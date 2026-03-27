@@ -7,7 +7,21 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import type { DbSyncState } from '../../shared/types';
 
-const dynamo = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+const client = new DynamoDBClient(
+  process.env.MOCK_DYNAMODB_ENDPOINT
+    ? {
+        endpoint: process.env.MOCK_DYNAMODB_ENDPOINT,
+        region: 'local',
+        credentials: { accessKeyId: 'test', secretAccessKey: 'test' },
+      }
+    : {},
+);
+const dynamo = DynamoDBDocumentClient.from(client);
+
+// Called in integration tests to release the connection so dynalite can shut down
+export function closeDbClient(): void {
+  client.destroy();
+}
 
 const BATCH_SIZE = 25; // DynamoDB BatchWrite max items per request
 const MAX_RETRIES = 5;

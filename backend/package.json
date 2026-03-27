@@ -5,6 +5,8 @@
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
+    "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.integration.config.ts --runInBand",
+    "test:all": "npm test && npm run test:integration",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
@@ -15,6 +17,7 @@
     "@types/jest": "^30",
     "@types/node": "^24.0.0",
     "jest": "^30",
+    "jest-dynalite": "^3.6.1",
     "msw": "^2.12.14",
     "ts-jest": "^29",
     "ts-node": "^10.9.2",

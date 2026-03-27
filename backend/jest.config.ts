@@ -5,6 +5,7 @@ const config: Config = {
   testEnvironment: 'node',
   rootDir: '.',
   testMatch: ['**/*.test.ts'],
+  testPathIgnorePatterns: ['<rootDir>/tests/integration/'],
   moduleFileExtensions: ['ts', 'js', 'json'],
   // Resolve imports relative to backend/ root
   moduleNameMapper: {

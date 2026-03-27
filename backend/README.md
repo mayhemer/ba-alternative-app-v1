@@ -29,11 +29,17 @@ backend/
 # Install dependencies (first time only)
 npm install
 
-# Run all tests once
+# Unit + mocked-I/O tests (fast, no external processes)
 npm test
 
-# Run in watch mode during development
+# Watch mode during development
 npm run test:watch
+
+# Integration tests — spins up in-memory DynamoDB (dynalite)
+npm run test:integration
+
+# All layers in sequence
+npm run test:all
 
 # Type-check without emitting
 npm run typecheck
@@ -58,11 +64,13 @@ Tests the sync handler with all I/O mocked via `jest.mock`:
 Covers: dirty-check logic, per-group rebuilds (artists vs schedule), stale item
 deletion, CloudFront path invalidation, per-slug error isolation, and multi-slug runs.
 
-### Layer 3 — Integration tests _(planned)_
+### Layer 3 — Integration tests (`tests/integration/db.test.ts`)
 
-Will use `jest-dynalite` (in-memory DynamoDB) and mock the official API at the
-HTTP level. Validates the full write → query → delete cycle against a real
-DynamoDB schema.
+Uses `jest-dynalite` (in-memory DynamoDB, no Java required) to test `db.ts`
+against a real DynamoDB engine. Tables from `jest-dynalite-config.js` are
+created before each file and cleared after each test. Covers: batchPut,
+batchDelete, queryAllKeys (including >25-item chunking), getSyncState,
+putSyncState, key projection, and slug isolation.
 
 ## Adding fixture data
 
