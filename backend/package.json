@@ -2,12 +2,21 @@
   "name": "ba-backend",
   "version": "0.1.0",
   "private": true,
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "typecheck": "tsc --noEmit"
+  },
   "devDependencies": {
     "@aws-sdk/client-cloudfront": "^3",
     "@aws-sdk/client-dynamodb": "^3",
     "@aws-sdk/lib-dynamodb": "^3",
     "@types/aws-lambda": "^8.10.149",
+    "@types/jest": "^30",
     "@types/node": "^24.0.0",
+    "jest": "^30",
+    "ts-jest": "^29",
+    "ts-node": "^10.9.2",
     "typescript": "~5.9.3"
   }
 }
