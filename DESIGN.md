@@ -183,13 +183,16 @@ with short TTLs. User endpoints bypass CloudFront (auth required, personalized).
 
 ### Source Endpoints (proxied, never exposed to frontend)
 
+Base URL: `https://admin.best4fest.app`
+
 ```
-GET /artists?time={unix-ms}
-GET /schedule?time={unix-ms}     → contains: schedules[], categories[]
-GET /changes                     → { tableName: lastUpdatedTimestamp, ... }
+GET /api/v2/{slug}/changes?time=0
+GET /api/v3/{slug}/artists?time=0
+GET /api/v3/{slug}/schedule?time=0    → contains: schedules[], categories[]
 ```
 
-JSON response schemes for each official endpoint will be discussed in detail later.
+Note: `/changes` is at v2; `/artists` and `/schedule` are at v3.
+Official slugs map directly to our DynamoDB `slug` key (e.g. `ba2026`, `ba2025`) — no remapping.
 
 ### `/changes` Response Shape
 

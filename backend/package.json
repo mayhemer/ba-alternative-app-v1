@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "devDependencies": {
+    "@aws-sdk/client-cloudfront": "^3",
+    "@aws-sdk/client-dynamodb": "^3",
+    "@aws-sdk/lib-dynamodb": "^3",
     "@types/aws-lambda": "^8.10.149",
     "@types/node": "^24.0.0",
     "typescript": "~5.9.3"

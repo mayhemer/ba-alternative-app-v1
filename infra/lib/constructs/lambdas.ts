@@ -59,7 +59,9 @@ export class Lambdas extends Construct {
       timeout: cdk.Duration.minutes(5),
       environment: {
         ...tableEnv,
-        OFFICIAL_API_BASE_URL: this.node.tryGetContext('officialApiBaseUrl') ?? '',
+        // FESTIVAL_SLUGS: comma-separated official slugs to sync, e.g. "ba2026,ba2025"
+        // Set via: cdk deploy --context festivalSlugs=ba2026,ba2025
+        FESTIVAL_SLUGS: this.node.tryGetContext('festivalSlugs') ?? '',
       },
       bundling,
     });
