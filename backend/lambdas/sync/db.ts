@@ -4,7 +4,6 @@ import {
   QueryCommand,
   BatchWriteCommand,
   PutCommand,
-  type WriteRequest,
 } from '@aws-sdk/lib-dynamodb';
 import type { DbSyncState } from '../../shared/types';
 
@@ -13,13 +12,18 @@ const dynamo = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const BATCH_SIZE = 25; // DynamoDB BatchWrite max items per request
 const MAX_RETRIES = 5;
 
+// DocumentClient write request — plain JS objects, no AttributeValue marshaling needed
+type DocWriteRequest =
+  | { PutRequest: { Item: Record<string, unknown> } }
+  | { DeleteRequest: { Key: Record<string, unknown> } };
+
 // ── Batch write (put) ─────────────────────────────────────────────────────────
 
-export async function batchPut(tableName: string, items: Record<string, unknown>[]): Promise<void> {
+export async function batchPut(tableName: string, items: object[]): Promise<void> {
   for (let i = 0; i < items.length; i += BATCH_SIZE) {
-    const requests: WriteRequest[] = items
+    const requests: DocWriteRequest[] = items
       .slice(i, i + BATCH_SIZE)
-      .map(item => ({ PutRequest: { Item: item } }));
+      .map(item => ({ PutRequest: { Item: item as Record<string, unknown> } }));
     await sendBatchWithRetry(tableName, requests);
   }
 }
@@ -31,7 +35,7 @@ export async function batchDelete(
   keys: Record<string, unknown>[],
 ): Promise<void> {
   for (let i = 0; i < keys.length; i += BATCH_SIZE) {
-    const requests: WriteRequest[] = keys
+    const requests: DocWriteRequest[] = keys
       .slice(i, i + BATCH_SIZE)
       .map(key => ({ DeleteRequest: { Key: key } }));
     await sendBatchWithRetry(tableName, requests);
@@ -41,13 +45,13 @@ export async function batchDelete(
 // Retry loop for unprocessed items (can occur under burst load even with PAY_PER_REQUEST)
 async function sendBatchWithRetry(
   tableName: string,
-  requests: WriteRequest[],
+  requests: DocWriteRequest[],
   attempt = 0,
 ): Promise<void> {
   const result = await dynamo.send(
     new BatchWriteCommand({ RequestItems: { [tableName]: requests } }),
   );
-  const unprocessed = result.UnprocessedItems?.[tableName];
+  const unprocessed = result.UnprocessedItems?.[tableName] as DocWriteRequest[] | undefined;
   if (unprocessed && unprocessed.length > 0) {
     if (attempt >= MAX_RETRIES) {
       throw new Error(`BatchWrite: ${unprocessed.length} unprocessed items after ${MAX_RETRIES} retries in ${tableName}`);

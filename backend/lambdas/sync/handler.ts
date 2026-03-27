@@ -16,25 +16,24 @@ import {
 } from './db';
 import { invalidatePaths } from './cloudfront';
 
-// ── Config from environment ───────────────────────────────────────────────────
+// ── Config from environment (read lazily so tests can set process.env) ────────
 
-const {
-  FESTIVAL_SLUGS,
-  ARTISTS_TABLE,
-  STAGES_TABLE,
-  CATEGORIES_TABLE,
-  EVENTS_TABLE,
-  SYNC_STATE_TABLE,
-  CLOUDFRONT_DISTRIBUTION_ID,
-} = process.env as Record<string, string>;
+type Config = ReturnType<typeof getConfig>;
 
-const tables = {
-  artists: ARTISTS_TABLE,
-  stages: STAGES_TABLE,
-  categories: CATEGORIES_TABLE,
-  events: EVENTS_TABLE,
-  syncState: SYNC_STATE_TABLE,
-};
+function getConfig() {
+  const env = process.env as Record<string, string>;
+  return {
+    slugs: (env.FESTIVAL_SLUGS ?? '').split(',').map(s => s.trim()).filter(Boolean),
+    tables: {
+      artists:    env.ARTISTS_TABLE,
+      stages:     env.STAGES_TABLE,
+      categories: env.CATEGORIES_TABLE,
+      events:     env.EVENTS_TABLE,
+      syncState:  env.SYNC_STATE_TABLE,
+    },
+    cloudfrontId: env.CLOUDFRONT_DISTRIBUTION_ID ?? '',
+  };
+}
 
 // Official /changes table names that map to our two sync groups
 const ARTISTS_OFFICIAL_TABLES = new Set(['db_artist', 'db_artist_localized']);
@@ -49,17 +48,18 @@ const SCHEDULE_OFFICIAL_TABLES = new Set([
 // ── Entry point ───────────────────────────────────────────────────────────────
 
 export async function handler(_event: ScheduledEvent): Promise<void> {
-  const slugs = (FESTIVAL_SLUGS ?? '').split(',').map(s => s.trim()).filter(Boolean);
-  if (slugs.length === 0) {
+  const config = getConfig();
+
+  if (config.slugs.length === 0) {
     console.warn('FESTIVAL_SLUGS is not configured — nothing to sync');
     return;
   }
 
-  console.log(`Sync started for slugs: ${slugs.join(', ')}`);
+  console.log(`Sync started for slugs: ${config.slugs.join(', ')}`);
 
-  for (const slug of slugs) {
+  for (const slug of config.slugs) {
     try {
-      await syncSlug(slug);
+      await syncSlug(slug, config);
     } catch (err) {
       // Log and continue — one failed slug should not block others
       console.error(`Sync failed for slug "${slug}":`, err);
@@ -71,7 +71,7 @@ export async function handler(_event: ScheduledEvent): Promise<void> {
 
 // ── Per-slug sync ─────────────────────────────────────────────────────────────
 
-async function syncSlug(slug: string): Promise<void> {
+async function syncSlug(slug: string, config: Config): Promise<void> {
   // 1. Fetch current timestamps from official /changes
   const changes = await fetchChanges(slug);
   const timeByTable = new Map(changes.map(c => [c.table, c.time]));
@@ -80,7 +80,7 @@ async function syncSlug(slug: string): Promise<void> {
   const scheduleOfficialTime = maxTime(timeByTable, SCHEDULE_OFFICIAL_TABLES);
 
   // 2. Compare against our last sync timestamps
-  const syncStateMap = await getSyncState(tables.syncState, slug);
+  const syncStateMap = await getSyncState(config.tables.syncState, slug);
   const artistsLastSynced = syncStateMap.get('artists')?.lastSyncedAt ?? 0;
   const scheduleLastSynced = syncStateMap.get('schedule')?.lastSyncedAt ?? 0;
 
@@ -100,8 +100,8 @@ async function syncSlug(slug: string): Promise<void> {
     console.log(`[${slug}] Artists dirty — rebuilding`);
     const officialArtists = await fetchArtists(slug);
     const newItems = officialArtists.map(a => normalizeArtist(slug, a));
-    await rebuildTable(tables.artists, slug, 'artistId', newItems);
-    await putSyncState(tables.syncState, {
+    await rebuildTable(config.tables.artists, slug, 'artistId', newItems);
+    await putSyncState(config.tables.syncState, {
       slug,
       tableName: 'artists',
       lastOfficialUpdate: artistsOfficialTime,
@@ -123,12 +123,12 @@ async function syncSlug(slug: string): Promise<void> {
 
     // Rebuild all three tables derived from the schedule endpoint
     await Promise.all([
-      rebuildTable(tables.stages, slug, 'stageId', newStages),
-      rebuildTable(tables.categories, slug, 'categoryId', newCategories),
-      rebuildTable(tables.events, slug, 'eventId', newEvents),
+      rebuildTable(config.tables.stages, slug, 'stageId', newStages),
+      rebuildTable(config.tables.categories, slug, 'categoryId', newCategories),
+      rebuildTable(config.tables.events, slug, 'eventId', newEvents),
     ]);
 
-    await putSyncState(tables.syncState, {
+    await putSyncState(config.tables.syncState, {
       slug,
       tableName: 'schedule',
       lastOfficialUpdate: scheduleOfficialTime,
@@ -143,8 +143,8 @@ async function syncSlug(slug: string): Promise<void> {
   }
 
   // 4. Invalidate CloudFront for affected paths
-  if (invalidationPaths.length > 0 && CLOUDFRONT_DISTRIBUTION_ID) {
-    await invalidatePaths(CLOUDFRONT_DISTRIBUTION_ID, invalidationPaths);
+  if (invalidationPaths.length > 0 && config.cloudfrontId) {
+    await invalidatePaths(config.cloudfrontId, invalidationPaths);
     console.log(`[${slug}] CloudFront invalidated: ${invalidationPaths.join(', ')}`);
   }
 }
@@ -157,16 +157,14 @@ async function rebuildTable(
   tableName: string,
   slug: string,
   skName: string,
-  newItems: Record<string, unknown>[],
+  newItems: object[],
 ): Promise<void> {
-  // Query existing keys and write new items concurrently
   const [existingKeys] = await Promise.all([
     queryAllKeys(tableName, slug, skName),
     batchPut(tableName, newItems),
   ]);
 
-  // Delete items that existed before but are no longer in the new set
-  const newSkSet = new Set(newItems.map(item => String(item[skName])));
+  const newSkSet = new Set(newItems.map(item => String((item as Record<string, unknown>)[skName])));
   const keysToDelete = existingKeys.filter(k => !newSkSet.has(String(k[skName])));
   if (keysToDelete.length > 0) {
     await batchDelete(tableName, keysToDelete);
