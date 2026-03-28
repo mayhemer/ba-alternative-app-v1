@@ -85,3 +85,4 @@ Place raw API responses under `tests/fixtures/<slug>/`:
 ## Additional notes
 
 [authorizer](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-jwt-authorizer.html)
+[local lambda dev](https://docs.aws.amazon.com/lambda/latest/dg/foundation-iac-local-development.html)
