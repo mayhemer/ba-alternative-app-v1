@@ -7,7 +7,7 @@ const app = new cdk.App();
 new InfraStack(app, 'BrutalAssaultStack', {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: process.env.CDK_DEFAULT_REGION ?? 'eu-central-1',
+    region: 'eu-central-1',
   },
   description: 'Brutal Assault Festival App — infrastructure',
 });

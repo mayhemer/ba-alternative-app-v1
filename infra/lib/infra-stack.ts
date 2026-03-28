@@ -39,7 +39,7 @@ export class InfraStack extends cdk.Stack {
       description: 'API Gateway HTTP API URL (not for direct client use — use CdnUrl)',
     });
     new cdk.CfnOutput(this, 'CdnUrl', {
-      value: `https://${cdn.distribution.distributionDomainName}`,
+      value: cdn.url,
       description: 'CloudFront distribution URL — use this as the API base in the app',
     });
     new cdk.CfnOutput(this, 'UserPoolId', { value: auth.userPool.userPoolId });

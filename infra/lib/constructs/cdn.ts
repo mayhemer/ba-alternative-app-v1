@@ -11,6 +11,7 @@ export interface CdnProps {
 
 export class Cdn extends Construct {
   readonly distribution: cloudfront.Distribution;
+  readonly url: string;
 
   constructor(scope: Construct, id: string, props: CdnProps) {
     super(scope, id);
@@ -63,7 +64,7 @@ export class Cdn extends Construct {
     // Requires an ACM certificate in us-east-1 (CloudFront requirement).
     // Set: cdk deploy --context certificateArn=arn:aws:acm:us-east-1:...
     const certificateArn = this.node.tryGetContext('certificateArn') as string | undefined;
-    const domainNames = certificateArn ? ['ba.janbambas.cz'] : undefined;
+    const domainNames = certificateArn ? ['api.ba.janbambas.cz'] : undefined;
     const certificate = certificateArn
       ? acm.Certificate.fromCertificateArn(this, 'Cert', certificateArn)
       : undefined;
@@ -113,5 +114,9 @@ export class Cdn extends Construct {
         },
       },
     });
+
+    this.url = certificateArn
+      ? 'https://api.ba.janbambas.cz'
+      : `https://${this.distribution.distributionDomainName}`;
   }
 }
