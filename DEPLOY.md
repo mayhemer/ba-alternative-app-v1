@@ -47,7 +47,6 @@ DNS CNAME: _xxxxx.api.ba.janbambas.cz --> _xxxx.xxxx.acm-validations.aws
 
 Secrets are stored in `app/infra/cdk.context.json`
 - reference to the certificate to deploy with; FIRST DEPLOY W/O IT TO GET THE TARGET CLOUDFRONT DOMAIN
-
 ```bash
 cd app/infra
 npx cdk deploy
@@ -59,3 +58,7 @@ Will output CdnUrl - that is where it deployed!
 
 DNS CNAME: api.ba.janbambas.cz --> xxxx.cloudfront.net
 
+- Enable the certificate
+- Redeploy again to take the cert into effect
+
+Now just `npx cdk deploy` to redeploy (it's slow... 200+ seconds)
