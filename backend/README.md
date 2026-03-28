@@ -81,3 +81,7 @@ Place raw API responses under `tests/fixtures/<slug>/`:
 | `changes.json`  | `GET /api/v2/<slug>/changes?time=0`                |
 | `artists.json`  | `GET /api/v3/<slug>/artists?time=0`                |
 | `schedule.json` | `GET /api/v3/<slug>/schedule?time=0`               |
+
+## Additional notes
+
+[authorizer](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-jwt-authorizer.html)
