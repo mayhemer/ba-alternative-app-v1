@@ -8,6 +8,7 @@ import { decodeCategoryColor } from '../../utils/color';
 import { getCategoryLocalized } from '../../utils/localization';
 import { CANVAS_WIDTH, LANE_HEIGHT, STRIP_HEIGHT } from './timelineLayout';
 import { ArtistBlock } from './ArtistBlock';
+import { colors } from '../../styling/tokens';
 
 export type LaneEvent = {
   event: DbEvent;
@@ -47,7 +48,7 @@ export function CategoryLane({
         style={{
           width: CANVAS_WIDTH,
           height: STRIP_HEIGHT,
-          backgroundColor: stripColor,
+          backgroundColor: colors.black,
           justifyContent: 'center',
           overflow: 'hidden',
         }}
@@ -58,7 +59,7 @@ export function CategoryLane({
             {
               fontSize: 10,
               fontWeight: '700',
-              color: '#000000',
+              color: stripColor,
               paddingHorizontal: 6,
             },
             labelStyle,
@@ -73,7 +74,7 @@ export function CategoryLane({
         style={{
           width: CANVAS_WIDTH,
           height: LANE_HEIGHT,
-          backgroundColor: '#111111',
+          backgroundColor: colors.surface,
           position: 'relative',
         }}
       >

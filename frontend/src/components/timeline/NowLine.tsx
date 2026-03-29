@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 import { CANVAS_WIDTH, timeToX } from './timelineLayout';
+import { colors } from '../../styling/tokens';
 
 type Props = {
   dayStart: number;
@@ -31,7 +32,7 @@ export function NowLine({ dayStart, canvasHeight }: Props) {
         top: 0,
         height: canvasHeight,
         width: 1,
-        backgroundColor: '#ff4444',
+        backgroundColor: colors.danger,
       }}
     >
       <Text
@@ -41,7 +42,7 @@ export function NowLine({ dayStart, canvasHeight }: Props) {
           left: 3,
           fontSize: 8,
           fontWeight: '700',
-          color: '#ff4444',
+          color: colors.danger,
           letterSpacing: 0.5,
         }}
       >

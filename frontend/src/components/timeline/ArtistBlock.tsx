@@ -3,6 +3,7 @@ import { Text, TouchableOpacity } from 'react-native';
 import type { DbArtist, DbEvent } from '../../types/backend';
 import type { InterestStatus } from '../../cache/cacheService';
 import { timeToX, LANE_HEIGHT, MIN_BLOCK_WIDTH } from './timelineLayout';
+import { colors } from '../../styling/tokens';
 
 type Props = {
   event: DbEvent;
@@ -16,11 +17,17 @@ type Props = {
 
 type BlockStyle = { bg: string; border: string };
 
+const blockBackground = colors.muted;
+const blockBorder = blockBackground;
+const blockTextColor = colors.white;
+
 function blockStyle(status: InterestStatus): BlockStyle {
+  const bg = blockBackground;
+  const border = blockBorder;
   switch (status) {
-    case 'maybe':    return { bg: '#1f1400', border: '#b87a1a' };
-    case 'must_see': return { bg: '#1f1800', border: '#e8c84a' };
-    default:         return { bg: '#1a1a1a', border: '#2a2a2a' };
+    case 'maybe':    return { bg, border };
+    case 'must_see': return { bg, border };
+    default:         return { bg, border };
   }
 }
 
@@ -53,7 +60,7 @@ export function ArtistBlock({ event, artist, dayStart, status, onPress }: Props)
       }}
     >
       {showLabel ? (
-        <Text numberOfLines={2} style={{ fontSize: 10, color: '#e0e0e0', fontWeight: '500' }}>
+        <Text numberOfLines={2} style={{ fontSize: 10, color: blockTextColor, fontWeight: '500' }}>
           {artist.name}
         </Text>
       ) : null}
