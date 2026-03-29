@@ -13,7 +13,7 @@ export function SplashScreen({ error, onRetry }: Props) {
         <>
           <ActivityIndicator size="large" color="#e8c84a" />
           <Text className="mt-4 text-textSecondary text-sm tracking-widest uppercase">
-            Loading festival data
+            Loading brutal data
           </Text>
         </>
       ) : (

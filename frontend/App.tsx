@@ -24,10 +24,10 @@ function RootGate() {
     lastSyncTimeRef.current = lastSyncTime;
   }, [lastSyncTime]);
 
-  const handleRetry = useCallback(() => {
-    setError(null);
+  const syncWithSlug = useCallback((slug: string): void => {
     setLoading(true);
-    startSync(selectedSlug, lastSyncTimeRef.current, {
+    setError(null);
+    startSync(slug, lastSyncTimeRef.current, {
       onFirstLoadSuccess: () => setLoading(false),
       onFirstLoadError: (err) => {
         setLoading(false);
@@ -36,25 +36,17 @@ function RootGate() {
       onRefreshComplete: () => emitCacheRefresh(),
       onSyncTimeUpdated: (time) => setSyncTime(time),
     });
-  }, [selectedSlug, setError, setLoading, setSyncTime, emitCacheRefresh]);
+  }, [setLoading, setError, emitCacheRefresh, setSyncTime]);
+
+  const handleRetry = useCallback(() => {
+    syncWithSlug(selectedSlug);
+  }, [syncWithSlug, selectedSlug]);
 
   // (Re-)start sync whenever the selected slug changes
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-
-    startSync(selectedSlug, lastSyncTimeRef.current, {
-      onFirstLoadSuccess: () => setLoading(false),
-      onFirstLoadError: (err) => {
-        setLoading(false);
-        setError(err.message);
-      },
-      onRefreshComplete: () => emitCacheRefresh(),
-      onSyncTimeUpdated: (time) => setSyncTime(time),
-    });
-
+    syncWithSlug(selectedSlug);
     return () => stopSync();
-  }, [selectedSlug, setLoading, setError, setSyncTime, emitCacheRefresh]);
+  }, [selectedSlug, syncWithSlug]);
 
   if (isLoading) {
     return <SplashScreen error={null} onRetry={handleRetry} />;
