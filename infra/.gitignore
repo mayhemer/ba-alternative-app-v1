@@ -1,0 +1,10 @@
+*.js
+
+!jest.config.js
+
+# CDK asset staging directory
+.cdk.staging
+cdk.out
+
+# Local context overrides (contains account-specific values like cert ARNs)
+cdk.context.json

@@ -1,13 +1,2 @@
-*.js
-!jest.config.js
-!jest-dynalite-config.js
-
 *.d.ts
 node_modules
-
-# CDK asset staging directory
-.cdk.staging
-cdk.out
-
-# Local context overrides (contains account-specific values like cert ARNs)
-cdk.context.json
