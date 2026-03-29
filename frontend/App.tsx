@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import { AppProvider, useAppContext } from './src/store/AppContext';
 import { ScreenUIProvider } from './src/context/ScreenUIContext';
 import { ArtistDetailProvider } from './src/context/ArtistDetailContext';
+import { InterestProvider } from './src/context/InterestContext';
 import { AppShell } from './src/components/layout/AppShell';
 import { SplashScreen } from './src/screens/SplashScreen';
 import { startSync, stop as stopSync } from './src/sync/backgroundSyncService';
@@ -62,9 +63,11 @@ function RootGate() {
 
   return (
     <ScreenUIProvider>
-      <ArtistDetailProvider>
-        <AppShell />
-      </ArtistDetailProvider>
+      <InterestProvider>
+        <ArtistDetailProvider>
+          <AppShell />
+        </ArtistDetailProvider>
+      </InterestProvider>
     </ScreenUIProvider>
   );
 }
