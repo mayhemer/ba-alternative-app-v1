@@ -174,7 +174,9 @@ export function TimelineScreen() {
   }, [artistById, selectedDayStart, myScheduleOnly, getStatus]);
 
   const visibleCategories = useMemo<DbCategory[]>(() => {
-    return categoriesRef.current.filter(
+    return categoriesRef.current.sort(
+      (a, b) => parseInt(a.categoryId) - parseInt(b.categoryId)
+    ).filter(
       (c) =>
         !hiddenCategories.has(c.categoryId) &&
         (eventsByCategory[c.categoryId]?.length ?? 0) > 0,

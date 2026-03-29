@@ -2,7 +2,7 @@ import type { DbEvent } from '../../types/backend';
 
 // ── Scale & geometry ──────────────────────────────────────────────────────────
 
-export const PIXELS_PER_HOUR = 80;
+export const PIXELS_PER_HOUR = 200;
 export const PIXELS_PER_MS = PIXELS_PER_HOUR / (60 * 60 * 1000);
 
 // Total canvas covers one full festival day (06:00 → next 06:00 = 24 h).
@@ -16,7 +16,7 @@ export const DAY_BOUNDARY_HOUR = 6;
 
 export const RULER_HEIGHT = 28;  // hour-label ruler at the top
 export const STRIP_HEIGHT = 20;  // category title strip above each lane
-export const LANE_HEIGHT  = 64;  // events row for each category
+export const LANE_HEIGHT  = 80;  // events row for each category
 export const MIN_BLOCK_WIDTH = 4; // minimum rendered width for very short sets
 
 // ── Time helpers ──────────────────────────────────────────────────────────────

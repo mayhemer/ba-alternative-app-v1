@@ -16,7 +16,7 @@ const Drawer = createDrawerNavigator<DrawerParamList>();
 export function AppNavigator() {
   return (
     <Drawer.Navigator
-      initialRouteName="ArtistList"
+      initialRouteName="Timeline"
       drawerContent={(props) => <SideDrawerContent {...props} />}
       screenOptions={{
         headerShown: false,
