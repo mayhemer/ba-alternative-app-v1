@@ -11,10 +11,7 @@ import { useAppState } from '../store/AppContext';
 import { useCacheRefresh } from '../store/AppContext';
 import { useTopBar, useBottomBar } from '../context/ScreenUIContext';
 import { useInterest } from '../context/InterestContext';
-import {
-  ArtistListFilterProvider,
-  useArtistListFilter,
-} from '../context/ArtistListFilterContext';
+import { useArtistListFilter } from '../context/ArtistListFilterContext';
 import { useArtistDetail } from '../context/ArtistDetailContext';
 import { ArtistRow } from '../components/ArtistRow';
 import { SectionSeparator } from '../components/SectionSeparator';
@@ -131,12 +128,10 @@ function ArtistListScreenInner() {
   );
 }
 
-// ── Screen (provides ArtistListFilterContext) ─────────────────────────────────
+// ── Screen ────────────────────────────────────────────────────────────────────
 
+// ArtistListFilterProvider lives above AppShell in App.tsx so that slot
+// components rendered in the TopBar can access the context.
 export function ArtistListScreen() {
-  return (
-    <ArtistListFilterProvider>
-      <ArtistListScreenInner />
-    </ArtistListFilterProvider>
-  );
+  return <ArtistListScreenInner />;
 }

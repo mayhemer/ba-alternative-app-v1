@@ -4,15 +4,15 @@ import { useScreenUI } from '../../context/ScreenUIContext';
 
 export function BottomBar() {
   const { state } = useScreenUI();
-  const { bottomBar } = state;
+  const { ContentComponent } = state.bottomBar;
 
-  if (bottomBar.content === undefined) {
+  if (ContentComponent === undefined) {
     return null;
   }
 
   return (
     <View className="bg-surface border-t border-border px-4 py-3">
-      {bottomBar.content}
+      <ContentComponent />
     </View>
   );
 }

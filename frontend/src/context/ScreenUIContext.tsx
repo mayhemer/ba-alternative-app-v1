@@ -36,7 +36,7 @@ export type TopBarConfig = {
 };
 
 export type BottomBarConfig = {
-  content?: React.ReactNode;
+  ContentComponent?: React.ComponentType;
 };
 
 type ScreenUIState = {

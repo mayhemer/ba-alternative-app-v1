@@ -4,6 +4,8 @@ import { AppProvider, useAppContext } from './src/store/AppContext';
 import { ScreenUIProvider } from './src/context/ScreenUIContext';
 import { ArtistDetailProvider } from './src/context/ArtistDetailContext';
 import { InterestProvider } from './src/context/InterestContext';
+import { ArtistListFilterProvider } from './src/context/ArtistListFilterContext';
+import { TimelineFilterProvider } from './src/context/TimelineFilterContext';
 import { AppShell } from './src/components/layout/AppShell';
 import { SplashScreen } from './src/screens/SplashScreen';
 import { startSync, stop as stopSync } from './src/sync/backgroundSyncService';
@@ -65,7 +67,11 @@ function RootGate() {
     <ScreenUIProvider>
       <InterestProvider>
         <ArtistDetailProvider>
-          <AppShell />
+          <ArtistListFilterProvider>
+            <TimelineFilterProvider>
+              <AppShell />
+            </TimelineFilterProvider>
+          </ArtistListFilterProvider>
         </ArtistDetailProvider>
       </InterestProvider>
     </ScreenUIProvider>
