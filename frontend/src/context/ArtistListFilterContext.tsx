@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useMemo, useState } from 'react';
 import type { InterestStatus } from './InterestContext';
 
 // Shared filter state for ArtistListScreen and its TopBar slot components.
@@ -17,10 +17,14 @@ export function ArtistListFilterProvider({ children }: { children: React.ReactNo
   const [searchQuery, setSearchQuery] = useState('');
   const [interestFilter, setInterestFilter] = useState<InterestStatus | null>(null);
 
+  const value = useMemo(
+    () => ({ searchQuery, setSearchQuery, interestFilter, setInterestFilter }),
+    [searchQuery, interestFilter],
+    // setSearchQuery and setInterestFilter are useState setters — stable by guarantee, omitted from deps
+  );
+
   return (
-    <ArtistListFilterContext.Provider
-      value={{ searchQuery, setSearchQuery, interestFilter, setInterestFilter }}
-    >
+    <ArtistListFilterContext.Provider value={value}>
       {children}
     </ArtistListFilterContext.Provider>
   );

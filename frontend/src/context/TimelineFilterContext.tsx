@@ -3,6 +3,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -106,21 +107,25 @@ export function TimelineFilterProvider({ children }: { children: React.ReactNode
     setScrollPositions((prev) => ({ ...prev, [String(dayStart)]: x }));
   }, []);
 
+  const value = useMemo(
+    () => ({
+      festivalDays,
+      setFestivalDays,
+      selectedDayStart,
+      setSelectedDayStart,
+      myScheduleOnly,
+      setMyScheduleOnly,
+      hiddenCategories,
+      toggleCategory,
+      scrollPositions,
+      setScrollPosition,
+    }),
+    // useState setters (setFestivalDays, setSelectedDayStart, setMyScheduleOnly) are stable — omitted
+    [festivalDays, selectedDayStart, myScheduleOnly, hiddenCategories, toggleCategory, scrollPositions, setScrollPosition],
+  );
+
   return (
-    <TimelineFilterContext.Provider
-      value={{
-        festivalDays,
-        setFestivalDays,
-        selectedDayStart,
-        setSelectedDayStart,
-        myScheduleOnly,
-        setMyScheduleOnly,
-        hiddenCategories,
-        toggleCategory,
-        scrollPositions,
-        setScrollPosition,
-      }}
-    >
+    <TimelineFilterContext.Provider value={value}>
       {children}
     </TimelineFilterContext.Provider>
   );

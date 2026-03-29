@@ -2,6 +2,7 @@ import React, {
   createContext,
   useCallback,
   useContext,
+  useMemo,
   useReducer,
   useRef,
 } from 'react';
@@ -93,34 +94,35 @@ export function ScreenUIProvider({ children }: { children: React.ReactNode }) {
   const trackerCounterRef = useRef<number>(0);
   const activeTrackerIdRef = useRef<number>(0);
 
-  function clearDismissTimer(): void {
+  // Stable helper — only refs, no deps
+  const clearDismissTimer = useCallback((): void => {
     if (dismissTimerRef.current !== null) {
       clearTimeout(dismissTimerRef.current);
       dismissTimerRef.current = null;
     }
-  }
+  }, []);
 
-  function setTopBar(config: TopBarConfig): void {
+  const setTopBar = useCallback((config: TopBarConfig): void => {
     dispatch({ type: 'SET_TOPBAR', config });
-  }
+  }, []);
 
-  function setBottomBar(config: BottomBarConfig): void {
+  const setBottomBar = useCallback((config: BottomBarConfig): void => {
     dispatch({ type: 'SET_BOTTOMBAR', config });
-  }
+  }, []);
 
-  function dismissFeedback(): void {
+  const dismissFeedback = useCallback((): void => {
     clearDismissTimer();
     activeTrackerIdRef.current = 0;
     dispatch({ type: 'SET_FEEDBACK', message: null });
-  }
+  }, [clearDismissTimer]);
 
-  function showFeedback(
+  const showFeedback = useCallback((
     text: string,
     variant: FeedbackVariant = 'confirmation',
     durationMs: number = 2000,
-  ): void {
+  ): void => {
     clearDismissTimer();
-    activeTrackerIdRef.current = 0; // detach any hanging tracker
+    activeTrackerIdRef.current = 0;
     dispatch({ type: 'SET_FEEDBACK', message: { text, variant } });
     if (durationMs > 0) {
       dismissTimerRef.current = setTimeout(() => {
@@ -128,9 +130,9 @@ export function ScreenUIProvider({ children }: { children: React.ReactNode }) {
         dismissTimerRef.current = null;
       }, durationMs);
     }
-  }
+  }, [clearDismissTimer]);
 
-  function startProgress(text: string): FeedbackTracker {
+  const startProgress = useCallback((text: string): FeedbackTracker => {
     clearDismissTimer();
 
     trackerCounterRef.current += 1;
@@ -154,7 +156,6 @@ export function ScreenUIProvider({ children }: { children: React.ReactNode }) {
     function warn(error?: unknown): void {
       if (activeTrackerIdRef.current !== trackerId) { return; }
       dispatch({ type: 'SET_FEEDBACK', message: { text, variant: 'warning', error } });
-      // stays until user taps
     }
 
     async function wrap<T>(promise: Promise<T>): Promise<T | null> {
@@ -169,12 +170,15 @@ export function ScreenUIProvider({ children }: { children: React.ReactNode }) {
     }
 
     return { confirm, warn, wrap };
-  }
+  }, [clearDismissTimer]);
+
+  const value = useMemo(
+    () => ({ state, setTopBar, setBottomBar, showFeedback, startProgress, dismissFeedback }),
+    [state, setTopBar, setBottomBar, showFeedback, startProgress, dismissFeedback],
+  );
 
   return (
-    <ScreenUIContext.Provider
-      value={{ state, setTopBar, setBottomBar, showFeedback, startProgress, dismissFeedback }}
-    >
+    <ScreenUIContext.Provider value={value}>
       {children}
     </ScreenUIContext.Provider>
   );

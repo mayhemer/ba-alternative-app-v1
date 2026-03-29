@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import type { DbArtist } from '../types/backend';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -27,22 +27,25 @@ export function ArtistDetailProvider({ children }: { children: React.ReactNode }
     presentation: 'collapsed',
   });
 
-  function openDetail(artist: DbArtist, presentation: DetailPresentationState): void {
+  const openDetail = useCallback((artist: DbArtist, presentation: DetailPresentationState): void => {
     setDetailState({ artist, presentation });
-  }
+  }, []);
 
-  function closeDetail(): void {
+  const closeDetail = useCallback((): void => {
     setDetailState({ artist: null, presentation: 'collapsed' });
-  }
+  }, []);
 
-  function expandDetail(): void {
+  const expandDetail = useCallback((): void => {
     setDetailState((prev) => ({ ...prev, presentation: 'expanded' }));
-  }
+  }, []);
+
+  const value = useMemo(
+    () => ({ detailState, openDetail, closeDetail, expandDetail }),
+    [detailState, openDetail, closeDetail, expandDetail],
+  );
 
   return (
-    <ArtistDetailContext.Provider
-      value={{ detailState, openDetail, closeDetail, expandDetail }}
-    >
+    <ArtistDetailContext.Provider value={value}>
       {children}
     </ArtistDetailContext.Provider>
   );

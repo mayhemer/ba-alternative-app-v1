@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useReducer, useRef } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useReducer, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -79,32 +79,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     AsyncStorage.setItem(STORAGE_KEY_SLUG, state.selectedSlug);
   }, [state.selectedSlug]);
 
-  function setSelectedSlug(slug: string): void {
+  const setSelectedSlug = useCallback((slug: string): void => {
     dispatch({ type: 'SET_SLUG', slug });
-  }
+  }, []);
 
-  function setLoading(loading: boolean): void {
+  const setLoading = useCallback((loading: boolean): void => {
     dispatch({ type: 'SET_LOADING', loading });
-  }
+  }, []);
 
-  function setError(error: string | null): void {
+  const setError = useCallback((error: string | null): void => {
     dispatch({ type: 'SET_ERROR', error });
-  }
+  }, []);
 
-  function setSyncTime(time: number): void {
+  const setSyncTime = useCallback((time: number): void => {
     dispatch({ type: 'SET_SYNC_TIME', time });
-  }
+  }, []);
 
-  function subscribeToCacheRefresh(listener: CacheRefreshListener): () => void {
+  const subscribeToCacheRefresh = useCallback((listener: CacheRefreshListener): () => void => {
     refreshListeners.current.add(listener);
     return () => {
       refreshListeners.current.delete(listener);
     };
-  }
+  }, []);
 
-  function emitCacheRefresh(): void {
+  const emitCacheRefresh = useCallback((): void => {
     refreshListeners.current.forEach((listener) => listener());
-  }
+  }, []);
 
   const value: AppContextValue = {
     state,

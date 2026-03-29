@@ -1,5 +1,6 @@
 import './global.css';
 import React, { useCallback, useEffect, useRef } from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppProvider, useAppContext } from './src/store/AppContext';
 import { ScreenUIProvider } from './src/context/ScreenUIContext';
 import { ArtistDetailProvider } from './src/context/ArtistDetailContext';
@@ -82,8 +83,10 @@ function RootGate() {
 
 export default function App() {
   return (
-    <AppProvider>
-      <RootGate />
-    </AppProvider>
+    <SafeAreaProvider>
+      <AppProvider>
+        <RootGate />
+      </AppProvider>
+    </SafeAreaProvider>
   );
 }

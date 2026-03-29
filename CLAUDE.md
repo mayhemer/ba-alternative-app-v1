@@ -4,10 +4,14 @@
 - Separate library, reusable API to its own file modules
 - Keep model data sources as adapters that can easily switch to a different root data source: fetch from API a, fetch from API b, fetch from persistent async storage
 - Rather use these model data sources to fetch additional data that are referenced by ids, instead of inlining them to a single data source if possible; break this rule when e.g. react intrinsics would work way better with inlined data, but ask me first
+- after making a change that may be suspect to cause integration problems, check the effect cross-file before finishing; mandatory for features spanning multiple files — read the relevant consumer files and trace the impact
 
 ### Frontend constrains
 - reuse native components where possible, design for reusability, modularity, and for easy adaptability of widgets content according current UI state
 - always use styling, including for element sizing
+- when introducing a hook or component that requires a root-level provider (SafeAreaProvider, GestureHandlerRootView, NavigationContainer, ReanimatedProvider, etc.), add the provider to App.tsx in the same step — never defer it
+- when installing a package that requires build-time configuration (Babel plugins, Metro config, etc.), update the config file in the same step as the install
+- all functions inside a React context provider must be useCallback-wrapped; the value object passed to <Context.Provider> must be useMemo-wrapped
 
 ## Minor
 - always use full bracing of if/while/for statements.
