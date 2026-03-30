@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { Image, Platform, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Image, Platform, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import RenderHtml from 'react-native-render-html';
 import { Text } from '../components/ui/Text';
 import { StarButton, getFeedbackLabel } from '../components/StarButton';
@@ -33,6 +33,9 @@ export function ArtistDetailContent({ artist }: Props) {
   const hPad        = width >= PADDING_BREAKPOINT ? 0 : 16;
   const htmlWidth   = innerWidth - hPad * 2;
   const isWeb = Platform.OS === 'web';
+  const [imageLoading, setImageLoading] = useState(true);
+
+  useEffect(() => { setImageLoading(true); }, [artist.artistId]);
 
   useEffect(() => {
     if (!isWeb) { return; }
@@ -84,11 +87,20 @@ export function ArtistDetailContent({ artist }: Props) {
         </View>
 
         {/* ── Hero image ── */}
-        <Image
-          source={{ uri: artist.imageUrl }}
-          style={{ width: innerWidth, height: imageHeight }}
-          resizeMode="cover"
-        />
+        <View style={{ width: innerWidth, height: imageHeight }}>
+          <Image
+            source={{ uri: artist.imageUrl }}
+            style={{ width: innerWidth, height: imageHeight }}
+            resizeMode="cover"
+            onLoad={() => setImageLoading(false)}
+            onError={() => setImageLoading(false)}
+          />
+          {imageLoading && (
+            <View style={{ position: 'absolute', top: 32, left: 0, right: 0, alignItems: 'center' }}>
+              <ActivityIndicator size="large" color={colors.accent} />
+            </View>
+          )}
+        </View>
 
         {/* ── HTML content ── */}
         {content !== '' && (
