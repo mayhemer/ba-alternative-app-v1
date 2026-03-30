@@ -5,6 +5,8 @@ import { Text } from '../components/ui/Text';
 import { StarButton, getFeedbackLabel } from '../components/StarButton';
 import { useArtistDetail } from '../context/ArtistDetailContext';
 import { useInterest } from '../context/InterestContext';
+import { getCategoryLocalized } from '../utils/localization';
+import { formatTime } from '../components/timeline/timelineLayout';
 import { useStartProgress } from '../context/ScreenUIContext';
 import { getArtistLocalized } from '../utils/localization';
 import { colors } from '../styling/tokens';
@@ -18,7 +20,8 @@ type Props = { artist: DbArtist };
 // ── Content (no scroll wrapper — caller provides BottomSheetScrollView) ──────
 
 export function ArtistDetailContent({ artist }: Props) {
-  const { closeDetail } = useArtistDetail();
+  const { closeDetail, detailState } = useArtistDetail();
+  const { detailEvent } = detailState;
   const { getStatus, cycleStatus } = useInterest();
   const startProgress = useStartProgress();
   const { width } = useWindowDimensions();
@@ -101,6 +104,19 @@ export function ArtistDetailContent({ artist }: Props) {
             </View>
           )}
         </View>
+
+        {/* ── Event info (time + category, when opened from timeline) ── */}
+        {detailEvent !== null && (
+          <View style={{ paddingHorizontal: hPad, paddingTop: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Text style={{ fontSize: 16, color: colors.textPrimary }}>
+              {formatTime(detailEvent.event.dateFrom)}–{formatTime(detailEvent.event.dateTo)}
+            </Text>
+            <Text style={{ fontSize: 16, color: colors.textSecondary }}>·</Text>
+            <Text style={{ fontSize: 16, color: colors.textPrimary }}>
+              {getCategoryLocalized(detailEvent.category.localized, 'title')}
+            </Text>
+          </View>
+        )}
 
         {content !== '' && (
           <View style={{ paddingHorizontal: hPad, paddingTop: 16, paddingBottom: 32 }}>

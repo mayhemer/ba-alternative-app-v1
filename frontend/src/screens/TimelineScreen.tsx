@@ -194,8 +194,10 @@ export function TimelineScreen() {
 
   const { width } = useWindowDimensions();
 
-  function handleBlockPress(_event: DbEvent, artist: DbArtist): void {
-    openDetail(artist, width >= 732 ? 'expanded' : 'collapsed');
+  function handleBlockPress(event: DbEvent, artist: DbArtist): void {
+    const category = categoriesRef.current.find(c => c.categoryId === event.categoryId);
+    const detailEvent = category !== undefined ? { event, category } : undefined;
+    openDetail(artist, width >= 732 ? 'expanded' : 'collapsed', detailEvent);
   }
 
   // ── Render ──────────────────────────────────────────────────────────────────
