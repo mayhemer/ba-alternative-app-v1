@@ -6,6 +6,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { TopBar } from './TopBar';
 import { BottomBar } from './BottomBar';
 import { AppNavigator } from '../../navigation/AppNavigator';
+import { navigationRef } from '../../navigation/navigationRef';
 import { useArtistDetail } from '../../context/ArtistDetailContext';
 
 // ArtistDetailScreen overlay — imported when built
@@ -22,7 +23,7 @@ export function AppShell() {
       <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
         <TopBar />
         <View className="flex-1">
-          <NavigationContainer>
+          <NavigationContainer ref={navigationRef}>
             <AppNavigator />
           </NavigationContainer>
         </View>
