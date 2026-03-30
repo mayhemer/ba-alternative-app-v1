@@ -61,10 +61,11 @@ export function CategoryLane({
             }} />
           <Animated.Text
             numberOfLines={1}
+            className={'font-family: default'}
             style={{
               fontSize: 20,
-              fontWeight: '300',
-              fontFamily: 'regular-default',
+              //fontWeight: '300',
+              fontFamily: 'Regular-Default',
               color: colors.timeline.categoryName,
             }}
           >

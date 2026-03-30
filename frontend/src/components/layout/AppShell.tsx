@@ -5,17 +5,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { TopBar } from './TopBar';
 import { BottomBar } from './BottomBar';
+import { ArtistDetailSheet } from './ArtistDetailSheet';
 import { AppNavigator } from '../../navigation/AppNavigator';
 import { navigationRef } from '../../navigation/navigationRef';
-import { useArtistDetail } from '../../context/ArtistDetailContext';
-
-// ArtistDetailScreen overlay — imported when built
-// import { ArtistDetailScreen } from '../../screens/ArtistDetailScreen';
 
 export function AppShell() {
-  const { detailState } = useArtistDetail();
-  const isDetailOpen = detailState.artist !== null;
-
   return (
     <GestureHandlerRootView className="flex-1">
 
@@ -30,13 +24,8 @@ export function AppShell() {
         <BottomBar />
       </SafeAreaView>
 
-      {/* ArtistDetail overlay — rendered AFTER SafeAreaView so it sits above
-          TopBar/BottomBar via z-order. Covers entire screen including safe areas. */}
-      {isDetailOpen && (
-        <View className="absolute inset-0">
-          {/* TODO: render ArtistDetailScreen here when built */}
-        </View>
-      )}
+      {/* Artist detail bottom sheet — always mounted, sheet manages its own visibility */}
+      <ArtistDetailSheet />
 
     </GestureHandlerRootView>
   );

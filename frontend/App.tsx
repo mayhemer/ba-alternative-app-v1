@@ -78,6 +78,8 @@ export default function App() {
   useFonts({
     'Regular-Default': require('./assets/WorkSans-Regular.ttf'),
     'Bold-Default': require('./assets/WorkSans-Bold.ttf'),
+    //'Regular-Default': require('./assets/DarkerGrotesque-Regular.ttf'),
+    //'Bold-Default': require('./assets/DarkerGrotesque-Bold.ttf'),
   });
 
   return (
