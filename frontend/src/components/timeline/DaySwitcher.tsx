@@ -17,7 +17,7 @@ export function DaySwitcher() {
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{ gap: 8 }}
+      contentContainerStyle={{ gap: 8, flexGrow: 1, justifyContent: 'center' }}
     >
       {festivalDays.map((dayStart) => {
         const isActive = dayStart === selectedDayStart;
