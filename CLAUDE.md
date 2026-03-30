@@ -5,6 +5,7 @@
 - Keep model data sources as adapters that can easily switch to a different root data source: fetch from API a, fetch from API b, fetch from persistent async storage
 - Rather use these model data sources to fetch additional data that are referenced by ids, instead of inlining them to a single data source if possible; break this rule when e.g. react intrinsics would work way better with inlined data, but ask me first
 - after making a change that may be suspect to cause integration problems, check the effect cross-file before finishing; mandatory for features spanning multiple files — read the relevant consumer files and trace the impact
+- don't revert externally made changes
 
 ### Frontend constrains
 - reuse native components where possible, design for reusability, modularity, and for easy adaptability of widgets content according current UI state
