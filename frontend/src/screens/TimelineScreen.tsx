@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, View, useWindowDimensions } from 'react-native';
 import { Text } from '../components/ui/Text';
 import Animated, {
   useSharedValue,
@@ -192,8 +192,10 @@ export function TimelineScreen() {
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
+  const { width } = useWindowDimensions();
+
   function handleBlockPress(_event: DbEvent, artist: DbArtist): void {
-    openDetail(artist, 'collapsed');
+    openDetail(artist, width >= 732 ? 'expanded' : 'collapsed');
   }
 
   // ── Render ──────────────────────────────────────────────────────────────────

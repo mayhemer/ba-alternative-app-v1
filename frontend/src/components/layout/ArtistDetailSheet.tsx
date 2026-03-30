@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useRef } from 'react';
+import { Platform, ScrollView, View } from 'react-native';
 import BottomSheet, { BottomSheetScrollView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useArtistDetail } from '../../context/ArtistDetailContext';
 import { ArtistDetailContent } from '../../screens/ArtistDetailScreen';
 import { colors } from '../../styling/tokens';
@@ -20,6 +22,7 @@ function Backdrop(props: BottomSheetBackdropProps) {
 
 export function ArtistDetailSheet() {
   const { detailState, closeDetail } = useArtistDetail();
+  const { top } = useSafeAreaInsets();
   const sheetRef = useRef<BottomSheet>(null);
 
   useEffect(() => {
@@ -36,11 +39,23 @@ export function ArtistDetailSheet() {
     closeDetail();
   }, [closeDetail]);
 
+  if (Platform.OS === 'web') {
+    if (detailState.artist === null) { return null; }
+    return (
+      <View style={{ position: 'absolute', inset: 0, backgroundColor: colors.background }}>
+        <ScrollView>
+          <ArtistDetailContent artist={detailState.artist} />
+        </ScrollView>
+      </View>
+    );
+  }
+
   return (
     <BottomSheet
       ref={sheetRef}
       index={-1}
       snapPoints={SNAP_POINTS}
+      topInset={top}
       enablePanDownToClose
       onClose={handleClose}
       backdropComponent={Backdrop}
