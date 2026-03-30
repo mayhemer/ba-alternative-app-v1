@@ -6,6 +6,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { TopBar } from './TopBar';
 import { BottomBar } from './BottomBar';
 import { ArtistDetailSheet } from './ArtistDetailSheet';
+import { FeedbackToast } from './FeedbackToast';
 import { AppNavigator } from '../../navigation/AppNavigator';
 import { navigationRef } from '../../navigation/navigationRef';
 
@@ -26,6 +27,9 @@ export function AppShell() {
 
       {/* Artist detail bottom sheet — always mounted, sheet manages its own visibility */}
       <ArtistDetailSheet />
+
+      {/* Feedback toast — rendered last so it's always above backdrop and sheet */}
+      <FeedbackToast />
 
     </GestureHandlerRootView>
   );
