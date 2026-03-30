@@ -10,17 +10,16 @@ const colors = {
   border:        '#2a2a2a',
   borderMid:     '#333333',   // slightly lighter border
   timeline: {
-    blockDefault: '#333333',
-    blockWanted:  '#787878',
-    blockText:    '#ffffff',
-    blockMarkDefault: '#757575',
-    blockMarkWanted: '#bbbbbb',
-    categoryName: '#999999',
-    stripBg:      '#141414',
-    laneBg:       '#141414',
-    laneBorder:   '#444444',
-    rulerBorder:  '#444444',
-    rulerText:    '#c0c0c0',
+    blockDefault:       '#333333',
+    blockWanted:        '#2a7fa7',
+    blockText:          '#ffffff',
+    blockMarkDefault:   '#757575',
+    categoryName:       '#dadada',
+    stripBg:            '#141414',
+    laneBg:             '#141414',
+    laneBorder:         '#444444',
+    rulerBorder:        '#444444',
+    rulerText:          '#c0c0c0',
   },
   accent:        '#e8c84a',   // must-see / active
   amber:         '#b87a1a',   // maybe

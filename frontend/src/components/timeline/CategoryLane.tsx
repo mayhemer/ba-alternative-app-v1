@@ -4,7 +4,7 @@ import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 import type { DbArtist, DbCategory, DbEvent } from '../../types/backend';
 import type { InterestStatus } from '../../cache/cacheService';
-import { decodeCategoryColor } from '../../utils/color';
+import { decodeCategoryColor, dimColor } from '../../utils/color';
 import { getCategoryLocalized } from '../../utils/localization';
 import { CANVAS_WIDTH, LANE_HEIGHT, STRIP_HEIGHT, VIEW_OFFSET_X, CATEGORY_MARKER_SIZE } from './timelineLayout';
 import { ArtistBlock } from './ArtistBlock';
@@ -34,6 +34,7 @@ export function CategoryLane({
 }: Props) {
   const title = getCategoryLocalized(category.localized, 'title');
   const categoryColor = decodeCategoryColor(category.color);
+  const dimmedColor   = dimColor(categoryColor, 60);
 
   // Translates the title right in sync with horizontal scroll so it stays
   // pinned to the left visual edge of the viewport.
@@ -56,7 +57,7 @@ export function CategoryLane({
         <Animated.View style={[{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8 }, labelStyle]}>
           <View style={{ 
               display: 'none',
-              width: CATEGORY_MARKER_SIZE, height: CATEGORY_MARKER_SIZE, backgroundColor: categoryColor, marginRight: 6 
+              width: CATEGORY_MARKER_SIZE, height: CATEGORY_MARKER_SIZE, backgroundColor: dimmedColor, marginRight: 6 
             }} />
           <Animated.Text
             numberOfLines={1}

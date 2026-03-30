@@ -2,7 +2,7 @@ import type { DbEvent } from '../../types/backend';
 
 // ── Scale & geometry ──────────────────────────────────────────────────────────
 
-export const PIXELS_PER_HOUR = 180;
+export const PIXELS_PER_HOUR = 170;
 export const PIXELS_PER_MS = PIXELS_PER_HOUR / (60 * 60 * 1000);
 
 // Total canvas covers one full festival day (06:00 → next 06:00 = 24 h).
@@ -30,7 +30,7 @@ export const MIN_BLOCK_WIDTH = 4; // minimum rendered width for very short sets
 
 // ── Elements ──────────────────────────────────────────────────────────────────
 
-export const CATEGORY_MARKER_SIZE = 16;
+export const CATEGORY_MARKER_SIZE = 9;
 
 // ── Time helpers ──────────────────────────────────────────────────────────────
 
