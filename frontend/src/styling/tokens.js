@@ -24,7 +24,7 @@ const colors = {
   accent:        '#e8c84a',   // must-see / active
   amber:         '#b87a1a',   // maybe
   textPrimary:   '#f0f0f0',
-  textSecondary: '#888888',
+  textSecondary: '#ababab',
   textMuted:     '#666666',
   muted:         '#444444',   // tick marks, block default, subtle chrome
   danger:        '#ff4444',   // now-line, errors, warnings

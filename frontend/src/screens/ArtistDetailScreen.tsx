@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Platform, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Image, Linking, Platform, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import RenderHtml from 'react-native-render-html';
 import { Text } from '../components/ui/Text';
 import { StarButton, getFeedbackLabel } from '../components/StarButton';
@@ -102,10 +102,20 @@ export function ArtistDetailContent({ artist }: Props) {
           )}
         </View>
 
-        {/* ── HTML content ── */}
         {content !== '' && (
           <View style={{ paddingHorizontal: hPad, paddingTop: 16, paddingBottom: 32 }}>
-            <RenderHtml
+            {/* ── Artist URL ── */}
+            {artist.url !== '' && (
+              <TouchableOpacity
+              onPress={() => Linking.openURL(artist.url)}
+              style={{ paddingVertical: 12 }}
+              >
+                <Text style={{ fontSize: 16, color: colors.textSecondary }}>Official Website ↗</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* ── HTML content ── */}
+            <RenderHtml    
               contentWidth={htmlWidth}
               source={{ html: content }}
               tagsStyles={htmlTagsStyles}
