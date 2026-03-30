@@ -10,9 +10,12 @@ const colors = {
   border:        '#2a2a2a',
   borderMid:     '#333333',   // slightly lighter border
   timeline: {
-    blockDefault: '#444444',
+    blockDefault: '#333333',
     blockWanted:  '#787878',
-    blockText:    '#d3d3d3',
+    blockText:    '#ffffff',
+    blockMarkDefault: '#757575',
+    blockMarkWanted: '#bbbbbb',
+    categoryName: '#999999',
     stripBg:      '#141414',
     laneBg:       '#141414',
     laneBorder:   '#444444',

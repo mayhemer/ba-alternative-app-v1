@@ -28,6 +28,10 @@ export const STRIP_HEIGHT = 32;  // category title strip above each lane
 export const LANE_HEIGHT  = 80;  // events row for each category
 export const MIN_BLOCK_WIDTH = 4; // minimum rendered width for very short sets
 
+// ── Elements ──────────────────────────────────────────────────────────────────
+
+export const CATEGORY_MARKER_SIZE = 16;
+
 // ── Time helpers ──────────────────────────────────────────────────────────────
 
 /** Map a Unix-ms timestamp to a canvas X coordinate for the given day. */

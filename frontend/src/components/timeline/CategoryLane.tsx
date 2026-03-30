@@ -6,7 +6,7 @@ import type { DbArtist, DbCategory, DbEvent } from '../../types/backend';
 import type { InterestStatus } from '../../cache/cacheService';
 import { decodeCategoryColor } from '../../utils/color';
 import { getCategoryLocalized } from '../../utils/localization';
-import { CANVAS_WIDTH, LANE_HEIGHT, STRIP_HEIGHT, VIEW_OFFSET_X } from './timelineLayout';
+import { CANVAS_WIDTH, LANE_HEIGHT, STRIP_HEIGHT, VIEW_OFFSET_X, CATEGORY_MARKER_SIZE } from './timelineLayout';
 import { ArtistBlock } from './ArtistBlock';
 import { colors } from '../../styling/tokens';
 
@@ -49,21 +49,22 @@ export function CategoryLane({
           width: CANVAS_WIDTH,
           height: STRIP_HEIGHT,
           backgroundColor: colors.timeline.stripBg,
-          borderTopWidth: 2,
-          borderTopColor: colors.timeline.laneBorder,
           justifyContent: 'center',
           overflow: 'hidden',
         }}
       >
         <Animated.View style={[{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8 }, labelStyle]}>
-          <View style={{ width: 8, height: 8, backgroundColor: categoryColor, marginRight: 6 }} />
+          <View style={{ 
+              display: 'none',
+              width: CATEGORY_MARKER_SIZE, height: CATEGORY_MARKER_SIZE, backgroundColor: categoryColor, marginRight: 6 
+            }} />
           <Animated.Text
             numberOfLines={1}
             style={{
-              fontSize: 12,
+              fontSize: 20,
               fontWeight: '300',
               fontFamily: 'regular-default',
-              color: colors.white,
+              color: colors.timeline.categoryName,
             }}
           >
             {title}
@@ -75,8 +76,10 @@ export function CategoryLane({
       <View
         style={{
           width: CANVAS_WIDTH,
-          height: LANE_HEIGHT + STRIP_HEIGHT / 2,
+          height: LANE_HEIGHT,
           backgroundColor: colors.surface,
+          borderBottomWidth: 2,
+          borderBottomColor: colors.timeline.laneBorder,
           position: 'relative',
         }}
       >
