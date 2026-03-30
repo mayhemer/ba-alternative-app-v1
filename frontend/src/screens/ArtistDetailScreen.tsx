@@ -92,7 +92,7 @@ export function ArtistDetailContent({ artist }: Props) {
         {/* ── Hero image ── */}
         <View style={{ width: innerWidth, height: imageHeight }}>
           <Image
-            source={{ uri: artist.imageUrl }}
+            source={{ uri: artist.thumbUrl }}
             style={{ width: innerWidth, height: imageHeight }}
             resizeMode="cover"
             onLoad={() => setImageLoading(false)}
