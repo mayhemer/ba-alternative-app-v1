@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
+import { Text } from '../components/ui/Text';
 import Animated, {
   useSharedValue,
   useAnimatedScrollHandler,
@@ -26,6 +27,8 @@ import {
   STRIP_HEIGHT,
   LANE_HEIGHT,
   DAY_DURATION_MS,
+  VIEW_OFFSET_X,
+  VIEW_WIDTH,
   deriveFestivalDays,
   getFestivalDayStart,
 } from '../components/timeline/timelineLayout';
@@ -214,7 +217,10 @@ export function TimelineScreen() {
         scrollEventThrottle={16}
         onScroll={onScroll}
       >
-        <View style={{ width: CANVAS_WIDTH, position: 'relative' }}>
+        {/* Clipping wrapper sized to the visible window only */}
+        <View style={{ width: VIEW_WIDTH, overflow: 'hidden' }}>
+        {/* Full canvas shifted left so 09:30 aligns with x=0 */}
+        <View style={{ width: CANVAS_WIDTH, position: 'relative', transform: [{ translateX: -VIEW_OFFSET_X }] }}>
           <TimeRuler dayStart={selectedDayStart} />
           {visibleCategories.map((cat) => (
             <CategoryLane
@@ -228,6 +234,7 @@ export function TimelineScreen() {
             />
           ))}
           <NowLine dayStart={selectedDayStart} canvasHeight={canvasHeight} />
+        </View>
         </View>
       </Animated.ScrollView>
     </ScrollView>

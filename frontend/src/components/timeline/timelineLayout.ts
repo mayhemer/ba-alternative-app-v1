@@ -2,7 +2,7 @@ import type { DbEvent } from '../../types/backend';
 
 // ── Scale & geometry ──────────────────────────────────────────────────────────
 
-export const PIXELS_PER_HOUR = 200;
+export const PIXELS_PER_HOUR = 180;
 export const PIXELS_PER_MS = PIXELS_PER_HOUR / (60 * 60 * 1000);
 
 // Total canvas covers one full festival day (06:00 → next 06:00 = 24 h).
@@ -12,10 +12,19 @@ export const DAY_DURATION_MS  = 24 * 60 * 60 * 1000;
 // A festival "day" begins at 06:00, not midnight.
 export const DAY_BOUNDARY_HOUR = 6;
 
+// ── Visible scroll window ─────────────────────────────────────────────────────
+
+// Scroll is limited to 09:30–04:00 (next day). Both expressed as hours after
+// DAY_BOUNDARY_HOUR (06:00), so 3.5 h → 09:30, 22 h → 04:00 next day.
+export const VIEW_START_H   = 3.5;   // hours after DAY_BOUNDARY_HOUR
+export const VIEW_END_H     = 22;    // hours after DAY_BOUNDARY_HOUR
+export const VIEW_OFFSET_X  = VIEW_START_H * PIXELS_PER_HOUR;
+export const VIEW_WIDTH      = (VIEW_END_H - VIEW_START_H) * PIXELS_PER_HOUR;
+
 // ── Row heights ───────────────────────────────────────────────────────────────
 
 export const RULER_HEIGHT = 28;  // hour-label ruler at the top
-export const STRIP_HEIGHT = 20;  // category title strip above each lane
+export const STRIP_HEIGHT = 32;  // category title strip above each lane
 export const LANE_HEIGHT  = 80;  // events row for each category
 export const MIN_BLOCK_WIDTH = 4; // minimum rendered width for very short sets
 
@@ -49,6 +58,12 @@ export function deriveFestivalDays(events: DbEvent[]): number[] {
 }
 
 // ── Display helpers ───────────────────────────────────────────────────────────
+
+/** Format a Unix-ms timestamp as HH:MM for display inside event blocks. */
+export function formatTime(timestampMs: number): string {
+  const date = new Date(timestampMs);
+  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
 
 const WEEKDAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 

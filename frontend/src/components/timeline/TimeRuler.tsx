@@ -1,5 +1,6 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import { Text } from '../ui/Text';
 import { CANVAS_WIDTH, DAY_BOUNDARY_HOUR, PIXELS_PER_HOUR, RULER_HEIGHT } from './timelineLayout';
 import { colors } from '../../styling/tokens';
 
@@ -19,7 +20,7 @@ export function TimeRuler(_props: Props) {
         position: 'relative',
         backgroundColor: colors.background,
         borderBottomWidth: 1,
-        borderBottomColor: colors.rulerBorder,
+        borderBottomColor: colors.timeline.rulerBorder,
       }}
     >
       {ticks.map((h) => {
@@ -31,7 +32,7 @@ export function TimeRuler(_props: Props) {
             style={{ position: 'absolute', left: x, top: 0, bottom: 0, alignItems: 'flex-start' }}
           >
             <View style={{ width: 1, height: 6, backgroundColor: colors.muted, marginTop: 4 }} />
-            <Text style={{ fontSize: 9, color: colors.textMuted, marginTop: 2, marginLeft: 2 }}>
+            <Text style={{ fontSize: 10, color: colors.timeline.rulerText, marginTop: 2, marginLeft: 2 }}>
               {String(hour).padStart(2, '0')}
             </Text>
           </View>

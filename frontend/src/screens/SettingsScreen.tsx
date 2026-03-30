@@ -1,5 +1,6 @@
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
+import { Text } from '../components/ui/Text';
 import { useTopBar, useBottomBar } from '../context/ScreenUIContext';
 import { useAppContext } from '../store/AppContext';
 import { getSlugs } from '../adapters/slugAdapter';

@@ -1,9 +1,11 @@
 import React from 'react';
-import { Text, TouchableOpacity } from 'react-native';
+import { TouchableOpacity } from 'react-native';
+import { Text } from '../ui/Text';
 import type { DbArtist, DbEvent } from '../../types/backend';
-import type { InterestStatus } from '../../cache/cacheService';
-import { timeToX, LANE_HEIGHT, MIN_BLOCK_WIDTH } from './timelineLayout';
+import { getCategories, type InterestStatus } from '../../cache/cacheService';
+import { timeToX, formatTime, LANE_HEIGHT, MIN_BLOCK_WIDTH } from './timelineLayout';
 import { colors } from '../../styling/tokens';
+import { decodeCategoryColor } from '../../utils/color';
 
 type Props = {
   event: DbEvent;
@@ -17,17 +19,13 @@ type Props = {
 
 type BlockStyle = { bg: string; border: string };
 
-const blockBackground = colors.muted;
-const blockBorder = blockBackground;
-const blockTextColor = colors.white;
-
-function blockStyle(status: InterestStatus): BlockStyle {
-  const bg = blockBackground;
-  const border = blockBorder;
+function blockStyle(status: InterestStatus, event: DbEvent): BlockStyle {
+  const category = getCategories(event.slug).find(c => c.categoryId == event.categoryId);
+  const border = decodeCategoryColor(category?.color ?? 0);
   switch (status) {
-    case 'maybe':    return { bg, border };
-    case 'must_see': return { bg, border };
-    default:         return { bg, border };
+    case 'maybe':    return { bg: colors.timeline.blockWanted, border };
+    case 'must_see': return { bg: colors.timeline.blockWanted, border };
+    default:         return { bg: colors.timeline.blockDefault, border };
   }
 }
 
@@ -38,7 +36,7 @@ export function ArtistBlock({ event, artist, dayStart, status, onPress }: Props)
   const right = timeToX(event.dateTo,   dayStart);
   const width = Math.max(MIN_BLOCK_WIDTH, right - x);
 
-  const { bg, border } = blockStyle(status);
+  const { bg, border } = blockStyle(status, event);
   const showLabel = width >= 40;
 
   return (
@@ -52,17 +50,20 @@ export function ArtistBlock({ event, artist, dayStart, status, onPress }: Props)
         width,
         height: LANE_HEIGHT - 4,
         backgroundColor: bg,
-        borderWidth: 1,
-        borderColor: border,
         overflow: 'hidden',
         justifyContent: 'center',
-        paddingHorizontal: 4,
+        paddingHorizontal: 10,
       }}
     >
       {showLabel ? (
-        <Text numberOfLines={2} style={{ fontSize: 10, color: blockTextColor, fontWeight: '500' }}>
-          {artist.name}
-        </Text>
+        <>
+          <Text numberOfLines={1} style={{ fontSize: 10, color: colors.timeline.blockText, fontWeight: '500' }}>
+            {artist.name}
+          </Text>
+          <Text numberOfLines={1} style={{ fontSize: 9, color: colors.timeline.blockText, opacity: 0.6 }}>
+            {formatTime(event.dateFrom)}–{formatTime(event.dateTo)}
+          </Text>
+        </>
       ) : null}
     </TouchableOpacity>
   );

@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   SectionList,
-  Text,
   TextInput,
   View,
 } from 'react-native';
+import { Text } from '../components/ui/Text';
 import type { DbArtist } from '../types/backend';
 import { getArtists } from '../cache/cacheService';
 import { useAppState } from '../store/AppContext';

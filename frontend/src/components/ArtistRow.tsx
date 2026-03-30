@@ -1,5 +1,6 @@
 import React from 'react';
-import { Image, Text, TouchableOpacity, View } from 'react-native';
+import { Image, TouchableOpacity, View } from 'react-native';
+import { Text } from './ui/Text';
 import type { DbArtist } from '../types/backend';
 import { getArtistLocalized } from '../utils/localization';
 import { useInterest } from '../context/InterestContext';

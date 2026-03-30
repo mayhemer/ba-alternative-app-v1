@@ -6,7 +6,7 @@ import type { DbArtist, DbCategory, DbEvent } from '../../types/backend';
 import type { InterestStatus } from '../../cache/cacheService';
 import { decodeCategoryColor } from '../../utils/color';
 import { getCategoryLocalized } from '../../utils/localization';
-import { CANVAS_WIDTH, LANE_HEIGHT, STRIP_HEIGHT } from './timelineLayout';
+import { CANVAS_WIDTH, LANE_HEIGHT, STRIP_HEIGHT, VIEW_OFFSET_X } from './timelineLayout';
 import { ArtistBlock } from './ArtistBlock';
 import { colors } from '../../styling/tokens';
 
@@ -32,13 +32,13 @@ export function CategoryLane({
   getStatus,
   onBlockPress,
 }: Props) {
-  const title      = getCategoryLocalized(category.localized, 'title');
-  const stripColor = decodeCategoryColor(category.color);
+  const title = getCategoryLocalized(category.localized, 'title');
+  const categoryColor = decodeCategoryColor(category.color);
 
   // Translates the title right in sync with horizontal scroll so it stays
   // pinned to the left visual edge of the viewport.
   const labelStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: scrollX.value }],
+    transform: [{ translateX: scrollX.value + VIEW_OFFSET_X }],
   }));
 
   return (
@@ -48,32 +48,34 @@ export function CategoryLane({
         style={{
           width: CANVAS_WIDTH,
           height: STRIP_HEIGHT,
-          backgroundColor: colors.black,
+          backgroundColor: colors.timeline.stripBg,
+          borderTopWidth: 2,
+          borderTopColor: colors.timeline.laneBorder,
           justifyContent: 'center',
           overflow: 'hidden',
         }}
       >
-        <Animated.Text
-          numberOfLines={1}
-          style={[
-            {
-              fontSize: 10,
-              fontWeight: '700',
-              color: stripColor,
-              paddingHorizontal: 6,
-            },
-            labelStyle,
-          ]}
-        >
-          {title}
-        </Animated.Text>
+        <Animated.View style={[{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8 }, labelStyle]}>
+          <View style={{ width: 8, height: 8, backgroundColor: categoryColor, marginRight: 6 }} />
+          <Animated.Text
+            numberOfLines={1}
+            style={{
+              fontSize: 12,
+              fontWeight: '300',
+              fontFamily: 'regular-default',
+              color: colors.white,
+            }}
+          >
+            {title}
+          </Animated.Text>
+        </Animated.View>
       </View>
 
       {/* Events row — artist blocks positioned absolutely by time offset */}
       <View
         style={{
           width: CANVAS_WIDTH,
-          height: LANE_HEIGHT,
+          height: LANE_HEIGHT + STRIP_HEIGHT / 2,
           backgroundColor: colors.surface,
           position: 'relative',
         }}

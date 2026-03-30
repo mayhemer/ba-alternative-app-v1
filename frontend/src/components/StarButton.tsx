@@ -1,5 +1,6 @@
 import React from 'react';
-import { Text, TouchableOpacity } from 'react-native';
+import { TouchableOpacity } from 'react-native';
+import { Text } from './ui/Text';
 import type { InterestStatus } from '../context/InterestContext';
 
 // ── Config ────────────────────────────────────────────────────────────────────

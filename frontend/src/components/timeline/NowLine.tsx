@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import { Text } from '../ui/Text';
 import { CANVAS_WIDTH, timeToX } from './timelineLayout';
 import { colors } from '../../styling/tokens';
 

@@ -1,5 +1,6 @@
 import React from 'react';
-import { ScrollView, Text, TouchableOpacity } from 'react-native';
+import { ScrollView, TouchableOpacity } from 'react-native';
+import { Text } from '../ui/Text';
 import { useTimelineFilter } from '../../context/TimelineFilterContext';
 import { formatDayLabel } from './timelineLayout';
 import { colors } from '../../styling/tokens';

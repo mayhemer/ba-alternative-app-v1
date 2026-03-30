@@ -1,5 +1,6 @@
 import React from 'react';
-import { Text, TouchableOpacity } from 'react-native';
+import { TouchableOpacity } from 'react-native';
+import { Text } from '../ui/Text';
 import { useTimelineFilter } from '../../context/TimelineFilterContext';
 
 // Module-level component — registered as TopBar RightComponent for TimelineScreen.

@@ -1,5 +1,6 @@
 import './global.css';
 import React, { useCallback, useEffect, useRef } from 'react';
+import { useFonts } from 'expo-font';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppProvider, useAppContext } from './src/store/AppContext';
 import { ScreenUIProvider } from './src/context/ScreenUIContext';
@@ -74,6 +75,11 @@ function RootGate() {
 // ── Root ──────────────────────────────────────────────────────────────────────
 
 export default function App() {
+  useFonts({
+    'Regular-Default': require('./assets/WorkSans-Regular.ttf'),
+    'Bold-Default': require('./assets/WorkSans-Bold.ttf'),
+  });
+
   return (
     <SafeAreaProvider>
       <AppProvider>
