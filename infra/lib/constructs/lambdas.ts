@@ -40,7 +40,7 @@ export class Lambdas extends Construct {
       handler: 'handler',
       runtime: lambda.Runtime.NODEJS_22_X,
       architecture: lambda.Architecture.ARM_64,
-      memorySize: 256,
+      memorySize: 512,
       timeout: cdk.Duration.seconds(30),
       environment: tableEnv,
       bundling,
