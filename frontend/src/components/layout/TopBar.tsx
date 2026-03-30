@@ -58,7 +58,7 @@ export function TopBar() {
           </TouchableOpacity>
         ) : (
           <Text className="text-textPrimary text-sm font-semibold tracking-widest uppercase">
-            {topBar.title}
+            Brutal Assault
           </Text>
         )}
       </View>
