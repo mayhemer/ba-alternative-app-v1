@@ -1,12 +1,11 @@
 import React from 'react';
-import { TouchableOpacity } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 import { Text } from '../ui/Text';
 import type { DbArtist, DbEvent } from '../../types/backend';
 import { getCategories, type InterestStatus } from '../../cache/cacheService';
 import { timeToX, formatTime, LANE_HEIGHT, MIN_BLOCK_WIDTH } from './timelineLayout';
 import { colors } from '../../styling/tokens';
 import { decodeCategoryColor, dimColor } from '../../utils/color';
-import { getArtistLocalized } from '../../utils/localization';
 
 type Props = {
   event: DbEvent;
@@ -16,15 +15,20 @@ type Props = {
   onPress: () => void;
 };
 
-// ── Block colours per interest state ──────────────────────────────────────────
+// ── Block colors per interest state ──────────────────────────────────────────
 
 type BlockStyle = { bg: string; border: string };
 
-function blockStyle(status: InterestStatus, categoryColor: string): BlockStyle {
-  const wanted = false; // status === 'maybe' || status === 'must_see';
-  const bg = dimColor(categoryColor, wanted ? 96 : 48); 
-  const border = dimColor(categoryColor, wanted ? 255 : 128); 
+function blockStyle(_status: InterestStatus, categoryColor: string): BlockStyle {
+  const bg     = dimColor(categoryColor, 48);
+  const border = dimColor(categoryColor, 128);
   return { bg, border };
+}
+
+function starIcon(status: InterestStatus): { icon: string; color: string } | null {
+  if (status === 'must_see') { return { icon: '★', color: colors.accent }; }
+  if (status === 'maybe')    { return { icon: '✦', color: colors.amber  }; }
+  return null;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -40,6 +44,9 @@ export function ArtistBlock({ event, artist, dayStart, status, onPress }: Props)
   const { bg, border } = blockStyle(status, categoryColor);
 
   const showLabel = width >= 40;
+  const star      = starIcon(status);
+
+  const oneWordArtist = artist.name.indexOf(' ') === -1;
 
   return (
     <TouchableOpacity
@@ -55,18 +62,30 @@ export function ArtistBlock({ event, artist, dayStart, status, onPress }: Props)
         borderLeftWidth: 3,
         overflow: 'hidden',
         justifyContent: 'flex-start',
-        padding: 10,
+        padding: 8,
       }}
     >
       {showLabel ? (
-        <>
-          <Text numberOfLines={2} style={{ fontSize: 12, color: colors.timeline.blockText, fontFamily: 'Bold-Default' }}>
-            {artist.name}
-          </Text>
-          <Text numberOfLines={1} style={{ fontSize: 10, color: colors.timeline.blockText }}>
-            {formatTime(event.dateFrom)}–{formatTime(event.dateTo)}
-          </Text>
-        </>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start', flex: 1 }}>
+          <View style={{ flex: 1 }}>
+            <Text
+              numberOfLines={oneWordArtist ? 1 : 2}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}
+              style={{ fontSize: 12, color: colors.timeline.blockText, fontFamily: 'Bold-Default' }}
+            >
+              {artist.name}
+            </Text>
+            <Text numberOfLines={1} style={{ fontSize: 10, color: colors.timeline.blockText }}>
+              {formatTime(event.dateFrom)}–{formatTime(event.dateTo)}
+            </Text>
+          </View>
+          {star !== null && (
+            <Text style={{ fontSize: 11, color: star.color, marginLeft: 4, padding: 0 }}>
+              {star.icon}
+            </Text>
+          )}
+        </View>
       ) : null}
     </TouchableOpacity>
   );
