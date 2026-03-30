@@ -166,7 +166,7 @@ export function TimelineScreen() {
     for (const event of eventsRef.current) {
       if (event.dateFrom < selectedDayStart || event.dateFrom >= dayEnd) { continue; }
       const artist = artistById[event.artistId];
-      if (artist === undefined || !artist.isPlayable) { continue; }
+      if (artist === undefined /* || !artist.isPlayable */) { continue; }
       if (myScheduleOnly && getStatus(artist.artistId) === 'none') { continue; }
       if (grouped[event.categoryId] === undefined) {
         grouped[event.categoryId] = [];
@@ -194,10 +194,8 @@ export function TimelineScreen() {
 
   const { width } = useWindowDimensions();
 
-  function handleBlockPress(event: DbEvent, artist: DbArtist): void {
-    const category = categoriesRef.current.find(c => c.categoryId === event.categoryId);
-    const detailEvent = category !== undefined ? { event, category } : undefined;
-    openDetail(artist, width >= 732 ? 'expanded' : 'collapsed', detailEvent);
+  function handleBlockPress(_event: DbEvent, artist: DbArtist): void {
+    openDetail(artist, width >= 732 ? 'expanded' : 'collapsed');
   }
 
   // ── Render ──────────────────────────────────────────────────────────────────

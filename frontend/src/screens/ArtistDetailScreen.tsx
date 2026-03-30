@@ -5,10 +5,10 @@ import { Text } from '../components/ui/Text';
 import { StarButton, getFeedbackLabel } from '../components/StarButton';
 import { useArtistDetail } from '../context/ArtistDetailContext';
 import { useInterest } from '../context/InterestContext';
-import { getCategoryLocalized } from '../utils/localization';
-import { formatTime } from '../components/timeline/timelineLayout';
+import { getCategoryLocalized, getArtistLocalized } from '../utils/localization';
+import { formatTime, formatDayLabel } from '../components/timeline/timelineLayout';
 import { useStartProgress } from '../context/ScreenUIContext';
-import { getArtistLocalized } from '../utils/localization';
+import { getArtistEvents, getCategories } from '../cache/cacheService';
 import { colors } from '../styling/tokens';
 import type { DbArtist } from '../types/backend';
 
@@ -20,8 +20,7 @@ type Props = { artist: DbArtist };
 // ── Content (no scroll wrapper — caller provides BottomSheetScrollView) ──────
 
 export function ArtistDetailContent({ artist }: Props) {
-  const { closeDetail, detailState } = useArtistDetail();
-  const { detailEvent } = detailState;
+  const { closeDetail } = useArtistDetail();
   const { getStatus, cycleStatus } = useInterest();
   const startProgress = useStartProgress();
   const { width } = useWindowDimensions();
@@ -55,6 +54,10 @@ export function ArtistDetailContent({ artist }: Props) {
   }
 
   const meta = [genre, country].filter(Boolean).join('  ·  ');
+
+  const artistEvents = getArtistEvents(artist.slug, artist.artistId);
+  const categoriesForSlug = getCategories(artist.slug);
+  const categoryById = Object.fromEntries(categoriesForSlug.map((c) => [c.categoryId, c]));
 
   const htmlTagsStyles = {
     body: { color: colors.textPrimary, fontSize: 14, lineHeight: 22 },
@@ -105,18 +108,25 @@ export function ArtistDetailContent({ artist }: Props) {
           )}
         </View>
 
-        {/* ── Event info (time + category, when opened from timeline) ── */}
-        {detailEvent !== null && (
-          <View style={{ paddingHorizontal: hPad, paddingTop: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <Text style={{ fontSize: 16, color: colors.textPrimary }}>
-              {formatTime(detailEvent.event.dateFrom)}–{formatTime(detailEvent.event.dateTo)}
-            </Text>
-            <Text style={{ fontSize: 16, color: colors.textSecondary }}>·</Text>
-            <Text style={{ fontSize: 16, color: colors.textPrimary }}>
-              {getCategoryLocalized(detailEvent.category.localized, 'title')}
-            </Text>
-          </View>
-        )}
+        {/* ── Event info (all scheduled times + categories from cache) ── */}
+        {artistEvents.map((event) => {
+          const category = categoryById[event.categoryId];
+          return (
+            <View key={event.eventId} style={{ paddingHorizontal: hPad, paddingTop: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Text style={{ fontSize: 16, color: colors.textPrimary }}>
+                {formatDayLabel(event.dateFrom)}
+              </Text>
+              <Text style={{ fontSize: 16, color: colors.textSecondary }}>·</Text>
+              <Text style={{ fontSize: 16, color: colors.textPrimary }}>
+                {formatTime(event.dateFrom)}–{formatTime(event.dateTo)}
+              </Text>
+              <Text style={{ fontSize: 16, color: colors.textSecondary }}>·</Text>
+              <Text style={{ fontSize: 16, color: colors.textPrimary }}>
+                {category !== undefined ? getCategoryLocalized(category.localized, 'title') : ''}
+              </Text>
+            </View>
+          );
+        })}
 
         {content !== '' && (
           <View style={{ paddingHorizontal: hPad, paddingTop: 16, paddingBottom: 32 }}>

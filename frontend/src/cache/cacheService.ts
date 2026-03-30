@@ -3,11 +3,14 @@ import type { DbArtist, DbCategory, DbEvent, DbStage, DbUserInterest } from '../
 
 // ── Public festival data types ────────────────────────────────────────────────
 
+export type DbArtistEventMap = Record<string, DbEvent[]>;
+
 export type CacheData = {
   artists: DbArtist[];
   categories: DbCategory[];
   stages: DbStage[];
   events: DbEvent[];
+  artistEventMap: DbArtistEventMap;
 };
 
 export type DataCollector = {
@@ -60,6 +63,10 @@ export function getEvents(slug: string): DbEvent[] {
   return festivalCache[slug]?.events ?? [];
 }
 
+export function getArtistEvents(slug: string, artistId: string): DbEvent[] {
+  return festivalCache[slug]?.artistEventMap[artistId] ?? [];
+}
+
 export function hasCachedData(slug: string): boolean {
   return festivalCache[slug] !== undefined;
 }
@@ -94,7 +101,14 @@ export function createDataCollector(): DataCollector & { build(): CacheData } {
       events = data;
     },
     build(): CacheData {
-      return { artists, categories, stages, events };
+      const artistEventMap: DbArtistEventMap = {};
+      for (const event of events) {
+        if (artistEventMap[event.artistId] === undefined) {
+          artistEventMap[event.artistId] = [];
+        }
+        artistEventMap[event.artistId].push(event);
+      }
+      return { artists, categories, stages, events, artistEventMap };
     },
   };
 }
