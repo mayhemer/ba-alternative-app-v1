@@ -119,7 +119,7 @@ export function ScreenUIProvider({ children }: { children: React.ReactNode }) {
   const showFeedback = useCallback((
     text: string,
     variant: FeedbackVariant = 'confirmation',
-    durationMs: number = 2000,
+    durationMs: number = 2500,
   ): void => {
     clearDismissTimer();
     activeTrackerIdRef.current = 0;
@@ -150,7 +150,7 @@ export function ScreenUIProvider({ children }: { children: React.ReactNode }) {
           activeTrackerIdRef.current = 0;
         }
         dismissTimerRef.current = null;
-      }, 2000);
+      }, 2500);
     }
 
     function warn(error?: unknown): void {
