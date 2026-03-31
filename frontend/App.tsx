@@ -1,6 +1,7 @@
 import './global.css';
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useFonts } from 'expo-font';
+import { Asset } from 'expo-asset';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppProvider, useAppContext } from './src/store/AppContext';
 import { ScreenUIProvider } from './src/context/ScreenUIContext';
@@ -81,6 +82,14 @@ export default function App() {
     //'Regular-Default': require('./assets/DarkerGrotesque-Regular.ttf'),
     //'Bold-Default': require('./assets/DarkerGrotesque-Bold.ttf'),
   });
+
+  useEffect(() => {
+    Asset.loadAsync([
+      require('./assets/spotify-icon.png'),
+      require('./assets/tidal-icon.png'),
+      require('./assets/metal-archives-icon.png'),
+    ]);
+  }, []);
 
   return (
     <SafeAreaProvider>

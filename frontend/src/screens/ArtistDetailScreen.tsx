@@ -15,6 +15,7 @@ import type { DbArtist } from '../types/backend';
 
 const MAX_CONTENT_WIDTH = 700;
 const PADDING_BREAKPOINT = 732;
+const STREAMING_ICON_SIZE = 24;
 
 type Props = { artist: DbArtist };
 
@@ -30,16 +31,16 @@ export function ArtistDetailContent({ artist }: Props) {
   const genre   = getArtistLocalized(artist.localized, 'genre');
   const country = getArtistLocalized(artist.localized, 'country');
   const content = getArtistLocalized(artist.localized, 'content');
-
+  
   const innerWidth  = Math.min(width, MAX_CONTENT_WIDTH);
   const imageHeight = Math.round(innerWidth * (3 / 4));
   const hPad        = width >= PADDING_BREAKPOINT ? 0 : 16;
   const htmlWidth   = innerWidth - hPad * 2;
   const isWeb = Platform.OS === 'web';
   const [imageLoading, setImageLoading] = useState(true);
-
+  
   useEffect(() => { setImageLoading(true); }, [artist.artistId]);
-
+  
   useEffect(() => {
     if (!isWeb) { return; }
     function handleKeyDown(e: KeyboardEvent): void {
@@ -48,13 +49,15 @@ export function ArtistDetailContent({ artist }: Props) {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isWeb, closeDetail]);
-
+  
   function handleStarPress(): void {
     const { next, promise } = cycleStatus(artist.artistId);
     startProgress(getFeedbackLabel(next)).wrap(promise);
   }
-
+  
   const meta = [genre, country].filter(Boolean).join('  ·  ');
+  const artistNameForURL = encodeURIComponent(artist.name.toLocaleLowerCase());
+  const artistWebDomain = artist.url !== '' ? new URL(artist.url).hostname.replace(/^www\./, '') : '';
 
   const artistEvents = getArtistEvents(artist.slug, artist.artistId);
   const stagesForSlug = getStages(artist.slug);
@@ -73,7 +76,7 @@ export function ArtistDetailContent({ artist }: Props) {
       <View style={{ width: innerWidth }}>
 
         {/* ── Header ── */}
-        <View style={{ paddingHorizontal: hPad, paddingTop: 12, paddingBottom: 10 }}>
+        <View style={{ paddingHorizontal: hPad, paddingTop: 12 }}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
             <Text
               numberOfLines={2}
@@ -94,9 +97,75 @@ export function ArtistDetailContent({ artist }: Props) {
             </Text>
           )}
         </View>
+        {(artist.isPlayable || artist.url !== '') && (
+          <View style={{ 
+            paddingHorizontal: hPad, 
+            paddingTop: 26, 
+            flexDirection: 'row', 
+            justifyContent: 'flex-start',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 18
+          }}>
+            {/* ── Streaming services ── */}
+            {artist.isPlayable && (
+              <TouchableOpacity
+              onPress={() => Linking.openURL(`https://open.spotify.com/search/${artistNameForURL}`)}
+              >
+                <Image
+                source={require('../../assets/spotify-icon.png')}
+                style={{
+                  width: STREAMING_ICON_SIZE, height: STREAMING_ICON_SIZE
+                }} resizeMode="contain"
+                />
+              </TouchableOpacity>
+            )}
+            {artist.isPlayable && (
+              <TouchableOpacity
+              onPress={() => Linking.openURL(`https://tidal.com/search?q=${artistNameForURL}`)}
+              >
+                <Image
+                source={require('../../assets/tidal-icon.png')}
+                style={{
+                  width: STREAMING_ICON_SIZE, height: STREAMING_ICON_SIZE
+                }} resizeMode="contain"
+                />
+              </TouchableOpacity>
+            )}
+            {artist.isPlayable && (
+              <TouchableOpacity
+              onPress={() => Linking.openURL(`https://www.metal-archives.com/search?searchString=${artistNameForURL}&type=band_name`)}
+              >
+                <Image
+                source={require('../../assets/metal-archives-icon.png')}
+                style={{
+                  width: STREAMING_ICON_SIZE, height: STREAMING_ICON_SIZE
+                }} resizeMode="contain"
+                />
+              </TouchableOpacity>
+            )}
+            {/* ── Artist URL ── */}
+            {artist.url !== '' && (
+              <TouchableOpacity
+              onPress={() => Linking.openURL(artist.url)}
+              >
+                <Text style={{
+                  fontSize: 14,
+                  color: colors.textSecondary,
+                  borderWidth: 1,
+                  borderColor: colors.muted,
+                  borderRadius: STREAMING_ICON_SIZE / 2,
+                  paddingHorizontal: 8,
+                  paddingVertical: 2,
+                  textAlign: 'center',
+                }}>{artistWebDomain} ↗</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
 
         {/* ── Hero image ── */}
-        <View style={{ width: innerWidth, height: imageHeight }}>
+        <View style={{ width: innerWidth, height: imageHeight, marginTop: 30 }}>
           <Image
             source={{ uri: artist.thumbUrl }}
             style={{ width: innerWidth, height: imageHeight }}
@@ -143,16 +212,6 @@ export function ArtistDetailContent({ artist }: Props) {
 
         {content !== '' && (
           <View style={{ paddingHorizontal: hPad, paddingTop: 16, paddingBottom: 32 }}>
-            {/* ── Artist URL ── */}
-            {artist.url !== '' && (
-              <TouchableOpacity
-              onPress={() => Linking.openURL(artist.url)}
-              style={{ paddingVertical: 12 }}
-              >
-                <Text style={{ fontSize: 16, color: colors.textSecondary }}>Website ↗</Text>
-              </TouchableOpacity>
-            )}
-
             {/* ── HTML content ── */}
             <RenderHtml    
               contentWidth={htmlWidth}

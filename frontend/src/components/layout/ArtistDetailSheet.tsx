@@ -8,7 +8,7 @@ import { useArtistDetail } from '../../context/ArtistDetailContext';
 import { ArtistDetailContent } from '../../screens/ArtistDetailScreen';
 import { colors } from '../../styling/tokens';
 
-const SNAP_POINTS = ['30%', '100%'];
+const SNAP_POINTS = ['40%', '100%'];
 
 function Backdrop(props: BottomSheetBackdropProps) {
   return (
