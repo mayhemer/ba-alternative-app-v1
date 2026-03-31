@@ -52,7 +52,7 @@ Three states, applied consistently across all views:
 | State | Icon | Label (EN) | Label (CZ) |
 |---|---|---|---|
 | Default | ☆ empty star | Not interested | Nemám zájem |
-| Maybe | ✦ half star | Maybe want to see | Možná chci vidět |
+| Maybe | ☆ empty star, accent color | Maybe want to see | Možná chci vidět |
 | Must See | ★ full star | Must see! | Musím vidět! |
 
 - Tap cycles state: none → maybe → must see → none.
@@ -66,10 +66,10 @@ Three states, applied consistently across all views:
 
 - FeedbackMessage variants: confirmation text, async progress indicator, tick on completion, warning.
 - Example messages:
-  - "★ Must see!"
-  - "✦ Maybe want to see"
-  - "☆ Removed"
-  - "⚠ Orbital and Four Tet overlap" (shown as reaction to starring — see Conflict Detection)
+  - "Must see!"
+  - "Maybe want to see"
+  - "Removed"
+  - "Orbital and Four Tet overlap" (shown as reaction to starring — see Conflict Detection)
 
 ---
 

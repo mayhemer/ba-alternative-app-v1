@@ -27,7 +27,7 @@ function blockStyle(_status: InterestStatus, categoryColor: string): BlockStyle 
 
 function starIcon(status: InterestStatus): { icon: string; color: string } | null {
   if (status === 'must_see') { return { icon: '★', color: colors.accent }; }
-  if (status === 'maybe')    { return { icon: '✦', color: colors.amber  }; }
+  if (status === 'maybe')    { return { icon: '☆', color: colors.accent  }; }
   return null;
 }
 

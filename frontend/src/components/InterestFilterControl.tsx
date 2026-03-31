@@ -15,7 +15,7 @@ type FilterButton = {
 
 const FILTER_BUTTONS: FilterButton[] = [
   { status: null,       icon: '≡',  label: 'All'      },
-  { status: 'maybe',    icon: '✦',  label: 'Maybe'    },
+  { status: 'maybe',    icon: '☆',  label: 'Maybe'    },
   { status: 'must_see', icon: '★',  label: 'Must see' },
 ];
 
