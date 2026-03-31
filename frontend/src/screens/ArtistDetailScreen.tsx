@@ -136,7 +136,7 @@ export function ArtistDetailContent({ artist }: Props) {
               onPress={() => Linking.openURL(artist.url)}
               style={{ paddingVertical: 12 }}
               >
-                <Text style={{ fontSize: 16, color: colors.textSecondary }}>Official Website ↗</Text>
+                <Text style={{ fontSize: 16, color: colors.textSecondary }}>Website ↗</Text>
               </TouchableOpacity>
             )}
 
