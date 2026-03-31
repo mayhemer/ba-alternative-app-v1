@@ -5,10 +5,11 @@ import { Text } from '../components/ui/Text';
 import { StarButton, getFeedbackLabel } from '../components/StarButton';
 import { useArtistDetail } from '../context/ArtistDetailContext';
 import { useInterest } from '../context/InterestContext';
-import { getCategoryLocalized, getArtistLocalized } from '../utils/localization';
+import { getStageLocalized, getArtistLocalized } from '../utils/localization';
 import { formatTime, formatDayLabel } from '../components/timeline/timelineLayout';
 import { useStartProgress } from '../context/ScreenUIContext';
-import { getArtistEvents, getCategories } from '../cache/cacheService';
+import { getArtistEvents, getStages, getCategories } from '../cache/cacheService';
+import { decodeCategoryColor } from '../utils/color';
 import { colors } from '../styling/tokens';
 import type { DbArtist } from '../types/backend';
 
@@ -56,6 +57,8 @@ export function ArtistDetailContent({ artist }: Props) {
   const meta = [genre, country].filter(Boolean).join('  ·  ');
 
   const artistEvents = getArtistEvents(artist.slug, artist.artistId);
+  const stagesForSlug = getStages(artist.slug);
+  const stageById = Object.fromEntries(stagesForSlug.map((s) => [s.stageId, s]));
   const categoriesForSlug = getCategories(artist.slug);
   const categoryById = Object.fromEntries(categoriesForSlug.map((c) => [c.categoryId, c]));
 
@@ -110,20 +113,30 @@ export function ArtistDetailContent({ artist }: Props) {
 
         {/* ── Event info (all scheduled times + categories from cache) ── */}
         {artistEvents.map((event) => {
+          const stage = stageById[event.stageId];
           const category = categoryById[event.categoryId];
+          const borderColor = category !== undefined ? decodeCategoryColor(category.color) : colors.textPrimary;
           return (
-            <View key={event.eventId} style={{ paddingHorizontal: hPad, paddingTop: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View key={event.eventId} style={{
+                paddingHorizontal: hPad,
+                marginLeft: 16,
+                marginRight: 12,
+                marginTop: 12,
+                borderLeftWidth: 5,
+                borderColor,
+            }}>
               <Text style={{ fontSize: 16, color: colors.textPrimary }}>
-                {formatDayLabel(event.dateFrom)}
+                {stage !== undefined ? getStageLocalized(stage.localized, 'name') : ''}
               </Text>
-              <Text style={{ fontSize: 16, color: colors.textSecondary }}>·</Text>
-              <Text style={{ fontSize: 16, color: colors.textPrimary }}>
-                {formatTime(event.dateFrom)}–{formatTime(event.dateTo)}
-              </Text>
-              <Text style={{ fontSize: 16, color: colors.textSecondary }}>·</Text>
-              <Text style={{ fontSize: 16, color: colors.textPrimary }}>
-                {category !== undefined ? getCategoryLocalized(category.localized, 'title') : ''}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
+                <Text style={{ fontSize: 16, color: colors.textSecondary }}>
+                  {formatDayLabel(event.dateFrom)}
+                </Text>
+                <Text style={{ fontSize: 16, color: colors.textSecondary }}>·</Text>
+                <Text style={{ fontSize: 16, color: colors.textSecondary }}>
+                  {formatTime(event.dateFrom)}–{formatTime(event.dateTo)}
+                </Text>
+              </View>
             </View>
           );
         })}
