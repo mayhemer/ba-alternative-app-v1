@@ -57,7 +57,13 @@ export function ArtistDetailContent({ artist }: Props) {
   
   const meta = [genre, country].filter(Boolean).join('  ·  ');
   const artistNameForURL = encodeURIComponent(artist.name.toLocaleLowerCase());
-  const artistWebDomain = artist.url !== '' ? new URL(artist.url).hostname.replace(/^www\./, '') : '';
+  let artistWebDomain;
+  try {
+    artistWebDomain = artist.url !== '' ? new URL(artist.url).hostname.replace(/^www\./, '') : '';
+  }
+  catch (_) {
+    artistWebDomain = '';
+  }
 
   const artistEvents = getArtistEvents(artist.slug, artist.artistId);
   const stagesForSlug = getStages(artist.slug);
@@ -76,7 +82,10 @@ export function ArtistDetailContent({ artist }: Props) {
       <View style={{ width: innerWidth }}>
 
         {/* ── Header ── */}
-        <View style={{ paddingHorizontal: hPad, paddingTop: 12 }}>
+        <View style={{ 
+          paddingHorizontal: hPad,
+          paddingTop: 12,
+        }}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
             <Text
               numberOfLines={2}
@@ -97,15 +106,17 @@ export function ArtistDetailContent({ artist }: Props) {
             </Text>
           )}
         </View>
+
+        {/* External links to the band */}
         {(artist.isPlayable || artist.url !== '') && (
           <View style={{ 
             paddingHorizontal: hPad, 
-            paddingTop: 26, 
+            marginTop: 40, 
             flexDirection: 'row', 
             justifyContent: 'flex-start',
             alignItems: 'center',
             flexWrap: 'wrap',
-            gap: 18
+            gap: 18,
           }}>
             {/* ── Streaming services ── */}
             {artist.isPlayable && (
@@ -145,12 +156,12 @@ export function ArtistDetailContent({ artist }: Props) {
               </TouchableOpacity>
             )}
             {/* ── Artist URL ── */}
-            {artist.url !== '' && (
+            {artistWebDomain !== '' && (
               <TouchableOpacity
               onPress={() => Linking.openURL(artist.url)}
               >
                 <Text style={{
-                  fontSize: 14,
+                  fontSize: 12,
                   color: colors.textSecondary,
                   borderWidth: 1,
                   borderColor: colors.muted,
@@ -165,7 +176,7 @@ export function ArtistDetailContent({ artist }: Props) {
         )}
 
         {/* ── Hero image ── */}
-        <View style={{ width: innerWidth, height: imageHeight, marginTop: 30 }}>
+        <View style={{ width: innerWidth, height: imageHeight, marginVertical: 16, backgroundColor: colors.black }}>
           <Image
             source={{ uri: artist.thumbUrl }}
             style={{ width: innerWidth, height: imageHeight }}
@@ -174,41 +185,44 @@ export function ArtistDetailContent({ artist }: Props) {
             onError={() => setImageLoading(false)}
           />
           {imageLoading && (
-            <View style={{ position: 'absolute', top: 32, left: 0, right: 0, alignItems: 'center' }}>
+            <View style={{ position: 'absolute', top: 50, left: 0, right: 0, alignItems: 'center' }}>
               <ActivityIndicator size="large" color={colors.accent} />
             </View>
           )}
         </View>
 
         {/* ── Event info (all scheduled times + categories from cache) ── */}
-        {artistEvents.map((event) => {
-          const stage = stageById[event.stageId];
-          const category = categoryById[event.categoryId];
-          const borderColor = category !== undefined ? decodeCategoryColor(category.color) : colors.textPrimary;
-          return (
-            <View key={event.eventId} style={{
-                paddingHorizontal: hPad,
-                marginLeft: 16,
-                marginRight: 12,
-                marginTop: 12,
-                borderLeftWidth: 5,
-                borderColor,
-            }}>
-              <Text style={{ fontSize: 16, color: colors.textPrimary }}>
-                {stage !== undefined ? getStageLocalized(stage.localized, 'name') : ''}
-              </Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
-                <Text style={{ fontSize: 16, color: colors.textSecondary }}>
-                  {formatDayLabel(event.dateFrom)}
-                </Text>
-                <Text style={{ fontSize: 16, color: colors.textSecondary }}>·</Text>
-                <Text style={{ fontSize: 16, color: colors.textSecondary }}>
-                  {formatTime(event.dateFrom)}–{formatTime(event.dateTo)}
-                </Text>
-              </View>
-            </View>
-          );
-        })}
+        {artistEvents.length !== 0 && 
+          <View style={{ marginVertical: 30 }}>
+            {artistEvents.map((event) => {
+              const stage = stageById[event.stageId];
+              const category = categoryById[event.categoryId];
+              const borderColor = category !== undefined ? decodeCategoryColor(category.color) : colors.textPrimary;
+              return (
+                <View key={event.eventId} style={{
+                    paddingHorizontal: hPad,
+                    marginHorizontal: 16,
+                    marginTop: 10,
+                    borderLeftWidth: 5,
+                    borderColor,
+                }}>
+                  <Text style={{ fontSize: 16, color: colors.textPrimary }}>
+                    {stage !== undefined ? getStageLocalized(stage.localized, 'name') : ''}
+                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
+                    <Text style={{ fontSize: 16, color: colors.textSecondary }}>
+                      {formatDayLabel(event.dateFrom)}
+                    </Text>
+                    <Text style={{ fontSize: 16, color: colors.textSecondary }}>·</Text>
+                    <Text style={{ fontSize: 16, color: colors.textSecondary }}>
+                      {formatTime(event.dateFrom)}–{formatTime(event.dateTo)}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        }
 
         {content !== '' && (
           <View style={{ paddingHorizontal: hPad, paddingTop: 16, paddingBottom: 32 }}>
