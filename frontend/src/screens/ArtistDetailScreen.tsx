@@ -33,7 +33,7 @@ export function ArtistDetailContent({ artist }: Props) {
   const content = getArtistLocalized(artist.localized, 'content');
   
   const innerWidth  = Math.min(width, MAX_CONTENT_WIDTH);
-  const imageHeight = Math.round(innerWidth * (3 / 4));
+  const imageHeight = Math.round(innerWidth * (0.62));
   const hPad        = width >= PADDING_BREAKPOINT ? 0 : 16;
   const htmlWidth   = innerWidth - hPad * 2;
   const isWeb = Platform.OS === 'web';
@@ -169,7 +169,7 @@ export function ArtistDetailContent({ artist }: Props) {
           <Image
             source={{ uri: artist.thumbUrl }}
             style={{ width: innerWidth, height: imageHeight }}
-            resizeMode="cover"
+            resizeMode="contain"
             onLoad={() => setImageLoading(false)}
             onError={() => setImageLoading(false)}
           />
