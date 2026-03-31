@@ -35,11 +35,11 @@ export function FeedbackToast() {
       activeOpacity={feedback.variant === 'progress' ? 1 : 0.8}
       style={{
         position: 'absolute',
-        top: top + 8,
+        top: top + 12,
         alignSelf: 'center',
         flexDirection: 'row',
         alignItems: 'center',
-        height: 40,
+        height: 48,
         backgroundColor: colors.white,
         paddingHorizontal: 14,
         borderRadius: 6,
@@ -51,12 +51,12 @@ export function FeedbackToast() {
       }}
     >
       {/* Fixed-width icon slot prevents text from shifting between variants */}
-      <View style={{ width: 22, alignItems: 'center', marginRight: 6 }}>
-        {renderIcon()}
-      </View>
-      <Text style={{ fontSize: 13, fontWeight: '700', color: colors.black }}>
+      <Text style={{ fontSize: 13, fontWeight: '700', color: colors.black, marginHorizontal: 6 }}>
         {feedback.text}
       </Text>
+      <View style={{ width: 22, alignItems: 'center' }}>
+        {renderIcon()}
+      </View>
     </TouchableOpacity>
   );
 }
