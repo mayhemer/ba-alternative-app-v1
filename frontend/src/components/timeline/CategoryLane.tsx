@@ -63,7 +63,7 @@ export function CategoryLane({
             numberOfLines={1}
             className={'font-family: default'}
             style={{
-              fontSize: 20,
+              fontSize: 16,
               //fontWeight: '300',
               fontFamily: 'Regular-Default',
               color: colors.timeline.categoryName,

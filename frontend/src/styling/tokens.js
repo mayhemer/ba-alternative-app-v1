@@ -14,7 +14,7 @@ const colors = {
     blockWanted:        '#2a7fa7',
     blockText:          '#ffffff',
     blockMarkDefault:   '#757575',
-    categoryName:       '#dadada',
+    categoryName:       '#777777',
     stripBg:            '#141414',
     laneBg:             '#141414',
     laneBorder:         '#444444',
