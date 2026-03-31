@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import { Platform, ScrollView, View } from 'react-native';
 import BottomSheet, { BottomSheetScrollView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
+import { ReduceMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useArtistDetail } from '../../context/ArtistDetailContext';
 import { ArtistDetailContent } from '../../screens/ArtistDetailScreen';
@@ -56,6 +57,7 @@ export function ArtistDetailSheet() {
       index={-1}
       snapPoints={SNAP_POINTS}
       topInset={top}
+      animationConfigs={{ reduceMotion: ReduceMotion.Never }}
       enablePanDownToClose
       onClose={handleClose}
       backdropComponent={Backdrop}
