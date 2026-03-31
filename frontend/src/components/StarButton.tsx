@@ -13,9 +13,9 @@ type StarConfig = {
 };
 
 const STAR_CONFIG: Record<InterestStatus, StarConfig> = {
-  none:     { icon: '☆', color: '#555555', label: 'Not interested', feedbackLabel: '☆ Removed'          },
-  maybe:    { icon: '✦', color: '#b87a1a', label: 'Maybe',          feedbackLabel: '✦ Maybe want to see' },
-  must_see: { icon: '★', color: '#e8c84a', label: 'Must see',       feedbackLabel: '★ Must see!'         },
+  none:     { icon: '☆', color: '#555555', label: 'Not interested', feedbackLabel: 'Removed'           },
+  maybe:    { icon: '☆', color: '#e8c84a', label: 'Maybe',          feedbackLabel: 'Maybe want to see' },
+  must_see: { icon: '★', color: '#e8c84a', label: 'Must see',       feedbackLabel: 'Must see!'         },
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
