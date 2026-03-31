@@ -2,21 +2,22 @@ import React from 'react';
 import { Image, TouchableOpacity, View } from 'react-native';
 import { Text } from './ui/Text';
 import type { DbArtist } from '../types/backend';
+import type { InterestStatus } from '../context/InterestContext';
 import { getArtistLocalized } from '../utils/localization';
-import { useInterest } from '../context/InterestContext';
+import { useInterestCycle } from '../context/InterestContext';
 import { useStartProgress } from '../context/ScreenUIContext';
 import { StarButton, getFeedbackLabel } from './StarButton';
 
 type Props = {
   artist: DbArtist;
+  status: InterestStatus;
   onPress: (artist: DbArtist) => void;
 };
 
-export function ArtistRow({ artist, onPress }: Props) {
-  const { getStatus, cycleStatus } = useInterest();
+export const ArtistRow = React.memo(function ArtistRow({ artist, status, onPress }: Props) {
+  const { cycleStatus } = useInterestCycle();
   const startProgress = useStartProgress();
 
-  const status = getStatus(artist.artistId);
   const genre = getArtistLocalized(artist.localized, 'genre');
   const country = getArtistLocalized(artist.localized, 'country');
 
@@ -65,4 +66,4 @@ export function ArtistRow({ artist, onPress }: Props) {
       <StarButton status={status} onPress={handleStarPress} />
     </TouchableOpacity>
   );
-}
+});

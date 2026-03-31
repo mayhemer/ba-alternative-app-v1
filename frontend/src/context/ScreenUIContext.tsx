@@ -51,13 +51,18 @@ type ScreenUIAction =
   | { type: 'SET_BOTTOMBAR'; config: BottomBarConfig }
   | { type: 'SET_FEEDBACK'; message: FeedbackMessage | null };
 
-type ScreenUIContextValue = {
-  state: ScreenUIState;
+// Actions context is stable — never changes after mount.
+// State context changes on every dispatch.
+type ScreenUIActionsContextValue = {
   setTopBar: (config: TopBarConfig) => void;
   setBottomBar: (config: BottomBarConfig) => void;
   showFeedback: (text: string, variant?: FeedbackVariant, durationMs?: number) => void;
   startProgress: (text: string) => FeedbackTracker;
   dismissFeedback: () => void;
+};
+
+type ScreenUIStateContextValue = {
+  state: ScreenUIState;
 };
 
 // ── Defaults ──────────────────────────────────────────────────────────────────
@@ -81,9 +86,10 @@ function screenUIReducer(state: ScreenUIState, action: ScreenUIAction): ScreenUI
   }
 }
 
-// ── Context ───────────────────────────────────────────────────────────────────
+// ── Contexts ──────────────────────────────────────────────────────────────────
 
-const ScreenUIContext = createContext<ScreenUIContextValue | null>(null);
+const ScreenUIActionsContext = createContext<ScreenUIActionsContextValue | null>(null);
+const ScreenUIStateContext = createContext<ScreenUIStateContextValue | null>(null);
 
 export function ScreenUIProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(screenUIReducer, defaultState);
@@ -172,35 +178,57 @@ export function ScreenUIProvider({ children }: { children: React.ReactNode }) {
     return { confirm, warn, wrap };
   }, [clearDismissTimer]);
 
-  const value = useMemo(
-    () => ({ state, setTopBar, setBottomBar, showFeedback, startProgress, dismissFeedback }),
-    [state, setTopBar, setBottomBar, showFeedback, startProgress, dismissFeedback],
+  const actionsValue = useMemo(
+    () => ({ setTopBar, setBottomBar, showFeedback, startProgress, dismissFeedback }),
+    [setTopBar, setBottomBar, showFeedback, startProgress, dismissFeedback],
   );
 
+  const stateValue = useMemo(() => ({ state }), [state]);
+
   return (
-    <ScreenUIContext.Provider value={value}>
-      {children}
-    </ScreenUIContext.Provider>
+    <ScreenUIActionsContext.Provider value={actionsValue}>
+      <ScreenUIStateContext.Provider value={stateValue}>
+        {children}
+      </ScreenUIStateContext.Provider>
+    </ScreenUIActionsContext.Provider>
   );
 }
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 
-export function useScreenUI(): ScreenUIContextValue {
-  const ctx = useContext(ScreenUIContext);
+function useScreenUIActions(): ScreenUIActionsContextValue {
+  const ctx = useContext(ScreenUIActionsContext);
   if (ctx === null) {
-    throw new Error('useScreenUI must be used inside ScreenUIProvider');
+    throw new Error('useScreenUIActions must be used inside ScreenUIProvider');
   }
   return ctx;
 }
 
+function useScreenUIState(): ScreenUIStateContextValue {
+  const ctx = useContext(ScreenUIStateContext);
+  if (ctx === null) {
+    throw new Error('useScreenUIState must be used inside ScreenUIProvider');
+  }
+  return ctx;
+}
+
+// Full access — subscribes to both contexts. Use only in components that
+// need to render state (TopBar, BottomBar, FeedbackToast).
+export function useScreenUI() {
+  const { state } = useScreenUIState();
+  const actions = useScreenUIActions();
+  return { state, ...actions };
+}
+
 export function useFeedback(): (text: string, variant?: FeedbackVariant) => void {
-  const { showFeedback } = useScreenUI();
+  const { showFeedback } = useScreenUIActions();
   return showFeedback;
 }
 
+// Subscribes only to the stable actions context — never re-renders due to
+// feedback/topBar/bottomBar state changes.
 export function useStartProgress(): (text: string) => FeedbackTracker {
-  const { startProgress } = useScreenUI();
+  const { startProgress } = useScreenUIActions();
   return startProgress;
 }
 
@@ -210,7 +238,7 @@ export function useStartProgress(): (text: string) => FeedbackTracker {
  * ref stays stable and useFocusEffect does not re-fire on every render.
  */
 export function useTopBar(config: TopBarConfig): void {
-  const { setTopBar } = useScreenUI();
+  const { setTopBar } = useScreenUIActions();
   // configRef holds the latest config without being a dep of the callback,
   // so useFocusEffect fires only on focus/blur, not on every config change.
   const configRef = useRef(config);
@@ -227,7 +255,7 @@ export function useTopBar(config: TopBarConfig): void {
  * Register BottomBar content for the current screen.
  */
 export function useBottomBar(config: BottomBarConfig): void {
-  const { setBottomBar } = useScreenUI();
+  const { setBottomBar } = useScreenUIActions();
   const configRef = useRef(config);
   configRef.current = config;
 

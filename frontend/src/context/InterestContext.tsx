@@ -3,7 +3,9 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useReducer,
+  useRef,
 } from 'react';
 import { useAppState } from '../store/AppContext';
 import {
@@ -36,8 +38,11 @@ export type CycleStatusResult = {
   promise: Promise<LocalInterest>; // resolves when local persistence is complete
 };
 
-type InterestContextValue = {
+type InterestStateContextValue = {
   getStatus: (artistId: string) => InterestStatus;
+};
+
+type InterestCycleContextValue = {
   cycleStatus: (artistId: string) => CycleStatusResult;
 };
 
@@ -63,9 +68,13 @@ function interestReducer(state: InterestState, action: InterestAction): Interest
   }
 }
 
-// ── Context ───────────────────────────────────────────────────────────────────
+// ── Contexts ──────────────────────────────────────────────────────────────────
 
-const InterestContext = createContext<InterestContextValue | null>(null);
+// Separate contexts so components can subscribe to only what they need:
+// - InterestStateContext changes whenever any interest status changes
+// - InterestCycleContext is stable and only changes when the slug changes
+const InterestStateContext = createContext<InterestStateContextValue | null>(null);
+const InterestCycleContext = createContext<InterestCycleContextValue | null>(null);
 
 export function InterestProvider({ children }: { children: React.ReactNode }) {
   const { selectedSlug } = useAppState();
@@ -73,6 +82,11 @@ export function InterestProvider({ children }: { children: React.ReactNode }) {
     interests: {},
     isHydrated: false,
   });
+
+  // Ref so cycleStatus can read current state without it being a dependency,
+  // keeping cycleStatus stable across interest updates.
+  const stateRef = useRef(state);
+  useEffect(() => { stateRef.current = state; }, [state]);
 
   // Hydrate from AsyncStorage (via cacheService) whenever the slug changes.
   useEffect(() => {
@@ -95,9 +109,10 @@ export function InterestProvider({ children }: { children: React.ReactNode }) {
     [state.interests],
   );
 
+  // cycleStatus reads state via ref so it stays stable across interest updates.
   const cycleStatus = useCallback(
     (artistId: string): CycleStatusResult => {
-      const current = state.interests[artistId] ?? 'none';
+      const current = stateRef.current.interests[artistId] ?? 'none';
       const next = nextStatus(current);
       // In-memory update is synchronous; promise covers AsyncStorage write
       const promise = setInterest(selectedSlug, artistId, next);
@@ -105,22 +120,38 @@ export function InterestProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: 'SET', artistId, status: next });
       return { next, promise };
     },
-    [state.interests, selectedSlug],
+    [selectedSlug],
   );
 
+  const stateValue = useMemo(() => ({ getStatus }), [getStatus]);
+  const cycleValue = useMemo(() => ({ cycleStatus }), [cycleStatus]);
+
   return (
-    <InterestContext.Provider value={{ getStatus, cycleStatus }}>
-      {children}
-    </InterestContext.Provider>
+    <InterestCycleContext.Provider value={cycleValue}>
+      <InterestStateContext.Provider value={stateValue}>
+        {children}
+      </InterestStateContext.Provider>
+    </InterestCycleContext.Provider>
   );
 }
 
-// ── Hook ──────────────────────────────────────────────────────────────────────
+// ── Hooks ─────────────────────────────────────────────────────────────────────
 
-export function useInterest(): InterestContextValue {
-  const ctx = useContext(InterestContext);
-  if (ctx === null) {
+// Full access — subscribes to both contexts (re-renders on any interest change).
+export function useInterest() {
+  const stateCtx = useContext(InterestStateContext);
+  const cycleCtx = useContext(InterestCycleContext);
+  if (stateCtx === null || cycleCtx === null) {
     throw new Error('useInterest must be used inside InterestProvider');
   }
-  return ctx;
+  return { getStatus: stateCtx.getStatus, cycleStatus: cycleCtx.cycleStatus };
+}
+
+// Stable-only access — only subscribes to cycleStatus (never re-renders due to interest changes).
+export function useInterestCycle() {
+  const cycleCtx = useContext(InterestCycleContext);
+  if (cycleCtx === null) {
+    throw new Error('useInterestCycle must be used inside InterestProvider');
+  }
+  return cycleCtx;
 }

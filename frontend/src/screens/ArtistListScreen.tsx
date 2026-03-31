@@ -90,17 +90,19 @@ function ArtistListScreenInner() {
     return buildSections(filtered);
   }, [allArtists, searchQuery, interestFilter, getStatus]);
 
-  function handleRowPress(artist: DbArtist): void {
+  const handleRowPress = useCallback((artist: DbArtist): void => {
     openDetail(artist, 'expanded');
-  }
+  }, [openDetail]);
+
+  const renderItem = useCallback(({ item }: { item: DbArtist }) => (
+    <ArtistRow artist={item} status={getStatus(item.artistId)} onPress={handleRowPress} />
+  ), [getStatus, handleRowPress]);
 
   return (
     <SectionList<DbArtist, Section>
       sections={sections}
       keyExtractor={(item) => item.artistId}
-      renderItem={({ item }) => (
-        <ArtistRow artist={item} onPress={handleRowPress} />
-      )}
+      renderItem={renderItem}
       renderSectionHeader={({ section }) => (
         <SectionSeparator letter={section.title} />
       )}
