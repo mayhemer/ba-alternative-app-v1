@@ -1,9 +1,11 @@
 import React from 'react';
-import { TouchableOpacity } from 'react-native';
+import { Pressable } from 'react-native';
 import { Text } from './ui/Text';
 import type { InterestStatus } from '../context/InterestContext';
 
 // ── Config ────────────────────────────────────────────────────────────────────
+
+const HIT_SLOP = 24;
 
 type StarConfig = {
   icon: string;
@@ -13,7 +15,7 @@ type StarConfig = {
 };
 
 const STAR_CONFIG: Record<InterestStatus, StarConfig> = {
-  none:     { icon: '☆', color: '#555555', label: 'Not interested', feedbackLabel: 'Removed'           },
+  none:     { icon: '☆', color: '#555555', label: 'Not interested', feedbackLabel: 'Removed from favorites' },
   maybe:    { icon: '☆', color: '#e8c84a', label: 'Maybe',          feedbackLabel: 'Maybe want to see' },
   must_see: { icon: '★', color: '#e8c84a', label: 'Must see',       feedbackLabel: 'Must see!'         },
 };
@@ -31,16 +33,16 @@ export function StarButton({ status, onPress, size = 'small' }: Props) {
   const fontSize = size === 'large' ? 28 : 20;
 
   return (
-    <TouchableOpacity
+    <Pressable
       onPress={onPress}
-      hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+      hitSlop={{ top: HIT_SLOP, bottom: HIT_SLOP, left: HIT_SLOP, right: HIT_SLOP }}
       accessibilityLabel={config.label}
       accessibilityRole="button"
     >
       <Text style={{ fontSize, color: config.color, lineHeight: fontSize + 4 }}>
         {config.icon}
       </Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 
