@@ -15,7 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const KEY_MY_SCHEDULE   = 'timeline:myScheduleOnly';
 const KEY_HIDDEN_CATS   = 'timeline:hiddenCategories';  // stored as JSON array
-const KEY_SCROLL_POS    = 'timeline:scrollPositions';   // stored as JSON Record<string,number>
+const KEY_SCROLL_POS    = 'timeline:scrollPositions:v2'; // stored as JSON Record<screenKey, Record<dayStart, x>>
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -37,9 +37,10 @@ type TimelineFilterContextValue = {
   hiddenCategories: Set<string>;
   toggleCategory: (categoryId: string) => void;
 
-  // Per-day horizontal scroll position (canvas X). Persisted.
-  scrollPositions: Record<string, number>;  // key = String(dayStart)
-  setScrollPosition: (dayStart: number, x: number) => void;
+  // Per-screen, per-day horizontal scroll position (canvas X). Persisted.
+  // Outer key = screenKey (e.g. 'timeline', 'support'), inner key = String(dayStart).
+  scrollPositions: Record<string, Record<string, number>>;
+  setScrollPosition: (screenKey: string, dayStart: number, x: number) => void;
 };
 
 // ── Context ───────────────────────────────────────────────────────────────────
@@ -51,7 +52,7 @@ export function TimelineFilterProvider({ children }: { children: React.ReactNode
   const [selectedDayStart, setSelectedDayStart] = useState<number>(0);
   const [myScheduleOnly,  setMyScheduleOnly]  = useState(false);
   const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(new Set());
-  const [scrollPositions, setScrollPositions] = useState<Record<string, number>>({});
+  const [scrollPositions, setScrollPositions] = useState<Record<string, Record<string, number>>>({});
 
   // ── Hydration (once on mount) ───────────────────────────────────────────────
 
@@ -69,7 +70,7 @@ export function TimelineFilterProvider({ children }: { children: React.ReactNode
         setHiddenCategories(new Set(JSON.parse(hiddenStored) as string[]));
       }
       if (scrollStored !== null) {
-        setScrollPositions(JSON.parse(scrollStored) as Record<string, number>);
+        setScrollPositions(JSON.parse(scrollStored) as Record<string, Record<string, number>>);
       }
     }
     void hydrate();
@@ -103,8 +104,11 @@ export function TimelineFilterProvider({ children }: { children: React.ReactNode
     });
   }, []);
 
-  const setScrollPosition = useCallback((dayStart: number, x: number): void => {
-    setScrollPositions((prev) => ({ ...prev, [String(dayStart)]: x }));
+  const setScrollPosition = useCallback((screenKey: string, dayStart: number, x: number): void => {
+    setScrollPositions((prev) => ({
+      ...prev,
+      [screenKey]: { ...(prev[screenKey] ?? {}), [String(dayStart)]: x },
+    }));
   }, []);
 
   const value = useMemo(

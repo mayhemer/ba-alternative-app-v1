@@ -18,6 +18,7 @@ import { CANVAS_WIDTH, VIEW_OFFSET_X, VIEW_WIDTH } from './timelineLayout';
 import type { DbArtist, DbCategory, DbEvent } from '../../types/backend';
 
 type Props = {
+  screenKey: string;
   visibleCategories: DbCategory[];
   eventsByCategory: Record<string, LaneEvent[]>;
   laneHeights: Record<string, number>;
@@ -28,6 +29,7 @@ type Props = {
 };
 
 export function TimelineView({
+  screenKey,
   visibleCategories,
   eventsByCategory,
   laneHeights,
@@ -64,11 +66,11 @@ export function TimelineView({
 
     const prevDay = prevDayRef.current;
     if (prevDay !== 0 && prevDay !== selectedDayStart) {
-      setScrollPositionRef.current(prevDay, scrollX.value);
+      setScrollPositionRef.current(screenKey, prevDay, scrollX.value);
     }
     prevDayRef.current = selectedDayStart;
 
-    const savedX = scrollPositions[String(selectedDayStart)] ?? 0;
+    const savedX = (scrollPositions[screenKey] ?? {})[String(selectedDayStart)] ?? 0;
 
     if (prevDay === 0) {
       const timer = setTimeout(() => {
@@ -88,7 +90,7 @@ export function TimelineView({
     useCallback(() => {
       return () => {
         if (selectedDayStartRef.current !== 0) {
-          setScrollPositionRef.current(selectedDayStartRef.current, scrollX.value);
+          setScrollPositionRef.current(screenKey, selectedDayStartRef.current, scrollX.value);
         }
       };
     }, [scrollX]),

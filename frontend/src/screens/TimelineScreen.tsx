@@ -5,5 +5,5 @@ import { BaseTimelineScreen } from './BaseTimelineScreen';
 const filterArtist = (a: DbArtist) => a.isPlayable;
 
 export function TimelineScreen() {
-  return <BaseTimelineScreen title="Timeline" filterArtist={filterArtist} />;
+  return <BaseTimelineScreen title="Timeline" screenKey="timeline" filterArtist={filterArtist} />;
 }

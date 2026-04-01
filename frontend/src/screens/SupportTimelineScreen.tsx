@@ -5,5 +5,5 @@ import { BaseTimelineScreen } from './BaseTimelineScreen';
 const filterArtist = (a: DbArtist) => !a.isPlayable;
 
 export function SupportTimelineScreen() {
-  return <BaseTimelineScreen title="Support" filterArtist={filterArtist} useSubRows />;
+  return <BaseTimelineScreen title="Support" screenKey="support" filterArtist={filterArtist} useSubRows />;
 }
