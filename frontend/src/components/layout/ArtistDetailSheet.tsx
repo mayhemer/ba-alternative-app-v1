@@ -5,7 +5,7 @@ import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { ReduceMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useArtistDetail } from '../../context/ArtistDetailContext';
-import { ArtistDetailContent } from '../../screens/ArtistDetailScreen';
+import { ArtistDetailHeader, ArtistDetailBody } from '../../screens/ArtistDetailScreen';
 import { colors } from '../../styling/tokens';
 
 const SNAP_POINTS = ['40%', '100%'];
@@ -44,8 +44,9 @@ export function ArtistDetailSheet() {
     if (detailState.artist === null) { return null; }
     return (
       <View style={{ position: 'absolute', inset: 0, backgroundColor: colors.background }}>
+        <ArtistDetailHeader artist={detailState.artist} />
         <ScrollView>
-          <ArtistDetailContent artist={detailState.artist} />
+          <ArtistDetailBody artist={detailState.artist} />
         </ScrollView>
       </View>
     );
@@ -74,9 +75,12 @@ export function ArtistDetailSheet() {
       }}
       backgroundStyle={{ backgroundColor: colors.surface }}
     >
+      {detailState.artist !== null && (
+        <ArtistDetailHeader artist={detailState.artist} />
+      )}
       <BottomSheetScrollView>
         {detailState.artist !== null && (
-          <ArtistDetailContent artist={detailState.artist} />
+          <ArtistDetailBody artist={detailState.artist} />
         )}
       </BottomSheetScrollView>
     </BottomSheet>

@@ -4,7 +4,7 @@ import { Image as ExpoImage } from 'expo-image';
 import RenderHtml from 'react-native-render-html';
 import { Text } from '../components/ui/Text';
 import { StarButton, getFeedbackLabel } from '../components/StarButton';
-import { useArtistDetail } from '../context/ArtistDetailContext';
+import { useArtistDetail as useArtistDetailContext } from '../context/ArtistDetailContext';
 import { useInterest } from '../context/InterestContext';
 import { getStageLocalized, getArtistLocalized } from '../utils/localization';
 import { formatTime, formatDayLabel } from '../components/timeline/timelineLayout';
@@ -26,10 +26,10 @@ const HTML_TAG_STYLES = {
 
 type Props = { artist: DbArtist };
 
-// ── Content (no scroll wrapper — caller provides BottomSheetScrollView) ──────
+// ── Shared derived values ─────────────────────────────────────────────────────
 
-export function ArtistDetailContent({ artist }: Props) {
-  const { closeDetail } = useArtistDetail();
+function useArtistDerived(artist: DbArtist) {
+  const { closeDetail } = useArtistDetailContext();
   const { getStatus, cycleStatus } = useInterest();
   const startProgress = useStartProgress();
   const { width } = useWindowDimensions();
@@ -38,16 +38,81 @@ export function ArtistDetailContent({ artist }: Props) {
   const genre   = getArtistLocalized(artist.localized, 'genre');
   const country = getArtistLocalized(artist.localized, 'country');
   const content = getArtistLocalized(artist.localized, 'content');
-  
-  const innerWidth  = Math.min(width, MAX_CONTENT_WIDTH);
-  const imageHeight = Math.round(innerWidth * (0.666));
-  const hPad        = width >= PADDING_BREAKPOINT ? 0 : 16;
+
+  const innerWidth = Math.min(width, MAX_CONTENT_WIDTH);
+  const hPad       = width >= PADDING_BREAKPOINT ? 0 : 16;
+  const isWeb      = Platform.OS === 'web';
+  const meta       = [genre, country].filter(Boolean).join('  ·  ');
+
+  const artistNameForURL = encodeURIComponent(artist.name.toLocaleLowerCase());
+  let artistWebDomain = '';
+  try {
+    if (artist.url !== '') { artistWebDomain = new URL(artist.url).hostname.replace(/^www\./, ''); }
+  } catch (_) { /* invalid URL */ }
+
+  function handleStarPress(): void {
+    const { next, promise } = cycleStatus(artist.artistId);
+    startProgress(getFeedbackLabel(next)).wrap(promise);
+  }
+
+  return { closeDetail, status, content, innerWidth, hPad, isWeb, meta, artistNameForURL, artistWebDomain, handleStarPress, width };
+}
+
+// ── Header (sticky — rendered outside scroll view) ────────────────────────────
+
+export function ArtistDetailHeader({ artist }: Props) {
+  const { closeDetail, status, innerWidth, hPad, isWeb, meta, handleStarPress } = useArtistDerived(artist);
+
+  return (
+    <View style={{
+      alignSelf: 'center',
+      width: innerWidth,
+      paddingHorizontal: hPad,
+      paddingTop: 12,
+      paddingBottom: 8,
+      backgroundColor: colors.surface,
+    }}>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+        <Text
+          numberOfLines={2}
+          style={{
+            flex: 1,
+            fontSize: 24,
+            fontWeight: '700',
+            color: colors.textPrimary,
+            fontFamily: 'Bold-Default',
+            marginRight: 8,
+          }}
+        >
+          {artist.name}
+        </Text>
+        <StarButton status={status} onPress={handleStarPress} size="large" />
+        {isWeb && (
+          <TouchableOpacity onPress={closeDetail} hitSlop={8} style={{ marginLeft: 12 }}>
+            <Text style={{ fontSize: 20, color: colors.textSecondary, lineHeight: 28 }}>✕</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+      {meta !== '' && (
+        <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 4 }}>
+          {meta}
+        </Text>
+      )}
+    </View>
+  );
+}
+
+// ── Body (scrollable content) ─────────────────────────────────────────────────
+
+export function ArtistDetailBody({ artist }: Props) {
+  const { closeDetail, content, innerWidth, hPad, isWeb, artistNameForURL, artistWebDomain, width } = useArtistDerived(artist);
+
+  const imageHeight = Math.round(innerWidth * 0.666);
   const htmlWidth   = innerWidth - hPad * 2;
-  const isWeb = Platform.OS === 'web';
   const [imageLoading, setImageLoading] = useState(true);
-  
+
   useEffect(() => { setImageLoading(true); }, [artist.artistId]);
-  
+
   useEffect(() => {
     if (!isWeb) { return; }
     function handleKeyDown(e: KeyboardEvent): void {
@@ -56,21 +121,6 @@ export function ArtistDetailContent({ artist }: Props) {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isWeb, closeDetail]);
-  
-  function handleStarPress(): void {
-    const { next, promise } = cycleStatus(artist.artistId);
-    startProgress(getFeedbackLabel(next)).wrap(promise);
-  }
-  
-  const meta = [genre, country].filter(Boolean).join('  ·  ');
-  const artistNameForURL = encodeURIComponent(artist.name.toLocaleLowerCase());
-  let artistWebDomain;
-  try {
-    artistWebDomain = artist.url !== '' ? new URL(artist.url).hostname.replace(/^www\./, '') : '';
-  }
-  catch (_) {
-    artistWebDomain = '';
-  }
 
   const artistEvents = getArtistEvents(artist.slug, artist.artistId);
   const stagesForSlug = getStages(artist.slug);
@@ -84,82 +134,46 @@ export function ArtistDetailContent({ artist }: Props) {
     <View style={{ width, alignItems: 'center' }}>
       <View style={{ width: innerWidth }}>
 
-        {/* ── Header ── */}
-        <View style={{ 
-          paddingHorizontal: hPad,
-          paddingTop: 12,
-        }}>
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-            <Text
-              numberOfLines={2}
-              style={{ flex: 1, fontSize: 24, fontWeight: '700', color: colors.textPrimary, fontFamily: 'Bold-Default', marginRight: 8 }}
-            >
-              {artist.name}
-            </Text>
-            <StarButton status={status} onPress={handleStarPress} size="large" />
-            {isWeb && (
-              <TouchableOpacity onPress={closeDetail} hitSlop={8} style={{ marginLeft: 12 }}>
-                <Text style={{ fontSize: 20, color: colors.textSecondary, lineHeight: 28 }}>✕</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-          {meta !== '' && (
-            <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 4 }}>
-              {meta}
-            </Text>
-          )}
-        </View>
-
         {/* External links to the band */}
         {(artist.isPlayable || artist.url !== '') && (
-          <View style={{ 
-            paddingHorizontal: hPad, 
-            marginTop: 40, 
-            flexDirection: 'row', 
+          <View style={{
+            paddingHorizontal: hPad,
+            marginTop: 16,
+            flexDirection: 'row',
             justifyContent: 'flex-start',
             alignItems: 'center',
             flexWrap: 'wrap',
             gap: 18,
           }}>
-            {/* ── Streaming services ── */}
             {artist.isPlayable && (
-              <TouchableOpacity
-              onPress={() => Linking.openURL(`https://open.spotify.com/search/${artistNameForURL}`)}
-              >
+              <TouchableOpacity onPress={() => Linking.openURL(`https://open.spotify.com/search/${artistNameForURL}`)}>
                 <ExpoImage
-                source={require('../../assets/spotify-icon-72.png')}
-                style={{ width: STREAMING_ICON_SIZE, height: STREAMING_ICON_SIZE }}
-                contentFit="contain"
+                  source={require('../../assets/spotify-icon-72.png')}
+                  style={{ width: STREAMING_ICON_SIZE, height: STREAMING_ICON_SIZE }}
+                  contentFit="contain"
                 />
               </TouchableOpacity>
             )}
             {artist.isPlayable && (
-              <TouchableOpacity
-              onPress={() => Linking.openURL(`https://tidal.com/search?q=${artistNameForURL}`)}
-              >
+              <TouchableOpacity onPress={() => Linking.openURL(`https://tidal.com/search?q=${artistNameForURL}`)}>
                 <ExpoImage
-                source={require('../../assets/tidal-icon-72.png')}
-                style={{ width: STREAMING_ICON_SIZE, height: STREAMING_ICON_SIZE }}
-                contentFit="contain"
+                  source={require('../../assets/tidal-icon-72.png')}
+                  style={{ width: STREAMING_ICON_SIZE, height: STREAMING_ICON_SIZE }}
+                  contentFit="contain"
                 />
               </TouchableOpacity>
             )}
             {artist.isPlayable && (
-              <TouchableOpacity
-              onPress={() => Linking.openURL(`https://www.metal-archives.com/search?searchString=${artistNameForURL}&type=band_name`)}
-              >
+              <TouchableOpacity onPress={() => Linking.openURL(`https://www.metal-archives.com/search?searchString=${artistNameForURL}&type=band_name`)}>
                 <ExpoImage
-                source={require('../../assets/metal-archives-icon-72.png')}
-                style={{ width: STREAMING_ICON_SIZE, height: STREAMING_ICON_SIZE }}
-                contentFit="contain"
+                  source={require('../../assets/metal-archives-icon-72.png')}
+                  style={{ width: STREAMING_ICON_SIZE, height: STREAMING_ICON_SIZE }}
+                  contentFit="contain"
                 />
               </TouchableOpacity>
             )}
-            {/* ── Artist URL ── */}
             {artistWebDomain !== '' && (
-              <TouchableOpacity
-              onPress={() => Linking.openURL(artist.url)}
-              >
+              <TouchableOpacity onPress={() => Linking.openURL(artist.url)}>
                 <Text style={{
                   fontSize: 12,
                   color: colors.textSecondary,
@@ -169,14 +183,21 @@ export function ArtistDetailContent({ artist }: Props) {
                   paddingHorizontal: 8,
                   paddingVertical: 2,
                   textAlign: 'center',
-                }}>{artistWebDomain} ↗</Text>
+                }}>
+                  {artistWebDomain} ↗
+                </Text>
               </TouchableOpacity>
             )}
           </View>
         )}
 
         {/* ── Hero image ── */}
-        <View style={{ width: innerWidth, height: imageHeight, marginVertical: 16, backgroundColor: colors.black }}>
+        <View style={{
+          width: innerWidth,
+          height: imageHeight,
+          marginVertical: 16,
+          backgroundColor: colors.black,
+        }}>
           <ExpoImage
             source={{ uri: artist.thumbUrl }}
             style={{ width: innerWidth, height: imageHeight }}
@@ -191,8 +212,8 @@ export function ArtistDetailContent({ artist }: Props) {
           )}
         </View>
 
-        {/* ── Event info (all scheduled times + categories from cache) ── */}
-        {artistEvents.length !== 0 && 
+        {/* ── Event info ── */}
+        {artistEvents.length !== 0 &&
           <View style={{ marginVertical: 30 }}>
             {artistEvents.map((event) => {
               const stage = stageById[event.stageId];
@@ -200,23 +221,19 @@ export function ArtistDetailContent({ artist }: Props) {
               const borderColor = category !== undefined ? decodeCategoryColor(category.color) : colors.textPrimary;
               return (
                 <View key={event.eventId} style={{
-                    paddingHorizontal: hPad,
-                    marginHorizontal: 16,
-                    marginTop: 10,
-                    borderLeftWidth: 5,
-                    borderColor,
+                  paddingHorizontal: hPad,
+                  marginHorizontal: 16,
+                  marginTop: 10,
+                  borderLeftWidth: 5,
+                  borderColor,
                 }}>
                   <Text style={{ fontSize: 16, color: colors.textPrimary }}>
                     {stage !== undefined ? getStageLocalized(stage.localized, 'name') : ''}
                   </Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
-                    <Text style={{ fontSize: 16, color: colors.textSecondary }}>
-                      {formatDayLabel(event.dateFrom)}
-                    </Text>
+                    <Text style={{ fontSize: 16, color: colors.textSecondary }}>{formatDayLabel(event.dateFrom)}</Text>
                     <Text style={{ fontSize: 16, color: colors.textSecondary }}>·</Text>
-                    <Text style={{ fontSize: 16, color: colors.textSecondary }}>
-                      {formatTime(event.dateFrom)}–{formatTime(event.dateTo)}
-                    </Text>
+                    <Text style={{ fontSize: 16, color: colors.textSecondary }}>{formatTime(event.dateFrom)}–{formatTime(event.dateTo)}</Text>
                   </View>
                 </View>
               );
@@ -226,12 +243,7 @@ export function ArtistDetailContent({ artist }: Props) {
 
         {content !== '' && (
           <View style={{ paddingHorizontal: hPad, paddingTop: 16, paddingBottom: 32 }}>
-            {/* ── HTML content ── */}
-            <RenderHtml    
-              contentWidth={htmlWidth}
-              source={htmlSource}
-              tagsStyles={HTML_TAG_STYLES}
-            />
+            <RenderHtml contentWidth={htmlWidth} source={htmlSource} tagsStyles={HTML_TAG_STYLES} />
           </View>
         )}
 
