@@ -1,9 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { DbArtist, DbCategory, DbEvent, DbStage, DbUserInterest } from '../types/backend';
+import { deriveFestivalDays } from '../components/timeline/timelineLayout';
 
 // ── Public festival data types ────────────────────────────────────────────────
 
 export type DbArtistEventMap = Record<string, DbEvent[]>;
+export type DbFestivalDays = number[];
 
 export type CacheData = {
   artists: DbArtist[];
@@ -11,6 +13,7 @@ export type CacheData = {
   stages: DbStage[];
   events: DbEvent[];
   artistEventMap: DbArtistEventMap;
+  festivalDays: DbFestivalDays;
 };
 
 export type DataCollector = {
@@ -59,6 +62,10 @@ export function getStages(slug: string): DbStage[] {
   return festivalCache[slug]?.stages ?? [];
 }
 
+export function getFestivalDays(slug: string): DbFestivalDays {
+  return festivalCache[slug]?.festivalDays ?? [];
+}
+
 export function getEvents(slug: string): DbEvent[] {
   return festivalCache[slug]?.events ?? [];
 }
@@ -101,6 +108,7 @@ export function createDataCollector(): DataCollector & { build(): CacheData } {
       events = data;
     },
     build(): CacheData {
+      const festivalDays = deriveFestivalDays(events);
       const artistEventMap: DbArtistEventMap = {};
       for (const event of events) {
         if (artistEventMap[event.artistId] === undefined) {
@@ -108,7 +116,7 @@ export function createDataCollector(): DataCollector & { build(): CacheData } {
         }
         artistEventMap[event.artistId].push(event);
       }
-      return { artists, categories, stages, events, artistEventMap };
+      return { artists, categories, stages, events, artistEventMap, festivalDays };
     },
   };
 }

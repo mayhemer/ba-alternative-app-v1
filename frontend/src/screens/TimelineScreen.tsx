@@ -7,9 +7,10 @@ import Animated, {
   useAnimatedRef,
   scrollTo,
 } from 'react-native-reanimated';
+import { scheduleOnUI } from 'react-native-worklets';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAppState, useCacheRefresh } from '../store/AppContext';
-import { getArtists, getCategories, getEvents } from '../cache/cacheService';
+import { getArtists, getCategories, getEvents, getFestivalDays } from '../cache/cacheService';
 import type { DbArtist, DbCategory, DbEvent } from '../types/backend';
 import { useTopBar, useBottomBar } from '../context/ScreenUIContext';
 import { useInterest } from '../context/InterestContext';
@@ -29,7 +30,6 @@ import {
   DAY_DURATION_MS,
   VIEW_OFFSET_X,
   VIEW_WIDTH,
-  deriveFestivalDays,
   getFestivalDayStart,
 } from '../components/timeline/timelineLayout';
 
@@ -82,10 +82,11 @@ export function TimelineScreen() {
   // ── Festival-day initialisation ─────────────────────────────────────────────
 
   useEffect(() => {
-    const days = deriveFestivalDays(eventsRef.current);
+    const days = getFestivalDays(selectedSlug);
     setFestivalDays(days);
     if (days.length === 0) { return; }
     if (days.includes(selectedDayStart)) { return; }
+    // TODO: adjust to our 6 hours shift...?
     const today = getFestivalDayStart(Date.now());
     const todayDay = days.find((d) => d === today);
     setSelectedDayStart(todayDay ?? days[0]);
@@ -127,10 +128,9 @@ export function TimelineScreen() {
     // Restore the saved position for the newly selected day.
     const savedX = scrollPositions[String(selectedDayStart)] ?? 0;
     // One-frame delay lets the new day's content render before we scroll.
-    const timer = setTimeout(() => {
+    scheduleOnUI(() => {
       scrollTo(horizontalScrollRef, savedX, 0, false);
-    }, 16);
-    return () => clearTimeout(timer);
+    });
     // scrollPositions intentionally omitted — restoring should only happen
     // when the day changes, not every time the map is updated.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -144,7 +144,7 @@ export function TimelineScreen() {
           setScrollPositionRef.current(selectedDayStartRef.current, scrollX.value);
         }
       };
-    }, []),
+    }, [scrollX]),
   );
 
   // ── Derived display data ────────────────────────────────────────────────────
