@@ -30,6 +30,7 @@ import {
   DAY_DURATION_MS,
   VIEW_OFFSET_X,
   VIEW_WIDTH,
+  PIXELS_PER_MS,
   getFestivalDayStart,
 } from '../components/timeline/timelineLayout';
 
@@ -85,8 +86,24 @@ export function TimelineScreen() {
     const days = getFestivalDays(selectedSlug);
     setFestivalDays(days);
     if (days.length === 0) { return; }
+
+    // Prebuild default scroll positions (30 min before first event) for days
+    // that have no saved position yet.
+    for (const day of days) {
+      if (scrollPositions[String(day)] !== undefined) { continue; }
+      const dayEnd = day + DAY_DURATION_MS;
+      const dayEvents = eventsRef.current.filter(
+        (e) => e.dateFrom >= day && e.dateFrom < dayEnd,
+      );
+      if (dayEvents.length > 0) {
+        const firstEventMs = Math.min(...dayEvents.map((e) => e.dateFrom));
+        const thirtyMinMs = 30 * 60 * 1000;
+        const defaultX = Math.max(0, (firstEventMs - thirtyMinMs - day) * PIXELS_PER_MS - VIEW_OFFSET_X);
+        setScrollPosition(day, defaultX);
+      }
+    }
+
     if (days.includes(selectedDayStart)) { return; }
-    // TODO: adjust to our 6 hours shift...?
     const today = getFestivalDayStart(Date.now());
     const todayDay = days.find((d) => d === today);
     setSelectedDayStart(todayDay ?? days[0]);
@@ -125,7 +142,7 @@ export function TimelineScreen() {
     }
     prevDayRef.current = selectedDayStart;
 
-    // Restore the saved position for the newly selected day.
+    // Restore the saved position (defaults are pre-built in the festival-day init effect).
     const savedX = scrollPositions[String(selectedDayStart)] ?? 0;
     // One-frame delay lets the new day's content render before we scroll.
     scheduleOnUI(() => {
