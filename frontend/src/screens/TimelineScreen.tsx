@@ -211,34 +211,36 @@ export function TimelineScreen() {
   }
 
   return (
-    <ScrollView className="flex-1 bg-background" showsVerticalScrollIndicator={false}>
-      <Animated.ScrollView
-        ref={horizontalScrollRef}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        scrollEventThrottle={16}
-        onScroll={onScroll}
-      >
-        {/* Clipping wrapper sized to the visible window only */}
-        <View style={{ width: VIEW_WIDTH, overflow: 'hidden' }}>
-        {/* Full canvas shifted left so 09:30 aligns with x=0 */}
-        <View style={{ width: CANVAS_WIDTH, position: 'relative', transform: [{ translateX: -VIEW_OFFSET_X }] }}>
-          <TimeRuler dayStart={selectedDayStart} />
-          {visibleCategories.map((cat) => (
-            <CategoryLane
-              key={cat.categoryId}
-              category={cat}
-              events={eventsByCategory[cat.categoryId] ?? []}
-              dayStart={selectedDayStart}
-              scrollX={scrollX}
-              getStatus={getStatus}
-              onBlockPress={handleBlockPress}
-            />
-          ))}
-          <NowLine dayStart={selectedDayStart} canvasHeight={canvasHeight} />
-        </View>
-        </View>
-      </Animated.ScrollView>
-    </ScrollView>
+    <View style={{ flex: 1 }}>
+      <TimeRuler dayStart={selectedDayStart} scrollX={scrollX} />
+      <ScrollView className="flex-1 bg-background" showsVerticalScrollIndicator={false}>
+        <Animated.ScrollView
+          ref={horizontalScrollRef}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          scrollEventThrottle={16}
+          onScroll={onScroll}
+        >
+          {/* Clipping wrapper sized to the visible window only */}
+          <View style={{ width: VIEW_WIDTH, overflow: 'hidden' }}>
+          {/* Full canvas shifted left so 09:30 aligns with x=0 */}
+          <View style={{ width: CANVAS_WIDTH, position: 'relative', transform: [{ translateX: -VIEW_OFFSET_X }] }}>
+            {visibleCategories.map((cat) => (
+              <CategoryLane
+                key={cat.categoryId}
+                category={cat}
+                events={eventsByCategory[cat.categoryId] ?? []}
+                dayStart={selectedDayStart}
+                scrollX={scrollX}
+                getStatus={getStatus}
+                onBlockPress={handleBlockPress}
+              />
+            ))}
+            <NowLine dayStart={selectedDayStart} canvasHeight={canvasHeight} />
+          </View>
+          </View>
+        </Animated.ScrollView>
+      </ScrollView>
+    </View>
   );
 }
