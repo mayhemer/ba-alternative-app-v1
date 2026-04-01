@@ -74,12 +74,14 @@ export function ArtistDetailHeader({ artist }: Props) {
     }}>
       <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
         <Text
-          numberOfLines={2}
+          numberOfLines={3}
+          adjustsFontSizeToFit
+          minimumFontScale={0.8}
           style={{
+            color: colors.textPrimary,
             flex: 1,
             fontSize: 24,
             fontWeight: '700',
-            color: colors.textPrimary,
             fontFamily: 'Bold-Default',
             marginRight: 8,
           }}

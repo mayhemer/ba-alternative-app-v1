@@ -72,7 +72,7 @@ export function ArtistBlock({ event, artist, dayStart, status, onPress, subRow =
             <Text
               numberOfLines={oneWordArtist ? 1 : 2}
               adjustsFontSizeToFit
-              minimumFontScale={0.7}
+              minimumFontScale={0.8}
               style={{ fontSize: 12, color: colors.timeline.blockText, fontFamily: 'Bold-Default' }}
             >
               {artist.name}
