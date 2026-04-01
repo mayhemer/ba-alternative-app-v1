@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Linking, Platform, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 import RenderHtml from 'react-native-render-html';
@@ -17,6 +17,12 @@ import type { DbArtist } from '../types/backend';
 const MAX_CONTENT_WIDTH = 700;
 const PADDING_BREAKPOINT = 732;
 const STREAMING_ICON_SIZE = 24;
+
+const HTML_TAG_STYLES = {
+  body: { color: colors.textPrimary, fontSize: 14, lineHeight: 22 },
+  p:    { marginBottom: 12 },
+  a:    { color: colors.accent },
+};
 
 type Props = { artist: DbArtist };
 
@@ -72,11 +78,7 @@ export function ArtistDetailContent({ artist }: Props) {
   const categoriesForSlug = getCategories(artist.slug);
   const categoryById = Object.fromEntries(categoriesForSlug.map((c) => [c.categoryId, c]));
 
-  const htmlTagsStyles = {
-    body: { color: colors.textPrimary, fontSize: 14, lineHeight: 22 },
-    p:    { marginBottom: 12 },
-    a:    { color: colors.accent },
-  };
+  const htmlSource = useMemo(() => ({ html: content }), [content]);
 
   return (
     <View style={{ width, alignItems: 'center' }}>
@@ -227,8 +229,8 @@ export function ArtistDetailContent({ artist }: Props) {
             {/* ── HTML content ── */}
             <RenderHtml    
               contentWidth={htmlWidth}
-              source={{ html: content }}
-              tagsStyles={htmlTagsStyles}
+              source={htmlSource}
+              tagsStyles={HTML_TAG_STYLES}
             />
           </View>
         )}
