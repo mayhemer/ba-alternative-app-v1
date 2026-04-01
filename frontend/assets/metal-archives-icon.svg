@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="72" height="72">
+  <!-- Outer border frame -->
+  <rect x="8" y="8" width="184" height="184" rx="4" ry="4"
+        fill="none" stroke="white" stroke-width="3.5"/>
+  <!-- Inner border frame -->
+  <rect x="15" y="15" width="170" height="170" rx="2" ry="2"
+        fill="none" stroke="white" stroke-width="1.2"/>
+
+  <!-- Corner ornaments — top-left -->
+  <path d="M 8 30 L 8 8 L 30 8" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="square"/>
+  <!-- Corner ornaments — top-right -->
+  <path d="M 170 8 L 192 8 L 192 30" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="square"/>
+  <!-- Corner ornaments — bottom-left -->
+  <path d="M 8 170 L 8 192 L 30 192" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="square"/>
+  <!-- Corner ornaments — bottom-right -->
+  <path d="M 170 192 L 192 192 L 192 170" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="square"/>
+
+  <!-- Top decorative rule with diamond centre -->
+  <line x1="24" y1="50" x2="88" y2="50" stroke="white" stroke-width="1.2"/>
+  <polygon points="100,44 106,50 100,56 94,50" fill="white"/>
+  <line x1="112" y1="50" x2="176" y2="50" stroke="white" stroke-width="1.2"/>
+
+  <!-- M.A. text — large, centred -->
+  <text x="100" y="126"
+        text-anchor="middle"
+        dominant-baseline="auto"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="62"
+        font-weight="bold"
+        letter-spacing="4"
+        fill="white">M.A.</text>
+
+  <!-- Bottom decorative rule with diamond centre -->
+  <line x1="24" y1="152" x2="88" y2="152" stroke="white" stroke-width="1.2"/>
+  <polygon points="100,146 106,152 100,158 94,152" fill="white"/>
+  <line x1="112" y1="152" x2="176" y2="152" stroke="white" stroke-width="1.2"/>
+
+  <!-- Book spine line on left edge -->
+  <line x1="22" y1="20" x2="22" y2="180" stroke="white" stroke-width="1" stroke-dasharray="3,4" opacity="0.5"/>
+</svg>
