@@ -215,7 +215,7 @@ export function ArtistDetailBody({ artist }: Props) {
         {/* ── Event info ── */}
         {artistEvents.length !== 0 &&
           <View style={{ marginVertical: 30 }}>
-            {artistEvents.map((event) => {
+            {artistEvents.sort((a, b) => a.dateFrom - b.dateFrom).map((event) => {
               const stage = stageById[event.stageId];
               const category = categoryById[event.categoryId];
               const borderColor = category !== undefined ? decodeCategoryColor(category.color) : colors.textPrimary;
