@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Linking, Platform, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Linking, Platform, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { Image as ExpoImage } from 'expo-image';
 import RenderHtml from 'react-native-render-html';
 import { Text } from '../components/ui/Text';
 import { StarButton, getFeedbackLabel } from '../components/StarButton';
@@ -123,11 +124,10 @@ export function ArtistDetailContent({ artist }: Props) {
               <TouchableOpacity
               onPress={() => Linking.openURL(`https://open.spotify.com/search/${artistNameForURL}`)}
               >
-                <Image
-                source={require('../../assets/spotify-icon.png')}
-                style={{
-                  width: STREAMING_ICON_SIZE, height: STREAMING_ICON_SIZE
-                }} resizeMode="contain"
+                <ExpoImage
+                source={require('../../assets/spotify-icon-72.png')}
+                style={{ width: STREAMING_ICON_SIZE, height: STREAMING_ICON_SIZE }}
+                contentFit="contain"
                 />
               </TouchableOpacity>
             )}
@@ -135,11 +135,10 @@ export function ArtistDetailContent({ artist }: Props) {
               <TouchableOpacity
               onPress={() => Linking.openURL(`https://tidal.com/search?q=${artistNameForURL}`)}
               >
-                <Image
-                source={require('../../assets/tidal-icon.png')}
-                style={{
-                  width: STREAMING_ICON_SIZE, height: STREAMING_ICON_SIZE
-                }} resizeMode="contain"
+                <ExpoImage
+                source={require('../../assets/tidal-icon-72.png')}
+                style={{ width: STREAMING_ICON_SIZE, height: STREAMING_ICON_SIZE }}
+                contentFit="contain"
                 />
               </TouchableOpacity>
             )}
@@ -147,11 +146,10 @@ export function ArtistDetailContent({ artist }: Props) {
               <TouchableOpacity
               onPress={() => Linking.openURL(`https://www.metal-archives.com/search?searchString=${artistNameForURL}&type=band_name`)}
               >
-                <Image
-                source={require('../../assets/metal-archives-icon.png')}
-                style={{
-                  width: STREAMING_ICON_SIZE, height: STREAMING_ICON_SIZE
-                }} resizeMode="contain"
+                <ExpoImage
+                source={require('../../assets/metal-archives-icon-72.png')}
+                style={{ width: STREAMING_ICON_SIZE, height: STREAMING_ICON_SIZE }}
+                contentFit="contain"
                 />
               </TouchableOpacity>
             )}
@@ -177,12 +175,12 @@ export function ArtistDetailContent({ artist }: Props) {
 
         {/* ── Hero image ── */}
         <View style={{ width: innerWidth, height: imageHeight, marginVertical: 16, backgroundColor: colors.black }}>
-          <Image
+          <ExpoImage
             source={{ uri: artist.thumbUrl }}
             style={{ width: innerWidth, height: imageHeight }}
-            resizeMode="contain"
-            onLoad={() => setImageLoading(false)}
-            onError={() => setImageLoading(false)}
+            contentFit="contain"
+            cachePolicy="memory"
+            onLoadEnd={() => setImageLoading(false)}
           />
           {imageLoading && (
             <View style={{ position: 'absolute', top: 50, left: 0, right: 0, alignItems: 'center' }}>

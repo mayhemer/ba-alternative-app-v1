@@ -1,7 +1,6 @@
 import './global.css';
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useFonts } from 'expo-font';
-import { Asset } from 'expo-asset';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppProvider, useAppContext } from './src/store/AppContext';
 import { ScreenUIProvider } from './src/context/ScreenUIContext';
@@ -12,6 +11,7 @@ import { TimelineFilterProvider } from './src/context/TimelineFilterContext';
 import { AppShell } from './src/components/layout/AppShell';
 import { SplashScreen } from './src/screens/SplashScreen';
 import { startSync, stop as stopSync } from './src/sync/backgroundSyncService';
+import { Image as ExpoImage } from 'expo-image';
 
 // ── Root gate: handles loading / error / ready states ─────────────────────────
 
@@ -84,10 +84,10 @@ export default function App() {
   });
 
   useEffect(() => {
-    Asset.loadAsync([
-      require('./assets/spotify-icon.png'),
-      require('./assets/tidal-icon.png'),
-      require('./assets/metal-archives-icon.png'),
+    ExpoImage.prefetch([
+      require('./assets/spotify-icon-72.png'),
+      require('./assets/tidal-icon-72.png'),
+      require('./assets/metal-archives-icon-72.png'),
     ]);
   }, []);
 
