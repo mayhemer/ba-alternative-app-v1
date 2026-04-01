@@ -30,7 +30,8 @@ function buildSections(artists: DbArtist[]): Section[] {
   const grouped: Record<string, DbArtist[]> = {};
 
   for (const artist of artists) {
-    const letter = artist.name.charAt(0).toUpperCase();
+    const first = artist.name.charAt(0);
+    const letter = /\d/.test(first) ? '#' : first.toUpperCase();
     if (grouped[letter] === undefined) {
       grouped[letter] = [];
     }
