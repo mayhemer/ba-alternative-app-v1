@@ -31,7 +31,8 @@ function buildSections(artists: DbArtist[]): Section[] {
 
   for (const artist of artists) {
     const first = artist.name.charAt(0);
-    const letter = /\d/.test(first) ? '#' : first.toUpperCase();
+    const base = first.normalize('NFD').replace(/\p{M}/gu, '');
+    const letter = /\d/.test(first) ? '#' : (base.toUpperCase() || '#');
     if (grouped[letter] === undefined) {
       grouped[letter] = [];
     }
@@ -39,10 +40,16 @@ function buildSections(artists: DbArtist[]): Section[] {
   }
 
   return Object.keys(grouped)
-    .sort()
+    .sort((a, b) => {
+      if (a === '#') { return -1; }
+      if (b === '#') { return 1; }
+      return a.localeCompare(b, undefined, { sensitivity: 'base' });
+    })
     .map((letter) => ({
       title: letter,
-      data: grouped[letter].sort((a, b) => a.name.localeCompare(b.name)),
+      data: grouped[letter].sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { sensitivity: 'base', ignorePunctuation: true })
+      ),
     }));
 }
 
