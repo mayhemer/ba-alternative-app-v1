@@ -144,10 +144,16 @@ export function TimelineScreen() {
 
     // Restore the saved position (defaults are pre-built in the festival-day init effect).
     const savedX = scrollPositions[String(selectedDayStart)] ?? 0;
-    // One-frame delay lets the new day's content render before we scroll.
-    scheduleOnUI(() => {
-      scrollTo(horizontalScrollRef, savedX, 0, false);
-    });
+
+    // First paint needs to be delayed, because layout has not finished.
+    if (prevDay === 0) {
+      const timer = setTimeout(() => {
+        scheduleOnUI(() => { scrollTo(horizontalScrollRef, savedX, 0, false); });
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+
+    scheduleOnUI(() => { scrollTo(horizontalScrollRef, savedX, 0, false); });
     // scrollPositions intentionally omitted — restoring should only happen
     // when the day changes, not every time the map is updated.
     // eslint-disable-next-line react-hooks/exhaustive-deps
