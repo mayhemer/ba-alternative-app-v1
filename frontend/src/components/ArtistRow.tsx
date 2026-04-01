@@ -1,5 +1,6 @@
-import React from 'react';
-import { Image, TouchableOpacity, View } from 'react-native';
+import React, { useCallback } from 'react';
+import { TouchableOpacity, View } from 'react-native';
+import { Image as ExpoImage } from 'expo-image';
 import { Text } from './ui/Text';
 import type { DbArtist } from '../types/backend';
 import type { InterestStatus } from '../context/InterestContext';
@@ -21,24 +22,29 @@ export const ArtistRow = React.memo(function ArtistRow({ artist, status, onPress
   const genre = getArtistLocalized(artist.localized, 'genre');
   const country = getArtistLocalized(artist.localized, 'country');
 
-  function handleStarPress(): void {
+  const handleStarPress = useCallback((): void => {
     const { next, promise } = cycleStatus(artist.artistId);
     startProgress(getFeedbackLabel(next)).wrap(promise);
-  }
+  }, [artist.artistId, cycleStatus, startProgress]);
+
+  const handlePress = useCallback((): void => {
+    onPress(artist);
+  }, [onPress, artist]);
 
   return (
     <TouchableOpacity
-      onPress={() => onPress(artist)}
+      onPress={handlePress}
       className="flex-row items-center px-4 py-3 border-b border-border bg-background"
       activeOpacity={0.7}
     >
       {/* Thumbnail */}
-      <View className="w-14 h-14 mr-3 bg-surface overflow-hidden">
+      <View className="w-18 h-14 mr-3 bg-surface overflow-hidden">
         {artist.thumbUrl !== '' ? (
-          <Image
+          <ExpoImage
             source={{ uri: artist.thumbUrl }}
-            className="w-14 h-14"
-            resizeMode="cover"
+            style={{ width: 75, height: 56 }}
+            contentFit="cover"
+            cachePolicy="memory"
           />
         ) : (
           <View className="w-14 h-14 bg-surface" />

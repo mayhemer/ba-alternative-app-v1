@@ -39,6 +39,7 @@ export type CycleStatusResult = {
 };
 
 type InterestStateContextValue = {
+  interests: InterestMap;
   getStatus: (artistId: string) => InterestStatus;
 };
 
@@ -123,7 +124,7 @@ export function InterestProvider({ children }: { children: React.ReactNode }) {
     [selectedSlug],
   );
 
-  const stateValue = useMemo(() => ({ getStatus }), [getStatus]);
+  const stateValue = useMemo(() => ({ interests: state.interests, getStatus }), [state.interests, getStatus]);
   const cycleValue = useMemo(() => ({ cycleStatus }), [cycleStatus]);
 
   return (
@@ -144,7 +145,7 @@ export function useInterest() {
   if (stateCtx === null || cycleCtx === null) {
     throw new Error('useInterest must be used inside InterestProvider');
   }
-  return { getStatus: stateCtx.getStatus, cycleStatus: cycleCtx.cycleStatus };
+  return { interests: stateCtx.interests, getStatus: stateCtx.getStatus, cycleStatus: cycleCtx.cycleStatus };
 }
 
 // Stable-only access — only subscribes to cycleStatus (never re-renders due to interest changes).

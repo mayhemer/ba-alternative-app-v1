@@ -55,7 +55,7 @@ function ArtistListTopBarRight() {
 
 function ArtistListScreenInner() {
   const { selectedSlug } = useAppState();
-  const { getStatus } = useInterest();
+  const { getStatus, interests } = useInterest();
   const { searchQuery, setSearchQuery, interestFilter } = useArtistListFilter();
   const { openDetail } = useArtistDetail();
 
@@ -84,11 +84,11 @@ function ArtistListScreenInner() {
     }
 
     if (interestFilter !== null) {
-      filtered = filtered.filter((a) => getStatus(a.artistId) === interestFilter);
+      filtered = filtered.filter((a) => (interests[a.artistId] ?? 'none') === interestFilter);
     }
 
     return buildSections(filtered);
-  }, [allArtists, searchQuery, interestFilter, getStatus]);
+  }, [allArtists, searchQuery, interestFilter, interests]);
 
   const handleRowPress = useCallback((artist: DbArtist): void => {
     openDetail(artist, 'expanded');
