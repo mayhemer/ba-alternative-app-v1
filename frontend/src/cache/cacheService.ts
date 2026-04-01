@@ -1,11 +1,21 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { DbArtist, DbCategory, DbEvent, DbStage, DbUserInterest } from '../types/backend';
-import { deriveFestivalDays } from '../components/timeline/timelineLayout';
+import { deriveFestivalDays, DAY_DURATION_MS } from '../components/timeline/timelineLayout';
 
 // ── Public festival data types ────────────────────────────────────────────────
 
 export type DbArtistEventMap = Record<string, DbEvent[]>;
 export type DbFestivalDays = number[];
+
+// Per-day layout for one category: how many sub-rows are needed and which
+// sub-row each event occupies. Computed once at build time; used by the
+// non-playable timeline to render overlapping events without visual collision.
+export type DbCategoryDayLayout = {
+  subRowCount: number;
+  eventSubRows: Record<string, number>; // eventId → 0-based sub-row index
+};
+// Key: `${categoryId}_${dayStart}`
+export type DbLayoutMap = Record<string, DbCategoryDayLayout>;
 
 export type CacheData = {
   artists: DbArtist[];
@@ -14,6 +24,7 @@ export type CacheData = {
   events: DbEvent[];
   artistEventMap: DbArtistEventMap;
   festivalDays: DbFestivalDays;
+  layoutMap: DbLayoutMap;
 };
 
 export type DataCollector = {
@@ -74,6 +85,10 @@ export function getArtistEvents(slug: string, artistId: string): DbEvent[] {
   return festivalCache[slug]?.artistEventMap[artistId] ?? [];
 }
 
+export function getCategoryDayLayout(slug: string, categoryId: string, dayStart: number): DbCategoryDayLayout {
+  return festivalCache[slug]?.layoutMap[`${categoryId}_${dayStart}`] ?? { subRowCount: 1, eventSubRows: {} };
+}
+
 export function hasCachedData(slug: string): boolean {
   return festivalCache[slug] !== undefined;
 }
@@ -83,6 +98,56 @@ export function hasCachedData(slug: string): boolean {
 export function populateCache(slug: string, data: CacheData): void {
   // Atomic replacement — JS is single-threaded, so no partial reads are possible.
   festivalCache[slug] = { ...data };
+}
+
+// ── Layout map builder ────────────────────────────────────────────────────────
+
+// Assigns each event to the minimum sub-row where it does not overlap with
+// any already-placed event. Uses a greedy interval-scheduling algorithm:
+// sort by start time, then place each event in the first sub-row whose last
+// event has already ended.
+function buildLayoutMap(events: DbEvent[], festivalDays: DbFestivalDays): DbLayoutMap {
+  const layoutMap: DbLayoutMap = {};
+
+  for (const day of festivalDays) {
+    const dayEnd = day + DAY_DURATION_MS;
+    const byCategory: Record<string, DbEvent[]> = {};
+
+    for (const event of events) {
+      if (event.dateFrom < day || event.dateFrom >= dayEnd) { continue; }
+      if (byCategory[event.categoryId] === undefined) { byCategory[event.categoryId] = []; }
+      byCategory[event.categoryId].push(event);
+    }
+
+    for (const [categoryId, catEvents] of Object.entries(byCategory)) {
+      const sorted = [...catEvents].sort((a, b) => a.dateFrom - b.dateFrom);
+      const subRowEndTimes: number[] = [];
+      const eventSubRows: Record<string, number> = {};
+
+      for (const event of sorted) {
+        let assigned = false;
+        for (let row = 0; row < subRowEndTimes.length; row++) {
+          if (subRowEndTimes[row] <= event.dateFrom) {
+            eventSubRows[event.eventId] = row;
+            subRowEndTimes[row] = event.dateTo;
+            assigned = true;
+            break;
+          }
+        }
+        if (!assigned) {
+          eventSubRows[event.eventId] = subRowEndTimes.length;
+          subRowEndTimes.push(event.dateTo);
+        }
+      }
+
+      layoutMap[`${categoryId}_${day}`] = {
+        subRowCount: Math.max(1, subRowEndTimes.length),
+        eventSubRows,
+      };
+    }
+  }
+
+  return layoutMap;
 }
 
 // ── DataCollector factory ─────────────────────────────────────────────────────
@@ -116,7 +181,8 @@ export function createDataCollector(): DataCollector & { build(): CacheData } {
         }
         artistEventMap[event.artistId].push(event);
       }
-      return { artists, categories, stages, events, artistEventMap, festivalDays };
+      const layoutMap = buildLayoutMap(events, festivalDays);
+      return { artists, categories, stages, events, artistEventMap, festivalDays, layoutMap };
     },
   };
 }

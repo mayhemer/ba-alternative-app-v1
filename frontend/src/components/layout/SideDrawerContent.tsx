@@ -10,9 +10,10 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Artists',  screen: 'ArtistList' },
-  { label: 'Timeline', screen: 'Timeline' },
-  { label: 'Settings', screen: 'Settings' },
+  { label: 'Artists',         screen: 'ArtistList' },
+  { label: 'Program',         screen: 'Timeline' },
+  { label: 'Support Program', screen: 'SupportTimeline' },
+  { label: 'Settings',        screen: 'Settings' },
 ];
 
 export function SideDrawerContent({ navigation, state }: DrawerContentComponentProps) {

@@ -13,6 +13,7 @@ type Props = {
   dayStart: number;
   status: InterestStatus;
   onPress: () => void;
+  subRow?: number;
 };
 
 // ── Block colors per interest state ──────────────────────────────────────────
@@ -33,7 +34,7 @@ function starIcon(status: InterestStatus): { icon: string; color: string } | nul
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function ArtistBlock({ event, artist, dayStart, status, onPress }: Props) {
+export function ArtistBlock({ event, artist, dayStart, status, onPress, subRow = 0 }: Props) {
   const x     = timeToX(event.dateFrom, dayStart);
   const right = timeToX(event.dateTo,   dayStart);
   const width = Math.max(MIN_BLOCK_WIDTH, right - x);
@@ -54,7 +55,7 @@ export function ArtistBlock({ event, artist, dayStart, status, onPress }: Props)
       style={{
         position: 'absolute',
         left: x,
-        top: 2,
+        top: 2 + subRow * LANE_HEIGHT,
         width,
         height: LANE_HEIGHT - 4,
         backgroundColor: bg,

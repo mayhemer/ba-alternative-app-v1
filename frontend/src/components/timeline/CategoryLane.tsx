@@ -22,6 +22,8 @@ type Props = {
   scrollX: SharedValue<number>;
   getStatus: (artistId: string) => InterestStatus;
   onBlockPress: (event: DbEvent, artist: DbArtist) => void;
+  laneHeight?: number;
+  eventSubRows?: Record<string, number>;
 };
 
 export function CategoryLane({
@@ -31,6 +33,8 @@ export function CategoryLane({
   scrollX,
   getStatus,
   onBlockPress,
+  laneHeight = LANE_HEIGHT,
+  eventSubRows,
 }: Props) {
   const title = getCategoryLocalized(category.localized, 'title');
   const categoryColor = decodeCategoryColor(category.color);
@@ -78,7 +82,7 @@ export function CategoryLane({
       <View
         style={{
           width: CANVAS_WIDTH,
-          height: LANE_HEIGHT,
+          height: laneHeight,
           backgroundColor: colors.surface,
           borderBottomWidth: 2,
           borderBottomColor: colors.timeline.laneBorder,
@@ -93,6 +97,7 @@ export function CategoryLane({
             dayStart={dayStart}
             status={getStatus(artist.artistId)}
             onPress={() => onBlockPress(event, artist)}
+            subRow={eventSubRows?.[event.eventId]}
           />
         ))}
       </View>
