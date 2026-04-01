@@ -6,7 +6,7 @@ import type { DbArtist, DbCategory, DbEvent } from '../../types/backend';
 import type { InterestStatus } from '../../cache/cacheService';
 import { decodeCategoryColor, dimColor } from '../../utils/color';
 import { getCategoryLocalized } from '../../utils/localization';
-import { CANVAS_WIDTH, LANE_HEIGHT, STRIP_HEIGHT, VIEW_OFFSET_X, CATEGORY_MARKER_SIZE } from './timelineLayout';
+import { CANVAS_WIDTH, LANE_HEIGHT, STRIP_HEIGHT, VIEW_OFFSET_X } from './timelineLayout';
 import { ArtistBlock } from './ArtistBlock';
 import { colors } from '../../styling/tokens';
 
@@ -59,10 +59,6 @@ export function CategoryLane({
         }}
       >
         <Animated.View style={[{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8 }, labelStyle]}>
-          <View style={{ 
-              display: 'none',
-              width: CATEGORY_MARKER_SIZE, height: CATEGORY_MARKER_SIZE, backgroundColor: dimmedColor, marginRight: 6 
-            }} />
           <Animated.Text
             numberOfLines={1}
             className={'font-family: default'}
