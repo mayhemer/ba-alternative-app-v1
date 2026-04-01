@@ -40,7 +40,7 @@ export function ArtistDetailContent({ artist }: Props) {
   const content = getArtistLocalized(artist.localized, 'content');
   
   const innerWidth  = Math.min(width, MAX_CONTENT_WIDTH);
-  const imageHeight = Math.round(innerWidth * (0.62));
+  const imageHeight = Math.round(innerWidth * (0.666));
   const hPad        = width >= PADDING_BREAKPOINT ? 0 : 16;
   const htmlWidth   = innerWidth - hPad * 2;
   const isWeb = Platform.OS === 'web';
