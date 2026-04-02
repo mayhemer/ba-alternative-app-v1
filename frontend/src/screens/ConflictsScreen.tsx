@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ScrollView, TouchableOpacity, View } from 'react-native';
 import { Text } from '../components/ui/Text';
 import { useInterest } from '../context/InterestContext';
@@ -8,7 +8,7 @@ import { getArtists, getArtistEvents, getStages } from '../cache/cacheService';
 import { eventsOverlap } from '../utils/conflictUtils';
 import { formatTime, formatDayLabel } from '../components/timeline/timelineLayout';
 import { getStageLocalized } from '../utils/localization';
-import { useTopBar } from '../context/ScreenUIContext';
+import { useTopBar, useBottomBar } from '../context/ScreenUIContext';
 import { colors } from '../styling/tokens';
 import type { DbArtist, DbEvent } from '../types/backend';
 
@@ -83,6 +83,7 @@ function computeConflictEntries(
 
 export function ConflictsScreen() {
   useTopBar({ title: 'Conflicts' });
+  useBottomBar({});
 
   const { selectedSlug } = useAppState();
   const { interests } = useInterest();
