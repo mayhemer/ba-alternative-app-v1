@@ -13,6 +13,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Artists',         screen: 'ArtistList' },
   { label: 'Program',         screen: 'Timeline' },
   { label: 'Support Program', screen: 'SupportTimeline' },
+  { label: 'Conflicts',       screen: 'Conflicts' },
   { label: 'Settings',        screen: 'Settings' },
 ];
 

@@ -5,6 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppProvider, useAppContext } from './src/store/AppContext';
 import { ScreenUIProvider } from './src/context/ScreenUIContext';
 import { ArtistDetailProvider } from './src/context/ArtistDetailContext';
+import { ConflictDetailProvider } from './src/context/ConflictDetailContext';
 import { InterestProvider } from './src/context/InterestContext';
 import { ArtistListFilterProvider } from './src/context/ArtistListFilterContext';
 import { TimelineFilterProvider } from './src/context/TimelineFilterContext';
@@ -62,11 +63,13 @@ function RootGate() {
     <ScreenUIProvider>
       <InterestProvider>
         <ArtistDetailProvider>
-          <ArtistListFilterProvider>
-            <TimelineFilterProvider>
-              <AppShell />
-            </TimelineFilterProvider>
-          </ArtistListFilterProvider>
+          <ConflictDetailProvider>
+            <ArtistListFilterProvider>
+              <TimelineFilterProvider>
+                <AppShell />
+              </TimelineFilterProvider>
+            </ArtistListFilterProvider>
+          </ConflictDetailProvider>
         </ArtistDetailProvider>
       </InterestProvider>
     </ScreenUIProvider>

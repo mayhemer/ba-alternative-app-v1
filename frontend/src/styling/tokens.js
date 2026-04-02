@@ -9,6 +9,7 @@ const colors = {
   surfaceRaised: '#1a1a1a',   // subtle elevation above surface
   border:        '#2a2a2a',
   borderMid:     '#333333',   // slightly lighter border
+  borderConflict:'#666666', 
   timeline: {
     blockDefault:       '#333333',
     blockWanted:        '#2a7fa7',
@@ -22,7 +23,7 @@ const colors = {
     rulerText:          '#c0c0c0',
   },
   accent:        '#e8c84a',   // must-see / active
-  amber:         '#b87a1a',   // maybe
+  amber:         '#b87a1a',   // warning
   textPrimary:   '#f0f0f0',
   textSecondary: '#ababab',
   textMuted:     '#666666',

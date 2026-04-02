@@ -4,12 +4,14 @@ import { ArtistListScreen } from '../screens/ArtistListScreen';
 import { TimelineScreen } from '../screens/TimelineScreen';
 import { SupportTimelineScreen } from '../screens/SupportTimelineScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
+import { ConflictsScreen } from '../screens/ConflictsScreen';
 import { SideDrawerContent } from '../components/layout/SideDrawerContent';
 
 export type DrawerParamList = {
   ArtistList: undefined;
   Timeline: undefined;
   SupportTimeline: undefined;
+  Conflicts: undefined;
   Settings: undefined;
 };
 
@@ -32,9 +34,10 @@ export function AppNavigator() {
         },
       }}
     >
-      <Drawer.Screen name="ArtistList" component={ArtistListScreen} />
+      <Drawer.Screen name="ArtistList"      component={ArtistListScreen} />
       <Drawer.Screen name="Timeline"        component={TimelineScreen} />
       <Drawer.Screen name="SupportTimeline" component={SupportTimelineScreen} />
+      <Drawer.Screen name="Conflicts"       component={ConflictsScreen} />
       <Drawer.Screen name="Settings"        component={SettingsScreen} />
     </Drawer.Navigator>
   );
