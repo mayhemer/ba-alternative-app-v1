@@ -45,7 +45,7 @@ export function useArtistDerived(artist: DbArtist) {
   const conflictMap = useMemo<Map<string, DbEvent[]>>(() => {
     const map = new Map<string, DbEvent[]>();
     const localInterest = interests[artist.artistId] ?? 'none';
-    if (localInterest === 'none') { return map; }
+    if (localInterest !== 'must_see') { return map; }
 
     const artistEvents = getArtistEvents(selectedSlug, artist.artistId);
     const allArtists   = getArtists(selectedSlug);
@@ -54,7 +54,7 @@ export function useArtistDerived(artist: DbArtist) {
       for (const other of allArtists) {
         if (other.artistId === artist.artistId) { continue; }
         const otherStatus = interests[other.artistId] ?? 'none';
-        if (otherStatus === 'none') { continue; }
+        if (otherStatus !== 'must_see') { continue; }
         const otherEvents = getArtistEvents(selectedSlug, other.artistId);
         for (const otherEvent of otherEvents) {
           if (eventsOverlap(event, otherEvent)) {
