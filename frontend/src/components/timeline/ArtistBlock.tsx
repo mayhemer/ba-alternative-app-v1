@@ -6,6 +6,8 @@ import { getCategories, type InterestStatus } from '../../cache/cacheService';
 import { timeToX, formatTime, LANE_HEIGHT, MIN_BLOCK_WIDTH } from './timelineLayout';
 import { colors } from '../../styling/tokens';
 import { decodeCategoryColor, dimColor } from '../../utils/color';
+import { useArtistDerived } from '../../hooks/useArtistDerived';
+import { Exclamation } from '../ui/Exclamation';
 
 type Props = {
   event: DbEvent;
@@ -39,13 +41,15 @@ export function ArtistBlock({ event, artist, dayStart, status, onPress, subRow =
   const right = timeToX(event.dateTo,   dayStart);
   const width = Math.max(MIN_BLOCK_WIDTH, right - x);
 
+  const { conflictMap } = useArtistDerived(artist);
   const category = getCategories(event.slug).find(c => c.categoryId === event.categoryId);
   const categoryColor = decodeCategoryColor(category?.color ?? colors.timeline.blockDefault);
 
   const { bg, border } = blockStyle(status, categoryColor);
 
-  const showLabel = width >= 40;
-  const star      = starIcon(status);
+  const showLabel   = width >= 40;
+  const star        = starIcon(status);
+  const hasConflict = conflictMap.has(event.eventId);
 
   const oneWordArtist = artist.name.indexOf(' ') === -1;
 
@@ -80,6 +84,14 @@ export function ArtistBlock({ event, artist, dayStart, status, onPress, subRow =
             <Text numberOfLines={1} style={{ fontSize: 10, color: colors.timeline.blockText }}>
               {formatTime(event.dateFrom)}–{formatTime(event.dateTo)}
             </Text>
+            {hasConflict && (
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', flex: 1, gap: 4 }}>
+                <Exclamation/>
+                <Text style={{ fontSize: 10, color: colors.danger, padding: 0 }}>
+                  Overlaps
+                </Text>
+              </View>
+            )}
           </View>
           {star !== null && (
             <Text style={{ fontSize: 11, color: star.color, marginLeft: 4, padding: 0 }}>

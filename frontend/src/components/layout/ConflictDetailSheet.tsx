@@ -177,7 +177,7 @@ function MiniTimeline({ sourceEvent, overlappingEvents, artistById, stageById, o
                 height: MINI_BLOCK_HEIGHT,
                 backgroundColor: isSource ? 'rgba(255,255,255,0.12)' : colors.surfaceRaised,
                 borderWidth: 1,
-                borderColor: isSource ? colors.white : colors.amber,
+                borderColor: isSource ? colors.white : colors.danger,
                 borderStyle: isSource ? undefined : 'dashed',
                 padding: 4,
                 overflow: 'hidden',

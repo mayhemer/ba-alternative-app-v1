@@ -1,24 +1,18 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Linking, Platform, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Linking, TouchableOpacity, View } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 import RenderHtml from 'react-native-render-html';
 import { Text } from '../components/ui/Text';
-import { StarButton, getFeedbackLabel } from '../components/StarButton';
-import { useArtistDetail as useArtistDetailContext } from '../context/ArtistDetailContext';
-import { useInterest } from '../context/InterestContext';
-import { useConflictDetail } from '../context/ConflictDetailContext';
-import { getStageLocalized, getArtistLocalized } from '../utils/localization';
+import { StarButton } from '../components/StarButton';
+import { getStageLocalized } from '../utils/localization';
 import { formatTime, formatDayLabel } from '../components/timeline/timelineLayout';
-import { useStartProgress, useFeedback } from '../context/ScreenUIContext';
-import { getArtistEvents, getStages, getCategories, getArtists } from '../cache/cacheService';
-import { eventsOverlap } from '../utils/conflictUtils';
+import { getArtistEvents, getStages, getCategories } from '../cache/cacheService';
 import { decodeCategoryColor } from '../utils/color';
 import { colors } from '../styling/tokens';
-import { useAppState } from '../store/AppContext';
-import type { DbArtist, DbEvent } from '../types/backend';
+import type { DbArtist } from '../types/backend';
+import { useArtistDerived } from '../hooks/useArtistDerived';
+import { Exclamation } from '../components/ui/Exclamation';
 
-const MAX_CONTENT_WIDTH = 700;
-const PADDING_BREAKPOINT = 732;
 const STREAMING_ICON_SIZE = 24;
 
 const HTML_TAG_STYLES = {
@@ -28,92 +22,6 @@ const HTML_TAG_STYLES = {
 };
 
 type Props = { artist: DbArtist };
-
-// ── Shared derived values ─────────────────────────────────────────────────────
-
-function useArtistDerived(artist: DbArtist) {
-  const { closeDetail } = useArtistDetailContext();
-  const { interests, getStatus, cycleStatus } = useInterest();
-  const { openConflict } = useConflictDetail();
-  const { selectedSlug } = useAppState();
-  const startProgress = useStartProgress();
-  const showFeedback  = useFeedback();
-  const { width } = useWindowDimensions();
-
-  const status  = getStatus(artist.artistId);
-  const genre   = getArtistLocalized(artist.localized, 'genre');
-  const country = getArtistLocalized(artist.localized, 'country');
-  const content = getArtistLocalized(artist.localized, 'content');
-
-  const innerWidth = Math.min(width, MAX_CONTENT_WIDTH);
-  const hPad       = width >= PADDING_BREAKPOINT ? 0 : 16;
-  const isWeb      = Platform.OS === 'web';
-  const meta       = [genre, country].filter(Boolean).join('  ·  ');
-
-  const artistNameForURL = encodeURIComponent(artist.name.toLocaleLowerCase());
-  let artistWebDomain = '';
-  try {
-    if (artist.url !== '') { artistWebDomain = new URL(artist.url).hostname.replace(/^www\./, ''); }
-  } catch (_) { /* invalid URL */ }
-
-  // Per-event conflict map: eventId → overlapping events from other marked artists.
-  const conflictMap = useMemo<Map<string, DbEvent[]>>(() => {
-    const map = new Map<string, DbEvent[]>();
-    const localInterest = interests[artist.artistId] ?? 'none';
-    if (localInterest === 'none') { return map; }
-
-    const artistEvents = getArtistEvents(selectedSlug, artist.artistId);
-    const allArtists   = getArtists(selectedSlug);
-    for (const event of artistEvents) {
-      const overlapping: DbEvent[] = [];
-      for (const other of allArtists) {
-        if (other.artistId === artist.artistId) { continue; }
-        const otherStatus = interests[other.artistId] ?? 'none';
-        if (otherStatus === 'none') { continue; }
-        const otherEvents = getArtistEvents(selectedSlug, other.artistId);
-        for (const otherEvent of otherEvents) {
-          if (eventsOverlap(event, otherEvent)) {
-            overlapping.push(otherEvent);
-          }
-        }
-      }
-      if (overlapping.length > 0) {
-        map.set(event.eventId, overlapping);
-      }
-    }
-    return map;
-  }, [selectedSlug, artist, interests]);
-
-  function handleStarPress(): void {
-    const { next, promise } = cycleStatus(artist.artistId);
-    const tracker = startProgress(getFeedbackLabel(next));
-    // Check for conflicts with other already-marked artists (uses pre-cycleStatus interests).
-    const showConflictWarning = (next === 'maybe' || next === 'must_see') && (() => {
-      // CLAUDE: looks like a code duplication, have a helper to collect conflicting events for an artist
-      const artistEvents = getArtistEvents(selectedSlug, artist.artistId);
-      return getArtists(selectedSlug).some((other) => {
-        if (other.artistId === artist.artistId) { return false; }
-        const otherStatus = interests[other.artistId] ?? 'none';
-        if (otherStatus === 'none') { return false; }
-        const otherEvents = getArtistEvents(selectedSlug, other.artistId);
-        return otherEvents.some((otherEvent) =>
-          artistEvents.some((event) => eventsOverlap(event, otherEvent))
-        );
-      });
-    })();
-    promise
-      .then(() => {
-        if (showConflictWarning) {
-          showFeedback('Conflicts with other performances', 'warning');
-        } else {
-          tracker.confirm();
-        }
-      })
-      .catch((err: unknown) => tracker.warn(err));
-  }
-
-  return { closeDetail, status, content, innerWidth, hPad, isWeb, meta, artistNameForURL, artistWebDomain, handleStarPress, width, conflictMap, openConflict };
-}
 
 // ── Header (sticky — rendered outside scroll view) ────────────────────────────
 
@@ -292,19 +200,20 @@ export function ArtistDetailBody({ artist }: Props) {
                     <Text style={{ fontSize: 16, color: colors.textPrimary }}>
                       {stage !== undefined ? getStageLocalized(stage.localized, 'name') : ''}
                     </Text>
-                    {hasConflict && (
-                      <Text style={{ fontSize: 14, color: colors.danger }}>⚠</Text>
-                    )}
                   </View>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
                     <Text style={{ fontSize: 16, color: colors.textSecondary }}>{formatDayLabel(event.dateFrom)}</Text>
                     <Text style={{ fontSize: 16, color: colors.textSecondary }}>·</Text>
                     <Text style={{ fontSize: 16, color: colors.textSecondary }}>{formatTime(event.dateFrom)}–{formatTime(event.dateTo)}</Text>
                   </View>
-                  {hasConflict &&
-                    <Text style={{ color: colors.amber }}>
-                      Overlaps with {conflictMap.get(event.eventId)?.length} other event(s)
-                    </Text>
+                  {hasConflict && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
+                      <Exclamation/>
+                      <Text style={{ color: colors.danger }}>
+                        Overlaps with {conflictMap.get(event.eventId)?.length} other event(s)
+                      </Text>
+                    </View>
+                    )
                   }
                 </View>
               );

@@ -137,7 +137,7 @@ export function ConflictsScreen() {
         return (
           <View key={entry.event.eventId}>
             {entry.leader && 
-              (<Text style={{ fontSize: 16, color: colors.amber, paddingVertical: 10 }}>
+              (<Text style={{ fontSize: 16, color: colors.danger, paddingVertical: 10 }}>
                 Overlapping events
               </Text>)
             }
