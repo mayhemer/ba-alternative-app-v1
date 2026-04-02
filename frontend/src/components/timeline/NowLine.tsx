@@ -12,16 +12,16 @@ type Props = {
 };
 
 export function NowLine({ dayStart, canvasHeight, top = 0, showArrow = false }: Props) {
-  const [nowX, setNowX] = useState(() => timeToX(currentTimeMs(), dayStart));
+  const [, setTick] = useState(0);
 
-  // Recompute position every minute and whenever dayStart changes.
+  // Tick every minute to trigger a re-render so nowX stays current.
   useEffect(() => {
-    setNowX(timeToX(currentTimeMs(), dayStart));
-    const interval = setInterval(() => {
-      setNowX(timeToX(currentTimeMs(), dayStart));
-    }, 60_000);
+    const interval = setInterval(() => { setTick((t) => t + 1); }, 60_000);
     return () => clearInterval(interval);
-  }, [dayStart]);
+  }, []);
+
+  // Computed synchronously — always reflects the current dayStart with no stale frame.
+  const nowX = timeToX(currentTimeMs(), dayStart);
 
   // Outside the day window — nothing to show.
   if (nowX <= 0 || nowX >= CANVAS_WIDTH) { return null; }
