@@ -119,21 +119,27 @@ export function ConflictsScreen() {
     <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: 16 }}>
       {entries.map((entry, index) => {
         const nextEntry = entries[index + 1];
+        const prevEntry = index ? entries[index - 1] : undefined;
+        // If is first in a group, we want special emphasis
+        const isFirst = prevEntry === undefined || prevEntry.event.dateTo < entry.event.dateFrom;
         // Show connector bar if consecutive entries' events overlap each other
-        const showConnector = nextEntry !== undefined &&
-          entry.overlappingEvents.some((e) => e.eventId === nextEntry.event.eventId);
+        const showConnector = nextEntry !== undefined && entry.event.dateTo > nextEntry.event.dateFrom;
 
         return (
           <View key={entry.event.eventId}>
+            {isFirst && 
+              (<Text style={{ color: colors.amber, paddingVertical: 10 }}>
+                Conflicting events
+              </Text>)
+            }
             <TouchableOpacity
               onPress={() => handleCardPress(entry)}
               style={{
                 backgroundColor: colors.surface,
-                borderRadius: 8,
                 padding: 16,
                 marginBottom: showConnector ? 0 : 60,
                 borderWidth: 1,
-                borderColor: colors.borderConflict,
+                borderColor: colors.borderMid,
               }}
               activeOpacity={0.75}
             >
@@ -148,15 +154,12 @@ export function ConflictsScreen() {
               <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 4 }}>
                 {entry.stageName}  ·  {formatDayLabel(entry.event.dateFrom)}  ·  {formatTime(entry.event.dateFrom)}–{formatTime(entry.event.dateTo)}
               </Text>
-              <Text style={{ fontSize: 12, color: colors.amber, marginTop: 6 }}>
-                Overlaps with {entry.overlapCount} other {entry.overlapCount === 1 ? 'event' : 'events'}
-              </Text>
             </TouchableOpacity>
 
             {showConnector && (
               <View style={{
                 alignSelf: 'center',
-                width: 4,
+                width: 10,
                 height: 16,
                 backgroundColor: colors.borderConflict,
               }} />
