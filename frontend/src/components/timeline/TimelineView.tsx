@@ -93,7 +93,7 @@ export function TimelineView({
           setScrollPositionRef.current(screenKey, selectedDayStartRef.current, scrollX.value);
         }
       };
-    }, [scrollX]),
+    }, [scrollX, screenKey]),
   );
 
   // ── Render ──────────────────────────────────────────────────────────────────
