@@ -39,9 +39,9 @@ export function TimeRuler(_props: Props) {
               key={h}
               style={{ position: 'absolute', left: x, top: 0, bottom: 0, alignItems: 'flex-start' }}
             >
-              <View style={{ width: 1, height: 6, backgroundColor: colors.muted, marginTop: 4 }} />
-              <Text style={{ fontSize: 10, color: colors.timeline.rulerText, marginTop: 2, marginLeft: 2 }}>
-                {String(hour).padStart(2, '0')}
+              <View style={{ width: 1, height: 10, backgroundColor: colors.muted, marginTop: 0  }} />
+              <Text style={{ fontSize: 12, color: colors.timeline.rulerText, marginTop: 2, marginLeft: 2 }}>
+                {String(hour).padStart(2, '0') + ':00'}
               </Text>
             </View>
           );

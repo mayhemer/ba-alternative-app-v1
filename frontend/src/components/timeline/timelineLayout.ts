@@ -23,7 +23,7 @@ export const VIEW_WIDTH      = (VIEW_END_H - VIEW_START_H) * PIXELS_PER_HOUR;
 
 // ── Row heights ───────────────────────────────────────────────────────────────
 
-export const RULER_HEIGHT = 28;  // hour-label ruler at the top
+export const RULER_HEIGHT = 32;  // hour-label ruler at the top
 export const STRIP_HEIGHT = 32;  // category title strip above each lane
 export const LANE_HEIGHT  = 80;  // events row for each category
 export const MIN_BLOCK_WIDTH = 4; // minimum rendered width for very short sets
