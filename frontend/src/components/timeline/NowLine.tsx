@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import { CANVAS_WIDTH, NOW_ARROW_SIZE, timeToX } from './timelineLayout';
+import { CANVAS_WIDTH, NOW_LINE_ARROW_SIZE, timeToX } from './timelineLayout';
 import { colors } from '../../styling/tokens';
 import { currentTimeMs } from '../../utils/clock';
 
@@ -43,12 +43,12 @@ export function NowLine({ dayStart, canvasHeight, top = 0, showArrow = false }: 
           style={{
             position: 'absolute',
             top: 0,
-            left: -NOW_ARROW_SIZE,
+            left: -NOW_LINE_ARROW_SIZE,
             width: 0,
             height: 0,
-            borderLeftWidth: NOW_ARROW_SIZE,
-            borderRightWidth: NOW_ARROW_SIZE,
-            borderTopWidth: NOW_ARROW_SIZE,
+            borderLeftWidth: NOW_LINE_ARROW_SIZE,
+            borderRightWidth: NOW_LINE_ARROW_SIZE,
+            borderTopWidth: NOW_LINE_ARROW_SIZE,
             borderLeftColor: 'transparent',
             borderRightColor: 'transparent',
             borderTopColor: colors.danger,
