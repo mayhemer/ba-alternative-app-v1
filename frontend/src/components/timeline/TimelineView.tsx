@@ -12,7 +12,6 @@ import { useInterest } from '../../context/InterestContext';
 import { useTimelineFilter } from '../../context/TimelineFilterContext';
 import { CategoryLane } from './CategoryLane';
 import type { LaneEvent } from './CategoryLane';
-import { NowLine } from './NowLine';
 import { TimeRuler } from './TimeRuler';
 import { CANVAS_WIDTH, VIEW_OFFSET_X, VIEW_WIDTH } from './timelineLayout';
 import type { DbArtist, DbCategory, DbEvent } from '../../types/backend';
@@ -127,7 +126,6 @@ export function TimelineView({
                   eventSubRows={categorySubRows?.[cat.categoryId]}
                 />
               ))}
-              <NowLine dayStart={selectedDayStart} canvasHeight={canvasHeight} />
             </View>
           </View>
         </Animated.ScrollView>

@@ -17,6 +17,7 @@ import {
   PIXELS_PER_MS,
   getFestivalDayStart,
 } from '../components/timeline/timelineLayout';
+import { currentTimeMs } from '../utils/clock';
 
 // ── Shared TopBar / BottomBar slot components ─────────────────────────────────
 
@@ -76,7 +77,7 @@ export function BaseTimelineScreen({ title, screenKey, filterArtist, useSubRows 
     }
 
     if (days.includes(selectedDayStart)) { return; }
-    const today = getFestivalDayStart(Date.now());
+    const today = getFestivalDayStart(currentTimeMs());
     const todayDay = days.find((d) => d === today);
     setSelectedDayStart(todayDay ?? days[0]);
     // selectedDayStart intentionally omitted — only re-run when events change,

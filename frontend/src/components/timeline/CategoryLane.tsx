@@ -8,6 +8,7 @@ import { decodeCategoryColor, dimColor } from '../../utils/color';
 import { getCategoryLocalized } from '../../utils/localization';
 import { CANVAS_WIDTH, LANE_HEIGHT, STRIP_HEIGHT, VIEW_OFFSET_X } from './timelineLayout';
 import { ArtistBlock } from './ArtistBlock';
+import { NowLine } from './NowLine';
 import { colors } from '../../styling/tokens';
 
 export type LaneEvent = {
@@ -85,6 +86,7 @@ export function CategoryLane({
           position: 'relative',
         }}
       >
+        <NowLine dayStart={dayStart} canvasHeight={STRIP_HEIGHT + laneHeight} top={-STRIP_HEIGHT} />
         {events.map(({ event, artist }) => (
           <ArtistBlock
             key={event.eventId}

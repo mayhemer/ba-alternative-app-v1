@@ -27,6 +27,7 @@ export const RULER_HEIGHT = 32;  // hour-label ruler at the top
 export const STRIP_HEIGHT = 32;  // category title strip above each lane
 export const LANE_HEIGHT  = 80;  // events row for each category
 export const MIN_BLOCK_WIDTH = 4; // minimum rendered width for very short sets
+export const NOW_ARROW_SIZE = 7;  // half-width and height of the now-line arrow
 export const CONTENT_MAX_WIDTH = 700; // max width for centred bottom bar / UI content
 
 // ── Time helpers ──────────────────────────────────────────────────────────────

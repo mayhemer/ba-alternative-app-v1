@@ -4,6 +4,7 @@ import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 import { Text } from '../ui/Text';
 import { CANVAS_WIDTH, DAY_BOUNDARY_HOUR, PIXELS_PER_HOUR, RULER_HEIGHT, VIEW_OFFSET_X, VIEW_WIDTH } from './timelineLayout';
+import { NowLine } from './NowLine';
 import { colors } from '../../styling/tokens';
 
 type Props = {
@@ -31,6 +32,7 @@ export function TimeRuler(_props: Props) {
       }}
     >
       <Animated.View style={[{ width: CANVAS_WIDTH, height: RULER_HEIGHT, position: 'relative' }, animatedStyle]}>
+        <NowLine dayStart={_props.dayStart} canvasHeight={RULER_HEIGHT} showArrow />
         {ticks.map((h) => {
           const hour = (DAY_BOUNDARY_HOUR + h) % 24;
           const x    = h * PIXELS_PER_HOUR;

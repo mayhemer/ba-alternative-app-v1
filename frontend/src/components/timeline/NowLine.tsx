@@ -1,22 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import { Text } from '../ui/Text';
-import { CANVAS_WIDTH, timeToX } from './timelineLayout';
+import { CANVAS_WIDTH, NOW_ARROW_SIZE, timeToX } from './timelineLayout';
 import { colors } from '../../styling/tokens';
+import { currentTimeMs } from '../../utils/clock';
 
 type Props = {
   dayStart: number;
   canvasHeight: number;
+  top?: number;
+  showArrow?: boolean;
 };
 
-export function NowLine({ dayStart, canvasHeight }: Props) {
-  const [nowX, setNowX] = useState(() => timeToX(Date.now(), dayStart));
+export function NowLine({ dayStart, canvasHeight, top = 0, showArrow = false }: Props) {
+  const [nowX, setNowX] = useState(() => timeToX(currentTimeMs(), dayStart));
 
   // Recompute position every minute and whenever dayStart changes.
   useEffect(() => {
-    setNowX(timeToX(Date.now(), dayStart));
+    setNowX(timeToX(currentTimeMs(), dayStart));
     const interval = setInterval(() => {
-      setNowX(timeToX(Date.now(), dayStart));
+      setNowX(timeToX(currentTimeMs(), dayStart));
     }, 60_000);
     return () => clearInterval(interval);
   }, [dayStart]);
@@ -30,25 +32,29 @@ export function NowLine({ dayStart, canvasHeight }: Props) {
       style={{
         position: 'absolute',
         left: nowX,
-        top: 0,
+        top,
         height: canvasHeight,
         width: 1,
         backgroundColor: colors.danger,
       }}
     >
-      <Text
-        style={{
-          position: 'absolute',
-          top: 2,
-          left: 3,
-          fontSize: 8,
-          fontWeight: '700',
-          color: colors.danger,
-          letterSpacing: 0.5,
-        }}
-      >
-        NOW
-      </Text>
+      {showArrow && (
+        <View
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: -NOW_ARROW_SIZE,
+            width: 0,
+            height: 0,
+            borderLeftWidth: NOW_ARROW_SIZE,
+            borderRightWidth: NOW_ARROW_SIZE,
+            borderTopWidth: NOW_ARROW_SIZE,
+            borderLeftColor: 'transparent',
+            borderRightColor: 'transparent',
+            borderTopColor: colors.danger,
+          }}
+        />
+      )}
     </View>
   );
 }
