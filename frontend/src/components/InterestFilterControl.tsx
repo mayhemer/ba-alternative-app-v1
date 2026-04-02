@@ -8,15 +8,16 @@ import { useArtistListFilter } from '../context/ArtistListFilterContext';
 // Reads its own context directly; no props needed.
 
 type FilterButton = {
+  size: number;
   status: InterestStatus | null;
   icon: string;
   label: string;
 };
 
 const FILTER_BUTTONS: FilterButton[] = [
-  { status: null,       icon: '≡',  label: 'All'      },
-  { status: 'maybe',    icon: '☆',  label: 'Maybe'    },
-  { status: 'must_see', icon: '★',  label: 'Must see' },
+  { size: 28, status: null,       icon: '≡',  label: 'All'      },
+  { size: 16, status: 'maybe',    icon: '☆',  label: 'Maybe'    },
+  { size: 16, status: 'must_see', icon: '★',  label: 'Must see' },
 ];
 
 export function InterestFilterControl() {
@@ -36,7 +37,7 @@ export function InterestFilterControl() {
           >
             <Text
               style={{
-                fontSize: 16,
+                fontSize: btn.size,
                 color: isActive ? '#e8c84a' : '#555555',
               }}
             >
