@@ -126,9 +126,6 @@ function MiniTimeline({ sourceEvent, overlappingEvents, artistById, stageById, o
             const x = (tick - rangeStart) * PIXELS_PER_MS;
             return (
               <View key={tick} style={{ position: 'absolute', left: x }}>
-                <Text style={{ fontSize: 10, color: colors.timeline.rulerText, paddingLeft: 4, lineHeight: RULER_HEIGHT }}>
-                  {formatTime(tick)}
-                </Text>
                 <View style={{
                   position: 'absolute',
                   bottom: 0,
@@ -137,6 +134,9 @@ function MiniTimeline({ sourceEvent, overlappingEvents, artistById, stageById, o
                   height: 6,
                   backgroundColor: colors.timeline.rulerBorder,
                 }} />
+                <Text style={{ fontSize: 10, color: colors.timeline.rulerText, paddingLeft: 4, lineHeight: RULER_HEIGHT }}>
+                  {formatTime(tick)}
+                </Text>
               </View>
             );
           })}
@@ -155,7 +155,7 @@ function MiniTimeline({ sourceEvent, overlappingEvents, artistById, stageById, o
         {/* Event blocks */}
         {allEvents.map((event) => {
           const isSource   = event.eventId === sourceEvent.eventId;
-          const blockLeft  = Math.max(0, (event.dateFrom - rangeStart) * PIXELS_PER_MS);
+          const blockLeft  = (event.dateFrom - rangeStart) * PIXELS_PER_MS;
           const blockWidth = Math.max(MIN_BLOCK_WIDTH, (event.dateTo - event.dateFrom) * PIXELS_PER_MS);
           const blockTop   = RULER_HEIGHT + (eventSubRows[event.eventId] ?? 0) * LANE_HEIGHT + 4;
           const artist     = artistById[event.artistId];

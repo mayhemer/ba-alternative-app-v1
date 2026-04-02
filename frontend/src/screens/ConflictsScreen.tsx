@@ -16,6 +16,7 @@ import { STAR_ICON_INDICATOR } from '../components/StarButton';
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type ConflictEntry = {
+  leader: boolean;
   event: DbEvent;
   artist: DbArtist;
   stageName: string;
@@ -61,6 +62,7 @@ function computeConflictEntries(
   }
 
   // Build entries for conflicting events only, sorted by start time
+  let latest = 0;
   const entries: ConflictEntry[] = markedEvents
     .filter((e) => conflictMap.has(e.eventId))
     .sort((a, b) => a.dateFrom - b.dateFrom)
@@ -69,7 +71,12 @@ function computeConflictEntries(
       const artist = artistById[event.artistId];
       const stage = stageById[event.stageId];
       const stageName = stage !== undefined ? getStageLocalized(stage.localized, 'name') : '';
+      // Keep track of the whole overlap graph, leader == true for the first event in a group
+      const leader = event.dateFrom > latest;
+      latest = leader ? event.dateTo : Math.max(latest, event.dateTo);
+
       return {
+        leader,
         event,
         artist,
         stageName,
@@ -121,17 +128,15 @@ export function ConflictsScreen() {
     <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: 16 }}>
       {entries.map((entry, index) => {
         const nextEntry = entries[index + 1];
-        const prevEntry = index ? entries[index - 1] : undefined;
-        // If is first in a group, we want special emphasis
-        const isFirst = prevEntry === undefined || prevEntry.event.dateTo < entry.event.dateFrom;
-        // Show connector bar if consecutive entries' events overlap each other
-        const showConnector = nextEntry !== undefined && entry.event.dateTo > nextEntry.event.dateFrom;
+        // Show connector bar if next entry is not a new leader
+        const showConnector = nextEntry !== undefined && !nextEntry.leader;
+
         const status     = getStatus(entry.artist.artistId);
         const starIcon   = STAR_ICON_INDICATOR[status];
 
         return (
           <View key={entry.event.eventId}>
-            {isFirst && 
+            {entry.leader && 
               (<Text style={{ fontSize: 16, color: colors.amber, paddingVertical: 10 }}>
                 Overlapping events
               </Text>)
