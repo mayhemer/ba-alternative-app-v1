@@ -7,10 +7,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../ui/Text';
 import { useConflictDetail } from '../../context/ConflictDetailContext';
 import { useArtistDetail } from '../../context/ArtistDetailContext';
-import { useInterest, type InterestStatus } from '../../context/InterestContext';
+import { useInterest } from '../../context/InterestContext';
 import { useAppState, useCacheRefresh } from '../../store/AppContext';
 import { getArtists, getStages } from '../../cache/cacheService';
 import { getStageLocalized } from '../../utils/localization';
+import { STAR_ICON_INDICATOR } from '../StarButton';
 import {
   PIXELS_PER_MS,
   LANE_HEIGHT,
@@ -49,12 +50,6 @@ type MiniTimelineProps = {
   artistById: Record<string, DbArtist>;
   stageById: Record<string, DbStage>;
   onEventPress: (event: DbEvent) => void;
-};
-
-const STAR_ICON: Record<InterestStatus, string> = {
-  none:     '',
-  maybe:    '☆',
-  must_see: '★',
 };
 
 function MiniTimeline({ sourceEvent, overlappingEvents, artistById, stageById, onEventPress }: MiniTimelineProps) {
@@ -167,7 +162,7 @@ function MiniTimeline({ sourceEvent, overlappingEvents, artistById, stageById, o
           const stage      = stageById[event.stageId];
           const stageName  = stage !== undefined ? getStageLocalized(stage.localized, 'name') : '';
           const status     = artist !== undefined ? getStatus(artist.artistId) : 'none';
-          const starIcon   = STAR_ICON[status];
+          const starIcon   = STAR_ICON_INDICATOR[status];
 
           return (
             <TouchableOpacity

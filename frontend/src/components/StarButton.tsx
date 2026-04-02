@@ -20,6 +20,12 @@ const STAR_CONFIG: Record<InterestStatus, StarConfig> = {
   must_see: { icon: '★', color: '#e8c84a', label: 'Must see',       feedbackLabel: 'Must see!'         },
 };
 
+export const STAR_ICON_INDICATOR: Record<InterestStatus, string> = {
+  none:     '',
+  maybe:    '☆',
+  must_see: '★',
+};
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 type Props = {

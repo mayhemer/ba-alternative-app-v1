@@ -11,6 +11,7 @@ import { getStageLocalized } from '../utils/localization';
 import { useTopBar, useBottomBar } from '../context/ScreenUIContext';
 import { colors } from '../styling/tokens';
 import type { DbArtist, DbEvent } from '../types/backend';
+import { STAR_ICON_INDICATOR } from '../components/StarButton';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -37,6 +38,7 @@ function computeConflictEntries(
   const markedEvents: DbEvent[] = [];
   for (const artist of artists) {
     const status = interests[artist.artistId] ?? 'none';
+    // TODO: may want a filter that will include "maybe" into the conflict list
     if (status === 'must_see') {
       const events = getArtistEvents(slug, artist.artistId);
       markedEvents.push(...events);
@@ -86,7 +88,7 @@ export function ConflictsScreen() {
   useBottomBar({});
 
   const { selectedSlug } = useAppState();
-  const { interests } = useInterest();
+  const { interests, getStatus } = useInterest();
   const { openConflict } = useConflictDetail();
 
   const [entries, setEntries] = useState<ConflictEntry[]>([]);
@@ -124,12 +126,14 @@ export function ConflictsScreen() {
         const isFirst = prevEntry === undefined || prevEntry.event.dateTo < entry.event.dateFrom;
         // Show connector bar if consecutive entries' events overlap each other
         const showConnector = nextEntry !== undefined && entry.event.dateTo > nextEntry.event.dateFrom;
+        const status     = getStatus(entry.artist.artistId);
+        const starIcon   = STAR_ICON_INDICATOR[status];
 
         return (
           <View key={entry.event.eventId}>
             {isFirst && 
-              (<Text style={{ color: colors.amber, paddingVertical: 10 }}>
-                Conflicting events
+              (<Text style={{ fontSize: 16, color: colors.amber, paddingVertical: 10 }}>
+                Overlapping events
               </Text>)
             }
             <TouchableOpacity
@@ -138,19 +142,28 @@ export function ConflictsScreen() {
                 backgroundColor: colors.surface,
                 padding: 16,
                 marginBottom: showConnector ? 0 : 60,
-                borderWidth: 1,
+                borderWidth: 2,
                 borderColor: colors.borderMid,
               }}
               activeOpacity={0.75}
             >
-              <Text style={{
-                fontSize: 16,
-                fontWeight: '700',
-                color: colors.textPrimary,
-                fontFamily: 'Bold-Default',
-              }}>
-                {entry.artist?.name ?? ''}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{
+                    fontSize: 16,
+                    fontWeight: '700',
+                    color: colors.textPrimary,
+                    fontFamily: 'Bold-Default',
+                  }}>
+                    {entry.artist?.name ?? ''}
+                  </Text>
+                </View>
+                {starIcon !== '' && (
+                  <Text style={{ fontSize: 14, color: colors.accent, marginLeft: 2 }}>
+                    {starIcon}
+                  </Text>
+                )}
+              </View>
               <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 4 }}>
                 {entry.stageName}  ·  {formatDayLabel(entry.event.dateFrom)}  ·  {formatTime(entry.event.dateFrom)}–{formatTime(entry.event.dateTo)}
               </Text>
