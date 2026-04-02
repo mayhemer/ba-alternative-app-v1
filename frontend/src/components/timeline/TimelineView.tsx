@@ -13,7 +13,8 @@ import { useTimelineFilter } from '../../context/TimelineFilterContext';
 import { CategoryLane } from './CategoryLane';
 import type { LaneEvent } from './CategoryLane';
 import { TimeRuler } from './TimeRuler';
-import { CANVAS_WIDTH, VIEW_OFFSET_X, VIEW_WIDTH } from './timelineLayout';
+import { CANVAS_WIDTH, VIEW_OFFSET_X, VIEW_WIDTH, timeToX } from './timelineLayout';
+import { currentTimeMs } from '../../utils/clock';
 import type { DbArtist, DbCategory, DbEvent } from '../../types/backend';
 
 type Props = {
@@ -38,8 +39,9 @@ export function TimelineView({
   onBlockPress,
 }: Props) {
   const [areaHeight, setAreaHeight] = useState(0);
+  const scrollViewWidthRef = useRef(0);
   const { getStatus } = useInterest();
-  const { scrollPositions, setScrollPosition } = useTimelineFilter();
+  const { scrollPositions, setScrollPosition, scrollToNowSignal } = useTimelineFilter();
 
   // ── Horizontal scroll tracking ──────────────────────────────────────────────
 
@@ -85,6 +87,18 @@ export function TimelineView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDayStart]);
 
+  // ── Scroll to now ───────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (scrollToNowSignal.counter === 0) { return; }
+    if (scrollToNowSignal.screenKey !== screenKey) { return; }
+    const nowX = timeToX(currentTimeMs(), selectedDayStart);
+    const targetX = Math.max(0, nowX - VIEW_OFFSET_X - scrollViewWidthRef.current / 2);
+    scheduleOnUI(() => { scrollTo(horizontalScrollRef, targetX, 0, true); });
+  // selectedDayStart is intentionally omitted — the signal always fires for the current day
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scrollToNowSignal]);
+
   // Save scroll position when the screen loses focus (navigating away).
   useFocusEffect(
     useCallback(() => {
@@ -108,6 +122,7 @@ export function TimelineView({
           showsHorizontalScrollIndicator={false}
           scrollEventThrottle={16}
           onScroll={onScroll}
+          onLayout={(e) => { scrollViewWidthRef.current = e.nativeEvent.layout.width; }}
         >
           {/* Clipping wrapper sized to the visible window only */}
           <View style={{ width: VIEW_WIDTH, overflow: 'hidden' }}>

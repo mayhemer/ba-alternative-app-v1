@@ -32,8 +32,12 @@ function getCurrentDayStart(festivalDays: number[]): number | null {
   return null;
 }
 
-export function DaySwitcher() {
-  const { festivalDays, selectedDayStart, setSelectedDayStart } = useTimelineFilter();
+type Props = {
+  screenKey: string;
+};
+
+export function DaySwitcher({ screenKey }: Props) {
+  const { festivalDays, selectedDayStart, setSelectedDayStart, requestScrollToNow } = useTimelineFilter();
 
   if (festivalDays.length === 0) { return null; }
 
@@ -47,7 +51,13 @@ export function DaySwitcher() {
         return (
           <TouchableOpacity
             key={dayStart}
-            onPress={() => setSelectedDayStart(dayStart)}
+            onPress={() => {
+              if (dayStart === selectedDayStart && isToday) {
+                requestScrollToNow(screenKey);
+              } else {
+                setSelectedDayStart(dayStart);
+              }
+            }}
             style={{
               flex: 1,
               paddingVertical: 6,

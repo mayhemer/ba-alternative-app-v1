@@ -41,6 +41,10 @@ type TimelineFilterContextValue = {
   // Outer key = screenKey (e.g. 'timeline', 'support'), inner key = String(dayStart).
   scrollPositions: Record<string, Record<string, number>>;
   setScrollPosition: (screenKey: string, dayStart: number, x: number) => void;
+
+  // Signals a specific screen's TimelineView to scroll to now.
+  scrollToNowSignal: { screenKey: string; counter: number };
+  requestScrollToNow: (screenKey: string) => void;
 };
 
 // ── Context ───────────────────────────────────────────────────────────────────
@@ -53,6 +57,7 @@ export function TimelineFilterProvider({ children }: { children: React.ReactNode
   const [myScheduleOnly,  setMyScheduleOnly]  = useState(false);
   const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(new Set());
   const [scrollPositions, setScrollPositions] = useState<Record<string, Record<string, number>>>({});
+  const [scrollToNowSignal, setScrollToNowSignal] = useState<{ screenKey: string; counter: number }>({ screenKey: '', counter: 0 });
 
   // ── Hydration (once on mount) ───────────────────────────────────────────────
 
@@ -111,6 +116,10 @@ export function TimelineFilterProvider({ children }: { children: React.ReactNode
     }));
   }, []);
 
+  const requestScrollToNow = useCallback((screenKey: string): void => {
+    setScrollToNowSignal((prev) => ({ screenKey, counter: prev.counter + 1 }));
+  }, []);
+
   const value = useMemo(
     () => ({
       festivalDays,
@@ -123,9 +132,11 @@ export function TimelineFilterProvider({ children }: { children: React.ReactNode
       toggleCategory,
       scrollPositions,
       setScrollPosition,
+      scrollToNowSignal,
+      requestScrollToNow,
     }),
     // useState setters (setFestivalDays, setSelectedDayStart, setMyScheduleOnly) are stable — omitted
-    [festivalDays, selectedDayStart, myScheduleOnly, hiddenCategories, toggleCategory, scrollPositions, setScrollPosition],
+    [festivalDays, selectedDayStart, myScheduleOnly, hiddenCategories, toggleCategory, scrollPositions, setScrollPosition, scrollToNowSignal, requestScrollToNow],
   );
 
   return (

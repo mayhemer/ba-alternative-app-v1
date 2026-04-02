@@ -25,9 +25,6 @@ function TopBarRight() {
   return <MyScheduleFilterControl />;
 }
 
-function BottomBar() {
-  return <DaySwitcher />;
-}
 
 // ── Shared screen logic ───────────────────────────────────────────────────────
 
@@ -52,8 +49,10 @@ export function BaseTimelineScreen({ title, screenKey, filterArtist, useSubRows 
   const { events, eventsByCategory, visibleCategories, laneHeights, categorySubRows, canvasHeight } =
     useTimelineData({ filterArtist, useSubRows });
 
+  const BottomBarContent = React.useCallback(() => <DaySwitcher screenKey={screenKey} />, [screenKey]);
+
   useTopBar({ title, RightComponent: TopBarRight });
-  useBottomBar({ ContentComponent: BottomBar });
+  useBottomBar({ ContentComponent: BottomBarContent });
 
   // ── Festival-day initialisation ─────────────────────────────────────────────
 
