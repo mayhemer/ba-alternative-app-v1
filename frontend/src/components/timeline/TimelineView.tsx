@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -38,6 +38,7 @@ export function TimelineView({
   selectedDayStart,
   onBlockPress,
 }: Props) {
+  const [areaHeight, setAreaHeight] = useState(0);
   const { getStatus } = useInterest();
   const { scrollPositions, setScrollPosition } = useTimelineFilter();
 
@@ -99,7 +100,7 @@ export function TimelineView({
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1 }} onLayout={(e) => { setAreaHeight(e.nativeEvent.layout.height); }}>
       <TimeRuler dayStart={selectedDayStart} scrollX={scrollX} />
       <ScrollView className="flex-1 bg-background" showsVerticalScrollIndicator={false}>
         <Animated.ScrollView
@@ -112,7 +113,7 @@ export function TimelineView({
           {/* Clipping wrapper sized to the visible window only */}
           <View style={{ width: VIEW_WIDTH, overflow: 'hidden' }}>
             {/* Full canvas shifted left so 09:30 aligns with x=0 */}
-            <View style={{ width: CANVAS_WIDTH, position: 'relative', transform: [{ translateX: -VIEW_OFFSET_X }] }}>
+            <View style={{ width: CANVAS_WIDTH, position: 'relative', transform: [{ translateX: -VIEW_OFFSET_X }], paddingBottom: Math.max(30, areaHeight - canvasHeight)}}>
               {visibleCategories.map((cat) => (
                 <CategoryLane
                   key={cat.categoryId}
