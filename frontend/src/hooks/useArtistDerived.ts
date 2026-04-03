@@ -73,7 +73,7 @@ export function useArtistDerived(artist: DbArtist) {
     const { next, promise } = cycleStatus(artist.artistId);
     const tracker = startProgress(getFeedbackLabel(next));
     // Check for conflicts with other already-marked artists (uses pre-cycleStatus interests).
-    const showConflictWarning = (next === 'maybe' || next === 'must_see') && (() => {
+    const showConflictWarning = (next === 'must_see') && (() => {
       // CLAUDE: looks like a code duplication, have a helper to collect conflicting events for an artist
       const artistEvents = getArtistEvents(selectedSlug, artist.artistId);
       return getArtists(selectedSlug).some((other) => {
