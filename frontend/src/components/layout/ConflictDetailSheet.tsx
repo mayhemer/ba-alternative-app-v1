@@ -18,7 +18,7 @@ import {
   RULER_HEIGHT,
   formatTime,
 } from '../timeline/timelineLayout';
-import { colors } from '../../styling/tokens';
+import { colors, MAX_CONTENT_WIDTH } from '../../styling/tokens';
 import type { DbArtist, DbEvent, DbStage } from '../../types/backend';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -314,24 +314,36 @@ export function ConflictDetailSheet() {
   if (Platform.OS === 'web') {
     if (conflictState.sourceEvent === null) { return null; }
     return (
-      <View style={{ position: 'absolute', inset: 0, backgroundColor: colors.background }}>
-        <ConflictDetailHeader
-          sourceEvent={conflictState.sourceEvent}
-          artistName={sourceArtistName}
-          stageName={sourceStageName}
-          onClose={handleClose}
-        />
-        <ScrollView>
-          <View style={{ padding: 16 }}>
-            <MiniTimeline
-              sourceEvent={conflictState.sourceEvent}
-              overlappingEvents={conflictState.overlappingEvents}
-              artistById={artistById}
-              stageById={stageById}
-              onEventPress={handleEventPress}
-            />
-          </View>
-        </ScrollView>
+      <View style={{ position: 'absolute', inset: 0, justifyContent: 'flex-end' }} pointerEvents="box-none">
+        <View style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)' }} />
+        <View style={{
+          maxWidth: MAX_CONTENT_WIDTH,
+          width: '100%',
+          alignSelf: 'center',
+          maxHeight: '100%',
+          backgroundColor: colors.surface,
+          borderTopLeftRadius: 12,
+          borderTopRightRadius: 12,
+          overflow: 'hidden',
+        }}>
+          <ConflictDetailHeader
+            sourceEvent={conflictState.sourceEvent}
+            artistName={sourceArtistName}
+            stageName={sourceStageName}
+            onClose={handleClose}
+          />
+          <ScrollView>
+            <View style={{ padding: 16 }}>
+              <MiniTimeline
+                sourceEvent={conflictState.sourceEvent}
+                overlappingEvents={conflictState.overlappingEvents}
+                artistById={artistById}
+                stageById={stageById}
+                onEventPress={handleEventPress}
+              />
+            </View>
+          </ScrollView>
+        </View>
       </View>
     );
   }
@@ -358,6 +370,7 @@ export function ConflictDetailSheet() {
         borderTopRightRadius: 12,
       }}
       backgroundStyle={{ backgroundColor: colors.surface }}
+      style={{ maxWidth: MAX_CONTENT_WIDTH, width: '100%', alignSelf: 'center' }}
     >
       {conflictState.sourceEvent !== null && (
         <ConflictDetailHeader

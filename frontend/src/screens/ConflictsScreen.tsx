@@ -9,7 +9,7 @@ import { eventsOverlap } from '../utils/conflictUtils';
 import { formatTime, formatDayLabel } from '../components/timeline/timelineLayout';
 import { getStageLocalized } from '../utils/localization';
 import { useTopBar, useBottomBar } from '../context/ScreenUIContext';
-import { colors } from '../styling/tokens';
+import { colors, MAX_CONTENT_WIDTH } from '../styling/tokens';
 import type { DbArtist, DbEvent } from '../types/backend';
 import { STAR_ICON_INDICATOR } from '../components/StarButton';
 
@@ -125,7 +125,7 @@ export function ConflictsScreen() {
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: 16 }}>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: 16, maxWidth: MAX_CONTENT_WIDTH, width: '100%', alignSelf: 'center' }}>
       {entries.map((entry, index) => {
         const nextEntry = entries[index + 1];
         // Show connector bar if next entry is not a new leader
