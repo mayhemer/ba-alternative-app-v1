@@ -3,6 +3,8 @@ import { TouchableOpacity, View } from 'react-native';
 import { Text } from '../ui/Text';
 import type { DrawerContentComponentProps } from '@react-navigation/drawer';
 import { DrawerActions } from '@react-navigation/native';
+import { useConflicts } from '../../context/ConflictContext';
+import { colors } from '../../styling/tokens';
 
 type NavItem = {
   label: string;
@@ -19,6 +21,7 @@ const NAV_ITEMS: NavItem[] = [
 
 export function SideDrawerContent({ navigation, state }: DrawerContentComponentProps) {
   const activeRouteName = state.routes[state.index]?.name;
+  const { count: conflictCount } = useConflicts();
 
   return (
     <View className="flex-1 bg-surface pt-12 pb-8 px-6">
@@ -39,15 +42,33 @@ export function SideDrawerContent({ navigation, state }: DrawerContentComponentP
             }}
             className="py-4 border-b border-border"
           >
-            <Text
-              className={
-                isActive
-                  ? 'text-accent text-base font-semibold tracking-wide'
-                  : 'text-textPrimary text-base tracking-wide'
-              }
-            >
-              {item.label}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text
+                className={
+                  isActive
+                    ? 'text-accent text-base font-semibold tracking-wide'
+                    : 'text-textPrimary text-base tracking-wide'
+                }
+              >
+                {item.label}
+              </Text>
+              {item.screen === 'Conflicts' && conflictCount > 0 && (
+                <View style={{
+                  marginLeft: 8,
+                  backgroundColor: colors.danger,
+                  borderRadius: 10,
+                  minWidth: 20,
+                  height: 20,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingHorizontal: 5,
+                }}>
+                  <Text style={{ color: colors.white, fontSize: 11, fontWeight: '700', lineHeight: 14 }}>
+                    {conflictCount}
+                  </Text>
+                </View>
+              )}
+            </View>
           </TouchableOpacity>
         );
       })}

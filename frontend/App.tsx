@@ -6,6 +6,7 @@ import { AppProvider, useAppContext } from './src/store/AppContext';
 import { ScreenUIProvider } from './src/context/ScreenUIContext';
 import { ArtistDetailProvider } from './src/context/ArtistDetailContext';
 import { ConflictDetailProvider } from './src/context/ConflictDetailContext';
+import { ConflictProvider } from './src/context/ConflictContext';
 import { InterestProvider } from './src/context/InterestContext';
 import { ArtistListFilterProvider } from './src/context/ArtistListFilterContext';
 import { TimelineFilterProvider } from './src/context/TimelineFilterContext';
@@ -62,15 +63,17 @@ function RootGate() {
   return (
     <ScreenUIProvider>
       <InterestProvider>
-        <ArtistDetailProvider>
-          <ConflictDetailProvider>
-            <ArtistListFilterProvider>
-              <TimelineFilterProvider>
-                <AppShell />
-              </TimelineFilterProvider>
-            </ArtistListFilterProvider>
-          </ConflictDetailProvider>
-        </ArtistDetailProvider>
+        <ConflictProvider>
+          <ArtistDetailProvider>
+            <ConflictDetailProvider>
+              <ArtistListFilterProvider>
+                <TimelineFilterProvider>
+                  <AppShell />
+                </TimelineFilterProvider>
+              </ArtistListFilterProvider>
+            </ConflictDetailProvider>
+          </ArtistDetailProvider>
+        </ConflictProvider>
       </InterestProvider>
     </ScreenUIProvider>
   );
