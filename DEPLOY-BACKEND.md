@@ -5,6 +5,7 @@
 ```bash
 cd app/infra
 npx cdk bootstrap
+aws login # does browser-oauth
 ```
 
 ## Certificate
