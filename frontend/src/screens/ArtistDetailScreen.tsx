@@ -190,8 +190,8 @@ export function ArtistDetailBody({ artist }: Props) {
 
               const inner = (
                 <View style={{
-                  paddingHorizontal: hPad,
-                  marginHorizontal: 16,
+                  marginHorizontal: hPad,
+                  paddingHorizontal: 16,
                   marginTop: 10,
                   borderLeftWidth: 5,
                   borderColor,
