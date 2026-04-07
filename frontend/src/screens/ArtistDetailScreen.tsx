@@ -35,7 +35,6 @@ export function ArtistDetailHeader({ artist }: Props) {
       paddingHorizontal: hPad,
       paddingTop: 12,
       paddingBottom: 8,
-      backgroundColor: colors.surface,
     }}>
       <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
         <Text
