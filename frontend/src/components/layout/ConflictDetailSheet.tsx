@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, ScrollView, TouchableOpacity, View } from 'react-native';
+import { Animated, Platform, ScrollView, TouchableOpacity, View } from 'react-native';
 import BottomSheet, { BottomSheetScrollView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { ReduceMotion } from 'react-native-reanimated';
@@ -311,12 +311,34 @@ export function ConflictDetailSheet() {
       })()
     : '';
 
+  const translateY      = useRef(new Animated.Value(600)).current;
+  const backdropOpacity = useRef(new Animated.Value(0)).current;
+  const [webVisible, setWebVisible] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web') { return; }
+    if (conflictState.sourceEvent !== null) {
+      setWebVisible(true);
+      Animated.parallel([
+        Animated.spring(translateY,      { toValue: 0, useNativeDriver: true, bounciness: 0, speed: 14 }),
+        Animated.timing(backdropOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(translateY,      { toValue: 600, duration: 250, useNativeDriver: true }),
+        Animated.timing(backdropOpacity, { toValue: 0,   duration: 200, useNativeDriver: true }),
+      ]).start(() => setWebVisible(false));
+    }
+  }, [conflictState.sourceEvent, translateY, backdropOpacity]);
+
   if (Platform.OS === 'web') {
-    if (conflictState.sourceEvent === null) { return null; }
+    if (!webVisible) { return null; }
     return (
       <View style={{ position: 'absolute', inset: 0, justifyContent: 'flex-end' }} pointerEvents="box-none">
-        <View style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)' }} />
-        <View style={{
+        <TouchableOpacity activeOpacity={1} onPress={handleClose} style={{ position: 'absolute', inset: 0 }}>
+          <Animated.View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', opacity: backdropOpacity }} />
+        </TouchableOpacity>
+        <Animated.View style={{
           maxWidth: MAX_CONTENT_WIDTH,
           width: '100%',
           alignSelf: 'center',
@@ -325,25 +347,30 @@ export function ConflictDetailSheet() {
           borderTopLeftRadius: 12,
           borderTopRightRadius: 12,
           overflow: 'hidden',
+          transform: [{ translateY }],
         }}>
-          <ConflictDetailHeader
-            sourceEvent={conflictState.sourceEvent}
-            artistName={sourceArtistName}
-            stageName={sourceStageName}
-            onClose={handleClose}
-          />
-          <ScrollView>
-            <View style={{ padding: 16 }}>
-              <MiniTimeline
+          {conflictState.sourceEvent !== null && (
+            <>
+              <ConflictDetailHeader
                 sourceEvent={conflictState.sourceEvent}
-                overlappingEvents={conflictState.overlappingEvents}
-                artistById={artistById}
-                stageById={stageById}
-                onEventPress={handleEventPress}
+                artistName={sourceArtistName}
+                stageName={sourceStageName}
+                onClose={handleClose}
               />
-            </View>
-          </ScrollView>
-        </View>
+              <ScrollView>
+                <View style={{ padding: 16 }}>
+                  <MiniTimeline
+                    sourceEvent={conflictState.sourceEvent}
+                    overlappingEvents={conflictState.overlappingEvents}
+                    artistById={artistById}
+                    stageById={stageById}
+                    onEventPress={handleEventPress}
+                  />
+                </View>
+              </ScrollView>
+            </>
+          )}
+        </Animated.View>
       </View>
     );
   }
