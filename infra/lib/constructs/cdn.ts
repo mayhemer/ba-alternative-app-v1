@@ -25,6 +25,10 @@ export class Cdn extends Construct {
     });
 
     // Cache policies
+    // Origin is included in the cache key so each browser origin gets its own cached
+    // response with the correct Access-Control-Allow-Origin value. CloudFront also
+    // automatically forwards headers that are in the cache key to the origin, so
+    // API Gateway receives Origin and can echo the right value back.
     const longCache = new cloudfront.CachePolicy(this, 'LongCache', {
       cachePolicyName: 'ba-static-cache',
       comment: '1-hour cache for artists, stages, categories',
@@ -32,7 +36,7 @@ export class Cdn extends Construct {
       maxTtl: cdk.Duration.hours(2),
       minTtl: cdk.Duration.seconds(0),
       queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
-      headerBehavior: cloudfront.CacheHeaderBehavior.none(),
+      headerBehavior: cloudfront.CacheHeaderBehavior.allowList('Origin'),
       cookieBehavior: cloudfront.CacheCookieBehavior.none(),
     });
 
@@ -43,19 +47,20 @@ export class Cdn extends Construct {
       maxTtl: cdk.Duration.minutes(10),
       minTtl: cdk.Duration.seconds(0),
       queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
-      headerBehavior: cloudfront.CacheHeaderBehavior.none(),
+      headerBehavior: cloudfront.CacheHeaderBehavior.allowList('Origin'),
       cookieBehavior: cloudfront.CacheCookieBehavior.none(),
     });
 
-    // No-cache policy that forwards Authorization header in the cache key
-    // (CloudFront requires Authorization to be in the CachePolicy, not OriginRequestPolicy)
+    // No-cache policy that forwards Authorization + Origin headers to the origin.
+    // CloudFront requires both to be in the CachePolicy (not OriginRequestPolicy)
+    // for them to reach API Gateway.
     const authPassThrough = new cloudfront.CachePolicy(this, 'AuthPassThrough', {
       cachePolicyName: 'ba-auth-passthrough',
-      comment: 'No cache; forwards Authorization header to origin',
+      comment: 'No cache; forwards Authorization and Origin headers to origin',
       defaultTtl: cdk.Duration.seconds(0),
       maxTtl: cdk.Duration.seconds(1),
       minTtl: cdk.Duration.seconds(0),
-      headerBehavior: cloudfront.CacheHeaderBehavior.allowList('Authorization'),
+      headerBehavior: cloudfront.CacheHeaderBehavior.allowList('Authorization', 'Origin'),
       queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
       cookieBehavior: cloudfront.CacheCookieBehavior.none(),
     });
