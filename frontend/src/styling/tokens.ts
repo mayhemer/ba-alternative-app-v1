@@ -6,3 +6,6 @@ import { colors as imported_colors } from './tokens.js';
 
 export const colors = { ...imported_colors } as any;
 export type ColorToken = keyof typeof colors;
+
+export const MAX_CONTENT_WIDTH = 700;
+export const PADDING_BREAKPOINT = 732;

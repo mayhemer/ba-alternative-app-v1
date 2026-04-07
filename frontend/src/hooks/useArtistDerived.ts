@@ -10,9 +10,7 @@ import { getArtistEvents, getArtists } from '../cache/cacheService';
 import { eventsOverlap } from '../utils/conflictUtils';
 import { useAppState } from '../store/AppContext';
 import type { DbArtist, DbEvent } from '../types/backend';
-
-const MAX_CONTENT_WIDTH = 700;
-const PADDING_BREAKPOINT = 732;
+import { MAX_CONTENT_WIDTH, PADDING_BREAKPOINT } from '../styling/tokens';
 
 // ── Shared derived values ─────────────────────────────────────────────────────
 

@@ -18,6 +18,7 @@ import {
   getFestivalDayStart,
 } from '../components/timeline/timelineLayout';
 import { currentTimeMs } from '../utils/clock';
+import { PADDING_BREAKPOINT } from '../styling/tokens';
 
 // ── Shared TopBar / BottomBar slot components ─────────────────────────────────
 
@@ -89,7 +90,7 @@ export function BaseTimelineScreen({ title, screenKey, filterArtist, useSubRows 
   const { width } = useWindowDimensions();
 
   function handleBlockPress(_event: DbEvent, artist: DbArtist): void {
-    openDetail(artist, width >= 732 ? 'expanded' : 'collapsed');
+    openDetail(artist, width >= PADDING_BREAKPOINT ? 'expanded' : 'collapsed');
   }
 
   // ── Render ──────────────────────────────────────────────────────────────────
