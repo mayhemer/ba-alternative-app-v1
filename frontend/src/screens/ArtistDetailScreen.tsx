@@ -54,7 +54,7 @@ export function ArtistDetailHeader({ artist }: Props) {
         </Text>
         <StarButton status={status} onPress={handleStarPress} size="large" />
         {isWeb && (
-          <TouchableOpacity onPress={closeDetail} hitSlop={8} style={{ marginLeft: 12 }}>
+          <TouchableOpacity onPress={closeDetail} hitSlop={8} style={{ marginLeft: 16 }}>
             <Text style={{ fontSize: 20, color: colors.textSecondary, lineHeight: 36 }}>✕</Text>
           </TouchableOpacity>
         )}

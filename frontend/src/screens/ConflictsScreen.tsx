@@ -7,7 +7,7 @@ import { useConflicts } from '../context/ConflictContext';
 import { formatTime, formatDayLabel } from '../components/timeline/timelineLayout';
 import { useTopBar, useBottomBar } from '../context/ScreenUIContext';
 import { colors, MAX_CONTENT_WIDTH } from '../styling/tokens';
-import { STAR_ICON_INDICATOR } from '../components/StarButton';
+import { StarIndicator } from '../components/StarButton';
 import type { ConflictEntry } from '../utils/conflictUtils';
 
 export function ConflictsScreen() {
@@ -41,7 +41,6 @@ export function ConflictsScreen() {
         const nextEntry = entries[index + 1];
         const showConnector = nextEntry !== undefined && !nextEntry.leader;
         const status   = getStatus(entry.artist.artistId);
-        const starIcon = STAR_ICON_INDICATOR[status];
 
         return (
           <View key={entry.event.eventId}>
@@ -67,11 +66,7 @@ export function ConflictsScreen() {
                     {entry.artist?.name ?? ''}
                   </Text>
                 </View>
-                {starIcon !== '' && (
-                  <Text style={{ fontSize: 14, color: colors.accent, marginLeft: 2 }}>
-                    {starIcon}
-                  </Text>
-                )}
+                <StarIndicator status={status} size={14} />
               </View>
               <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 4 }}>
                 {entry.stageName}  ·  {formatDayLabel(entry.event.dateFrom)}  ·  {formatTime(entry.event.dateFrom)}–{formatTime(entry.event.dateTo)}

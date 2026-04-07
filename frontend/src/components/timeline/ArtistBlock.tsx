@@ -8,6 +8,7 @@ import { colors } from '../../styling/tokens';
 import { decodeCategoryColor, dimColor } from '../../utils/color';
 import { useArtistDerived } from '../../hooks/useArtistDerived';
 import { Exclamation } from '../ui/Exclamation';
+import { StarIndicator } from '../StarButton';
 
 type Props = {
   event: DbEvent;
@@ -28,11 +29,6 @@ function blockStyle(_status: InterestStatus, categoryColor: string): BlockStyle 
   return { bg, border };
 }
 
-function starIcon(status: InterestStatus): { icon: string; color: string } | null {
-  if (status === 'must_see') { return { icon: '★', color: colors.accent }; }
-  if (status === 'maybe')    { return { icon: '☆', color: colors.accent  }; }
-  return null;
-}
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -48,7 +44,6 @@ export function ArtistBlock({ event, artist, dayStart, status, onPress, subRow =
   const { bg, border } = blockStyle(status, categoryColor);
 
   const showLabel   = width >= 40;
-  const star        = starIcon(status);
   const hasConflict = conflictMap.has(event.eventId);
 
   const oneWordArtist = artist.name.indexOf(' ') === -1;
@@ -93,11 +88,7 @@ export function ArtistBlock({ event, artist, dayStart, status, onPress, subRow =
               </View>
             )}
           </View>
-          {star !== null && (
-            <Text style={{ fontSize: 11, color: star.color, marginLeft: 4, padding: 0 }}>
-              {star.icon}
-            </Text>
-          )}
+          <StarIndicator status={status} size={11} />
         </View>
       ) : null}
     </TouchableOpacity>

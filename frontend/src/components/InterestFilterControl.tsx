@@ -1,23 +1,23 @@
 import React from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import { Text } from './ui/Text';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import type { InterestStatus } from '../context/InterestContext';
 import { useArtistListFilter } from '../context/ArtistListFilterContext';
+import { colors } from '../styling/tokens';
 
 // Module-level component — registered as TopBar RightComponent.
 // Reads its own context directly; no props needed.
 
 type FilterButton = {
-  size: number;
   status: InterestStatus | null;
-  icon: string;
   label: string;
 };
 
 const FILTER_BUTTONS: FilterButton[] = [
-  { size: 28, status: null,       icon: '≡',  label: 'All'      },
-  { size: 16, status: 'maybe',    icon: '☆',  label: 'Maybe'    },
-  { size: 16, status: 'must_see', icon: '★',  label: 'Must see' },
+  { status: null,       label: 'All'      },
+  { status: 'maybe',    label: 'Maybe'    },
+  { status: 'must_see', label: 'Must see' },
 ];
 
 export function InterestFilterControl() {
@@ -27,6 +27,7 @@ export function InterestFilterControl() {
     <View className="flex-row items-center gap-1">
       {FILTER_BUTTONS.map((btn) => {
         const isActive = interestFilter === btn.status;
+        const iconColor = isActive ? colors.accent : colors.muted;
         return (
           <TouchableOpacity
             key={btn.label}
@@ -35,14 +36,15 @@ export function InterestFilterControl() {
             accessibilityLabel={btn.label}
             accessibilityRole="button"
           >
-            <Text
-              style={{
-                fontSize: btn.size,
-                color: isActive ? '#e8c84a' : '#555555',
-              }}
-            >
-              {btn.icon}
-            </Text>
+            {btn.status === null && (
+              <Text style={{ fontSize: 28, color: iconColor }}>≡</Text>
+            )}
+            {btn.status === 'maybe' && (
+              <FontAwesome name="star-o" size={16} color={iconColor} />
+            )}
+            {btn.status === 'must_see' && (
+              <FontAwesome name="star" size={16} color={iconColor} />
+            )}
           </TouchableOpacity>
         );
       })}

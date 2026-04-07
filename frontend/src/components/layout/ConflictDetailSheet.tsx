@@ -11,7 +11,7 @@ import { useInterest } from '../../context/InterestContext';
 import { useAppState, useCacheRefresh } from '../../store/AppContext';
 import { getArtists, getStages } from '../../cache/cacheService';
 import { getStageLocalized } from '../../utils/localization';
-import { STAR_ICON_INDICATOR } from '../StarButton';
+import { StarIndicator } from '../StarButton';
 import {
   PIXELS_PER_MS,
   LANE_HEIGHT,
@@ -161,8 +161,7 @@ function MiniTimeline({ sourceEvent, overlappingEvents, artistById, stageById, o
           const artist     = artistById[event.artistId];
           const stage      = stageById[event.stageId];
           const stageName  = stage !== undefined ? getStageLocalized(stage.localized, 'name') : '';
-          const status     = artist !== undefined ? getStatus(artist.artistId) : 'none';
-          const starIcon   = STAR_ICON_INDICATOR[status];
+          const status = artist !== undefined ? getStatus(artist.artistId) : 'none';
 
           return (
             <TouchableOpacity
@@ -190,11 +189,7 @@ function MiniTimeline({ sourceEvent, overlappingEvents, artistById, stageById, o
                 >
                   {artist?.name ?? ''}
                 </Text>
-                {starIcon !== '' && (
-                  <Text style={{ fontSize: 10, color: colors.accent, marginLeft: 2 }}>
-                    {starIcon}
-                  </Text>
-                )}
+                <StarIndicator status={status} size={10} />
               </View>
               <Text numberOfLines={1} style={{ fontSize: 10, color: colors.textSecondary }}>
                 {stageName}

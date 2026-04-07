@@ -22,6 +22,7 @@ const colors = {
     rulerBorder:        '#444444',
     rulerText:          '#c0c0c0',
   },
+  notInterested: '#888888',
   accent:        '#e8c84a',   // must-see / active
   amber:         '#b87a1a',   // warning
   textPrimary:   '#f0f0f0',

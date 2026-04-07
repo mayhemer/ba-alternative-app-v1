@@ -1,7 +1,8 @@
 import React from 'react';
 import { TouchableOpacity } from 'react-native';
-import { Text } from '../ui/Text';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useTimelineFilter } from '../../context/TimelineFilterContext';
+import { colors } from '../../styling/tokens';
 
 // Module-level component — registered as TopBar RightComponent for TimelineScreen.
 // Reads its own context directly; no props needed.
@@ -16,9 +17,7 @@ export function MyScheduleFilterControl() {
       accessibilityLabel={myScheduleOnly ? 'Show all artists' : 'Show my schedule only'}
       accessibilityRole="button"
     >
-      <Text style={{ fontSize: 16, color: myScheduleOnly ? '#e8c84a' : '#555555' }}>
-        ★
-      </Text>
+      <FontAwesome name="star" size={16} color={myScheduleOnly ? colors.accent : colors.muted} />
     </TouchableOpacity>
   );
 }
