@@ -91,8 +91,14 @@ function ArtistListScreenInner() {
       filtered = filtered.filter((a) => a.name.toLowerCase().includes(q));
     }
 
-    if (interestFilter !== null) {
-      filtered = filtered.filter((a) => (interests[a.artistId] ?? 'none') === interestFilter);
+    if (interestFilter === 'maybe') {
+      // 'maybe' means "at least maybe" — includes both maybe and must_see
+      filtered = filtered.filter((a) => {
+        const s = interests[a.artistId] ?? 'none';
+        return s === 'maybe' || s === 'must_see';
+      });
+    } else if (interestFilter === 'must_see') {
+      filtered = filtered.filter((a) => (interests[a.artistId] ?? 'none') === 'must_see');
     }
 
     return buildSections(filtered);

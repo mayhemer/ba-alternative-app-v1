@@ -49,7 +49,7 @@ type InterestCycleContextValue = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function nextStatus(current: InterestStatus): InterestStatus {
+export function nextStatus(current: InterestStatus): InterestStatus {
   if (current === 'none') { return 'maybe'; }
   if (current === 'maybe') { return 'must_see'; }
   return 'none';

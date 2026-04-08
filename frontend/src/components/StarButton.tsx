@@ -8,17 +8,18 @@ import { colors } from '../styling/tokens';
 
 const HIT_SLOP = 24;
 
+export type StarIconName = 'star' | 'star-half' | 'star-outline';
+
 type StarConfig = {
-  icon: 'star' | 'star-half' | 'star-outline';
+  icon: StarIconName;
   color: string;
-  label: string;
   feedbackLabel: string;
 };
 
 const STAR_CONFIG: Record<InterestStatus, StarConfig> = {
-  none:     { icon: 'star-outline', color: colors.notInterested,   label: 'Not interested', feedbackLabel: 'Removed from favorites' },
-  maybe:    { icon: 'star-half', color: colors.accent,  label: 'Maybe',          feedbackLabel: 'Maybe want to see'      },
-  must_see: { icon: 'star',   color: colors.accent,  label: 'Must see',       feedbackLabel: 'Must see!'              },
+  none:     { icon: 'star-outline', color: colors.notInterested, feedbackLabel: 'Removed from favorites' },
+  maybe:    { icon: 'star-half',    color: colors.accent,        feedbackLabel: 'Maybe want to see'      },
+  must_see: { icon: 'star',         color: colors.accent,        feedbackLabel: 'Must see!'              },
 };
 
 // ── StarIndicator ─────────────────────────────────────────────────────────────
@@ -41,10 +42,11 @@ export function StarIndicator({ status, size = 14 }: IndicatorProps) {
 type Props = {
   status: InterestStatus;
   onPress: () => void;
+  label: string;
   size?: 'small' | 'large';
 };
 
-export function StarButton({ status, onPress, size = 'small' }: Props) {
+export function StarButton({ status, onPress, label, size = 'small' }: Props) {
   const config = STAR_CONFIG[status];
   const iconSize = size === 'large' ? 32 : 26;
 
@@ -52,7 +54,7 @@ export function StarButton({ status, onPress, size = 'small' }: Props) {
     <Pressable
       onPress={onPress}
       hitSlop={{ top: HIT_SLOP, bottom: HIT_SLOP, left: HIT_SLOP, right: HIT_SLOP }}
-      accessibilityLabel={config.label}
+      accessibilityLabel={label}
       accessibilityRole="button"
     >
       <Ionicons name={config.icon} size={iconSize} color={config.color} />
@@ -62,4 +64,10 @@ export function StarButton({ status, onPress, size = 'small' }: Props) {
 
 export function getFeedbackLabel(status: InterestStatus): string {
   return STAR_CONFIG[status].feedbackLabel;
+}
+
+/** Returns the icon name and color for a given interest status. Used by filter controls. */
+export function getStarIconProps(status: InterestStatus): { name: StarIconName; color: string } {
+  const c = STAR_CONFIG[status];
+  return { name: c.icon, color: c.color };
 }

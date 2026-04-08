@@ -7,7 +7,7 @@ import type { InterestStatus } from './InterestContext';
 type ArtistListFilterContextValue = {
   searchQuery: string;
   setSearchQuery: (q: string) => void;
-  interestFilter: InterestStatus | null; // null = show all
+  interestFilter: InterestStatus | null; // null = all, 'maybe' = maybe+must_see, 'must_see' = must_see only
   setInterestFilter: (f: InterestStatus | null) => void;
 };
 

@@ -69,7 +69,7 @@ export const ArtistRow = React.memo(function ArtistRow({ artist, status, onPress
       </View>
 
       {/* Star */}
-      <StarButton status={status} onPress={handleStarPress} />
+      <StarButton status={status} onPress={handleStarPress} label="Toggle interest" />
     </TouchableOpacity>
   );
 });
