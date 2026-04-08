@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity } from 'react-native';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTimelineFilter } from '../../context/TimelineFilterContext';
 import { colors } from '../../styling/tokens';
 
@@ -17,7 +17,7 @@ export function MyScheduleFilterControl() {
       accessibilityLabel={myScheduleOnly ? 'Show all artists' : 'Show my schedule only'}
       accessibilityRole="button"
     >
-      <FontAwesome name="star" size={16} color={myScheduleOnly ? colors.accent : colors.muted} />
+      <Ionicons name="star" size={16} color={myScheduleOnly ? colors.accent : colors.muted} />
     </TouchableOpacity>
   );
 }

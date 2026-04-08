@@ -1,7 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import { Text } from './ui/Text';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import type { InterestStatus } from '../context/InterestContext';
 import { useArtistListFilter } from '../context/ArtistListFilterContext';
 import { colors } from '../styling/tokens';
@@ -40,10 +40,10 @@ export function InterestFilterControl() {
               <Text style={{ fontSize: 28, color: iconColor }}>≡</Text>
             )}
             {btn.status === 'maybe' && (
-              <FontAwesome name="star-o" size={16} color={iconColor} />
+              <Ionicons name="star-outline" size={16} color={iconColor} />
             )}
             {btn.status === 'must_see' && (
-              <FontAwesome name="star" size={16} color={iconColor} />
+              <Ionicons name="star" size={16} color={iconColor} />
             )}
           </TouchableOpacity>
         );
