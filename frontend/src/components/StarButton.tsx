@@ -6,7 +6,7 @@ import { colors } from '../styling/tokens';
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
-const HIT_SLOP = 24;
+const HIT_SLOP = 40;
 
 export type StarIconName = 'star' | 'star-half' | 'star-outline';
 
