@@ -15,7 +15,8 @@ import { useArtistListFilter } from '../context/ArtistListFilterContext';
 import { useArtistDetail } from '../context/ArtistDetailContext';
 import { ArtistRow } from '../components/ArtistRow';
 import { SectionSeparator } from '../components/SectionSeparator';
-import { InterestFilterControl } from '../components/InterestFilterControl';
+import { ArtistListInterestFilterControl } from '../components/InterestFilterControl';
+import { matchesInterestFilter } from '../utils/interestUtils';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -56,7 +57,7 @@ function buildSections(artists: DbArtist[]): Section[] {
 // ── TopBar right slot (module-level for stable reference) ─────────────────────
 
 function ArtistListTopBarRight() {
-  return <InterestFilterControl />;
+  return <ArtistListInterestFilterControl />;
 }
 
 // ── Inner screen (needs ArtistListFilterContext) ──────────────────────────────
@@ -91,14 +92,8 @@ function ArtistListScreenInner() {
       filtered = filtered.filter((a) => a.name.toLowerCase().includes(q));
     }
 
-    if (interestFilter === 'maybe') {
-      // 'maybe' means "at least maybe" — includes both maybe and must_see
-      filtered = filtered.filter((a) => {
-        const s = interests[a.artistId] ?? 'none';
-        return s === 'maybe' || s === 'must_see';
-      });
-    } else if (interestFilter === 'must_see') {
-      filtered = filtered.filter((a) => (interests[a.artistId] ?? 'none') === 'must_see');
+    if (interestFilter !== null) {
+      filtered = filtered.filter((a) => matchesInterestFilter(interests[a.artistId] ?? 'none', interestFilter));
     }
 
     return buildSections(filtered);

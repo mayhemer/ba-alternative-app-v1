@@ -7,13 +7,14 @@ import React, {
   useState,
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { InterestStatus } from './InterestContext';
 
 // Provider lives above AppShell so that slot components rendered in TopBar/BottomBar
 // can access the context even though they're outside the navigator tree.
 
 // ── Storage keys ──────────────────────────────────────────────────────────────
 
-const KEY_MY_SCHEDULE   = 'timeline:myScheduleOnly';
+const KEY_INTEREST_FILTER = 'timeline:interestFilter';
 const KEY_HIDDEN_CATS   = 'timeline:hiddenCategories';  // stored as JSON array
 const KEY_SCROLL_POS    = 'timeline:scrollPositions:v2'; // stored as JSON Record<screenKey, Record<dayStart, x>>
 
@@ -29,9 +30,9 @@ type TimelineFilterContextValue = {
   selectedDayStart: number;
   setSelectedDayStart: (ts: number) => void;
 
-  // "My schedule only" — hides artists with status 'none'. Persisted.
-  myScheduleOnly: boolean;
-  setMyScheduleOnly: (v: boolean) => void;
+  // Interest filter for timeline — same 3-state semantics as artist list. Persisted.
+  interestFilter: InterestStatus | null;
+  setInterestFilter: (f: InterestStatus | null) => void;
 
   // Category IDs the user has chosen to hide. Persisted.
   hiddenCategories: Set<string>;
@@ -54,7 +55,7 @@ const TimelineFilterContext = createContext<TimelineFilterContextValue | null>(n
 export function TimelineFilterProvider({ children }: { children: React.ReactNode }) {
   const [festivalDays,    setFestivalDays]    = useState<number[]>([]);
   const [selectedDayStart, setSelectedDayStart] = useState<number>(0);
-  const [myScheduleOnly,  setMyScheduleOnly]  = useState(false);
+  const [interestFilter, setInterestFilter] = useState<InterestStatus | null>(null);
   const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(new Set());
   const [scrollPositions, setScrollPositions] = useState<Record<string, Record<string, number>>>({});
   const [scrollToNowSignal, setScrollToNowSignal] = useState<{ screenKey: string; counter: number }>({ screenKey: '', counter: 0 });
@@ -63,13 +64,13 @@ export function TimelineFilterProvider({ children }: { children: React.ReactNode
 
   useEffect(() => {
     async function hydrate(): Promise<void> {
-      const [myScheduleStored, hiddenStored, scrollStored] = await Promise.all([
-        AsyncStorage.getItem(KEY_MY_SCHEDULE),
+      const [interestStored, hiddenStored, scrollStored] = await Promise.all([
+        AsyncStorage.getItem(KEY_INTEREST_FILTER),
         AsyncStorage.getItem(KEY_HIDDEN_CATS),
         AsyncStorage.getItem(KEY_SCROLL_POS),
       ]);
-      if (myScheduleStored !== null) {
-        setMyScheduleOnly(JSON.parse(myScheduleStored) as boolean);
+      if (interestStored !== null) {
+        setInterestFilter(JSON.parse(interestStored) as InterestStatus | null);
       }
       if (hiddenStored !== null) {
         setHiddenCategories(new Set(JSON.parse(hiddenStored) as string[]));
@@ -84,8 +85,8 @@ export function TimelineFilterProvider({ children }: { children: React.ReactNode
   // ── Persistence ────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    void AsyncStorage.setItem(KEY_MY_SCHEDULE, JSON.stringify(myScheduleOnly));
-  }, [myScheduleOnly]);
+    void AsyncStorage.setItem(KEY_INTEREST_FILTER, JSON.stringify(interestFilter));
+  }, [interestFilter]);
 
   useEffect(() => {
     void AsyncStorage.setItem(KEY_HIDDEN_CATS, JSON.stringify(Array.from(hiddenCategories)));
@@ -126,8 +127,8 @@ export function TimelineFilterProvider({ children }: { children: React.ReactNode
       setFestivalDays,
       selectedDayStart,
       setSelectedDayStart,
-      myScheduleOnly,
-      setMyScheduleOnly,
+      interestFilter,
+      setInterestFilter,
       hiddenCategories,
       toggleCategory,
       scrollPositions,
@@ -135,8 +136,8 @@ export function TimelineFilterProvider({ children }: { children: React.ReactNode
       scrollToNowSignal,
       requestScrollToNow,
     }),
-    // useState setters (setFestivalDays, setSelectedDayStart, setMyScheduleOnly) are stable — omitted
-    [festivalDays, selectedDayStart, myScheduleOnly, hiddenCategories, toggleCategory, scrollPositions, setScrollPosition, scrollToNowSignal, requestScrollToNow],
+    // useState setters (setFestivalDays, setSelectedDayStart, setInterestFilter) are stable — omitted
+    [festivalDays, selectedDayStart, interestFilter, hiddenCategories, toggleCategory, scrollPositions, setScrollPosition, scrollToNowSignal, requestScrollToNow],
   );
 
   return (

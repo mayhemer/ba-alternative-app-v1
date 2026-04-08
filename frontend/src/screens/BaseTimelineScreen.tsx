@@ -9,7 +9,7 @@ import { useArtistDetail } from '../context/ArtistDetailContext';
 import { useTimelineFilter } from '../context/TimelineFilterContext';
 import { TimelineView } from '../components/timeline/TimelineView';
 import { DaySwitcher } from '../components/timeline/DaySwitcher';
-import { MyScheduleFilterControl } from '../components/timeline/MyScheduleFilterControl';
+import { TimelineInterestFilterControl } from '../components/InterestFilterControl';
 import { useTimelineData } from '../hooks/useTimelineData';
 import {
   DAY_DURATION_MS,
@@ -23,7 +23,7 @@ import { PADDING_BREAKPOINT } from '../styling/tokens';
 // ── Shared TopBar / BottomBar slot components ─────────────────────────────────
 
 function TopBarRight() {
-  return <MyScheduleFilterControl />;
+  return <TimelineInterestFilterControl />;
 }
 
 

@@ -16,6 +16,7 @@ import {
   RULER_HEIGHT,
   STRIP_HEIGHT,
 } from '../components/timeline/timelineLayout';
+import { matchesInterestFilter } from '../utils/interestUtils';
 
 type Options = {
   filterArtist?: (artist: DbArtist) => boolean;
@@ -34,7 +35,7 @@ export type TimelineData = {
 export function useTimelineData({ filterArtist, useSubRows = false }: Options = {}): TimelineData {
   const { selectedSlug } = useAppState();
   const { getStatus } = useInterest();
-  const { selectedDayStart, myScheduleOnly, hiddenCategories } = useTimelineFilter();
+  const { selectedDayStart, interestFilter, hiddenCategories } = useTimelineFilter();
 
   const eventsRef     = useRef<DbEvent[]>([]);
   const artistsRef    = useRef<DbArtist[]>([]);
@@ -70,13 +71,13 @@ export function useTimelineData({ filterArtist, useSubRows = false }: Options = 
       const artist = artistById[event.artistId];
       if (artist === undefined) { continue; }
       if (filterArtist !== undefined && !filterArtist(artist)) { continue; }
-      if (myScheduleOnly && getStatus(artist.artistId) === 'none') { continue; }
+      if (!matchesInterestFilter(getStatus(artist.artistId), interestFilter)) { continue; }
       if (grouped[event.categoryId] === undefined) { grouped[event.categoryId] = []; }
       grouped[event.categoryId].push({ event, artist });
     }
     return grouped;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [artistById, selectedDayStart, myScheduleOnly, getStatus, filterArtist]);
+  }, [artistById, selectedDayStart, interestFilter, getStatus, filterArtist]);
 
   const visibleCategories = useMemo<DbCategory[]>(() => {
     return [...categoriesRef.current]
