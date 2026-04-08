@@ -2,6 +2,7 @@ import React from 'react';
 import { TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { Text } from '../ui/Text';
 import { DrawerActions } from '@react-navigation/native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { navigationRef } from '../../navigation/navigationRef';
 import { useScreenUI } from '../../context/ScreenUIContext';
 import { WIDE_SCREEN_WIDTH_BREAKPOINT } from '../../styling/tokens';
@@ -20,7 +21,7 @@ export function TopBar() {
       <View className="w-16 items-start">
         {!isWide && (
           <TouchableOpacity onPress={() => navigationRef.dispatch(DrawerActions.openDrawer())} hitSlop={8}>
-            <Text style={{ fontSize: 18, color: '#f0f0f0', letterSpacing: 2 }}>☰</Text>
+            <Ionicons name={'menu-outline'} size={28} color={'#f0f0f0'}/>
           </TouchableOpacity>
         )}
         {LeftComponent !== undefined ? <LeftComponent /> : null}
