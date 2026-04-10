@@ -19,7 +19,6 @@ import {
   formatTime,
 } from '../timeline/timelineLayout';
 import { colors, MAX_CONTENT_WIDTH } from '../../styling/tokens';
-import Svg, { Defs, Pattern, Rect as SvgRect } from 'react-native-svg';
 import type { DbArtist, DbEvent, DbStage } from '../../types/backend';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -159,8 +158,6 @@ function MiniTimeline({ sourceEvent, overlappingEvents, artistById, stageById, o
           const overlapLeft  = isSource ? 0 : Math.max(0, (sourceEvent.dateFrom - event.dateFrom) * PIXELS_PER_MS) - OVERLAPPING_BLOCK_BORDER_WIDTH;
           const overlapRight = isSource ? 0 : Math.min(blockWidth, (sourceEvent.dateTo - event.dateFrom) * PIXELS_PER_MS);
           const overlapWidth = Math.max(0, overlapRight - overlapLeft) - OVERLAPPING_BLOCK_BORDER_WIDTH;
-          const stripePatternId = `stripes-${event.eventId}`;
-
           return (
             <TouchableOpacity
               key={event.eventId}
@@ -174,30 +171,20 @@ function MiniTimeline({ sourceEvent, overlappingEvents, artistById, stageById, o
                 height: MINI_BLOCK_HEIGHT,
                 backgroundColor: isSource ? 'rgba(255,255,255,0.12)' : colors.surfaceRaised,
                 borderWidth: isSource ? 1 : OVERLAPPING_BLOCK_BORDER_WIDTH,
-                borderColor: isSource ? colors.white : colors.danger,
+                borderColor: isSource ? colors.white : colors.dangerSecondary,
                 padding: 4,
                 overflow: 'hidden',
               }}
             >
               {!isSource && overlapWidth > 0 && (
-                <Svg
-                  style={{ position: 'absolute', left: overlapLeft, top: 0 }}
-                  width={overlapWidth}
-                  height={MINI_BLOCK_HEIGHT}
-                >
-                  <Defs>
-                    <Pattern
-                      id={stripePatternId}
-                      width="5"
-                      height="5"
-                      patternUnits="userSpaceOnUse"
-                      patternTransform="rotate(45)"
-                    >
-                      <SvgRect width="2" height="5" fill={colors.dangerSecondary} />
-                    </Pattern>
-                  </Defs>
-                  <SvgRect width={overlapWidth} height={MINI_BLOCK_HEIGHT} fill={`url(#${stripePatternId})`} />
-                </Svg>
+                <View style={{
+                  position: 'absolute',
+                  left: overlapLeft,
+                  top: 0,
+                  width: overlapWidth,
+                  height: MINI_BLOCK_HEIGHT,
+                  backgroundColor: colors.dangerSecondary,
+                }} pointerEvents="none" />
               )}
               <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
                 <Text
