@@ -5,11 +5,9 @@ import { Text } from './ui/Text';
 import type { DbArtist } from '../types/backend';
 import type { InterestStatus } from '../context/InterestContext';
 import { getArtistLocalized } from '../utils/localization';
-import { useArtistDerived } from '../hooks/useArtistDerived';
 import { useInterestCycle } from '../context/InterestContext';
 import { useStartProgress } from '../context/ScreenUIContext';
 import { StarButton, getFeedbackLabel } from './StarButton';
-import { Exclamation } from './ui/Exclamation';
 
 type Props = {
   artist: DbArtist;
@@ -23,8 +21,6 @@ export const ArtistRow = React.memo(function ArtistRow({ artist, status, onPress
 
   const genre = getArtistLocalized(artist.localized, 'genre');
   const country = getArtistLocalized(artist.localized, 'country');
-  const { conflictMap } = useArtistDerived(artist);
-  const hasConflict = conflictMap.size > 0;
 
   const handleStarPress = useCallback((): void => {
     const { next, promise } = cycleStatus(artist.artistId);
@@ -73,10 +69,7 @@ export const ArtistRow = React.memo(function ArtistRow({ artist, status, onPress
       </View>
 
       {/* Star */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-        {hasConflict && <Exclamation/>}
-        <StarButton status={status} onPress={handleStarPress} label="Toggle interest" />
-      </View>
+      <StarButton status={status} onPress={handleStarPress} label="Toggle interest" />
     </TouchableOpacity>
   );
 });
