@@ -1,6 +1,5 @@
-import { Pressable, TouchableOpacity } from 'react-native';
-import { colors, HIT_SLOP } from '../../styling/tokens';
-import { Text } from './Text';
+import { Pressable } from 'react-native';
+import { colors } from '../../styling/tokens';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 export function Exclamation({ size = 14, ...props }) {
@@ -18,7 +17,7 @@ export function ExclamationTouchable({ size = 24, onPress, ...props }: PropsTouc
   return (
     <Pressable
       onPress={onPress}
-      hitSlop={{ top: HIT_SLOP, bottom: HIT_SLOP, left: HIT_SLOP, right: HIT_SLOP }}
+      hitSlop={15}
     >
       <Exclamation size={size} {...props} />
     </Pressable>

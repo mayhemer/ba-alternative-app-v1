@@ -10,4 +10,3 @@ export type ColorToken = keyof typeof colors;
 export const WIDE_SCREEN_WIDTH_BREAKPOINT = 800;
 export const MAX_CONTENT_WIDTH = 700;
 export const PADDING_BREAKPOINT = 732;
-export const HIT_SLOP = 40;

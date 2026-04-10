@@ -2,7 +2,7 @@ import React from 'react';
 import { Pressable } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { InterestStatus } from '../context/InterestContext';
-import { colors, HIT_SLOP } from '../styling/tokens';
+import { colors } from '../styling/tokens';
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
@@ -47,11 +47,12 @@ type Props = {
 export function StarButton({ status, onPress, label, size = 'small' }: Props) {
   const config = STAR_CONFIG[status];
   const iconSize = size === 'large' ? 32 : 26;
+  const slop = size === 'large' ? 5 : 25;
 
   return (
     <Pressable
       onPress={onPress}
-      hitSlop={{ top: HIT_SLOP, bottom: HIT_SLOP, left: HIT_SLOP, right: HIT_SLOP }}
+      hitSlop={slop}
       accessibilityLabel={label}
       accessibilityRole="button"
     >
