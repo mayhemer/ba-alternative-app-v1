@@ -6,6 +6,7 @@
     "tscheck": "npx tsc --noEmit",
     "start": "npx expo start",
     "android": "npx expo run:android",
+    "pre-ios": "npx expo prebuild --platform ios --clean",
     "ios": "npx expo run:ios",
     "ios-device": "npx expo run:ios --device",
     "web": "npx expo start --web",
