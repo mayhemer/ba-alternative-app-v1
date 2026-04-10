@@ -12,9 +12,6 @@ const colors = {
   borderConflict:'#666666', 
   timeline: {
     blockDefault:       '#333333',
-    blockWanted:        '#2a7fa7',
-    blockText:          '#ffffff',
-    blockMarkDefault:   '#757575',
     categoryName:       '#777777',
     stripBg:            '#141414',
     laneBg:             '#141414',
@@ -25,10 +22,10 @@ const colors = {
   notInterested: '#888888',
   accent:        '#e8c84a',   // must-see / active
   amber:         '#b87a1a',   // warning
-  textPrimary:   '#f0f0f0',
-  textSecondary: '#ababab',
-  textMuted:     '#666666',
-  muted:         '#444444',   // tick marks, block default, subtle chrome
+  textPrimary:   '#ffffff',
+  textSecondary: '#dddddd',
+  textMuted:     '#bbbbbb',
+  muted:         '#7f7f7f',   // tick marks, block default, subtle chrome
   danger:        '#ff4444',   // now-line, errors, warnings
   black:         '#000000',
   white:         '#ffffff',

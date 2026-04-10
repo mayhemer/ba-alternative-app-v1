@@ -72,11 +72,11 @@ export function ArtistBlock({ event, artist, dayStart, status, onPress, subRow =
               numberOfLines={oneWordArtist ? 1 : 2}
               adjustsFontSizeToFit
               minimumFontScale={0.8}
-              style={{ fontSize: 12, color: colors.timeline.blockText, fontFamily: 'Bold-Default' }}
+              style={{ fontSize: 12, color: colors.textPrimary, fontFamily: 'Bold-Default' }}
             >
               {artist.name}
             </Text>
-            <Text numberOfLines={1} style={{ fontSize: 10, color: colors.timeline.blockText }}>
+            <Text numberOfLines={1} style={{ fontSize: 10, color: colors.textPrimary }}>
               {formatTime(event.dateFrom)}–{formatTime(event.dateTo)}
             </Text>
             {hasConflict && (

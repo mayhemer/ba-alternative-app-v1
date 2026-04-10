@@ -67,7 +67,7 @@ export function CategoryLane({
               fontSize: 14,
               //fontWeight: '300',
               fontFamily: 'Regular-Default',
-              color: colors.timeline.categoryName,
+              color: colors.textSecondary,
             }}
           >
             {title}
