@@ -4,12 +4,12 @@
   "main": "index.ts",
   "scripts": {
     "tscheck": "npx tsc --noEmit",
-    "start": "expo start",
-    "android": "expo run:android",
-    "ios": "expo run:ios",
-    "ios-device": "expo run:ios --device",
-    "web": "expo start --web",
-    "build:web": "expo export --platform web"
+    "start": "npx expo start",
+    "android": "npx expo run:android",
+    "ios": "npx expo run:ios",
+    "ios-device": "npx expo run:ios --device",
+    "web": "npx expo start --web",
+    "build:web": "npx expo export --platform web"
   },
   "dependencies": {
     "@babel/core": "^7.26.0",
