@@ -71,16 +71,6 @@ function MiniTimeline({ sourceEvent, overlappingEvents, artistById, stageById, o
     const rows: Record<string, number> = {};
     for (const event of allEvents) {
       let placed = false;
-      /*
-      for (let row = 0; row < subRowEndTimes.length; row++) {
-        if (subRowEndTimes[row] <= event.dateFrom) {
-          rows[event.eventId] = row;
-          subRowEndTimes[row] = event.dateTo;
-          placed = true;
-          break;
-        }
-      }
-      */
       if (!placed) {
         rows[event.eventId] = subRowEndTimes.length;
         subRowEndTimes.push(event.dateTo);
