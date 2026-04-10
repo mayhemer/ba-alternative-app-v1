@@ -28,7 +28,7 @@ const PADDING_MS = 30 * 60 * 1000; // 30 min padding on each side
 const MINI_BLOCK_HEIGHT = LANE_HEIGHT - 8;
 const HOUR_MS = 60 * 60 * 1000;
 const MIN_BLOCK_WIDTH = 40;
-const OVERLAPPING_BLOCK_BORDER_WIDTH = 3;
+const OVERLAPPING_BLOCK_BORDER_WIDTH = 2;
 
 // ── Backdrop ──────────────────────────────────────────────────────────────────
 
@@ -170,8 +170,8 @@ function MiniTimeline({ sourceEvent, overlappingEvents, artistById, stageById, o
                 width: blockWidth,
                 height: MINI_BLOCK_HEIGHT,
                 backgroundColor: isSource ? 'rgba(255,255,255,0.12)' : colors.surfaceRaised,
-                borderWidth: isSource ? 1 : OVERLAPPING_BLOCK_BORDER_WIDTH,
-                borderColor: isSource ? colors.white : colors.dangerSecondary,
+                borderWidth: isSource ? 2 : OVERLAPPING_BLOCK_BORDER_WIDTH,
+                borderColor: isSource ? colors.white : colors.danger,
                 padding: 4,
                 overflow: 'hidden',
               }}
