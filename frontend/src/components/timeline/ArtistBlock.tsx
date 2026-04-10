@@ -79,16 +79,11 @@ export function ArtistBlock({ event, artist, dayStart, status, onPress, subRow =
             <Text numberOfLines={1} style={{ fontSize: 10, color: colors.textPrimary }}>
               {formatTime(event.dateFrom)}–{formatTime(event.dateTo)}
             </Text>
-            {hasConflict && (
-              <View style={{ flexDirection: 'row', alignItems: 'flex-start', flex: 1, gap: 4 }}>
-                <Exclamation/>
-                <Text style={{ fontSize: 10, color: colors.danger, padding: 0 }}>
-                  Overlaps
-                </Text>
-              </View>
-            )}
           </View>
-          <StarIndicator status={status} size={11} />
+          <View style={{ flexDirection: 'column', alignItems: 'center' }}>
+            <StarIndicator status={status} size={11} />
+            {hasConflict && <Exclamation/>}
+          </View>
         </View>
       ) : null}
     </TouchableOpacity>

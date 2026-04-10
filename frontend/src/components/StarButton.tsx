@@ -2,11 +2,9 @@ import React from 'react';
 import { Pressable } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { InterestStatus } from '../context/InterestContext';
-import { colors } from '../styling/tokens';
+import { colors, HIT_SLOP } from '../styling/tokens';
 
 // ── Config ────────────────────────────────────────────────────────────────────
-
-const HIT_SLOP = 40;
 
 export type StarIconName = 'star' | 'star-half' | 'star-outline';
 

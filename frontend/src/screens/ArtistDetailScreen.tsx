@@ -11,7 +11,7 @@ import { decodeCategoryColor } from '../utils/color';
 import { colors } from '../styling/tokens';
 import type { DbArtist } from '../types/backend';
 import { useArtistDerived } from '../hooks/useArtistDerived';
-import { Exclamation } from '../components/ui/Exclamation';
+import { Exclamation, ExclamationTouchable } from '../components/ui/Exclamation';
 
 const STREAMING_ICON_SIZE = 24;
 
@@ -26,7 +26,8 @@ type Props = { artist: DbArtist };
 // ── Header (sticky — rendered outside scroll view) ────────────────────────────
 
 export function ArtistDetailHeader({ artist }: Props) {
-  const { closeDetail, status, innerWidth, hPad, isWeb, meta, handleStarPress } = useArtistDerived(artist);
+  const { closeDetail, expandDetail, status, innerWidth, hPad, isWeb, meta, handleStarPress, conflictMap } = useArtistDerived(artist);
+  const hasConflict = conflictMap.size > 0;
 
   return (
     <View style={{
@@ -52,12 +53,15 @@ export function ArtistDetailHeader({ artist }: Props) {
         >
           {artist.name}
         </Text>
-        <StarButton status={status} onPress={handleStarPress} label="Toggle interest" size="large" />
-        {isWeb && (
-          <TouchableOpacity onPress={closeDetail} hitSlop={8} style={{ marginLeft: 16 }}>
-            <Text style={{ fontSize: 20, color: colors.textSecondary, lineHeight: 36 }}>✕</Text>
-          </TouchableOpacity>
-        )}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          {hasConflict && <ExclamationTouchable onPress={expandDetail} />}
+          <StarButton status={status} onPress={handleStarPress} label="Toggle interest" size="large" />
+          {isWeb && (
+            <TouchableOpacity onPress={closeDetail} hitSlop={8} style={{ marginLeft: 16 }}>
+              <Text style={{ fontSize: 20, color: colors.textSecondary, lineHeight: 36 }}>✕</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
       {meta !== '' && (
         <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 4 }}>

@@ -15,7 +15,7 @@ import { MAX_CONTENT_WIDTH, PADDING_BREAKPOINT } from '../styling/tokens';
 // ── Shared derived values ─────────────────────────────────────────────────────
 
 export function useArtistDerived(artist: DbArtist) {
-  const { closeDetail } = useArtistDetailContext();
+  const { closeDetail, expandDetail } = useArtistDetailContext();
   const { interests, getStatus, cycleStatus } = useInterest();
   const { openConflict } = useConflictDetail();
   const { selectedSlug } = useAppState();
@@ -69,32 +69,9 @@ export function useArtistDerived(artist: DbArtist) {
 
   function handleStarPress(): void {
     const { next, promise } = cycleStatus(artist.artistId);
-    const tracker = startProgress(getFeedbackLabel(next));
-    // Check for conflicts with other already-marked artists (uses pre-cycleStatus interests).
-    const showConflictWarning = (next === 'must_see') && (() => {
-      // CLAUDE: looks like a code duplication, have a helper to collect conflicting events for an artist
-      const artistEvents = getArtistEvents(selectedSlug, artist.artistId);
-      return getArtists(selectedSlug).some((other) => {
-        if (other.artistId === artist.artistId) { return false; }
-        const otherStatus = interests[other.artistId] ?? 'none';
-        if (otherStatus === 'none') { return false; }
-        const otherEvents = getArtistEvents(selectedSlug, other.artistId);
-        return otherEvents.some((otherEvent) =>
-          artistEvents.some((event) => eventsOverlap(event, otherEvent))
-        );
-      });
-    })();
-    promise
-      .then(() => {
-        if (showConflictWarning) {
-          showFeedback('Conflicts with other performances', 'warning');
-        } else {
-          tracker.confirm();
-        }
-      })
-      .catch((err: unknown) => tracker.warn(err));
+    startProgress(getFeedbackLabel(next)).wrap(promise);
   }
 
-  return { closeDetail, status, content, innerWidth, hPad, isWeb, meta, artistNameForURL, artistWebDomain, handleStarPress, width, conflictMap, openConflict };
+  return { closeDetail, expandDetail, status, content, innerWidth, hPad, isWeb, meta, artistNameForURL, artistWebDomain, handleStarPress, width, conflictMap, openConflict };
 }
 
