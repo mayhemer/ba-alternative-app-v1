@@ -6,11 +6,11 @@
     "tscheck": "npx tsc --noEmit",
     "start": "npx expo start",
     "android": "npx expo run:android",
-    "pre-ios": "npx expo prebuild --platform ios --clean",
-    "ios": "npx expo run:ios",
-    "ios-device": "npx expo run:ios --device",
-    "web": "npx expo start --web",
-    "build:web": "npx expo export --platform web"
+    "build:ios": "npx expo prebuild --platform ios --clean",
+    "ios:sym": "npx expo run:ios",
+    "ios:device": "npx expo run:ios --device",
+    "build:web": "npx expo export --platform web",
+    "web": "npx expo start --web"
   },
   "dependencies": {
     "@babel/core": "^7.26.0",
