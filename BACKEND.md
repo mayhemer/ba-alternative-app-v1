@@ -63,3 +63,8 @@ DNS CNAME: api.ba.janbambas.cz --> xxxx.cloudfront.net
 - Redeploy again to take the cert into effect
 
 Now just `npx cdk deploy` to redeploy (it's slow... 200+ seconds)
+
+
+## Manual sync
+
+`curl https://api.ba.janbambas.cz/sync -X POST`
