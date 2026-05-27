@@ -9,16 +9,19 @@
     "test:all": "npm test && npm run test:integration",
     "typecheck": "tsc --noEmit"
   },
+  "overrides": {
+    "tar": "^7.5.15"
+  },
   "devDependencies": {
     "@aws-sdk/client-cloudfront": "^3",
     "@aws-sdk/client-dynamodb": "^3",
     "@aws-sdk/client-lambda": "^3.1019.0",
     "@aws-sdk/lib-dynamodb": "^3",
+    "@shelf/jest-dynamodb": "^4.0.2",
     "@types/aws-lambda": "^8.10.149",
     "@types/jest": "^30",
     "@types/node": "^24.0.0",
     "jest": "^30",
-    "jest-dynalite": "^3.6.1",
     "msw": "^2.12.14",
     "ts-jest": "^29",
     "ts-node": "^10.9.2",

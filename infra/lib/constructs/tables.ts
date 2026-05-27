@@ -1,3 +1,6 @@
+// ⚠ When adding or renaming tables/keys here, mirror the change in
+//   app/backend/db-table-schema.js (used by integration tests against DynamoDB Local).
+
 import { Construct } from 'constructs';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { RemovalPolicy } from 'aws-cdk-lib';

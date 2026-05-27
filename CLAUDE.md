@@ -14,6 +14,17 @@
 - when installing a package that requires build-time configuration (Babel plugins, Metro config, etc.), update the config file in the same step as the install
 - all functions inside a React context provider must be useCallback-wrapped; the value object passed to <Context.Provider> must be useMemo-wrapped
 
+## DynamoDB tables — keeping infra and tests in sync
+
+The canonical DynamoDB table definitions live in two places that must stay in sync:
+
+| File | Purpose |
+|------|---------|
+| `infra/lib/constructs/tables.ts` | CDK stack — creates the real AWS tables |
+| `backend/db-table-schema.js` | Plain-JS mirror — used by integration tests (DynamoDB Local) |
+
+When you add, rename, or delete a table or key in `tables.ts`, make the matching change in `db-table-schema.js` in the same step. `db-table-schema.js` is imported by `jest-dynamodb-config.js` (table creation) and `tests/integration/clearTables.ts` (beforeEach wipe) — both derive from it automatically.
+
 ## Minor
 - always use full bracing of if/while/for statements.
 - use ternary operator in ts/js only for one liners, do not nest it

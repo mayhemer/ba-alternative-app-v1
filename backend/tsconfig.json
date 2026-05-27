@@ -8,7 +8,8 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "outDir": "dist",
-    "rootDir": "."
+    "rootDir": ".",
+    "types": ["node", "jest", "aws-lambda"]
   },
   "include": ["**/*.ts"],
   "exclude": ["node_modules", "dist"]
