@@ -6,7 +6,6 @@ import { getCategories, type InterestStatus } from '../../cache/cacheService';
 import { timeToX, formatTime, LANE_HEIGHT, MIN_BLOCK_WIDTH } from './timelineLayout';
 import { colors } from '../../styling/tokens';
 import { decodeCategoryColor, dimColor } from '../../utils/color';
-import { useArtistDerived } from '../../hooks/useArtistDerived';
 import { Exclamation } from '../ui/Exclamation';
 import { StarIndicator } from '../StarButton';
 
@@ -17,6 +16,7 @@ type Props = {
   status: InterestStatus;
   onPress: () => void;
   subRow?: number;
+  hasConflict: boolean;
 };
 
 // ── Block colors per interest state ──────────────────────────────────────────
@@ -32,19 +32,17 @@ function blockStyle(_status: InterestStatus, categoryColor: string): BlockStyle 
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function ArtistBlock({ event, artist, dayStart, status, onPress, subRow = 0 }: Props) {
+export function ArtistBlock({ event, artist, dayStart, status, onPress, subRow = 0, hasConflict }: Props) {
   const x     = timeToX(event.dateFrom, dayStart);
   const right = timeToX(event.dateTo,   dayStart);
   const width = Math.max(MIN_BLOCK_WIDTH, right - x);
 
-  const { conflictMap } = useArtistDerived(artist);
   const category = getCategories(event.slug).find(c => c.categoryId === event.categoryId);
   const categoryColor = decodeCategoryColor(category?.color ?? colors.timeline.blockDefault);
 
   const { bg, border } = blockStyle(status, categoryColor);
 
-  const showLabel   = width >= 40;
-  const hasConflict = conflictMap.has(event.eventId);
+  const showLabel = width >= 40;
 
   const oneWordArtist = artist.name.indexOf(' ') === -1;
 

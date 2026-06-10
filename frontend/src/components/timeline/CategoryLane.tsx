@@ -25,6 +25,7 @@ type Props = {
   onBlockPress: (event: DbEvent, artist: DbArtist) => void;
   laneHeight?: number;
   eventSubRows?: Record<string, number>;
+  conflictingEventIds: Set<string>;
 };
 
 export function CategoryLane({
@@ -36,6 +37,7 @@ export function CategoryLane({
   onBlockPress,
   laneHeight = LANE_HEIGHT,
   eventSubRows,
+  conflictingEventIds,
 }: Props) {
   const title = getCategoryLocalized(category.localized, 'title');
   const categoryColor = decodeCategoryColor(category.color);
@@ -96,6 +98,7 @@ export function CategoryLane({
             status={getStatus(artist.artistId)}
             onPress={() => onBlockPress(event, artist)}
             subRow={eventSubRows?.[event.eventId]}
+            hasConflict={conflictingEventIds.has(event.eventId)}
           />
         ))}
       </View>

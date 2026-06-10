@@ -26,6 +26,7 @@ type Props = {
   canvasHeight: number;
   selectedDayStart: number;
   onBlockPress: (event: DbEvent, artist: DbArtist) => void;
+  conflictingEventIds: Set<string>;
 };
 
 export function TimelineView({
@@ -37,6 +38,7 @@ export function TimelineView({
   canvasHeight,
   selectedDayStart,
   onBlockPress,
+  conflictingEventIds,
 }: Props) {
   const [areaHeight, setAreaHeight] = useState(0);
   const scrollViewWidthRef = useRef(0);
@@ -139,6 +141,7 @@ export function TimelineView({
                   onBlockPress={onBlockPress}
                   laneHeight={laneHeights[cat.categoryId]}
                   eventSubRows={categorySubRows?.[cat.categoryId]}
+                  conflictingEventIds={conflictingEventIds}
                 />
               ))}
             </View>

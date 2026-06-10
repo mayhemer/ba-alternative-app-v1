@@ -17,6 +17,7 @@ import {
   STRIP_HEIGHT,
 } from '../components/timeline/timelineLayout';
 import { matchesInterestFilter } from '../utils/interestUtils';
+import { computeConflictEntries } from '../utils/conflictUtils';
 
 type Options = {
   filterArtist?: (artist: DbArtist) => boolean;
@@ -30,11 +31,12 @@ export type TimelineData = {
   laneHeights: Record<string, number>;
   categorySubRows: Record<string, Record<string, number>>;
   canvasHeight: number;
+  conflictingEventIds: Set<string>;
 };
 
 export function useTimelineData({ filterArtist, useSubRows = false }: Options = {}): TimelineData {
   const { selectedSlug } = useAppState();
-  const { getStatus } = useInterest();
+  const { getStatus, interests } = useInterest();
   const { selectedDayStart, interestFilter, hiddenCategories } = useTimelineFilter();
 
   const eventsRef     = useRef<DbEvent[]>([]);
@@ -119,6 +121,11 @@ export function useTimelineData({ filterArtist, useSubRows = false }: Options = 
     }, 0);
   }, [visibleCategories, laneHeights]);
 
+  const conflictingEventIds = useMemo<Set<string>>(() => {
+    const entries = computeConflictEntries(selectedSlug, interests);
+    return new Set(entries.map((e) => e.event.eventId));
+  }, [selectedSlug, interests]);
+
   return {
     events: eventsRef.current,
     eventsByCategory,
@@ -126,5 +133,6 @@ export function useTimelineData({ filterArtist, useSubRows = false }: Options = 
     laneHeights,
     categorySubRows,
     canvasHeight,
+    conflictingEventIds,
   };
 }

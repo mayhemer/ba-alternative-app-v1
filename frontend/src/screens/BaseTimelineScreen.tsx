@@ -47,7 +47,7 @@ export function BaseTimelineScreen({ title, screenKey, filterArtist, useSubRows 
     setScrollPosition,
   } = useTimelineFilter();
 
-  const { events, eventsByCategory, visibleCategories, laneHeights, categorySubRows, canvasHeight } =
+  const { events, eventsByCategory, visibleCategories, laneHeights, categorySubRows, canvasHeight, conflictingEventIds } =
     useTimelineData({ filterArtist, useSubRows });
 
   const BottomBarContent = React.useCallback(() => <DaySwitcher screenKey={screenKey} />, [screenKey]);
@@ -115,6 +115,7 @@ export function BaseTimelineScreen({ title, screenKey, filterArtist, useSubRows 
       canvasHeight={canvasHeight}
       selectedDayStart={selectedDayStart}
       onBlockPress={handleBlockPress}
+      conflictingEventIds={conflictingEventIds}
     />
   );
 }
