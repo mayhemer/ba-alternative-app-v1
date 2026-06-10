@@ -135,8 +135,10 @@ export function useAppState(): AppState {
 
 export function useCacheRefresh(listener: CacheRefreshListener): void {
   const { subscribeToCacheRefresh } = useAppContext();
+  const listenerRef = useRef(listener);
+  listenerRef.current = listener;
+
   useEffect(() => {
-    const unsubscribe = subscribeToCacheRefresh(listener);
-    return unsubscribe;
-  }, [subscribeToCacheRefresh, listener]);
+    return subscribeToCacheRefresh(() => listenerRef.current());
+  }, [subscribeToCacheRefresh]);
 }
