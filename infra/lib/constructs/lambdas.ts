@@ -30,13 +30,18 @@ export class Lambdas extends Construct {
       SYNC_STATE_TABLE: tables.syncState.tableName,
     };
 
+    // Lambda source lives in backend/ — a sibling package of infra/.
+    // projectRoot + depsLockFilePath must be set explicitly so NodejsFunction's
+    // path validation doesn't reject paths that are outside the infra directory.
+    const backendRoot = path.join(__dirname, '../../../backend');
+    const depsLockFilePath = path.join(backendRoot, 'package-lock.json');
     const bundling = { minify: true, sourceMap: false };
 
     // User-facing API Lambda
     this.apiFn = new NodejsFunction(this, 'ApiFunction', {
       functionName: 'ba-api',
       description: 'Brutal Assault — user-facing API handler',
-      entry: path.join(__dirname, '../../../backend/lambdas/api/handler.ts'),
+      entry: path.join(backendRoot, 'lambdas/api/handler.ts'),
       handler: 'handler',
       runtime: lambda.Runtime.NODEJS_22_X,
       architecture: lambda.Architecture.ARM_64,
@@ -44,6 +49,8 @@ export class Lambdas extends Construct {
       timeout: cdk.Duration.seconds(30),
       environment: tableEnv,
       bundling,
+      projectRoot: backendRoot,
+      depsLockFilePath,
     });
 
     // Background sync Lambda — polls official API and rebuilds DynamoDB tables
@@ -51,7 +58,7 @@ export class Lambdas extends Construct {
     this.syncFn = new NodejsFunction(this, 'SyncFunction', {
       functionName: 'ba-sync',
       description: 'Brutal Assault — background sync from official API',
-      entry: path.join(__dirname, '../../../backend/lambdas/sync/handler.ts'),
+      entry: path.join(backendRoot, 'lambdas/sync/handler.ts'),
       handler: 'handler',
       runtime: lambda.Runtime.NODEJS_22_X,
       architecture: lambda.Architecture.ARM_64,
@@ -64,6 +71,8 @@ export class Lambdas extends Construct {
         FESTIVAL_SLUGS: this.node.tryGetContext('festivalSlugs') ?? '',
       },
       bundling,
+      projectRoot: backendRoot,
+      depsLockFilePath,
     });
 
     // IAM: API Lambda — read public tables; read-write user tables
@@ -84,8 +93,8 @@ export class Lambdas extends Construct {
     const syncRule = new events.Rule(this, 'SyncSchedule', {
       ruleName: 'ba-sync-schedule',
       description: 'Trigger BA sync Lambda — disabled; use POST /sync API endpoint instead',
-      schedule: events.Schedule.rate(cdk.Duration.minutes(5)),
-      enabled: false,
+      schedule: events.Schedule.rate(cdk.Duration.hours(1)),
+      enabled: true,
     });
     syncRule.addTarget(new targets.LambdaFunction(this.syncFn));
 
