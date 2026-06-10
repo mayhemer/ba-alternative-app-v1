@@ -10,10 +10,11 @@ import { colors } from '../../styling/tokens';
 type Props = {
   dayStart: number;
   scrollX: SharedValue<number>;
+  nowX: SharedValue<number>;
 };
 
 export function TimeRuler(_props: Props) {
-  const { scrollX } = _props;
+  const { scrollX, nowX } = _props;
   const ticks = Array.from({ length: 25 }, (_, i) => i);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -32,7 +33,7 @@ export function TimeRuler(_props: Props) {
       }}
     >
       <Animated.View style={[{ width: CANVAS_WIDTH, height: RULER_HEIGHT, position: 'relative' }, animatedStyle]}>
-        <NowLine dayStart={_props.dayStart} canvasHeight={RULER_HEIGHT} showArrow />
+        <NowLine nowX={nowX} canvasHeight={RULER_HEIGHT} showArrow />
         {ticks.map((h) => {
           const hour = (DAY_BOUNDARY_HOUR + h) % 24;
           const x    = h * PIXELS_PER_HOUR;

@@ -1,42 +1,42 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View } from 'react-native';
-import { CANVAS_WIDTH, NOW_LINE_ARROW_SIZE, timeToX } from './timelineLayout';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import type { SharedValue } from 'react-native-reanimated';
+import { CANVAS_WIDTH, NOW_LINE_ARROW_SIZE } from './timelineLayout';
 import { colors } from '../../styling/tokens';
-import { currentTimeMs } from '../../utils/clock';
 
 type Props = {
-  dayStart: number;
+  nowX: SharedValue<number>;
   canvasHeight: number;
   top?: number;
   showArrow?: boolean;
 };
 
-export function NowLine({ dayStart, canvasHeight, top = 0, showArrow = false }: Props) {
-  const [, setTick] = useState(0);
-
-  // Tick every minute to trigger a re-render so nowX stays current.
-  useEffect(() => {
-    const interval = setInterval(() => { setTick((t) => t + 1); }, 60_000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Computed synchronously — always reflects the current dayStart with no stale frame.
-  const nowX = timeToX(currentTimeMs(), dayStart);
-
-  // Outside the day window — nothing to show.
-  if (nowX <= 0 || nowX >= CANVAS_WIDTH) { return null; }
+export function NowLine({ nowX, canvasHeight, top = 0, showArrow = false }: Props) {
+  // Position and visibility are driven on the UI thread — no JS re-renders.
+  const lineStyle = useAnimatedStyle(() => {
+    const x = nowX.value;
+    const visible = x > 0 && x < CANVAS_WIDTH;
+    return {
+      left: x,
+      // Collapse to zero width when outside the day window so nothing shows.
+      width: visible ? 1 : 0,
+      opacity: visible ? 1 : 0,
+    };
+  });
 
   return (
-    <View
+    <Animated.View
       pointerEvents="none"
-      style={{
-        position: 'absolute',
-        left: nowX,
-        top,
-        height: canvasHeight,
-        width: 1,
-        backgroundColor: colors.danger,
-      }}
+      style={[
+        {
+          position: 'absolute',
+          top,
+          height: canvasHeight,
+          backgroundColor: colors.danger,
+        },
+        lineStyle,
+      ]}
     >
       {showArrow && (
         <View
@@ -55,6 +55,6 @@ export function NowLine({ dayStart, canvasHeight, top = 0, showArrow = false }: 
           }}
         />
       )}
-    </View>
+    </Animated.View>
   );
 }

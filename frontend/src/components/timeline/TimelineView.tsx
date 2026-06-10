@@ -56,6 +56,20 @@ export function TimelineView({
     },
   });
 
+  // ── Now-line position ────────────────────────────────────────────────────────
+  // Computed once here and shared with every NowLine. A single interval keeps it
+  // current; the value is consumed on the UI thread, so updates cause no JS re-renders.
+
+  const nowX = useSharedValue(timeToX(currentTimeMs(), selectedDayStart));
+
+  useEffect(() => {
+    nowX.value = timeToX(currentTimeMs(), selectedDayStart);
+    const interval = setInterval(() => {
+      nowX.value = timeToX(currentTimeMs(), selectedDayStart);
+    }, 60_000);
+    return () => clearInterval(interval);
+  }, [selectedDayStart, nowX]);
+
   // ── Scroll save / restore on day switch ────────────────────────────────────
 
   const prevDayRef           = useRef(0);
@@ -94,8 +108,8 @@ export function TimelineView({
   useEffect(() => {
     if (scrollToNowSignal.counter === 0) { return; }
     if (scrollToNowSignal.screenKey !== screenKey) { return; }
-    const nowX = timeToX(currentTimeMs(), selectedDayStart);
-    const targetX = Math.max(0, nowX - VIEW_OFFSET_X - scrollViewWidthRef.current / 2);
+    const nowXValue = timeToX(currentTimeMs(), selectedDayStart);
+    const targetX = Math.max(0, nowXValue - VIEW_OFFSET_X - scrollViewWidthRef.current / 2);
     scheduleOnUI(() => { scrollTo(horizontalScrollRef, targetX, 0, true); });
   // selectedDayStart is intentionally omitted — the signal always fires for the current day
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -116,7 +130,7 @@ export function TimelineView({
 
   return (
     <View style={{ flex: 1 }} onLayout={(e) => { setAreaHeight(e.nativeEvent.layout.height); }}>
-      <TimeRuler dayStart={selectedDayStart} scrollX={scrollX} />
+      <TimeRuler dayStart={selectedDayStart} scrollX={scrollX} nowX={nowX} />
       <ScrollView className="flex-1 bg-background" showsVerticalScrollIndicator={false}>
         <Animated.ScrollView
           ref={horizontalScrollRef}
@@ -137,6 +151,7 @@ export function TimelineView({
                   events={eventsByCategory[cat.categoryId] ?? []}
                   dayStart={selectedDayStart}
                   scrollX={scrollX}
+                  nowX={nowX}
                   getStatus={getStatus}
                   onBlockPress={onBlockPress}
                   laneHeight={laneHeights[cat.categoryId]}

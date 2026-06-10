@@ -21,6 +21,7 @@ type Props = {
   events: LaneEvent[];
   dayStart: number;
   scrollX: SharedValue<number>;
+  nowX: SharedValue<number>;
   getStatus: (artistId: string) => InterestStatus;
   onBlockPress: (event: DbEvent, artist: DbArtist) => void;
   laneHeight?: number;
@@ -33,6 +34,7 @@ export function CategoryLane({
   events,
   dayStart,
   scrollX,
+  nowX,
   getStatus,
   onBlockPress,
   laneHeight = LANE_HEIGHT,
@@ -88,7 +90,7 @@ export function CategoryLane({
           position: 'relative',
         }}
       >
-        <NowLine dayStart={dayStart} canvasHeight={STRIP_HEIGHT + laneHeight} top={-STRIP_HEIGHT} />
+        <NowLine nowX={nowX} canvasHeight={STRIP_HEIGHT + laneHeight} top={-STRIP_HEIGHT} />
         {events.map(({ event, artist }) => (
           <ArtistBlock
             key={event.eventId}
