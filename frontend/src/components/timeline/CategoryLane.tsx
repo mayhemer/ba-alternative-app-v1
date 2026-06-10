@@ -96,6 +96,7 @@ export function CategoryLane({
             artist={artist}
             dayStart={dayStart}
             status={getStatus(artist.artistId)}
+            categoryColor={categoryColor}
             onPress={() => onBlockPress(event, artist)}
             subRow={eventSubRows?.[event.eventId]}
             hasConflict={conflictingEventIds.has(event.eventId)}

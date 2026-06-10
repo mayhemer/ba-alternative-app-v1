@@ -2,10 +2,10 @@ import React from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import { Text } from '../ui/Text';
 import type { DbArtist, DbEvent } from '../../types/backend';
-import { getCategories, type InterestStatus } from '../../cache/cacheService';
+import { type InterestStatus } from '../../cache/cacheService';
 import { timeToX, formatTime, LANE_HEIGHT, MIN_BLOCK_WIDTH } from './timelineLayout';
 import { colors } from '../../styling/tokens';
-import { decodeCategoryColor, dimColor } from '../../utils/color';
+import { dimColor } from '../../utils/color';
 import { Exclamation } from '../ui/Exclamation';
 import { StarIndicator } from '../StarButton';
 
@@ -14,6 +14,7 @@ type Props = {
   artist: DbArtist;
   dayStart: number;
   status: InterestStatus;
+  categoryColor: string;
   onPress: () => void;
   subRow?: number;
   hasConflict: boolean;
@@ -32,13 +33,10 @@ function blockStyle(_status: InterestStatus, categoryColor: string): BlockStyle 
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function ArtistBlock({ event, artist, dayStart, status, onPress, subRow = 0, hasConflict }: Props) {
+export function ArtistBlock({ event, artist, dayStart, status, categoryColor, onPress, subRow = 0, hasConflict }: Props) {
   const x     = timeToX(event.dateFrom, dayStart);
   const right = timeToX(event.dateTo,   dayStart);
   const width = Math.max(MIN_BLOCK_WIDTH, right - x);
-
-  const category = getCategories(event.slug).find(c => c.categoryId === event.categoryId);
-  const categoryColor = decodeCategoryColor(category?.color ?? colors.timeline.blockDefault);
 
   const { bg, border } = blockStyle(status, categoryColor);
 
