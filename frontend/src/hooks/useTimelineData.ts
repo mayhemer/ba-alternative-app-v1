@@ -42,7 +42,7 @@ export function useTimelineData({ filterArtist, useSubRows = false }: Options = 
   const eventsRef     = useRef<DbEvent[]>([]);
   const artistsRef    = useRef<DbArtist[]>([]);
   const categoriesRef = useRef<DbCategory[]>([]);
-  const [, setRevision] = useState(0);
+  const [revision, setRevision] = useState(0);
 
   const loadData = useCallback(() => {
     eventsRef.current     = getEvents(selectedSlug);
@@ -60,8 +60,7 @@ export function useTimelineData({ filterArtist, useSubRows = false }: Options = 
       map[a.artistId] = a;
     }
     return map;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [artistsRef.current]);
+  }, [revision]);
 
   const eventsByCategory = useMemo<Record<string, LaneEvent[]>>(() => {
     if (selectedDayStart === 0) { return {}; }
@@ -89,8 +88,7 @@ export function useTimelineData({ filterArtist, useSubRows = false }: Options = 
           !hiddenCategories.has(c.categoryId) &&
           (eventsByCategory[c.categoryId]?.length ?? 0) > 0,
       );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [categoriesRef.current, hiddenCategories, eventsByCategory]);
+  }, [revision, hiddenCategories, eventsByCategory]);
 
   const laneHeights = useMemo<Record<string, number>>(() => {
     const map: Record<string, number> = {};
