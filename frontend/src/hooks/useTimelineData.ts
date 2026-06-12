@@ -62,6 +62,12 @@ export function useTimelineData({ filterArtist, useSubRows = false }: Options = 
     return map;
   }, [revision]);
 
+  // Keep getStatus accessible inside the memo without depending on its identity.
+  // getStatus is a useCallback derived from interests and changes on every toggle,
+  // so we read it via a ref and depend on the raw interests data instead.
+  const getStatusRef = useRef(getStatus);
+  getStatusRef.current = getStatus;
+
   const eventsByCategory = useMemo<Record<string, LaneEvent[]>>(() => {
     if (selectedDayStart === 0) { return {}; }
     const dayEnd = selectedDayStart + DAY_DURATION_MS;
@@ -72,13 +78,13 @@ export function useTimelineData({ filterArtist, useSubRows = false }: Options = 
       const artist = artistById[event.artistId];
       if (artist === undefined) { continue; }
       if (filterArtist !== undefined && !filterArtist(artist)) { continue; }
-      if (!matchesInterestFilter(getStatus(artist.artistId), interestFilter)) { continue; }
+      if (!matchesInterestFilter(getStatusRef.current(artist.artistId), interestFilter)) { continue; }
       if (grouped[event.categoryId] === undefined) { grouped[event.categoryId] = []; }
       grouped[event.categoryId].push({ event, artist });
     }
     return grouped;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [artistById, selectedDayStart, interestFilter, getStatus, filterArtist]);
+  }, [artistById, selectedDayStart, interestFilter, interests, filterArtist]);
 
   const visibleCategories = useMemo<DbCategory[]>(() => {
     return [...categoriesRef.current]
