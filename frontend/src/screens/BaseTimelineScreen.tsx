@@ -8,7 +8,6 @@ import { useTopBar, useBottomBar } from '../context/ScreenUIContext';
 import { useArtistDetail } from '../context/ArtistDetailContext';
 import { useTimelineFilter } from '../context/TimelineFilterContext';
 import { TimelineView } from '../components/timeline/TimelineView';
-import { DaySwitcher } from '../components/timeline/DaySwitcher';
 import { TimelineInterestFilterControl } from '../components/InterestFilterControl';
 import { useTimelineData } from '../hooks/useTimelineData';
 import {
@@ -32,11 +31,12 @@ function TopBarRight() {
 type Props = {
   title: string;
   screenKey: string;
+  BottomBarComponent: React.ComponentType;
   filterArtist?: (artist: DbArtist) => boolean;
   useSubRows?: boolean;
 };
 
-export function BaseTimelineScreen({ title, screenKey, filterArtist, useSubRows = false }: Props) {
+export function BaseTimelineScreen({ title, screenKey, BottomBarComponent, filterArtist, useSubRows = false }: Props) {
   const { selectedSlug } = useAppState();
   const { openDetail } = useArtistDetail();
   const {
@@ -50,10 +50,8 @@ export function BaseTimelineScreen({ title, screenKey, filterArtist, useSubRows 
   const { events, eventsByCategory, visibleCategories, laneHeights, categorySubRows, canvasHeight, conflictingEventIds } =
     useTimelineData({ filterArtist, useSubRows });
 
-  const BottomBarContent = React.useCallback(() => <DaySwitcher screenKey={screenKey} />, [screenKey]);
-
   useTopBar({ title, RightComponent: TopBarRight });
-  useBottomBar({ ContentComponent: BottomBarContent });
+  useBottomBar({ ContentComponent: BottomBarComponent });
 
   // ── Festival-day initialisation ─────────────────────────────────────────────
 
