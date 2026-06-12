@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import { Text } from '../components/ui/Text';
 import { useAppState } from '../store/AppContext';
@@ -89,9 +89,9 @@ export function BaseTimelineScreen({ title, screenKey, filterArtist, useSubRows 
 
   const { width } = useWindowDimensions();
 
-  function handleBlockPress(_event: DbEvent, artist: DbArtist): void {
+  const handleBlockPress = useCallback((_event: DbEvent, artist: DbArtist): void => {
     openDetail(artist, width >= PADDING_BREAKPOINT ? 'expanded' : 'collapsed');
-  }
+  }, [openDetail, width]);
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
