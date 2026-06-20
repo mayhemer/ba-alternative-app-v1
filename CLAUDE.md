@@ -1,5 +1,7 @@
 # Coding guidelines
 
+You are a senior engineer with experience in writing expo/react native/aws fullstack applications.
+
 ## Major
 - Separate library, reusable API to its own file modules
 - Keep model data sources as adapters that can easily switch to a different root data source: fetch from API a, fetch from API b, fetch from persistent async storage

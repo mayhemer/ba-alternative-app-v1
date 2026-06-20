@@ -29,7 +29,6 @@ export class Auth extends Construct {
     // Social identity providers — each is activated only when context vars are present.
     // Pass them at deploy time:
     //   cdk deploy --context googleClientId=... --context googleClientSecret=...
-    //   cdk deploy --context facebookAppId=... --context facebookAppSecret=...
     //   cdk deploy --context appleServicesId=... --context appleTeamId=... --context appleKeyId=... --context applePrivateKey=...
 
     const googleClientId = this.node.tryGetContext('googleClientId') as string | undefined;
@@ -45,20 +44,6 @@ export class Auth extends Construct {
           givenName: cognito.ProviderAttribute.GOOGLE_GIVEN_NAME,
           familyName: cognito.ProviderAttribute.GOOGLE_FAMILY_NAME,
           profilePicture: cognito.ProviderAttribute.GOOGLE_PICTURE,
-        },
-      });
-    }
-
-    const facebookAppId = this.node.tryGetContext('facebookAppId') as string | undefined;
-    const facebookAppSecret = this.node.tryGetContext('facebookAppSecret') as string | undefined;
-    if (facebookAppId && facebookAppSecret) {
-      new cognito.UserPoolIdentityProviderFacebook(this, 'Facebook', {
-        userPool: this.userPool,
-        clientId: facebookAppId,
-        clientSecret: facebookAppSecret,
-        scopes: ['email', 'public_profile'],
-        attributeMapping: {
-          email: cognito.ProviderAttribute.FACEBOOK_EMAIL,
         },
       });
     }

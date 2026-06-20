@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import { useFonts } from 'expo-font';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppProvider, useAppContext } from './src/store/AppContext';
+import { AuthProvider } from './src/context/AuthContext';
 import { ScreenUIProvider } from './src/context/ScreenUIContext';
 import { ArtistDetailProvider } from './src/context/ArtistDetailContext';
 import { ConflictDetailProvider } from './src/context/ConflictDetailContext';
@@ -100,7 +101,9 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <AppProvider>
-        <RootGate />
+        <AuthProvider>
+          <RootGate />
+        </AuthProvider>
       </AppProvider>
     </SafeAreaProvider>
   );

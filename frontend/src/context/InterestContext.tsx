@@ -8,12 +8,19 @@ import React, {
   useRef,
 } from 'react';
 import { useAppState } from '../store/AppContext';
+import { useAuth } from './AuthContext';
 import {
   type InterestStatus,
   type LocalInterest,
   hydrateInterests,
+  mergeServerInterests,
   setInterest,
 } from '../cache/cacheService';
+import {
+  fetchUserInterests,
+  putUserInterest,
+  deleteUserInterest,
+} from '../adapters/baUserApiAdapter';
 
 // Re-export so existing callsites (ArtistListFilterContext, InterestFilterControl, etc.)
 // continue to import InterestStatus from here without any changes.
@@ -55,6 +62,26 @@ export function nextStatus(current: InterestStatus): InterestStatus {
   return 'none';
 }
 
+// Maps local InterestStatus to the server's status field.
+// Returns null for 'none' (caller should DELETE instead of PUT).
+function toServerStatus(status: InterestStatus): 'will_go' | 'maybe' | null {
+  if (status === 'must_see') { return 'will_go'; }
+  if (status === 'maybe') { return 'maybe'; }
+  return null;
+}
+
+// Converts a LocalInterest map (from cacheService) to a plain status map
+// suitable for React state, omitting 'none' entries.
+function toStatusMap(localMap: Record<string, LocalInterest>): InterestMap {
+  const result: InterestMap = {};
+  for (const [artistId, record] of Object.entries(localMap)) {
+    if (record.status !== 'none') {
+      result[artistId] = record.status;
+    }
+  }
+  return result;
+}
+
 // ── Reducer ───────────────────────────────────────────────────────────────────
 
 function interestReducer(state: InterestState, action: InterestAction): InterestState {
@@ -79,6 +106,7 @@ const InterestCycleContext = createContext<InterestCycleContextValue | null>(nul
 
 export function InterestProvider({ children }: { children: React.ReactNode }) {
   const { selectedSlug } = useAppState();
+  const { isLoggedIn, getAccessToken } = useAuth();
   const [state, dispatch] = useReducer(interestReducer, {
     interests: {},
     isHydrated: false,
@@ -89,19 +117,64 @@ export function InterestProvider({ children }: { children: React.ReactNode }) {
   const stateRef = useRef(state);
   useEffect(() => { stateRef.current = state; }, [state]);
 
-  // Hydrate from AsyncStorage (via cacheService) whenever the slug changes.
-  useEffect(() => {
-    hydrateInterests(selectedSlug).then((map) => {
-      // Convert LocalInterest map → plain status map for React state
-      const statusMap: InterestMap = {};
-      for (const [artistId, record] of Object.entries(map)) {
-        if (record.status !== 'none') {
-          statusMap[artistId] = record.status;
+  // Fetches server interests and merges them with local state.
+  // Called on login and on slug change while logged in.
+  const syncFromServer = useCallback(async (slug: string): Promise<void> => {
+    const token = await getAccessToken();
+    if (token === null) { return; }
+
+    const serverInterests = await fetchUserInterests(slug, token);
+    const merged = await mergeServerInterests(slug, serverInterests);
+    dispatch({ type: 'HYDRATE', interests: toStatusMap(merged) });
+
+    // Push back any local interests that won the merge (local.updatedAt was newer).
+    // This syncs changes made offline or on another device that we just merged locally.
+    const pushToken = await getAccessToken(); // may have refreshed
+    if (pushToken === null) { return; }
+
+    for (const [artistId, record] of Object.entries(merged)) {
+      const serverEntry = serverInterests.find(
+        (s) => s.slugArtistId === `${slug}#${artistId}`,
+      );
+      const localIsNewer =
+        serverEntry === undefined || record.updatedAt > serverEntry.updatedAt;
+
+      if (!localIsNewer) { continue; }
+
+      const serverStatus = toServerStatus(record.status);
+      if (serverStatus !== null) {
+        putUserInterest(slug, artistId, serverStatus, pushToken).catch(() => undefined);
+      } else {
+        // status is 'none' but server had an entry — delete it
+        if (serverEntry !== undefined) {
+          deleteUserInterest(slug, artistId, pushToken).catch(() => undefined);
         }
       }
-      dispatch({ type: 'HYDRATE', interests: statusMap });
+    }
+  }, [getAccessToken]);
+
+  // Hydrate from AsyncStorage whenever the slug changes, then merge from server
+  // if the user is logged in.
+  useEffect(() => {
+    hydrateInterests(selectedSlug).then((localMap) => {
+      dispatch({ type: 'HYDRATE', interests: toStatusMap(localMap) });
+      if (isLoggedIn) {
+        syncFromServer(selectedSlug).catch(() => undefined);
+      }
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSlug]);
+
+  // When auth state transitions to logged-in, fetch and merge server interests
+  // for the current slug.
+  const prevLoggedInRef = useRef(isLoggedIn);
+  useEffect(() => {
+    const justLoggedIn = !prevLoggedInRef.current && isLoggedIn;
+    prevLoggedInRef.current = isLoggedIn;
+    if (justLoggedIn) {
+      syncFromServer(selectedSlug).catch(() => undefined);
+    }
+  }, [isLoggedIn, selectedSlug, syncFromServer]);
 
   const getStatus = useCallback(
     (artistId: string): InterestStatus => {
@@ -115,13 +188,26 @@ export function InterestProvider({ children }: { children: React.ReactNode }) {
     (artistId: string): CycleStatusResult => {
       const current = stateRef.current.interests[artistId] ?? 'none';
       const next = nextStatus(current);
-      // In-memory update is synchronous; promise covers AsyncStorage write
       const promise = setInterest(selectedSlug, artistId, next);
-      // Update React state so subscribers re-render
       dispatch({ type: 'SET', artistId, status: next });
+
+      // Fire-and-forget sync to server. Errors are swallowed; the merge on next
+      // login/launch will reconcile any divergence using updatedAt timestamps.
+      promise.then(async () => {
+        const token = await getAccessToken();
+        if (token === null) { return; }
+
+        const serverStatus = toServerStatus(next);
+        if (serverStatus !== null) {
+          putUserInterest(selectedSlug, artistId, serverStatus, token).catch(() => undefined);
+        } else {
+          deleteUserInterest(selectedSlug, artistId, token).catch(() => undefined);
+        }
+      }).catch(() => undefined);
+
       return { next, promise };
     },
-    [selectedSlug],
+    [selectedSlug, getAccessToken],
   );
 
   const stateValue = useMemo(() => ({ interests: state.interests, getStatus }), [state.interests, getStatus]);
