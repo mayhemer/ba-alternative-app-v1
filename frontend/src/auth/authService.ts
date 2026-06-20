@@ -1,4 +1,5 @@
 import * as AuthSession from 'expo-auth-session';
+import { Platform } from 'react-native';
 import { COGNITO, COGNITO_DISCOVERY } from './cognitoConfig';
 import { type StoredTokens, saveTokens, loadTokens } from './tokenStorage';
 
@@ -15,6 +16,13 @@ function parseJwtPayload(token: string): Record<string, unknown> {
 }
 
 function makeRedirectUri(): string {
+  if (Platform.OS === 'web') {
+    // On web the popup redirects back to the app root (no path), so no server
+    // route is needed. makeRedirectUri with no path returns window.location.origin.
+    return AuthSession.makeRedirectUri({ scheme: 'ba' });
+  }
+  // On native, ba://auth/callback is a custom URL scheme intercepted by the OS —
+  // no HTTP server involved, so the path is fine and arbitrary.
   return AuthSession.makeRedirectUri({ scheme: 'ba', path: 'auth/callback' });
 }
 

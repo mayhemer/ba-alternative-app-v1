@@ -80,9 +80,9 @@ export class Auth extends Construct {
         flows: { authorizationCodeGrant: true },
         scopes: [cognito.OAuthScope.EMAIL, cognito.OAuthScope.OPENID, cognito.OAuthScope.PROFILE],
         callbackUrls: [
-          'https://ba.janbambas.cz/auth/callback',
+          'https://ba.janbambas.cz',
           'ba://auth/callback',          // deep link for native mobile
-          'http://localhost:8081/auth/callback',
+          'http://localhost:8081',
         ],
         logoutUrls: [
           'https://ba.janbambas.cz',

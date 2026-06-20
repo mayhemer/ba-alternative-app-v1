@@ -2,6 +2,7 @@ import './global.css';
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useFonts } from 'expo-font';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import * as WebBrowser from 'expo-web-browser';
 import { AppProvider, useAppContext } from './src/store/AppContext';
 import { AuthProvider } from './src/context/AuthContext';
 import { ScreenUIProvider } from './src/context/ScreenUIContext';
@@ -89,6 +90,13 @@ export default function App() {
     //'Regular-Default': require('./assets/DarkerGrotesque-Regular.ttf'),
     //'Bold-Default': require('./assets/DarkerGrotesque-Bold.ttf'),
   });
+
+  useEffect(() => {
+    // On web: if this render is happening inside the OAuth popup window,
+    // this reads the code from the URL, posts it to the parent window, and
+    // closes the popup so promptAsync() can resolve. On native it's a no-op.
+    WebBrowser.maybeCompleteAuthSession();
+  }, []);
 
   useEffect(() => {
     ExpoImage.prefetch([
