@@ -51,19 +51,13 @@ export class Cdn extends Construct {
       cookieBehavior: cloudfront.CacheCookieBehavior.none(),
     });
 
-    // No-cache policy that forwards Authorization + Origin headers to the origin.
-    // CloudFront requires both to be in the CachePolicy (not OriginRequestPolicy)
-    // for them to reach API Gateway.
-    const authPassThrough = new cloudfront.CachePolicy(this, 'AuthPassThrough', {
-      cachePolicyName: 'ba-auth-passthrough',
-      comment: 'No cache; forwards Authorization and Origin headers to origin',
-      defaultTtl: cdk.Duration.seconds(0),
-      maxTtl: cdk.Duration.seconds(1),
-      minTtl: cdk.Duration.seconds(0),
-      headerBehavior: cloudfront.CacheHeaderBehavior.allowList('Authorization', 'Origin'),
-      queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
-      cookieBehavior: cloudfront.CacheCookieBehavior.none(),
-    });
+    // For authenticated routes: no caching + forward every viewer header to the
+    // origin so API Gateway receives Origin, Authorization, and the CORS preflight
+    // headers (Access-Control-Request-Method / -Headers) unmodified.
+    // Using the managed CACHING_DISABLED policy avoids allowList conflicts with
+    // ALL_VIEWER_EXCEPT_HOST_HEADER (which implicitly covers Origin and Authorization).
+    const noCache = cloudfront.CachePolicy.CACHING_DISABLED;
+    const allViewerHeaders = cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER;
 
     // Optional custom domain — activated when context var is present.
     // Requires an ACM certificate in us-east-1 (CloudFront requirement).
@@ -78,17 +72,29 @@ export class Cdn extends Construct {
       comment: 'Brutal Assault Festival App CDN',
       domainNames,
       certificate,
-      // Default behavior: pass-through with Authorization forwarded (covers /user/*, /share POST/DELETE)
+      // Default behavior: covers /share/* and any unmatched authenticated routes.
       defaultBehavior: {
         origin: apiOrigin,
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        cachePolicy: authPassThrough,
+        cachePolicy: noCache,
+        originRequestPolicy: allViewerHeaders,
         allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
         cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
       },
       // Slug-prefixed public endpoints — cached per path (slug is part of the URL, so editions
       // are naturally cache-isolated). Wildcard patterns match any slug.
       additionalBehaviors: {
+        // Explicit behavior for all user routes — must come before /*/schedule
+        // so that /user/*/schedule is not accidentally captured by the cached
+        // public-schedule behavior (CloudFront's * wildcard matches slashes).
+        '/user/*': {
+          origin: apiOrigin,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          cachePolicy: noCache,
+          originRequestPolicy: allViewerHeaders,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+          cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
+        },
         '/*/artists': {
           origin: apiOrigin,
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
