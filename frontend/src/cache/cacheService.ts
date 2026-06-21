@@ -253,8 +253,10 @@ export async function mergeServerInterests(
     let localStatus: InterestStatus;
     if (item.status === 'will_go') {
       localStatus = 'must_see';
-    } else {
+    } else if (item.status === 'maybe') {
       localStatus = 'maybe';
+    } else {
+      localStatus = 'none';
     }
 
     const existing = merged[artistId];

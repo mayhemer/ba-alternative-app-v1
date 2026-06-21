@@ -112,10 +112,17 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
       }
 
       case 'DELETE /user/{slug}/schedule/{artistId}': {
-        await deleteItem(tables.userInterests, {
+        // Soft delete: keep the record with status 'none' so that other devices can
+        // resolve the deletion correctly via updatedAt comparison during sync merge.
+        // Hard deletes would leave no timestamp for the merge to compare against,
+        // causing the old interest to survive on devices that haven't synced yet.
+        const softDelete: DbUserInterest = {
           userId: userId(event),
           slugArtistId: `${p.slug!}#${p.artistId!}`,
-        });
+          status: 'none',
+          updatedAt: Date.now(),
+        };
+        await putItem(tables.userInterests, softDelete);
         return noContent();
       }
 
