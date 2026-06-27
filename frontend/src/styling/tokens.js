@@ -21,6 +21,7 @@ const colors = {
   },
   notInterested:  '#888888',
   accent:         '#e8c84a',   // must-see / active
+  friend:         '#5b9cf0',   // friends' shared picks (facepile, pip, avatars)
   amber:          '#b87a1a',   // warning
   textPrimary:    '#ffffff',
   textSecondary:  '#dddddd',

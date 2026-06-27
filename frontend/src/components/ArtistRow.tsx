@@ -6,8 +6,10 @@ import type { DbArtist } from '../types/backend';
 import type { InterestStatus } from '../context/InterestContext';
 import { getArtistLocalized } from '../utils/localization';
 import { useInterestCycle } from '../context/InterestContext';
+import { useSocialData } from '../context/SocialContext';
 import { useStartProgress } from '../context/ScreenUIContext';
 import { StarButton, getFeedbackLabel } from './StarButton';
+import { FriendFacepile } from './social/FriendFacepile';
 
 type Props = {
   artist: DbArtist;
@@ -17,7 +19,10 @@ type Props = {
 
 export const ArtistRow = React.memo(function ArtistRow({ artist, status, onPress }: Props) {
   const { cycleStatus } = useInterestCycle();
+  const { friendsByArtist } = useSocialData();
   const startProgress = useStartProgress();
+
+  const friends = friendsByArtist[artist.artistId];
 
   const genre = getArtistLocalized(artist.localized, 'genre');
   const country = getArtistLocalized(artist.localized, 'country');
@@ -67,6 +72,13 @@ export const ArtistRow = React.memo(function ArtistRow({ artist, status, onPress
           </Text>
         )}
       </View>
+
+      {/* Friends who picked this artist */}
+      {friends !== undefined && (
+        <View className="mr-3">
+          <FriendFacepile friends={friends} size={20} />
+        </View>
+      )}
 
       {/* Star */}
       <StarButton status={status} onPress={handleStarPress} label="Toggle interest" />

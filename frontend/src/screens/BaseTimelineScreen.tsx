@@ -8,7 +8,7 @@ import { useTopBar, useBottomBar } from '../context/ScreenUIContext';
 import { useArtistDetail } from '../context/ArtistDetailContext';
 import { useTimelineFilter } from '../context/TimelineFilterContext';
 import { TimelineView } from '../components/timeline/TimelineView';
-import { TimelineInterestFilterControl } from '../components/InterestFilterControl';
+import { LensChip } from '../components/social/LensChip';
 import { useTimelineData } from '../hooks/useTimelineData';
 import {
   DAY_DURATION_MS,
@@ -22,7 +22,7 @@ import { PADDING_BREAKPOINT } from '../styling/tokens';
 // ── Shared TopBar / BottomBar slot components ─────────────────────────────────
 
 function TopBarRight() {
-  return <TimelineInterestFilterControl />;
+  return <LensChip />;
 }
 
 

@@ -1,3 +1,5 @@
+This is a festival app with artist and event listing.
+
 # Coding guidelines
 
 You are a senior engineer with experience in writing expo/react native/aws fullstack applications.
@@ -32,3 +34,7 @@ When you add, rename, or delete a table or key in `tables.ts`, make the matching
 - use ternary operator in ts/js only for one liners, do not nest it
 - when converting between different tuples, don't use nested ternary, use `switch()` or `if (source == 1) return "one";` style; you can break the bracing rule here.
 - use js intrinsics or lib functions to calculate with time and date and day of week, try to avoid sub-string hacks, if possible
+
+# Project description
+
+Read DESIGN.md side by this file to understand the UX and most of internal design and implementation details.  Keep DESIGN.md file up to date when the design of the project changes, new features are added.

@@ -6,6 +6,9 @@ export class Auth extends Construct {
   readonly userPool: cognito.UserPool;
   readonly userPoolClient: cognito.UserPoolClient;
   readonly identityPool: cognito.CfnIdentityPool;
+  // OIDC userInfo endpoint on the hosted-UI domain — the backend calls this with
+  // the caller's access token to read their profile (given_name, email, picture).
+  readonly userInfoUrl: string;
 
   constructor(scope: Construct, id: string) {
     super(scope, id);
@@ -67,9 +70,10 @@ export class Auth extends Construct {
     }
 
     // Hosted UI domain (Cognito-managed subdomain)
-    this.userPool.addDomain('Domain', {
+    const domain = this.userPool.addDomain('Domain', {
       cognitoDomain: { domainPrefix: 'brutal-assault-app' },
     });
+    this.userInfoUrl = `${domain.baseUrl()}/oauth2/userInfo`;
 
     // App client — public client (no secret), used by mobile + web
     this.userPoolClient = new cognito.UserPoolClient(this, 'AppClient', {

@@ -66,6 +66,8 @@ export interface DbShareToken {
   userId: string;
   slug: string;
   createdAt: number;
+  label: string;        // sharer's display name, surfaced to the viewer
+  avatarUrl?: string;   // optional profile picture (e.g. Google "picture" claim)
 }
 
 export interface DbSyncState {

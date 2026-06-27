@@ -6,8 +6,10 @@ import { type InterestStatus } from '../../cache/cacheService';
 import { timeToX, formatTime, LANE_HEIGHT, MIN_BLOCK_WIDTH } from './timelineLayout';
 import { colors } from '../../styling/tokens';
 import { dimColor } from '../../utils/color';
-import { Exclamation } from '../ui/Exclamation';
 import { StarIndicator } from '../StarButton';
+import { useSocialData } from '../../context/SocialContext';
+
+const CONFLICT_BAR_HEIGHT = 5;
 
 type Props = {
   event: DbEvent;
@@ -39,6 +41,8 @@ export function ArtistBlock({ event, artist, dayStart, status, categoryColor, on
   const width = Math.max(MIN_BLOCK_WIDTH, right - x);
 
   const { bg, border } = blockStyle(status, categoryColor);
+  const { friendsByArtist } = useSocialData();
+  const pickedByFriend = friendsByArtist[artist.artistId] !== undefined;
 
   const showLabel = width >= 40;
 
@@ -61,6 +65,19 @@ export function ArtistBlock({ event, artist, dayStart, status, categoryColor, on
         padding: 8,
       }}
     >
+      {/* Conflict marker — a red bar struck across the top edge of the block */}
+      {hasConflict && (
+        <View
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: CONFLICT_BAR_HEIGHT,
+            backgroundColor: colors.danger,
+          }}
+        />
+      )}
       {showLabel ? (
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', flex: 1 }}>
           <View style={{ flex: 1 }}>
@@ -76,9 +93,18 @@ export function ArtistBlock({ event, artist, dayStart, status, categoryColor, on
               {formatTime(event.dateFrom)}–{formatTime(event.dateTo)}
             </Text>
           </View>
-          <View style={{ flexDirection: 'column', alignItems: 'center' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+            {pickedByFriend && (
+              <View
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: 3.5,
+                  backgroundColor: colors.friend,
+                }}
+              />
+            )}
             <StarIndicator status={status} size={11} />
-            {hasConflict && <Exclamation/>}
           </View>
         </View>
       ) : null}

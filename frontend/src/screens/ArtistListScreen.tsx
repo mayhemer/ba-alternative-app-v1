@@ -12,11 +12,13 @@ import { useCacheRefresh } from '../store/AppContext';
 import { useTopBar, useBottomBar } from '../context/ScreenUIContext';
 import { useInterest } from '../context/InterestContext';
 import { useArtistListFilter } from '../context/ArtistListFilterContext';
+import { useLens } from '../context/LensContext';
+import { useSocialData } from '../context/SocialContext';
 import { useArtistDetail } from '../context/ArtistDetailContext';
 import { ArtistRow } from '../components/ArtistRow';
 import { SectionSeparator } from '../components/SectionSeparator';
-import { ArtistListInterestFilterControl } from '../components/InterestFilterControl';
-import { matchesInterestFilter } from '../utils/interestUtils';
+import { LensChip } from '../components/social/LensChip';
+import { matchesScope } from '../utils/interestUtils';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -57,7 +59,7 @@ function buildSections(artists: DbArtist[]): Section[] {
 // ── TopBar right slot (module-level for stable reference) ─────────────────────
 
 function ArtistListTopBarRight() {
-  return <ArtistListInterestFilterControl />;
+  return <LensChip />;
 }
 
 // ── Inner screen (needs ArtistListFilterContext) ──────────────────────────────
@@ -65,8 +67,13 @@ function ArtistListTopBarRight() {
 function ArtistListScreenInner() {
   const selectedSlug = useSelectedSlug();
   const { getStatus, interests } = useInterest();
-  const { searchQuery, setSearchQuery, interestFilter } = useArtistListFilter();
+  const { searchQuery, setSearchQuery } = useArtistListFilter();
+  const { scope } = useLens();
+  const { getFriend } = useSocialData();
   const { openDetail } = useArtistDetail();
+
+  const friendInterests =
+    scope.kind === 'friend' ? getFriend(scope.token)?.interests : undefined;
 
   const [allArtists, setAllArtists] = useState<DbArtist[]>([]);
 
@@ -92,12 +99,14 @@ function ArtistListScreenInner() {
       filtered = filtered.filter((a) => a.name.toLowerCase().includes(q));
     }
 
-    if (interestFilter !== null) {
-      filtered = filtered.filter((a) => matchesInterestFilter(interests[a.artistId] ?? 'none', interestFilter));
+    if (scope.kind !== 'all') {
+      filtered = filtered.filter((a) =>
+        matchesScope(scope, interests[a.artistId] ?? 'none', friendInterests?.[a.artistId]),
+      );
     }
 
     return buildSections(filtered);
-  }, [allArtists, searchQuery, interestFilter, interests]);
+  }, [allArtists, searchQuery, scope, friendInterests, interests]);
 
   const handleRowPress = useCallback((artist: DbArtist): void => {
     openDetail(artist, 'expanded');

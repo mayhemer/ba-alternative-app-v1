@@ -10,6 +10,8 @@ import { BottomBar } from './BottomBar';
 import { ArtistDetailSheet } from './ArtistDetailSheet';
 import { ConflictDetailSheet } from './ConflictDetailSheet';
 import { FeedbackToast } from './FeedbackToast';
+import { LensPanel } from '../social/LensPanel';
+import { useShareLinkHandler } from '../../navigation/useShareLinkHandler';
 import { AppNavigator } from '../../navigation/AppNavigator';
 import { navigationRef } from '../../navigation/navigationRef';
 import { colors } from '../../styling/tokens';
@@ -19,6 +21,9 @@ const NAV_STATE_KEY = 'navigation:state';
 export function AppShell() {
   const [initialState, setInitialState] = useState<NavigationState | undefined>(undefined);
   const [isReady, setIsReady] = useState(false);
+
+  // Handle incoming add-friend share links (cold start + while running).
+  useShareLinkHandler();
 
   useEffect(() => {
     async function restoreState(): Promise<void> {
@@ -55,6 +60,8 @@ export function AppShell() {
           >
             <AppNavigator />
           </NavigationContainer>
+          {/* View/share lens panel — drops from under the TopBar over the content */}
+          <LensPanel />
         </View>
         <BottomBar />
       </SafeAreaView>

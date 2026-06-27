@@ -8,6 +8,8 @@ import {
 } from '../cache/cacheService';
 import { useInterest } from '../context/InterestContext';
 import { useTimelineFilter } from '../context/TimelineFilterContext';
+import { useLens } from '../context/LensContext';
+import { useSocialData } from '../context/SocialContext';
 import type { LaneEvent } from '../components/timeline/CategoryLane';
 import type { DbArtist, DbCategory, DbEvent } from '../types/backend';
 import {
@@ -16,7 +18,7 @@ import {
   RULER_HEIGHT,
   STRIP_HEIGHT,
 } from '../components/timeline/timelineLayout';
-import { matchesInterestFilter } from '../utils/interestUtils';
+import { matchesScope } from '../utils/interestUtils';
 import { computeConflictEntries } from '../utils/conflictUtils';
 
 type Options = {
@@ -37,7 +39,11 @@ export type TimelineData = {
 export function useTimelineData({ filterArtist, useSubRows = false }: Options = {}): TimelineData {
   const selectedSlug = useSelectedSlug();
   const { getStatus, interests } = useInterest();
-  const { selectedDayStart, interestFilter, hiddenCategories } = useTimelineFilter();
+  const { selectedDayStart, hiddenCategories } = useTimelineFilter();
+  const { scope } = useLens();
+  const { getFriend } = useSocialData();
+  const friendInterests =
+    scope.kind === 'friend' ? getFriend(scope.token)?.interests : undefined;
 
   const eventsRef     = useRef<DbEvent[]>([]);
   const artistsRef    = useRef<DbArtist[]>([]);
@@ -78,13 +84,13 @@ export function useTimelineData({ filterArtist, useSubRows = false }: Options = 
       const artist = artistById[event.artistId];
       if (artist === undefined) { continue; }
       if (filterArtist !== undefined && !filterArtist(artist)) { continue; }
-      if (!matchesInterestFilter(getStatusRef.current(artist.artistId), interestFilter)) { continue; }
+      if (!matchesScope(scope, getStatusRef.current(artist.artistId), friendInterests?.[artist.artistId])) { continue; }
       if (grouped[event.categoryId] === undefined) { grouped[event.categoryId] = []; }
       grouped[event.categoryId].push({ event, artist });
     }
     return grouped;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [artistById, selectedDayStart, interestFilter, interests, filterArtist]);
+  }, [artistById, selectedDayStart, scope, friendInterests, interests, filterArtist]);
 
   const visibleCategories = useMemo<DbCategory[]>(() => {
     return [...categoriesRef.current]

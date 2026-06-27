@@ -61,3 +61,12 @@ export interface DbUserInterest {
   status: 'will_go' | 'maybe' | 'none';
   updatedAt: number;
 }
+
+export interface DbShareToken {
+  token: string;
+  userId: string;
+  slug: string;
+  createdAt: number;
+  label: string;        // sharer's display name, surfaced to the viewer
+  avatarUrl?: string;   // optional profile picture (e.g. Google "picture" claim)
+}

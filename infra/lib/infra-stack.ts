@@ -14,6 +14,11 @@ export class InfraStack extends cdk.Stack {
     const tables = new Tables(this, 'Tables');
     const auth = new Auth(this, 'Auth');
     const lambdas = new Lambdas(this, 'Lambdas', { tables });
+
+    // API Lambda reads the caller's profile from the Cognito userInfo endpoint
+    // (to label share links). The domain is owned by the Auth construct.
+    lambdas.apiFn.addEnvironment('COGNITO_USER_INFO_URL', auth.userInfoUrl);
+
     const api = new Api(this, 'Api', {
       apiLambda: lambdas.apiFn,
       userPool: auth.userPool,

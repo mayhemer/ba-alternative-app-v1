@@ -2,8 +2,6 @@ import React, { useCallback } from 'react';
 import type { InterestStatus } from '../context/InterestContext';
 import { nextStatus } from '../context/InterestContext';
 import { StarButton } from './StarButton';
-import { useArtistListFilter } from '../context/ArtistListFilterContext';
-import { useTimelineFilter } from '../context/TimelineFilterContext';
 
 // ── Shared labels ─────────────────────────────────────────────────────────────
 
@@ -14,7 +12,8 @@ export const INTEREST_FILTER_LABELS: Record<string, string> = {
 };
 
 // ── StarFilterButton ──────────────────────────────────────────────────────────
-// Presentational cycling button. No context dependency — wired by the caller.
+// Presentational cycling button (null → maybe → must_see → null). No context
+// dependency — wired by the caller (used inside the Lens panel level selector).
 
 type StarFilterButtonProps = {
   value: InterestStatus | null;
@@ -34,20 +33,4 @@ export function StarFilterButton({ value, onChange }: StarFilterButtonProps) {
       label={INTEREST_FILTER_LABELS[String(value)]}
     />
   );
-}
-
-// ── ArtistListInterestFilterControl ───────────────────────────────────────────
-// Context-aware wrapper for the artist list screen.
-
-export function ArtistListInterestFilterControl() {
-  const { interestFilter, setInterestFilter } = useArtistListFilter();
-  return <StarFilterButton value={interestFilter} onChange={setInterestFilter} />;
-}
-
-// ── TimelineInterestFilterControl ─────────────────────────────────────────────
-// Context-aware wrapper for the timeline screen.
-
-export function TimelineInterestFilterControl() {
-  const { interestFilter, setInterestFilter } = useTimelineFilter();
-  return <StarFilterButton value={interestFilter} onChange={setInterestFilter} />;
 }

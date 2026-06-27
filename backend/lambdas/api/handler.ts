@@ -22,6 +22,7 @@ function getConfig() {
   const env = process.env as Record<string, string>;
   return {
     syncFunctionArn: env.SYNC_FUNCTION_ARN,
+    userInfoUrl:     env.COGNITO_USER_INFO_URL,
     tables: {
       artists:       env.ARTISTS_TABLE,
       stages:        env.STAGES_TABLE,
@@ -39,7 +40,7 @@ const lambdaClient = new LambdaClient({});
 // ── Entry point ───────────────────────────────────────────────────────────────
 
 export async function handler(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> {
-  const { syncFunctionArn, tables } = getConfig();
+  const { syncFunctionArn, tables, userInfoUrl } = getConfig();
   const p = event.pathParameters ?? {};
 
   try {
@@ -82,7 +83,12 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
           tokenItem.userId,
           tokenItem.slug,
         );
-        return json({ slug: tokenItem.slug, interests });
+        return json({
+          slug: tokenItem.slug,
+          label: tokenItem.label ?? '',
+          avatarUrl: tokenItem.avatarUrl,
+          interests,
+        });
       }
 
       // ── Authenticated ────────────────────────────────────────────────────────
@@ -127,15 +133,26 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
       }
 
       case 'POST /{slug}/share': {
+        // Label/avatar are fetched live from the Cognito OIDC userInfo endpoint
+        // using the caller's access token — never from the request body. userInfo
+        // works with the openid/profile/email scopes the app already requests (no
+        // aws.cognito.signin.user.admin scope needed, unlike GetUser).
+        const accessToken = bearerToken(event);
+        const profile = await fetchUserProfile(userInfoUrl, accessToken);
+        const label = buildShareLabel(profile);
+        const avatarUrl = profile['picture'];
+
         const token = randomBytes(24).toString('hex');
         const tokenItem: DbShareToken = {
           token,
           userId: userId(event),
           slug: p.slug!,
           createdAt: Date.now(),
+          label,
+          ...(avatarUrl ? { avatarUrl } : {}),
         };
         await putItem(tables.shareTokens, tokenItem);
-        return json({ token }, 201);
+        return json({ token, label, avatarUrl }, 201);
       }
 
       case 'DELETE /share/{token}': {
@@ -184,8 +201,60 @@ function forbidden(message = 'Forbidden'): APIGatewayProxyResultV2 {
 // JWT authorizer variant — safe because API Gateway always populates it for
 // routes that have a Cognito authorizer attached.
 function userId(event: APIGatewayProxyEventV2): string {
+  return jwtClaims(event)['sub'] as string;
+}
+
+// Returns the full set of JWT claims injected by API Gateway (sub, email, name, picture…).
+function jwtClaims(event: APIGatewayProxyEventV2): Record<string, unknown> {
   const ctx = event.requestContext as APIGatewayEventRequestContextV2WithAuthorizer<APIGatewayEventRequestContextJWTAuthorizer>;
-  return ctx.authorizer.jwt.claims['sub'] as string;
+  return ctx.authorizer.jwt.claims as Record<string, unknown>;
+}
+
+// Builds the sharer's display name from their Cognito profile attributes:
+// given_name → family_name → the local part of the email → 'Friend'.
+function buildShareLabel(profile: Record<string, string>): string {
+  const str = (key: string): string | undefined => {
+    const value = profile[key];
+    return value !== undefined && value.trim() !== '' ? value : undefined;
+  };
+  const emailLocalPart = str('email')?.replace(/@.*$/, '');
+  return str('given_name') ?? str('family_name') ?? emailLocalPart ?? 'Friend';
+}
+
+// Extracts the bearer access token from the Authorization header (API Gateway
+// lowercases header names). The token was already validated by the JWT authorizer.
+function bearerToken(event: APIGatewayProxyEventV2): string | null {
+  const header = event.headers?.authorization ?? event.headers?.Authorization;
+  const match = header?.match(/^Bearer\s+(.+)$/i);
+  return match ? match[1] : null;
+}
+
+// Fetches the caller's profile claims from the Cognito OIDC userInfo endpoint,
+// authorized by the access token. Returns a flat string map of claims; an empty
+// map on any failure so share creation still succeeds.
+async function fetchUserProfile(
+  userInfoUrl: string | undefined,
+  accessToken: string | null,
+): Promise<Record<string, string>> {
+  if (userInfoUrl === undefined || accessToken === null) { return {}; }
+  try {
+    const response = await fetch(userInfoUrl, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!response.ok) {
+      console.error('[api] userInfo failed:', response.status, await response.text());
+      return {};
+    }
+    const data = (await response.json()) as Record<string, unknown>;
+    const profile: Record<string, string> = {};
+    for (const [key, value] of Object.entries(data)) {
+      if (typeof value === 'string') { profile[key] = value; }
+    }
+    return profile;
+  } catch (err) {
+    console.error('[api] userInfo error:', err);
+    return {};
+  }
 }
 
 function parseBody(raw: string | null | undefined): Record<string, unknown> | null {

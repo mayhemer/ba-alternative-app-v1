@@ -10,6 +10,8 @@ import { ArtistDetailProvider } from './src/context/ArtistDetailContext';
 import { ConflictDetailProvider } from './src/context/ConflictDetailContext';
 import { ConflictProvider } from './src/context/ConflictContext';
 import { InterestProvider } from './src/context/InterestContext';
+import { SocialProvider } from './src/context/SocialContext';
+import { LensProvider } from './src/context/LensContext';
 import { ArtistListFilterProvider } from './src/context/ArtistListFilterContext';
 import { TimelineFilterProvider } from './src/context/TimelineFilterContext';
 import { AppShell } from './src/components/layout/AppShell';
@@ -78,17 +80,21 @@ function RootGate() {
   return (
     <ScreenUIProvider>
       <InterestProvider>
-        <ConflictProvider>
-          <ArtistDetailProvider>
-            <ConflictDetailProvider>
-              <ArtistListFilterProvider>
-                <TimelineFilterProvider>
-                  <AppShell />
-                </TimelineFilterProvider>
-              </ArtistListFilterProvider>
-            </ConflictDetailProvider>
-          </ArtistDetailProvider>
-        </ConflictProvider>
+        <SocialProvider>
+          <LensProvider>
+            <ConflictProvider>
+              <ArtistDetailProvider>
+                <ConflictDetailProvider>
+                  <ArtistListFilterProvider>
+                    <TimelineFilterProvider>
+                      <AppShell />
+                    </TimelineFilterProvider>
+                  </ArtistListFilterProvider>
+                </ConflictDetailProvider>
+              </ArtistDetailProvider>
+            </ConflictProvider>
+          </LensProvider>
+        </SocialProvider>
       </InterestProvider>
     </ScreenUIProvider>
   );

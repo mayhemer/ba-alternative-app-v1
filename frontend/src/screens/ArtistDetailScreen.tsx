@@ -12,6 +12,8 @@ import { colors } from '../styling/tokens';
 import type { DbArtist } from '../types/backend';
 import { useArtistDerived } from '../hooks/useArtistDerived';
 import { Exclamation, ExclamationTouchable } from '../components/ui/Exclamation';
+import { useSocialData } from '../context/SocialContext';
+import { FriendPickList } from '../components/social/FriendPickList';
 
 const STREAMING_ICON_SIZE = 24;
 
@@ -27,7 +29,9 @@ type Props = { artist: DbArtist };
 
 export function ArtistDetailHeader({ artist }: Props) {
   const { closeDetail, expandDetail, status, innerWidth, hPad, isWeb, meta, handleStarPress, conflictMap } = useArtistDerived(artist);
+  const { friendsByArtist } = useSocialData();
   const hasConflict = conflictMap.size > 0;
+  const friends = friendsByArtist[artist.artistId] ?? [];
 
   return (
     <View style={{
@@ -68,6 +72,7 @@ export function ArtistDetailHeader({ artist }: Props) {
           {meta}
         </Text>
       )}
+      <FriendPickList friends={friends} />
     </View>
   );
 }

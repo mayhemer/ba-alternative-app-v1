@@ -15,7 +15,8 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "cz.janbambas.ba"
+      "bundleIdentifier": "cz.janbambas.ba",
+      "associatedDomains": ["applinks:ba.janbambas.cz"]
     },
     "android": {
       "adaptiveIcon": {
@@ -23,7 +24,17 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            { "scheme": "https", "host": "ba.janbambas.cz", "pathPrefix": "/add-friend" }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
