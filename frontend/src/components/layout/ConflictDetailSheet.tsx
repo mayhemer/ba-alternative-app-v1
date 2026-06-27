@@ -314,6 +314,22 @@ export function ConflictDetailSheet() {
   const backdropOpacity = useRef(new Animated.Value(0)).current;
   const [webVisible, setWebVisible] = useState(false);
 
+  // Close on Esc (web). Use the capture phase + stopPropagation so this wins
+  // over the artist detail screen's window-level Esc listener when the conflict
+  // sheet is open on top of it.
+  useEffect(() => {
+    if (Platform.OS !== 'web') { return; }
+    if (conflictState.sourceEvent === null) { return; }
+    function handleKeyDown(e: KeyboardEvent): void {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        closeConflict();
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
+  }, [conflictState.sourceEvent, closeConflict]);
+
   useEffect(() => {
     if (Platform.OS !== 'web') { return; }
     if (conflictState.sourceEvent !== null) {
