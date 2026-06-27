@@ -17,6 +17,7 @@ import {
   LANE_HEIGHT,
   RULER_HEIGHT,
   formatTime,
+  formatDayLabel,
 } from '../timeline/timelineLayout';
 import { colors, MAX_CONTENT_WIDTH } from '../../styling/tokens';
 import type { DbArtist, DbEvent, DbStage } from '../../types/backend';
@@ -240,7 +241,7 @@ function ConflictDetailHeader({ sourceEvent, artistName, stageName, onClose }: H
             {artistName}
           </Text>
           <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 2 }}>
-            {stageName}  ·  {formatTime(sourceEvent.dateFrom)}–{formatTime(sourceEvent.dateTo)}
+            {stageName}  ·  {formatDayLabel(sourceEvent.dateFrom)}  ·  {formatTime(sourceEvent.dateFrom)}–{formatTime(sourceEvent.dateTo)}
           </Text>
         </View>
         <TouchableOpacity onPress={onClose} hitSlop={8}>
