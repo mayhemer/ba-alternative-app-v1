@@ -122,6 +122,7 @@ export default function App() {
       require('./assets/spotify-icon-72.png'),
       require('./assets/tidal-icon-72.png'),
       require('./assets/metal-archives-icon-72.png'),
+      require('./assets/setlist-fm-icon-72.png'),
     ]);
   }, []);
 

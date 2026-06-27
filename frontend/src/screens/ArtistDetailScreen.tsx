@@ -147,6 +147,15 @@ export function ArtistDetailBody({ artist }: Props) {
                 />
               </TouchableOpacity>
             )}
+            {artist.isPlayable && (
+              <TouchableOpacity onPress={() => Linking.openURL(`https://www.setlist.fm/search?query=${artistNameForURL}`)}>
+                <ExpoImage
+                  source={require('../../assets/setlist-fm-icon-72.png')}
+                  style={{ width: STREAMING_ICON_SIZE, height: STREAMING_ICON_SIZE }}
+                  contentFit="contain"
+                />
+              </TouchableOpacity>
+            )}
             {artistWebDomain !== '' && (
               <TouchableOpacity onPress={() => Linking.openURL(artist.url)}>
                 <Text style={{
