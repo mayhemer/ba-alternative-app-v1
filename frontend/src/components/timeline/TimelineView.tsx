@@ -16,6 +16,7 @@ import { TimeRuler } from './TimeRuler';
 import { CANVAS_WIDTH, VIEW_OFFSET_X, VIEW_WIDTH, timeToX } from './timelineLayout';
 import { currentTimeMs } from '../../utils/clock';
 import type { DbArtist, DbCategory, DbEvent } from '../../types/backend';
+import type { ConflictOverlap } from '../../utils/conflictUtils';
 
 type Props = {
   screenKey: string;
@@ -26,7 +27,7 @@ type Props = {
   canvasHeight: number;
   selectedDayStart: number;
   onBlockPress: (event: DbEvent, artist: DbArtist) => void;
-  conflictingEventIds: Set<string>;
+  conflictOverlaps: Map<string, ConflictOverlap[]>;
 };
 
 export function TimelineView({
@@ -38,7 +39,7 @@ export function TimelineView({
   canvasHeight,
   selectedDayStart,
   onBlockPress,
-  conflictingEventIds,
+  conflictOverlaps,
 }: Props) {
   const [areaHeight, setAreaHeight] = useState(0);
   const scrollViewWidthRef = useRef(0);
@@ -156,7 +157,7 @@ export function TimelineView({
                   onBlockPress={onBlockPress}
                   laneHeight={laneHeights[cat.categoryId]}
                   eventSubRows={categorySubRows?.[cat.categoryId]}
-                  conflictingEventIds={conflictingEventIds}
+                  conflictOverlaps={conflictOverlaps}
                 />
               ))}
             </View>

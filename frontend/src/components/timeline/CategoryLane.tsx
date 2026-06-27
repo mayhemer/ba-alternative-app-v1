@@ -4,6 +4,7 @@ import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 import type { DbArtist, DbCategory, DbEvent } from '../../types/backend';
 import type { InterestStatus } from '../../cache/cacheService';
+import type { ConflictOverlap } from '../../utils/conflictUtils';
 import { decodeCategoryColor, dimColor } from '../../utils/color';
 import { getCategoryLocalized } from '../../utils/localization';
 import { CANVAS_WIDTH, LANE_HEIGHT, STRIP_HEIGHT, VIEW_OFFSET_X } from './timelineLayout';
@@ -26,7 +27,7 @@ type Props = {
   onBlockPress: (event: DbEvent, artist: DbArtist) => void;
   laneHeight?: number;
   eventSubRows?: Record<string, number>;
-  conflictingEventIds: Set<string>;
+  conflictOverlaps: Map<string, ConflictOverlap[]>;
 };
 
 export function CategoryLane({
@@ -39,7 +40,7 @@ export function CategoryLane({
   onBlockPress,
   laneHeight = LANE_HEIGHT,
   eventSubRows,
-  conflictingEventIds,
+  conflictOverlaps,
 }: Props) {
   const title = getCategoryLocalized(category.localized, 'title');
   const categoryColor = decodeCategoryColor(category.color);
@@ -101,7 +102,7 @@ export function CategoryLane({
             categoryColor={categoryColor}
             onPress={() => onBlockPress(event, artist)}
             subRow={eventSubRows?.[event.eventId]}
-            hasConflict={conflictingEventIds.has(event.eventId)}
+            conflictOverlaps={conflictOverlaps.get(event.eventId)}
           />
         ))}
       </View>

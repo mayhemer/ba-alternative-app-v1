@@ -19,7 +19,7 @@ import {
   STRIP_HEIGHT,
 } from '../components/timeline/timelineLayout';
 import { matchesScope } from '../utils/interestUtils';
-import { computeConflictEntries } from '../utils/conflictUtils';
+import { computeConflictOverlaps, type ConflictOverlap } from '../utils/conflictUtils';
 
 type Options = {
   filterArtist?: (artist: DbArtist) => boolean;
@@ -33,7 +33,7 @@ export type TimelineData = {
   laneHeights: Record<string, number>;
   categorySubRows: Record<string, Record<string, number>>;
   canvasHeight: number;
-  conflictingEventIds: Set<string>;
+  conflictOverlaps: Map<string, ConflictOverlap[]>;
 };
 
 export function useTimelineData({ filterArtist, useSubRows = false }: Options = {}): TimelineData {
@@ -131,9 +131,8 @@ export function useTimelineData({ filterArtist, useSubRows = false }: Options = 
     }, 0);
   }, [visibleCategories, laneHeights]);
 
-  const conflictingEventIds = useMemo<Set<string>>(() => {
-    const entries = computeConflictEntries(selectedSlug, interests);
-    return new Set(entries.map((e) => e.event.eventId));
+  const conflictOverlaps = useMemo<Map<string, ConflictOverlap[]>>(() => {
+    return computeConflictOverlaps(selectedSlug, interests);
   }, [selectedSlug, interests]);
 
   return {
@@ -143,6 +142,6 @@ export function useTimelineData({ filterArtist, useSubRows = false }: Options = 
     laneHeights,
     categorySubRows,
     canvasHeight,
-    conflictingEventIds,
+    conflictOverlaps,
   };
 }

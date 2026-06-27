@@ -70,6 +70,52 @@ export function computeConflictEntries(
     });
 }
 
+// ── Overlap spans (for the timeline conflict marker) ────────────────────────────
+
+// A single [from, to] time interval (Unix ms) of an event that is covered by a conflict.
+export type ConflictOverlap = { from: number; to: number };
+
+/**
+ * For every conflicting must_see event, the merged set of disjoint intervals where
+ * it actually overlaps other must_see events. An event that clashes with two others
+ * on either side (with a clear gap in the middle) yields two intervals, so the
+ * timeline draws two bars and leaves the gap uncovered.
+ *
+ * Cost is dominated by computeConflictEntries' O(n²) pairing; the per-event merge is
+ * O(k log k) over the (small) number of conflicts that event has.
+ */
+export function computeConflictOverlaps(
+  slug: string,
+  interests: Record<string, string>,
+): Map<string, ConflictOverlap[]> {
+  const map = new Map<string, ConflictOverlap[]>();
+  for (const entry of computeConflictEntries(slug, interests)) {
+    // Pairwise intersections of this event with each event it conflicts with.
+    const intervals: ConflictOverlap[] = [];
+    for (const other of entry.overlappingEvents) {
+      const from = Math.max(entry.event.dateFrom, other.dateFrom);
+      const to   = Math.min(entry.event.dateTo,   other.dateTo);
+      if (from < to) { intervals.push({ from, to }); }
+    }
+    if (intervals.length === 0) { continue; }
+
+    // Merge into disjoint intervals.
+    intervals.sort((a, b) => a.from - b.from);
+    const merged: ConflictOverlap[] = [{ ...intervals[0] }];
+    for (let i = 1; i < intervals.length; i++) {
+      const last = merged[merged.length - 1];
+      const cur  = intervals[i];
+      if (cur.from <= last.to) {
+        last.to = Math.max(last.to, cur.to);
+      } else {
+        merged.push({ ...cur });
+      }
+    }
+    map.set(entry.event.eventId, merged);
+  }
+  return map;
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 /** Returns true if two events' time ranges intersect (strict overlap). */

@@ -29,6 +29,7 @@ const colors = {
   muted:          '#7f7f7f',   // tick marks, block default, subtle chrome
   danger:         '#ff4444',   // now-line, errors, warnings
   dangerSecondary:'#7e2222',   // now-line, errors, warnings
+  dangerMuted:    '#111111',   // now-line, errors, warnings
   black:          '#000000',
   white:          '#ffffff',
 };
