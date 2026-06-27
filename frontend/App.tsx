@@ -34,7 +34,13 @@ function RootGate() {
     setLoading(true);
     setError(null);
     startSync(slug, lastSyncTimeRef.current, {
-      onFirstLoadSuccess: () => setLoading(false),
+      onFirstLoadSuccess: () => {
+        setLoading(false);
+        // Signal that the festival cache is now populated so cache-reading
+        // consumers (conflicts) recompute. The latch in useCacheRefresh ensures
+        // this is caught even though it fires before those providers mount.
+        emitCacheRefresh();
+      },
       onFirstLoadError: (err) => {
         setLoading(false);
         setError(err.message);
@@ -45,11 +51,18 @@ function RootGate() {
   }, [setLoading, setError, emitCacheRefresh, setSyncTime]);
 
   const handleRetry = useCallback(() => {
-    syncWithSlug(selectedSlug);
+    if (selectedSlug !== null) {
+      syncWithSlug(selectedSlug);
+    }
   }, [syncWithSlug, selectedSlug]);
 
-  // (Re-)start sync whenever the selected slug changes
+  // (Re-)start sync whenever the selected slug changes. Held until the slug is
+  // resolved from storage (null) so we sync once under the correct slug instead
+  // of racing a default-then-stored double sync.
   useEffect(() => {
+    if (selectedSlug === null) {
+      return;
+    }
     syncWithSlug(selectedSlug);
     return () => stopSync();
   }, [selectedSlug, syncWithSlug]);

@@ -8,7 +8,7 @@ import { getArtistLocalized } from '../utils/localization';
 import { useStartProgress, useFeedback } from '../context/ScreenUIContext';
 import { getArtistEvents, getArtists } from '../cache/cacheService';
 import { eventsOverlap } from '../utils/conflictUtils';
-import { useAppState } from '../store/AppContext';
+import { useSelectedSlug } from '../store/AppContext';
 import type { DbArtist, DbEvent } from '../types/backend';
 import { MAX_CONTENT_WIDTH, PADDING_BREAKPOINT } from '../styling/tokens';
 
@@ -18,7 +18,7 @@ export function useArtistDerived(artist: DbArtist) {
   const { closeDetail, expandDetail } = useArtistDetailContext();
   const { interests, getStatus, cycleStatus } = useInterest();
   const { openConflict } = useConflictDetail();
-  const { selectedSlug } = useAppState();
+  const selectedSlug = useSelectedSlug();
   const startProgress = useStartProgress();
   const showFeedback  = useFeedback();
   const { width } = useWindowDimensions();

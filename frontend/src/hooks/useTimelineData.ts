@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useAppState, useCacheRefresh } from '../store/AppContext';
+import { useCacheRefresh, useSelectedSlug } from '../store/AppContext';
 import {
   getArtists,
   getCategories,
@@ -35,7 +35,7 @@ export type TimelineData = {
 };
 
 export function useTimelineData({ filterArtist, useSubRows = false }: Options = {}): TimelineData {
-  const { selectedSlug } = useAppState();
+  const selectedSlug = useSelectedSlug();
   const { getStatus, interests } = useInterest();
   const { selectedDayStart, interestFilter, hiddenCategories } = useTimelineFilter();
 

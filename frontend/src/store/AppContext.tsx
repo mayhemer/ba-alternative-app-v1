@@ -4,7 +4,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type AppState = {
-  selectedSlug: string;
+  // null until the persisted slug has been read from AsyncStorage on startup;
+  // thereafter always a real slug. This is the single source of truth for
+  // "is the slug known yet" — RootGate holds the first sync until it resolves.
+  selectedSlug: string | null;
   isLoading: boolean;
   lastError: string | null;
   lastSyncTime: number;
@@ -26,6 +29,7 @@ type AppContextValue = {
   setSyncTime: (time: number) => void;
   subscribeToCacheRefresh: (listener: CacheRefreshListener) => () => void;
   emitCacheRefresh: () => void;
+  getRefreshEpoch: () => number;
 };
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -56,26 +60,37 @@ const AppContext = createContext<AppContextValue | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, {
-    selectedSlug: DEFAULT_SLUG,
+    selectedSlug: null,
     isLoading: true,
     lastError: null,
     lastSyncTime: 0,
   });
 
-  // Event emitter for cache refresh notifications
+  // Event emitter for cache refresh notifications.
   const refreshListeners = useRef<Set<CacheRefreshListener>>(new Set());
+  // Monotonic counter bumped on every emitCacheRefresh. Lets late-mounting
+  // subscribers detect a refresh that fired before they subscribed (see useCacheRefresh).
+  const refreshEpoch = useRef(0);
 
-  // Hydrate selectedSlug from AsyncStorage on mount
+  // Resolve selectedSlug from AsyncStorage on mount. Always dispatches a real
+  // slug — falling back to DEFAULT_SLUG on a missing value or a read error — so
+  // the slug can never stay null and deadlock RootGate's first-sync gate.
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY_SLUG).then((stored) => {
-      if (stored !== null) {
-        dispatch({ type: 'SET_SLUG', slug: stored });
-      }
-    });
+    AsyncStorage.getItem(STORAGE_KEY_SLUG)
+      .then((stored) => {
+        dispatch({ type: 'SET_SLUG', slug: stored ?? DEFAULT_SLUG });
+      })
+      .catch(() => {
+        dispatch({ type: 'SET_SLUG', slug: DEFAULT_SLUG });
+      });
   }, []);
 
-  // Persist selectedSlug to AsyncStorage whenever it changes
+  // Persist selectedSlug to AsyncStorage whenever it changes. Skipped while
+  // unresolved so we never overwrite the stored slug with a placeholder.
   useEffect(() => {
+    if (state.selectedSlug === null) {
+      return;
+    }
     AsyncStorage.setItem(STORAGE_KEY_SLUG, state.selectedSlug);
   }, [state.selectedSlug]);
 
@@ -103,8 +118,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const emitCacheRefresh = useCallback((): void => {
+    refreshEpoch.current += 1;
     refreshListeners.current.forEach((listener) => listener());
   }, []);
+
+  const getRefreshEpoch = useCallback((): number => refreshEpoch.current, []);
 
   const value: AppContextValue = {
     state,
@@ -114,6 +132,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setSyncTime,
     subscribeToCacheRefresh,
     emitCacheRefresh,
+    getRefreshEpoch,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
@@ -133,12 +152,33 @@ export function useAppState(): AppState {
   return useAppContext().state;
 }
 
+// Returns the resolved slug. Safe to call anywhere below RootGate's loading
+// gate, where the slug is guaranteed resolved; throws otherwise so a premature
+// read surfaces loudly instead of silently reading from an empty cache.
+export function useSelectedSlug(): string {
+  const { selectedSlug } = useAppState();
+  if (selectedSlug === null) {
+    throw new Error('useSelectedSlug called before the slug was resolved');
+  }
+  return selectedSlug;
+}
+
 export function useCacheRefresh(listener: CacheRefreshListener): void {
-  const { subscribeToCacheRefresh } = useAppContext();
+  const { subscribeToCacheRefresh, getRefreshEpoch } = useAppContext();
   const listenerRef = useRef(listener);
   listenerRef.current = listener;
+  // Epoch this subscriber has already reacted to. Starts at 0 so a refresh that
+  // fired before mount (current epoch > 0) is caught up on subscribe.
+  const seenEpochRef = useRef(0);
 
   useEffect(() => {
-    return subscribeToCacheRefresh(() => listenerRef.current());
-  }, [subscribeToCacheRefresh]);
+    if (getRefreshEpoch() !== seenEpochRef.current) {
+      seenEpochRef.current = getRefreshEpoch();
+      listenerRef.current();
+    }
+    return subscribeToCacheRefresh(() => {
+      seenEpochRef.current = getRefreshEpoch();
+      listenerRef.current();
+    });
+  }, [subscribeToCacheRefresh, getRefreshEpoch]);
 }

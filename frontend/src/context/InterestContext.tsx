@@ -7,7 +7,7 @@ import React, {
   useReducer,
   useRef,
 } from 'react';
-import { useAppState } from '../store/AppContext';
+import { useSelectedSlug } from '../store/AppContext';
 import { useAuth } from './AuthContext';
 import {
   type InterestStatus,
@@ -105,7 +105,7 @@ const InterestStateContext = createContext<InterestStateContextValue | null>(nul
 const InterestCycleContext = createContext<InterestCycleContextValue | null>(null);
 
 export function InterestProvider({ children }: { children: React.ReactNode }) {
-  const { selectedSlug } = useAppState();
+  const selectedSlug = useSelectedSlug();
   const { isLoggedIn, getAccessToken } = useAuth();
   const [state, dispatch] = useReducer(interestReducer, {
     interests: {},

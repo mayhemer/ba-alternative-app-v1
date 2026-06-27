@@ -7,7 +7,7 @@ import {
 import { Text } from '../components/ui/Text';
 import type { DbArtist } from '../types/backend';
 import { getArtists } from '../cache/cacheService';
-import { useAppState } from '../store/AppContext';
+import { useSelectedSlug } from '../store/AppContext';
 import { useCacheRefresh } from '../store/AppContext';
 import { useTopBar, useBottomBar } from '../context/ScreenUIContext';
 import { useInterest } from '../context/InterestContext';
@@ -63,7 +63,7 @@ function ArtistListTopBarRight() {
 // ── Inner screen (needs ArtistListFilterContext) ──────────────────────────────
 
 function ArtistListScreenInner() {
-  const { selectedSlug } = useAppState();
+  const selectedSlug = useSelectedSlug();
   const { getStatus, interests } = useInterest();
   const { searchQuery, setSearchQuery, interestFilter } = useArtistListFilter();
   const { openDetail } = useArtistDetail();

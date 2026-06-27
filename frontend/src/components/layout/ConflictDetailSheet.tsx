@@ -8,7 +8,7 @@ import { Text } from '../ui/Text';
 import { useConflictDetail } from '../../context/ConflictDetailContext';
 import { useArtistDetail } from '../../context/ArtistDetailContext';
 import { useInterest } from '../../context/InterestContext';
-import { useAppState, useCacheRefresh } from '../../store/AppContext';
+import { useCacheRefresh, useSelectedSlug } from '../../store/AppContext';
 import { getArtists, getStages } from '../../cache/cacheService';
 import { getStageLocalized } from '../../utils/localization';
 import { StarIndicator } from '../StarButton';
@@ -256,7 +256,7 @@ function ConflictDetailHeader({ sourceEvent, artistName, stageName, onClose }: H
 export function ConflictDetailSheet() {
   const { conflictState, closeConflict } = useConflictDetail();
   const { openDetail } = useArtistDetail();
-  const { selectedSlug } = useAppState();
+  const selectedSlug = useSelectedSlug();
   const { top } = useSafeAreaInsets();
   const sheetRef = useRef<BottomSheet>(null);
 

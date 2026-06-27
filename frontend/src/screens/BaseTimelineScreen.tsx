@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import { Text } from '../components/ui/Text';
-import { useAppState } from '../store/AppContext';
+import { useSelectedSlug } from '../store/AppContext';
 import { getFestivalDays } from '../cache/cacheService';
 import type { DbArtist, DbEvent } from '../types/backend';
 import { useTopBar, useBottomBar } from '../context/ScreenUIContext';
@@ -37,7 +37,7 @@ type Props = {
 };
 
 export function BaseTimelineScreen({ title, screenKey, BottomBarComponent, filterArtist, useSubRows = false }: Props) {
-  const { selectedSlug } = useAppState();
+  const selectedSlug = useSelectedSlug();
   const { openDetail } = useArtistDetail();
   const {
     setFestivalDays,
