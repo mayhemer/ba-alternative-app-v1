@@ -29,7 +29,6 @@ export function FriendFacepile({ friends, size = 22 }: Props) {
             label={friend.label}
             avatarUrl={friend.avatarUrl}
             size={size}
-            ringColor={colors.surface}
           />
         </View>
       ))}

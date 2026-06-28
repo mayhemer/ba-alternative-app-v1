@@ -15,15 +15,14 @@ type Props = {
   label: string;
   avatarUrl?: string;
   size?: number;
-  // Ring color drawn around the avatar (e.g. surface bg to separate stacked avatars).
-  ringColor?: string;
 };
 
 // A circular friend avatar — profile image when available, otherwise an
 // initials chip on the friend accent color.
-export function FriendAvatar({ label, avatarUrl, size = 22, ringColor }: Props) {
+export function FriendAvatar({ label, avatarUrl, size = 22 }: Props) {
   const radius = size / 2;
-  const ring = ringColor !== undefined ? { borderWidth: 1.5, borderColor: ringColor } : null;
+  // 1px white ring to lift the avatar off the background and separate stacked avatars.
+  const ring = { borderWidth: 1, borderColor: colors.white };
 
   if (avatarUrl !== undefined && avatarUrl !== '') {
     return (
