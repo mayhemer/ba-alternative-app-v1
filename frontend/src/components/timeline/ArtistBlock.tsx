@@ -14,7 +14,7 @@ import type { ConflictOverlap } from '../../utils/conflictUtils';
 const CONFLICT_BAR_HEIGHT = 10;
 const CONFLICT_BAR_RAISE = 1; // px the bar sits above the block's top edge ("over" it)
 const CONFLICT_BAR_MIN_WIDTH = 4;
-const CONFLICT_STRIPE = 5; // half-period of the 45° red / dark-red stripes
+const CONFLICT_STRIPE = 2; // half-period of the 45° red / dark-red stripes
 
 type Props = {
   event: DbEvent;
