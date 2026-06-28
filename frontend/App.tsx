@@ -1,10 +1,11 @@
 import './global.css';
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { useFonts } from 'expo-font';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
-import { AppProvider, useAppContext } from './src/store/AppContext';
+import { AppProvider } from './src/store/AppContext';
 import { AuthProvider } from './src/context/AuthContext';
+import { StartupGate } from './src/store/StartupGate';
 import { ScreenUIProvider } from './src/context/ScreenUIContext';
 import { ArtistDetailProvider } from './src/context/ArtistDetailContext';
 import { ConflictDetailProvider } from './src/context/ConflictDetailContext';
@@ -15,68 +16,11 @@ import { LensProvider } from './src/context/LensContext';
 import { ArtistListFilterProvider } from './src/context/ArtistListFilterContext';
 import { TimelineFilterProvider } from './src/context/TimelineFilterContext';
 import { AppShell } from './src/components/layout/AppShell';
-import { SplashScreen } from './src/screens/SplashScreen';
-import { startSync, stop as stopSync } from './src/sync/backgroundSyncService';
 import { Image as ExpoImage } from 'expo-image';
 
-// ── Root gate: handles loading / error / ready states ─────────────────────────
+// ── App content: full provider tree, mounted once startup hydration completes ─
 
-function RootGate() {
-  const { state, setLoading, setError, setSyncTime, emitCacheRefresh } =
-    useAppContext();
-  const { selectedSlug, isLoading, lastError, lastSyncTime } = state;
-
-  // Stable ref so sync callbacks always read the latest value without re-subscribing
-  const lastSyncTimeRef = useRef(lastSyncTime);
-  useEffect(() => {
-    lastSyncTimeRef.current = lastSyncTime;
-  }, [lastSyncTime]);
-
-  const syncWithSlug = useCallback((slug: string): void => {
-    setLoading(true);
-    setError(null);
-    startSync(slug, lastSyncTimeRef.current, {
-      onFirstLoadSuccess: () => {
-        setLoading(false);
-        // Signal that the festival cache is now populated so cache-reading
-        // consumers (conflicts) recompute. The latch in useCacheRefresh ensures
-        // this is caught even though it fires before those providers mount.
-        emitCacheRefresh();
-      },
-      onFirstLoadError: (err) => {
-        setLoading(false);
-        setError(err.message);
-      },
-      onRefreshComplete: () => emitCacheRefresh(),
-      onSyncTimeUpdated: (time) => setSyncTime(time),
-    });
-  }, [setLoading, setError, emitCacheRefresh, setSyncTime]);
-
-  const handleRetry = useCallback(() => {
-    if (selectedSlug !== null) {
-      syncWithSlug(selectedSlug);
-    }
-  }, [syncWithSlug, selectedSlug]);
-
-  // (Re-)start sync whenever the selected slug changes. Held until the slug is
-  // resolved from storage (null) so we sync once under the correct slug instead
-  // of racing a default-then-stored double sync.
-  useEffect(() => {
-    if (selectedSlug === null) {
-      return;
-    }
-    syncWithSlug(selectedSlug);
-    return () => stopSync();
-  }, [selectedSlug, syncWithSlug]);
-
-  if (isLoading) {
-    return <SplashScreen error={null} onRetry={handleRetry} />;
-  }
-
-  if (lastError !== null) {
-    return <SplashScreen error={lastError} onRetry={handleRetry} />;
-  }
-
+function AppContent() {
   return (
     <ScreenUIProvider>
       <InterestProvider>
@@ -130,7 +74,9 @@ export default function App() {
     <SafeAreaProvider>
       <AppProvider>
         <AuthProvider>
-          <RootGate />
+          <StartupGate>
+            <AppContent />
+          </StartupGate>
         </AuthProvider>
       </AppProvider>
     </SafeAreaProvider>

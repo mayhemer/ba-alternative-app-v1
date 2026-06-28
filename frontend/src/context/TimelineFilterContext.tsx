@@ -2,19 +2,19 @@ import React, {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
 } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getUiState, setHiddenCategories as persistHiddenCategories } from '../store/uiStatePersistence';
 
 // Provider lives above AppShell so that slot components rendered in TopBar/BottomBar
 // can access the context even though they're outside the navigator tree.
-
-// ── Storage keys ──────────────────────────────────────────────────────────────
-
-const KEY_HIDDEN_CATS   = 'timeline:hiddenCategories';  // stored as JSON array
-const KEY_SCROLL_POS    = 'timeline:scrollPositions:v2'; // stored as JSON Record<screenKey, Record<dayStart, x>>
+//
+// Persisted UI state (hidden categories, scroll positions, selected day) is owned
+// by the uiStatePersistence module, hydrated before this provider mounts (under
+// StartupGate). Scroll positions and the per-screen selected day are read/written
+// directly against that module by the timeline screens; only hiddenCategories
+// needs to live here as React state because hiding a category re-renders the lanes.
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -32,11 +32,6 @@ type TimelineFilterContextValue = {
   hiddenCategories: Set<string>;
   toggleCategory: (categoryId: string) => void;
 
-  // Per-screen, per-day horizontal scroll position (canvas X). Persisted.
-  // Outer key = screenKey (e.g. 'timeline', 'support'), inner key = String(dayStart).
-  scrollPositions: Record<string, Record<string, number>>;
-  setScrollPosition: (screenKey: string, dayStart: number, x: number) => void;
-
   // Signals a specific screen's TimelineView to scroll to now.
   scrollToNowSignal: { screenKey: string; counter: number };
   requestScrollToNow: (screenKey: string) => void;
@@ -49,37 +44,12 @@ const TimelineFilterContext = createContext<TimelineFilterContextValue | null>(n
 export function TimelineFilterProvider({ children }: { children: React.ReactNode }) {
   const [festivalDays,    setFestivalDays]    = useState<number[]>([]);
   const [selectedDayStart, setSelectedDayStart] = useState<number>(0);
-  const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(new Set());
-  const [scrollPositions, setScrollPositions] = useState<Record<string, Record<string, number>>>({});
+  // Seeded synchronously from the already-hydrated snapshot (StartupGate gates
+  // this provider behind hydration).
+  const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(
+    () => new Set(getUiState('hiddenCategories')),
+  );
   const [scrollToNowSignal, setScrollToNowSignal] = useState<{ screenKey: string; counter: number }>({ screenKey: '', counter: 0 });
-
-  // ── Hydration (once on mount) ───────────────────────────────────────────────
-
-  useEffect(() => {
-    async function hydrate(): Promise<void> {
-      const [hiddenStored, scrollStored] = await Promise.all([
-        AsyncStorage.getItem(KEY_HIDDEN_CATS),
-        AsyncStorage.getItem(KEY_SCROLL_POS),
-      ]);
-      if (hiddenStored !== null) {
-        setHiddenCategories(new Set(JSON.parse(hiddenStored) as string[]));
-      }
-      if (scrollStored !== null) {
-        setScrollPositions(JSON.parse(scrollStored) as Record<string, Record<string, number>>);
-      }
-    }
-    void hydrate();
-  }, []);
-
-  // ── Persistence ────────────────────────────────────────────────────────────
-
-  useEffect(() => {
-    void AsyncStorage.setItem(KEY_HIDDEN_CATS, JSON.stringify(Array.from(hiddenCategories)));
-  }, [hiddenCategories]);
-
-  useEffect(() => {
-    void AsyncStorage.setItem(KEY_SCROLL_POS, JSON.stringify(scrollPositions));
-  }, [scrollPositions]);
 
   // ── Stable callbacks ───────────────────────────────────────────────────────
 
@@ -91,15 +61,9 @@ export function TimelineFilterProvider({ children }: { children: React.ReactNode
       } else {
         next.add(categoryId);
       }
+      persistHiddenCategories(Array.from(next));
       return next;
     });
-  }, []);
-
-  const setScrollPosition = useCallback((screenKey: string, dayStart: number, x: number): void => {
-    setScrollPositions((prev) => ({
-      ...prev,
-      [screenKey]: { ...(prev[screenKey] ?? {}), [String(dayStart)]: x },
-    }));
   }, []);
 
   const requestScrollToNow = useCallback((screenKey: string): void => {
@@ -114,13 +78,11 @@ export function TimelineFilterProvider({ children }: { children: React.ReactNode
       setSelectedDayStart,
       hiddenCategories,
       toggleCategory,
-      scrollPositions,
-      setScrollPosition,
       scrollToNowSignal,
       requestScrollToNow,
     }),
-    // useState setters (setFestivalDays, setSelectedDayStart, setInterestFilter) are stable — omitted
-    [festivalDays, selectedDayStart, hiddenCategories, toggleCategory, scrollPositions, setScrollPosition, scrollToNowSignal, requestScrollToNow],
+    // useState setters (setFestivalDays, setSelectedDayStart) are stable — omitted
+    [festivalDays, selectedDayStart, hiddenCategories, toggleCategory, scrollToNowSignal, requestScrollToNow],
   );
 
   return (

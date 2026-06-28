@@ -6,10 +6,11 @@ import Animated, {
   useAnimatedRef,
   scrollTo,
 } from 'react-native-reanimated';
-import { scheduleOnUI } from 'react-native-worklets';
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 import { useFocusEffect } from '@react-navigation/native';
 import { useInterest } from '../../context/InterestContext';
 import { useTimelineFilter } from '../../context/TimelineFilterContext';
+import { getScroll, setScroll } from '../../store/uiStatePersistence';
 import { CategoryLane } from './CategoryLane';
 import type { LaneEvent } from './CategoryLane';
 import { TimeRuler } from './TimeRuler';
@@ -44,18 +45,45 @@ export function TimelineView({
   const [areaHeight, setAreaHeight] = useState(0);
   const scrollViewWidthRef = useRef(0);
   const { getStatus } = useInterest();
-  const { scrollPositions, setScrollPosition, scrollToNowSignal } = useTimelineFilter();
+  const { scrollToNowSignal } = useTimelineFilter();
 
   // ── Horizontal scroll tracking ──────────────────────────────────────────────
 
   const horizontalScrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollX = useSharedValue(0);
+  const lastPersist = useSharedValue(0);
+
+  const selectedDayStartRef = useRef(selectedDayStart);
+  useEffect(() => { selectedDayStartRef.current = selectedDayStart; }, [selectedDayStart]);
+
+  // Persist the settled scroll offset for the current day. Called on JS thread
+  // from the scroll-gesture-end worklets, so it reads the current day from a ref.
+  const persistCurrentScroll = useCallback((x: number): void => {
+    if (selectedDayStartRef.current !== 0) {
+      setScroll(screenKey, selectedDayStartRef.current, x);
+    }
+  }, [screenKey]);
 
   const onScroll = useAnimatedScrollHandler({
     onScroll: (event) => {
       scrollX.value = event.contentOffset.x;
+      // Persist continuously while scrolling (throttled). Drag/momentum-end
+      // events don't fire for web wheel scrolling, so saving here keeps the
+      // position current on every platform; the module debounces the write.
+      const now = Date.now();
+      if (now - lastPersist.value >= 32) {
+        lastPersist.value = now;
+        scheduleOnRN(persistCurrentScroll, event.contentOffset.x);
+      }
     },
-  });
+    // Native: capture the exact final offset when the gesture settles.
+    onEndDrag: (event) => {
+      scheduleOnRN(persistCurrentScroll, event.contentOffset.x);
+    },
+    onMomentumEnd: (event) => {
+      scheduleOnRN(persistCurrentScroll, event.contentOffset.x);
+    },
+  }, [persistCurrentScroll]);
 
   // ── Now-line position ────────────────────────────────────────────────────────
   // Computed once here and shared with every NowLine. A single interval keeps it
@@ -73,23 +101,18 @@ export function TimelineView({
 
   // ── Scroll save / restore on day switch ────────────────────────────────────
 
-  const prevDayRef           = useRef(0);
-  const selectedDayStartRef  = useRef(selectedDayStart);
-  const setScrollPositionRef = useRef(setScrollPosition);
-
-  useEffect(() => { selectedDayStartRef.current  = selectedDayStart;  }, [selectedDayStart]);
-  useEffect(() => { setScrollPositionRef.current = setScrollPosition; }, [setScrollPosition]);
+  const prevDayRef = useRef(0);
 
   useEffect(() => {
     if (selectedDayStart === 0) { return; }
 
     const prevDay = prevDayRef.current;
     if (prevDay !== 0 && prevDay !== selectedDayStart) {
-      setScrollPositionRef.current(screenKey, prevDay, scrollX.value);
+      setScroll(screenKey, prevDay, scrollX.value);
     }
     prevDayRef.current = selectedDayStart;
 
-    const savedX = (scrollPositions[screenKey] ?? {})[String(selectedDayStart)] ?? 0;
+    const savedX = getScroll(screenKey, selectedDayStart) ?? 0;
 
     if (prevDay === 0) {
       const timer = setTimeout(() => {
@@ -99,8 +122,7 @@ export function TimelineView({
     }
 
     scheduleOnUI(() => { scrollTo(horizontalScrollRef, savedX, 0, false); });
-    // scrollPositions intentionally omitted — restoring should only happen
-    // when the day changes, not every time the map is updated.
+    // Only re-run when the day changes; the saved offset is read imperatively.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDayStart]);
 
@@ -121,7 +143,7 @@ export function TimelineView({
     useCallback(() => {
       return () => {
         if (selectedDayStartRef.current !== 0) {
-          setScrollPositionRef.current(screenKey, selectedDayStartRef.current, scrollX.value);
+          setScroll(screenKey, selectedDayStartRef.current, scrollX.value);
         }
       };
     }, [scrollX, screenKey]),
