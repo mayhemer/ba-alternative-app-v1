@@ -6,6 +6,7 @@ import React, {
   useState,
 } from 'react';
 import { getUiState, setHiddenCategories as persistHiddenCategories } from '../store/uiStatePersistence';
+import { currentTimeMs } from '../utils/clock';
 
 // Provider lives above AppShell so that slot components rendered in TopBar/BottomBar
 // can access the context even though they're outside the navigator tree.
@@ -32,8 +33,12 @@ type TimelineFilterContextValue = {
   hiddenCategories: Set<string>;
   toggleCategory: (categoryId: string) => void;
 
-  // Signals a specific screen's TimelineView to scroll to now.
-  scrollToNowSignal: { screenKey: string; counter: number };
+  // Signals a specific screen's TimelineView to scroll to an event: its centre is
+  // centred in the view, but the start is kept visible with 1 h of space to its left.
+  scrollToTimeSignal: { screenKey: string; fromMs: number; toMs: number; counter: number };
+  requestScrollToTime: (screenKey: string, fromMs: number, toMs: number) => void;
+
+  // Convenience wrapper: scroll so the current time is centred.
   requestScrollToNow: (screenKey: string) => void;
 };
 
@@ -49,7 +54,7 @@ export function TimelineFilterProvider({ children }: { children: React.ReactNode
   const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(
     () => new Set(getUiState('hiddenCategories')),
   );
-  const [scrollToNowSignal, setScrollToNowSignal] = useState<{ screenKey: string; counter: number }>({ screenKey: '', counter: 0 });
+  const [scrollToTimeSignal, setScrollToTimeSignal] = useState<{ screenKey: string; fromMs: number; toMs: number; counter: number }>({ screenKey: '', fromMs: 0, toMs: 0, counter: 0 });
 
   // ── Stable callbacks ───────────────────────────────────────────────────────
 
@@ -66,9 +71,14 @@ export function TimelineFilterProvider({ children }: { children: React.ReactNode
     });
   }, []);
 
-  const requestScrollToNow = useCallback((screenKey: string): void => {
-    setScrollToNowSignal((prev) => ({ screenKey, counter: prev.counter + 1 }));
+  const requestScrollToTime = useCallback((screenKey: string, fromMs: number, toMs: number): void => {
+    setScrollToTimeSignal((prev) => ({ screenKey, fromMs, toMs, counter: prev.counter + 1 }));
   }, []);
+
+  const requestScrollToNow = useCallback((screenKey: string): void => {
+    const now = currentTimeMs();
+    requestScrollToTime(screenKey, now, now);
+  }, [requestScrollToTime]);
 
   const value = useMemo(
     () => ({
@@ -78,11 +88,12 @@ export function TimelineFilterProvider({ children }: { children: React.ReactNode
       setSelectedDayStart,
       hiddenCategories,
       toggleCategory,
-      scrollToNowSignal,
+      scrollToTimeSignal,
+      requestScrollToTime,
       requestScrollToNow,
     }),
     // useState setters (setFestivalDays, setSelectedDayStart) are stable — omitted
-    [festivalDays, selectedDayStart, hiddenCategories, toggleCategory, scrollToNowSignal, requestScrollToNow],
+    [festivalDays, selectedDayStart, hiddenCategories, toggleCategory, scrollToTimeSignal, requestScrollToTime, requestScrollToNow],
   );
 
   return (

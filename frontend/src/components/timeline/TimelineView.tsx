@@ -14,10 +14,13 @@ import { getScroll, setScroll } from '../../store/uiStatePersistence';
 import { CategoryLane } from './CategoryLane';
 import type { LaneEvent } from './CategoryLane';
 import { TimeRuler } from './TimeRuler';
-import { CANVAS_WIDTH, VIEW_OFFSET_X, VIEW_WIDTH, timeToX } from './timelineLayout';
+import { CANVAS_WIDTH, VIEW_OFFSET_X, VIEW_WIDTH, PIXELS_PER_MS, timeToX } from './timelineLayout';
 import { currentTimeMs } from '../../utils/clock';
 import type { DbArtist, DbCategory, DbEvent } from '../../types/backend';
 import type { ConflictOverlap } from '../../utils/conflictUtils';
+
+// Horizontal space kept to the left of an event's start when scrolling to it.
+const LEFT_PADDING_X = 60 * 60 * 1000 * PIXELS_PER_MS; // 1 hour
 
 type Props = {
   screenKey: string;
@@ -45,7 +48,7 @@ export function TimelineView({
   const [areaHeight, setAreaHeight] = useState(0);
   const scrollViewWidthRef = useRef(0);
   const { getStatus } = useInterest();
-  const { scrollToNowSignal } = useTimelineFilter();
+  const { scrollToTimeSignal } = useTimelineFilter();
 
   // ── Horizontal scroll tracking ──────────────────────────────────────────────
 
@@ -126,17 +129,31 @@ export function TimelineView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDayStart]);
 
-  // ── Scroll to now ───────────────────────────────────────────────────────────
+  // ── Scroll to a specific time (centered) ─────────────────────────────────────
+  // Fired both by the day-switcher "now" button and when navigating here from an
+  // event (e.g. the artist detail). Deferred so it runs after the day-switch
+  // restore (which may use a 50 ms timer on a fresh mount) and after the
+  // ScrollView has measured its width.
 
   useEffect(() => {
-    if (scrollToNowSignal.counter === 0) { return; }
-    if (scrollToNowSignal.screenKey !== screenKey) { return; }
-    const nowXValue = timeToX(currentTimeMs(), selectedDayStart);
-    const targetX = Math.max(0, nowXValue - VIEW_OFFSET_X - scrollViewWidthRef.current / 2);
-    scheduleOnUI(() => { scrollTo(horizontalScrollRef, targetX, 0, true); });
-  // selectedDayStart is intentionally omitted — the signal always fires for the current day
+    if (scrollToTimeSignal.counter === 0) { return; }
+    if (scrollToTimeSignal.screenKey !== screenKey) { return; }
+    const { fromMs, toMs } = scrollToTimeSignal;
+    const timer = setTimeout(() => {
+      const day = selectedDayStartRef.current;
+      // Content-space X (canvas is shifted left by VIEW_OFFSET_X).
+      const centreX = timeToX((fromMs + toMs) / 2, day) - VIEW_OFFSET_X;
+      const startX  = timeToX(fromMs, day) - VIEW_OFFSET_X;
+      // Centre the event's midpoint, but never scroll so far that the start loses
+      // its 1 h of left padding (long events).
+      const centredOffset = centreX - scrollViewWidthRef.current / 2;
+      const targetX = Math.max(0, Math.min(centredOffset, startX - LEFT_PADDING_X));
+      scheduleOnUI(() => { scrollTo(horizontalScrollRef, targetX, 0, true); });
+    }, 120);
+    return () => clearTimeout(timer);
+  // selectedDayStart read via ref inside the timer — the signal carries its own time
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scrollToNowSignal]);
+  }, [scrollToTimeSignal]);
 
   // Save scroll position when the screen loses focus (navigating away).
   useFocusEffect(

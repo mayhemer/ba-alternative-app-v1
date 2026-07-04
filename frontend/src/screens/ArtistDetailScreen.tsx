@@ -1,16 +1,18 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Linking, TouchableOpacity, View } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 import RenderHtml from 'react-native-render-html';
 import { Text } from '../components/ui/Text';
 import { StarButton } from '../components/StarButton';
 import { getStageLocalized } from '../utils/localization';
-import { formatTime, formatDayLabel } from '../components/timeline/timelineLayout';
+import { formatTime, formatDayLabel, getFestivalDayStart } from '../components/timeline/timelineLayout';
 import { getArtistEvents, getStages, getCategories } from '../cache/cacheService';
 import { decodeCategoryColor } from '../utils/color';
 import { colors } from '../styling/tokens';
-import type { DbArtist } from '../types/backend';
+import type { DbArtist, DbEvent } from '../types/backend';
 import { useArtistDerived } from '../hooks/useArtistDerived';
+import { useTimelineFilter } from '../context/TimelineFilterContext';
+import { navigationRef } from '../navigation/navigationRef';
 import { Exclamation, ExclamationTouchable } from '../components/ui/Exclamation';
 import { useSocialData } from '../context/SocialContext';
 import { FriendPickList } from '../components/social/FriendPickList';
@@ -81,6 +83,24 @@ export function ArtistDetailHeader({ artist }: Props) {
 
 export function ArtistDetailBody({ artist }: Props) {
   const { closeDetail, content, innerWidth, hPad, isWeb, artistNameForURL, artistWebDomain, width, conflictMap, openConflict } = useArtistDerived(artist);
+  const { setSelectedDayStart, requestScrollToTime } = useTimelineFilter();
+
+  // Jump to this artist's event on the timeline: select its day, center its time,
+  // switch to the matching timeline tab (support vs main), and close the sheet.
+  const handleEventPress = useCallback((event: DbEvent): void => {
+    const isSupport = !artist.isPlayable;
+    const screenKey = isSupport ? 'support' : 'timeline';
+    setSelectedDayStart(getFestivalDayStart(event.dateFrom));
+    requestScrollToTime(screenKey, event.dateFrom, event.dateTo);
+    if (navigationRef.isReady()) {
+      if (isSupport) {
+        navigationRef.navigate('SupportTimeline');
+      } else {
+        navigationRef.navigate('Timeline');
+      }
+    }
+    closeDetail();
+  }, [artist.isPlayable, setSelectedDayStart, requestScrollToTime, closeDetail]);
 
   const imageHeight = Math.round(innerWidth * 0.666);
   const htmlWidth   = innerWidth - hPad * 2;
@@ -205,48 +225,46 @@ export function ArtistDetailBody({ artist }: Props) {
               const borderColor = category !== undefined ? decodeCategoryColor(category.color) : colors.textPrimary;
               const hasConflict = conflictMap.has(event.eventId);
 
-              const inner = (
-                <View style={{
-                  marginHorizontal: hPad,
-                  paddingHorizontal: 16,
-                  marginTop: 10,
-                  borderLeftWidth: 5,
-                  borderColor,
-                }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Text style={{ fontSize: 16, color: colors.textPrimary }}>
-                      {stage !== undefined ? getStageLocalized(stage.localized, 'name') : ''}
-                    </Text>
-                  </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
-                    <Text style={{ fontSize: 16, color: colors.textSecondary }}>{formatDayLabel(event.dateFrom)}</Text>
-                    <Text style={{ fontSize: 16, color: colors.textSecondary }}>·</Text>
-                    <Text style={{ fontSize: 16, color: colors.textSecondary }}>{formatTime(event.dateFrom)}–{formatTime(event.dateTo)}</Text>
-                  </View>
-                  {hasConflict && (
+              return (
+                <View
+                  key={event.eventId}
+                  style={{
+                    marginHorizontal: hPad,
+                    paddingHorizontal: 16,
+                    marginTop: 10,
+                    borderLeftWidth: 5,
+                    borderColor,
+                  }}
+                >
+                  <TouchableOpacity
+                    onPress={() => handleEventPress(event)}
+                    activeOpacity={0.75}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <Text style={{ fontSize: 16, color: colors.textPrimary }}>
+                        {stage !== undefined ? getStageLocalized(stage.localized, 'name') : ''}
+                      </Text>
+                    </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
+                      <Text style={{ fontSize: 16, color: colors.textSecondary }}>{formatDayLabel(event.dateFrom)}</Text>
+                      <Text style={{ fontSize: 16, color: colors.textSecondary }}>·</Text>
+                      <Text style={{ fontSize: 16, color: colors.textSecondary }}>{formatTime(event.dateFrom)}–{formatTime(event.dateTo)}</Text>
+                    </View>
+                  </TouchableOpacity>
+                  {hasConflict && (
+                    <TouchableOpacity
+                      onPress={() => openConflict(event, conflictMap.get(event.eventId) ?? [])}
+                      activeOpacity={0.75}
+                      style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}
+                    >
                       <Exclamation/>
                       <Text style={{ color: colors.danger }}>
                         Overlaps with {conflictMap.get(event.eventId)?.length} other event(s)
                       </Text>
-                    </View>
-                    )
-                  }
+                    </TouchableOpacity>
+                  )}
                 </View>
               );
-
-              if (hasConflict) {
-                return (
-                  <TouchableOpacity
-                    key={event.eventId}
-                    onPress={() => openConflict(event, conflictMap.get(event.eventId) ?? [])}
-                    activeOpacity={0.75}
-                  >
-                    {inner}
-                  </TouchableOpacity>
-                );
-              }
-              return <View key={event.eventId}>{inner}</View>;
             })}
           </View>
         }

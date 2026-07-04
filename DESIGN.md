@@ -33,6 +33,8 @@ full account.
   - Band slots rendered as blocks spanning dateFrom → dateTo
 - Browse full **lineup** (band list)
 - Tap a band → detail view (name, time slot, stage, user status)
+  - Tap the event's stage/time → jump to that slot on the timeline (selects its day, centers its time; main vs support timeline per the band)
+  - If the slot overlaps another Will-Go pick, tap the conflict warning line → conflict detail (only that line, not the whole slot)
 
 ### Personal Schedule
 - Per-band status: **Will Go** | **Maybe**
