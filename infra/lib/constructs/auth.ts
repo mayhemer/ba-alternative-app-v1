@@ -61,7 +61,9 @@ export class Auth extends Construct {
         clientId: appleServicesId,
         teamId: appleTeamId,
         keyId: appleKeyId,
-        privateKey: applePrivateKey,
+        // Cognito expects the raw base64 body of the .p8 file — no PEM headers.
+        // Extract with: cat AuthKey_XXX.p8 | grep -v 'BEGIN\|END' | tr -d '\n'
+        privateKeyValue: cdk.SecretValue.unsafePlainText(applePrivateKey),
         scopes: ['email', 'name'],
         attributeMapping: {
           email: cognito.ProviderAttribute.APPLE_EMAIL,
