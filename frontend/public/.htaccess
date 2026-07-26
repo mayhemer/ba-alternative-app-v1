@@ -1,0 +1,23 @@
+# Deployed verbatim: `expo export` copies public/ into dist/, which
+# scripts/deploy-frontend rsyncs to the ba.janbambas.cz document root.
+
+# The association file has no extension, so mod_mime leaves Content-Type empty.
+# Apple requires application/json for the universal-link AASA.
+<Files "apple-app-site-association">
+  ForceType application/json
+</Files>
+
+# Expo exports a single-page web bundle — /index.html is the only HTML on disk,
+# so share links like /add-friend/<token> would 404 before the app ever boots.
+# Serve index.html for anything that isn't a real file or directory and let
+# useShareLinkHandler read the URL client-side.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Never rewrite .well-known — a missing AASA must stay a 404, not become HTML.
+  RewriteCond %{REQUEST_URI} !^/\.well-known/
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
