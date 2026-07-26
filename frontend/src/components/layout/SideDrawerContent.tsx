@@ -24,12 +24,7 @@ export function SideDrawerContent({ navigation, state }: DrawerContentComponentP
   const { count: conflictCount } = useConflicts();
 
   return (
-    <View className="flex-1 bg-surface pt-12 pb-8 px-6">
-      {/* App label */}
-      <Text className="text-textSecondary text-xs tracking-widest uppercase mb-8">
-        Brutal Assault
-      </Text>
-
+    <View className="flex-1 bg-surface px-6">
       {/* Nav items */}
       {NAV_ITEMS.map((item) => {
         const isActive = item.screen === activeRouteName;
