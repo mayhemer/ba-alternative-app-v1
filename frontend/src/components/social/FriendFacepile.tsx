@@ -6,7 +6,7 @@ import { colors } from '../../styling/tokens';
 import type { FriendPick } from '../../context/SocialContext';
 
 const MAX_AVATARS = 3;
-const OVERLAP = 8; // px each avatar overlaps the previous one
+const OVERLAP = 4; // px each avatar overlaps the previous one
 
 type Props = {
   friends: FriendPick[];

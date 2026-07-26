@@ -7,10 +7,6 @@ import { FriendAvatar } from './FriendAvatar';
 import { colors } from '../../styling/tokens';
 import type { FriendPick } from '../../context/SocialContext';
 
-function statusLabel(status: FriendPick['status']): string {
-  return status === 'will_go' ? 'must-see' : 'maybe';
-}
-
 // Shows which friends picked an artist: a facepile + summary line that expands
 // on tap to the full avatars + names + status list. Renders nothing when empty.
 export function FriendPickList({ friends }: { friends: FriendPick[] }) {
@@ -40,19 +36,30 @@ export function FriendPickList({ friends }: { friends: FriendPick[] }) {
       </Pressable>
 
       {expanded && (
-        <View style={{ marginTop: 8 }}>
+        <View
+          style={{
+            marginTop: 26,
+            marginBottom: 10,
+            backgroundColor: colors.surfaceRaised,
+            borderRadius: 8,
+            paddingHorizontal: 14,
+            paddingVertical: 8,
+          }}
+        >
           {friends.map((friend) => (
             <View
               key={friend.token}
-              style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 4 }}
+              style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 8 }}
             >
               <FriendAvatar label={friend.label} avatarUrl={friend.avatarUrl} size={20} />
               <Text style={{ color: colors.textPrimary, fontSize: 14, marginLeft: 8, flex: 1 }} numberOfLines={1}>
                 {friend.label}
               </Text>
-              <Text style={{ color: colors.notInterested, fontSize: 12 }}>
-                {statusLabel(friend.status)}
-              </Text>
+              <Ionicons
+                name={friend.status === 'will_go' ? 'star' : 'star-half'}
+                size={15}
+                color={colors.accent}
+              />
             </View>
           ))}
         </View>
