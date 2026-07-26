@@ -5,7 +5,7 @@
       "namespace": "android_app",
       "package_name": "cz.janbambas.ba",
       "sha256_cert_fingerprints": [
-        "REPLACE_ME: run `eas credentials -p android` after the first Android build and paste the SHA-256 Fingerprint here (colon-separated uppercase hex)"
+        "E6:1E:9E:1B:A0:33:B7:12:9A:7B:F1:72:7A:6D:54:D7:B6:ED:68:17:D9:36:E3:CD:BB:AC:19:FD:07:16:F7:42"
       ]
     }
   }
