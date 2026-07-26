@@ -3,6 +3,17 @@ import { Platform } from 'react-native';
 import { COGNITO, COGNITO_DISCOVERY } from './cognitoConfig';
 import { type StoredTokens, saveTokens, loadTokens } from './tokenStorage';
 
+// ── Dev-only logging ────────────────────────────────────────────────────────────
+// These payloads can include the OAuth authorization code, token-presence flags,
+// and PII (email). In release builds console output is written to the device
+// system log (readable via Console.app / sysdiagnose), so it must never run there.
+function devLog(...args: unknown[]): void {
+  if (__DEV__) { console.log(...args); }
+}
+function devError(...args: unknown[]): void {
+  if (__DEV__) { console.error(...args); }
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 // Decodes the payload segment of a JWT without signature verification.
@@ -67,7 +78,7 @@ export type SocialProvider = 'Google' | 'SignInWithApple';
  */
 export async function signIn(provider: SocialProvider): Promise<StoredTokens> {
   const redirectUri = makeRedirectUri();
-  console.log('[auth] signIn start', { provider, redirectUri, platform: Platform.OS });
+  devLog('[auth] signIn start', { provider, redirectUri, platform: Platform.OS });
 
   const request = new AuthSession.AuthRequest({
     clientId: COGNITO.clientId,
@@ -81,7 +92,7 @@ export async function signIn(provider: SocialProvider): Promise<StoredTokens> {
   // Log the whole result shape — the useful failure detail lives in
   // result.error / result.params.error / result.params.error_description,
   // which Cognito populates on the redirect back to the app.
-  console.log('[auth] promptAsync result', JSON.stringify(result, null, 2));
+  devLog('[auth] promptAsync result', JSON.stringify(result, null, 2));
 
   if (result.type === 'cancel' || result.type === 'dismiss') {
     throw new Error('cancelled');
@@ -92,19 +103,19 @@ export async function signIn(provider: SocialProvider): Promise<StoredTokens> {
     const authError = (result as { error?: { message?: string; code?: string } }).error;
     const detail =
       params.error_description ?? params.error ?? authError?.message ?? authError?.code ?? result.type;
-    console.error('[auth] authorization failed', { type: result.type, params, authError });
+    devError('[auth] authorization failed', { type: result.type, params, authError });
     throw new Error(`auth_failed: ${detail}`);
   }
 
   if (result.params.error !== undefined) {
     // Some IdPs redirect back with type 'success' but an error in the params.
-    console.error('[auth] authorization returned error param', result.params);
+    devError('[auth] authorization returned error param', result.params);
     throw new Error(`auth_failed: ${result.params.error_description ?? result.params.error}`);
   }
 
   let tokenResponse: AuthSession.TokenResponse;
   try {
-    console.log('[auth] exchanging code for tokens…');
+    devLog('[auth] exchanging code for tokens…');
     tokenResponse = await AuthSession.exchangeCodeAsync(
       {
         clientId: COGNITO.clientId,
@@ -115,17 +126,17 @@ export async function signIn(provider: SocialProvider): Promise<StoredTokens> {
       COGNITO_DISCOVERY,
     );
   } catch (err) {
-    console.error('[auth] token exchange failed', err);
+    devError('[auth] token exchange failed', err);
     throw new Error(`token_exchange_failed: ${err instanceof Error ? err.message : String(err)}`);
   }
 
   try {
     const tokens = tokensFromResponse(tokenResponse);
     await saveTokens(tokens);
-    console.log('[auth] signIn success', { userId: tokens.userId, email: tokens.email });
+    devLog('[auth] signIn success', { userId: tokens.userId, email: tokens.email });
     return tokens;
   } catch (err) {
-    console.error('[auth] failed to parse/store tokens', err, {
+    devError('[auth] failed to parse/store tokens', err, {
       hasIdToken: tokenResponse.idToken !== undefined,
       hasAccessToken: tokenResponse.accessToken !== undefined,
     });

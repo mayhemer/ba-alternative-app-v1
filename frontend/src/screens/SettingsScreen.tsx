@@ -29,8 +29,10 @@ function AccountSection() {
         if (err instanceof Error && err.message !== 'cancelled') {
           // Debugging: log full error and surface its real message in the UI so
           // the actual failure reason is visible on-device, not just a generic string.
-          console.error('[settings] sign-in error', provider, err);
-          setError(err instanceof Error ? err.message : 'Sign-in failed. Please try again.');
+          if (__DEV__) { console.error('[settings] sign-in error', provider, err); }
+          // Show the real reason only in dev; a generic message in release builds.
+          const detail = err instanceof Error ? err.message : String(err);
+          setError(__DEV__ ? detail : 'Sign-in failed. Please try again.');
         }
       } finally {
         setIsBusy(false);
