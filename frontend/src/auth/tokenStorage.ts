@@ -26,12 +26,21 @@ export async function saveTokens(tokens: StoredTokens): Promise<void> {
 }
 
 export async function loadTokens(): Promise<StoredTokens | null> {
-  if (Platform.OS === 'web') {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored !== null ? (JSON.parse(stored) as StoredTokens) : null;
+  const stored =
+    Platform.OS === 'web'
+      ? localStorage.getItem(STORAGE_KEY)
+      : await SecureStore.getItemAsync(STORAGE_KEY);
+  if (stored === null) {
+    return null;
   }
-  const stored = await SecureStore.getItemAsync(STORAGE_KEY);
-  return stored !== null ? (JSON.parse(stored) as StoredTokens) : null;
+  try {
+    return JSON.parse(stored) as StoredTokens;
+  } catch {
+    // Corrupt/legacy entry (iOS Keychain survives reinstalls). Clear it so we
+    // don't fail on every launch, and treat the session as absent.
+    await clearTokens();
+    return null;
+  }
 }
 
 export async function clearTokens(): Promise<void> {

@@ -52,19 +52,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Restore session from secure storage on mount.
   useEffect(() => {
-    tryRestoreSession().then((tokens) => {
-      if (tokens !== null) {
-        tokensRef.current = tokens;
-        setAuthState({
-          userId: tokens.userId,
-          email: tokens.email,
-          isLoggedIn: true,
-          isRestoringSession: false,
-        });
-      } else {
+    tryRestoreSession()
+      .then((tokens) => {
+        if (tokens !== null) {
+          tokensRef.current = tokens;
+          setAuthState({
+            userId: tokens.userId,
+            email: tokens.email,
+            isLoggedIn: true,
+            isRestoringSession: false,
+          });
+        } else {
+          setAuthState((prev) => ({ ...prev, isRestoringSession: false }));
+        }
+      })
+      .catch(() => {
+        // A storage/refresh error must never leave the UI stuck on the spinner:
+        // fall through to the signed-out state so the sign-in buttons render.
         setAuthState((prev) => ({ ...prev, isRestoringSession: false }));
-      }
-    });
+      });
   }, []);
 
   const applyTokens = useCallback((tokens: StoredTokens): void => {
