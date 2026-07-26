@@ -54,6 +54,7 @@ export type SocialProvider = 'Google' | 'SignInWithApple';
  */
 export async function signIn(provider: SocialProvider): Promise<StoredTokens> {
   const redirectUri = makeRedirectUri();
+  console.log('[auth] signIn start', { provider, redirectUri, platform: Platform.OS });
 
   const request = new AuthSession.AuthRequest({
     clientId: COGNITO.clientId,
@@ -64,27 +65,59 @@ export async function signIn(provider: SocialProvider): Promise<StoredTokens> {
   });
 
   const result = await request.promptAsync(COGNITO_DISCOVERY);
+  // Log the whole result shape — the useful failure detail lives in
+  // result.error / result.params.error / result.params.error_description,
+  // which Cognito populates on the redirect back to the app.
+  console.log('[auth] promptAsync result', JSON.stringify(result, null, 2));
 
   if (result.type === 'cancel' || result.type === 'dismiss') {
     throw new Error('cancelled');
   }
   if (result.type !== 'success') {
-    throw new Error('auth_failed');
+    // result.type is 'error' (or 'locked'): surface the real reason.
+    const params = (result as { params?: Record<string, string> }).params ?? {};
+    const authError = (result as { error?: { message?: string; code?: string } }).error;
+    const detail =
+      params.error_description ?? params.error ?? authError?.message ?? authError?.code ?? result.type;
+    console.error('[auth] authorization failed', { type: result.type, params, authError });
+    throw new Error(`auth_failed: ${detail}`);
   }
 
-  const tokenResponse = await AuthSession.exchangeCodeAsync(
-    {
-      clientId: COGNITO.clientId,
-      redirectUri,
-      code: result.params.code,
-      extraParams: { code_verifier: request.codeVerifier ?? '' },
-    },
-    COGNITO_DISCOVERY,
-  );
+  if (result.params.error !== undefined) {
+    // Some IdPs redirect back with type 'success' but an error in the params.
+    console.error('[auth] authorization returned error param', result.params);
+    throw new Error(`auth_failed: ${result.params.error_description ?? result.params.error}`);
+  }
 
-  const tokens = tokensFromResponse(tokenResponse);
-  await saveTokens(tokens);
-  return tokens;
+  let tokenResponse: AuthSession.TokenResponse;
+  try {
+    console.log('[auth] exchanging code for tokens…');
+    tokenResponse = await AuthSession.exchangeCodeAsync(
+      {
+        clientId: COGNITO.clientId,
+        redirectUri,
+        code: result.params.code,
+        extraParams: { code_verifier: request.codeVerifier ?? '' },
+      },
+      COGNITO_DISCOVERY,
+    );
+  } catch (err) {
+    console.error('[auth] token exchange failed', err);
+    throw new Error(`token_exchange_failed: ${err instanceof Error ? err.message : String(err)}`);
+  }
+
+  try {
+    const tokens = tokensFromResponse(tokenResponse);
+    await saveTokens(tokens);
+    console.log('[auth] signIn success', { userId: tokens.userId, email: tokens.email });
+    return tokens;
+  } catch (err) {
+    console.error('[auth] failed to parse/store tokens', err, {
+      hasIdToken: tokenResponse.idToken !== undefined,
+      hasAccessToken: tokenResponse.accessToken !== undefined,
+    });
+    throw new Error(`token_parse_failed: ${err instanceof Error ? err.message : String(err)}`);
+  }
 }
 
 /**

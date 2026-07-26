@@ -10,7 +10,9 @@ export type StoredTokens = {
   email: string;     // Cognito 'email' claim
 };
 
-const STORAGE_KEY = 'auth:tokens';
+// SecureStore keys may contain only alphanumerics and ".", "-", "_" — no ":".
+// (localStorage on web is unrestricted, but we keep one key for both platforms.)
+const STORAGE_KEY = 'auth_tokens';
 
 // On web, localStorage persists across page reloads.
 // The refresh token means a stolen entry only lasts until the next token refresh

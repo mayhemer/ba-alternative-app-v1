@@ -27,7 +27,10 @@ function AccountSection() {
       } catch (err: unknown) {
         // Don't surface "cancelled" — user intentionally closed the browser
         if (err instanceof Error && err.message !== 'cancelled') {
-          setError('Sign-in failed. Please try again.');
+          // Debugging: log full error and surface its real message in the UI so
+          // the actual failure reason is visible on-device, not just a generic string.
+          console.error('[settings] sign-in error', provider, err);
+          setError(err instanceof Error ? err.message : 'Sign-in failed. Please try again.');
         }
       } finally {
         setIsBusy(false);
