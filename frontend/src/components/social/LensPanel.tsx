@@ -13,6 +13,7 @@ import { StarFilterButton } from '../InterestFilterControl';
 import { useLens, useLensPanel } from '../../context/LensContext';
 import { useSocialData, useSocialActions } from '../../context/SocialContext';
 import { useAuth } from '../../context/AuthContext';
+import { useOpenSharedSchedule } from '../../hooks/useOpenSharedSchedule';
 import { useFeedback } from '../../context/ScreenUIContext';
 import { type InterestStatus } from '../../context/InterestContext';
 import { type LensScope, type ScopeLevel } from '../../utils/interestUtils';
@@ -77,9 +78,10 @@ export function LensPanel() {
   const { isOpen, close } = useLensPanel();
   const { scope, setScope } = useLens();
   const { friends, myShare } = useSocialData();
-  const { shareMine, revokeMine, addFriend, removeFriend } = useSocialActions();
+  const { shareMine, revokeMine, removeFriend } = useSocialActions();
   const { isLoggedIn } = useAuth();
   const showFeedback = useFeedback();
+  const openSharedSchedule = useOpenSharedSchedule();
 
   const [addOpen, setAddOpen] = useState(false);
   const [tokenInput, setTokenInput] = useState('');
@@ -108,10 +110,9 @@ export function LensPanel() {
     if (token === null) { return; }
     setBusy(true);
     try {
-      const friend = await addFriend(token);
+      const friend = await openSharedSchedule(token);
       setTokenInput('');
       setAddOpen(false);
-      setScope({ kind: 'friend', token: friend.token, level: null });
       close();
       showFeedback(`Added ${friend.label}'s schedule`, 'confirmation');
     } catch {
@@ -119,7 +120,7 @@ export function LensPanel() {
     } finally {
       setBusy(false);
     }
-  }, [tokenInput, addFriend, setScope, close, showFeedback]);
+  }, [tokenInput, openSharedSchedule, close, showFeedback]);
 
   const handleRemoveFriend = useCallback(
     async (token: string) => {
