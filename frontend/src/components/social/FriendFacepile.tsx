@@ -24,11 +24,17 @@ export function FriendFacepile({ friends, size = 22 }: Props) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
       {shown.map((friend, index) => (
-        <View key={friend.token} style={{ marginLeft: index === 0 ? 0 : -OVERLAP }}>
+        // Leftmost avatar sits on top so its top-right status star isn't covered
+        // by the next avatar.
+        <View
+          key={friend.token}
+          style={{ marginLeft: index === 0 ? 0 : -OVERLAP, zIndex: shown.length - index }}
+        >
           <FriendAvatar
             label={friend.label}
             avatarUrl={friend.avatarUrl}
             size={size}
+            status={friend.status}
           />
         </View>
       ))}
