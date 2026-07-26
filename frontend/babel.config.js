@@ -6,7 +6,9 @@ module.exports = function (api) {
       'nativewind/babel',
     ],
     plugins: [
-      'react-native-reanimated/plugin', // must be last
+      // Reanimated 4 moved its Babel plugin here; 'react-native-reanimated/plugin'
+      // is now just a deprecated re-export of this one. Must be last.
+      'react-native-worklets/plugin',
     ],
   };
 };

@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "cz.janbambas.ba",
+      "sha256_cert_fingerprints": [
+        "REPLACE_ME: run `eas credentials -p android` after the first Android build and paste the SHA-256 Fingerprint here (colon-separated uppercase hex)"
+      ]
+    }
+  }
+]

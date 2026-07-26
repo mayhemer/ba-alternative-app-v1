@@ -16,9 +16,15 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "cz.janbambas.ba",
-      "associatedDomains": ["applinks:ba.janbambas.cz"]
+      "associatedDomains": [
+        "applinks:ba.janbambas.cz"
+      ],
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "cz.janbambas.ba",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "monochromeImage": "./assets/adaptive-icon-monochrome.png",
@@ -31,9 +37,16 @@
           "action": "VIEW",
           "autoVerify": true,
           "data": [
-            { "scheme": "https", "host": "ba.janbambas.cz", "pathPrefix": "/add-friend" }
+            {
+              "scheme": "https",
+              "host": "ba.janbambas.cz",
+              "pathPrefix": "/add-friend"
+            }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -46,6 +59,12 @@
       "expo-web-browser",
       "expo-secure-store",
       "expo-apple-authentication"
-    ]
+    ],
+    "owner": "janbambass-team",
+    "extra": {
+      "eas": {
+        "projectId": "acd505d2-c045-4d2e-8e5a-6bf9be7bbe92"
+      }
+    }
   }
 }

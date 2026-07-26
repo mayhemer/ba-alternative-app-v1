@@ -1,0 +1,7 @@
+# Excluded from the archive uploaded to EAS Build.
+# The native folders are regenerated remotely by prebuild (CNG), dist/ is the
+# web export, and .expo/ holds local caches and multi-MB xcodebuild logs.
+dist/
+.expo/
+ios/
+android/
