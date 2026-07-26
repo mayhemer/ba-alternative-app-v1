@@ -1,11 +1,15 @@
 import React from 'react';
 import { TouchableOpacity, View, useWindowDimensions } from 'react-native';
-import { Text } from '../ui/Text';
+import { Image as ExpoImage } from 'expo-image';
 import { DrawerActions } from '@react-navigation/native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { navigationRef } from '../../navigation/navigationRef';
 import { useScreenUI } from '../../context/ScreenUIContext';
 import { WIDE_SCREEN_WIDTH_BREAKPOINT } from '../../styling/tokens';
+
+/** Logo is 601 × 231 px; keep its aspect ratio while fitting inside the 56 px (h-14) bar. */
+const LOGO_HEIGHT = 34;
+const LOGO_WIDTH = Math.round(LOGO_HEIGHT * (601 / 231));
 
 export function TopBar() {
   const { state } = useScreenUI();
@@ -27,11 +31,14 @@ export function TopBar() {
         {LeftComponent !== undefined ? <LeftComponent /> : null}
       </View>
 
-      {/* Center — title */}
+      {/* Center — logo */}
       <View className="flex-1 items-center">
-        <Text className="text-textPrimary text-sm font-semibold tracking-widest uppercase">
-          Brutal Assault
-        </Text>
+        <ExpoImage
+          source={require('../../../assets/logo-ba.png')}
+          style={{ width: LOGO_WIDTH, height: LOGO_HEIGHT }}
+          contentFit="contain"
+          accessibilityLabel="Brutal Assault"
+        />
       </View>
 
       {/* Right slot */}
