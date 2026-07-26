@@ -271,7 +271,7 @@ export function LensPanel() {
               onPress={() => setAddOpen(true)}
               style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 8 }}
             >
-              <Ionicons name="add-circle-outline" size={20} color={colors.friend} style={{ marginRight: 10 }} />
+              <Ionicons name="add-circle-outline" size={20} color={colors.accent} style={{ marginRight: 10 }} />
               <Text style={{ color: colors.textPrimary, fontSize: 15 }}>Add a friend's link…</Text>
             </Pressable>
           )}
@@ -301,7 +301,7 @@ export function LensPanel() {
               {myShare !== null && (
                 <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8 }}>
                   <Pressable onPress={handleCopyMine} style={{ paddingVertical: 8, paddingRight: 16 }}>
-                    <Text style={{ color: colors.friend, fontSize: 14 }}>Copy link</Text>
+                    <Text style={{ color: colors.accent, fontSize: 14 }}>Copy link</Text>
                   </Pressable>
                   <Pressable onPress={handleRevokeMine} style={{ paddingVertical: 8 }}>
                     <Text style={{ color: colors.danger, fontSize: 14 }}>Revoke</Text>
