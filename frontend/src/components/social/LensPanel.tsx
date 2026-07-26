@@ -5,6 +5,7 @@ import {
   ScrollView,
   TextInput,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text } from '../ui/Text';
@@ -19,7 +20,12 @@ import { type InterestStatus, useInterestCycle } from '../../context/InterestCon
 import { type LensScope, type ScopeLevel } from '../../utils/interestUtils';
 import { shareLink, copyToClipboard } from '../../utils/shareLink';
 import { extractShareToken } from '../../adapters/baShareApiAdapter';
-import { colors } from '../../styling/tokens';
+import {
+  colors,
+  OVERLAY_PANEL_MARGIN,
+  OVERLAY_PANEL_RADIUS,
+  WIDE_SCREEN_WIDTH_BREAKPOINT,
+} from '../../styling/tokens';
 
 // ── Section header ──────────────────────────────────────────────────────────────
 
@@ -77,6 +83,7 @@ function ScopeRow({ active, onPress, children }: RowProps) {
 export function LensPanel() {
   const { isOpen, close } = useLensPanel();
   const { scope, setScope } = useLens();
+  const { width } = useWindowDimensions();
   const { friends, myShare } = useSocialData();
   const { shareMine, revokeMine, removeFriend, refreshFriend } = useSocialActions();
   const { refreshFromServer } = useInterestCycle();
@@ -174,6 +181,7 @@ export function LensPanel() {
   if (!isOpen) { return null; }
 
   const myLevel: ScopeLevel = scope.kind === 'me' ? scope.level : null;
+  const isWide = width >= WIDE_SCREEN_WIDTH_BREAKPOINT;
 
   return (
     <>
@@ -183,19 +191,33 @@ export function LensPanel() {
         style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)' }}
       />
 
+      {/* Floating card — inset from the screen edges and the TopBar above it. Past
+          the wide-screen breakpoint it stops growing and stays pinned to the right,
+          under the LensChip that opens it and clear of the permanent drawer, rather
+          than stretching a dropdown across the full width of a desktop window.
+          No `overflow: hidden` is needed to keep content off the rounded corners:
+          the ScrollView already clips to its own frame, which the padding insets
+          past the corner radius — and it would clip the shadow away on iOS. */}
       <View
         style={{
           position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
+          top: OVERLAY_PANEL_MARGIN,
+          left: isWide ? undefined : OVERLAY_PANEL_MARGIN,
+          right: OVERLAY_PANEL_MARGIN,
+          width: isWide ? WIDE_SCREEN_WIDTH_BREAKPOINT - OVERLAY_PANEL_MARGIN * 2 : undefined,
           backgroundColor: colors.surface,
-          borderBottomWidth: 1,
+          borderWidth: 1,
           borderColor: colors.border,
+          borderRadius: OVERLAY_PANEL_RADIUS,
           maxHeight: '85%',
           paddingHorizontal: 12,
           paddingTop: 10,
           paddingBottom: 14,
+          shadowColor: colors.black,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.4,
+          shadowRadius: 12,
+          elevation: 12,
         }}
       >
         <ScrollView keyboardShouldPersistTaps="handled">

@@ -10,3 +10,7 @@ export type ColorToken = keyof typeof colors;
 export const WIDE_SCREEN_WIDTH_BREAKPOINT = 800;
 export const MAX_CONTENT_WIDTH = 700;
 export const PADDING_BREAKPOINT = 732;
+
+// Gap between a floating overlay panel and the screen edges / the TopBar above it.
+export const OVERLAY_PANEL_MARGIN = 10;
+export const OVERLAY_PANEL_RADIUS = 14;

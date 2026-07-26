@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Pressable, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { DrawerActions } from '@react-navigation/native';
 import { useLens, useLensPanel } from '../../context/LensContext';
 import { useSocialData } from '../../context/SocialContext';
+import { navigationRef } from '../../navigation/navigationRef';
 import { FriendAvatar } from './FriendAvatar';
 import { colors } from '../../styling/tokens';
 
@@ -18,9 +20,19 @@ export function LensChip() {
   const levelActive = scope.kind !== 'all' && scope.level !== null;
   const iconTint = scope.kind === 'me' ? colors.accent : colors.textPrimary;
 
+  // The drawer and the lens panel are mutually exclusive overlays — opening the
+  // panel dismisses the drawer. A no-op when the drawer is already closed, and on
+  // wide screens where it is permanent. The reverse direction lives in TopBar.
+  const handlePress = useCallback((): void => {
+    if (!isOpen) {
+      navigationRef.dispatch(DrawerActions.closeDrawer());
+    }
+    toggle();
+  }, [isOpen, toggle]);
+
   return (
     <Pressable
-      onPress={toggle}
+      onPress={handlePress}
       hitSlop={10}
       accessibilityRole="button"
       accessibilityLabel="View and share schedules"
