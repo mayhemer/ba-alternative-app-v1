@@ -4,6 +4,7 @@
   "main": "index.ts",
   "scripts": {
     "tscheck": "npx tsc --noEmit",
+    "gen:icons": "node scripts/gen-icons.js",
     "start": "npx expo start",
     "android": "npx expo run:android",
     "build:ios": "npx expo prebuild --platform ios --clean",
