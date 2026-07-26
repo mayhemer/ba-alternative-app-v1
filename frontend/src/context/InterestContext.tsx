@@ -52,6 +52,9 @@ type InterestStateContextValue = {
 
 type InterestCycleContextValue = {
   cycleStatus: (artistId: string) => CycleStatusResult;
+  // Re-fetches server interests and merges them into local state (picks up edits
+  // made on another device). No-op when signed out. Stable across interest changes.
+  refreshFromServer: () => Promise<void>;
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -210,8 +213,14 @@ export function InterestProvider({ children }: { children: React.ReactNode }) {
     [selectedSlug, getAccessToken],
   );
 
+  // Manual refresh entry point (used by the lens when a source is (re)selected).
+  const refreshFromServer = useCallback(
+    (): Promise<void> => syncFromServer(selectedSlug),
+    [syncFromServer, selectedSlug],
+  );
+
   const stateValue = useMemo(() => ({ interests: state.interests, getStatus }), [state.interests, getStatus]);
-  const cycleValue = useMemo(() => ({ cycleStatus }), [cycleStatus]);
+  const cycleValue = useMemo(() => ({ cycleStatus, refreshFromServer }), [cycleStatus, refreshFromServer]);
 
   return (
     <InterestCycleContext.Provider value={cycleValue}>

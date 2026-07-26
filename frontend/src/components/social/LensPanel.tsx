@@ -15,7 +15,7 @@ import { useSocialData, useSocialActions } from '../../context/SocialContext';
 import { useAuth } from '../../context/AuthContext';
 import { useOpenSharedSchedule } from '../../hooks/useOpenSharedSchedule';
 import { useFeedback } from '../../context/ScreenUIContext';
-import { type InterestStatus } from '../../context/InterestContext';
+import { type InterestStatus, useInterestCycle } from '../../context/InterestContext';
 import { type LensScope, type ScopeLevel } from '../../utils/interestUtils';
 import { shareLink, copyToClipboard } from '../../utils/shareLink';
 import { extractShareToken } from '../../adapters/baShareApiAdapter';
@@ -78,7 +78,8 @@ export function LensPanel() {
   const { isOpen, close } = useLensPanel();
   const { scope, setScope } = useLens();
   const { friends, myShare } = useSocialData();
-  const { shareMine, revokeMine, removeFriend } = useSocialActions();
+  const { shareMine, revokeMine, removeFriend, refreshFriend } = useSocialActions();
+  const { refreshFromServer } = useInterestCycle();
   const { isLoggedIn } = useAuth();
   const showFeedback = useFeedback();
   const openSharedSchedule = useOpenSharedSchedule();
@@ -89,10 +90,20 @@ export function LensPanel() {
 
   const selectScope = useCallback(
     (next: LensScope) => {
+      // Refresh the latest data for the chosen source before showing it — my view
+      // re-merges with the server (picks up edits from another device); a friend's
+      // view re-fetches their link. Fire-and-forget so the view switches instantly
+      // and updates when the data arrives. Runs even when re-selecting the current
+      // source; merely closing the panel does not refresh.
+      if (next.kind === 'friend') {
+        refreshFriend(next.token).catch(() => undefined);
+      } else {
+        refreshFromServer().catch(() => undefined);
+      }
       setScope(next);
       close();
     },
-    [setScope, close],
+    [refreshFriend, refreshFromServer, setScope, close],
   );
 
   const setLevel = useCallback(
