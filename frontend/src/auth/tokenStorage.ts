@@ -8,6 +8,7 @@ export type StoredTokens = {
   expiresAt: number; // Unix ms
   userId: string;    // Cognito 'sub' claim
   email: string;     // Cognito 'email' claim
+  name: string | null; // 'name' or given_name+family_name; null if the IdP didn't provide one
 };
 
 // SecureStore keys may contain only alphanumerics and ".", "-", "_" — no ":".

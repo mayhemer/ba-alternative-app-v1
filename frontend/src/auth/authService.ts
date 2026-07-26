@@ -26,6 +26,18 @@ function makeRedirectUri(): string {
   return AuthSession.makeRedirectUri({ scheme: 'ba', path: 'auth/callback' });
 }
 
+// Derives a display name from the id token claims: prefers the single 'name'
+// claim, else joins given_name + family_name. Returns null when none are present
+// (e.g. Apple only sends the name on the user's first-ever authorization).
+function nameFromClaims(payload: Record<string, unknown>): string | null {
+  const asString = (key: string): string =>
+    typeof payload[key] === 'string' ? (payload[key] as string).trim() : '';
+  const full = asString('name');
+  if (full !== '') { return full; }
+  const joined = `${asString('given_name')} ${asString('family_name')}`.trim();
+  return joined !== '' ? joined : null;
+}
+
 function tokensFromResponse(
   response: AuthSession.TokenResponse,
   existingRefreshToken?: string,
@@ -39,6 +51,7 @@ function tokensFromResponse(
     expiresAt: Date.now() + (response.expiresIn ?? 3600) * 1000,
     userId: idPayload['sub'] as string,
     email: idPayload['email'] as string,
+    name: nameFromClaims(idPayload),
   };
 }
 

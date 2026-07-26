@@ -9,7 +9,7 @@ import { getSlugs } from '../adapters/slugAdapter';
 // ── Account section ───────────────────────────────────────────────────────────
 
 function AccountSection() {
-  const { isLoggedIn, isRestoringSession, email, signInWithGoogle, signInWithApple, signOut } =
+  const { isLoggedIn, isRestoringSession, email, name, signInWithGoogle, signInWithApple, signOut } =
     useAuth();
   const [isBusy, setIsBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -62,7 +62,12 @@ function AccountSection() {
           Account
         </Text>
         <View className="py-4 border-b border-border">
-          <Text className="text-textPrimary text-base">{email}</Text>
+          {name !== null && (
+            <Text className="text-textPrimary text-base font-semibold">{name}</Text>
+          )}
+          <Text className={name !== null ? 'text-textSecondary text-sm mt-1' : 'text-textPrimary text-base'}>
+            {email}
+          </Text>
         </View>
         <TouchableOpacity
           onPress={handleSignOut}

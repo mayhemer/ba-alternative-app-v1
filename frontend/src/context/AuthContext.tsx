@@ -21,6 +21,7 @@ import { clearTokens, type StoredTokens } from '../auth/tokenStorage';
 type AuthState = {
   userId: string | null;
   email: string | null;
+  name: string | null;
   isLoggedIn: boolean;
   isRestoringSession: boolean; // true while loading stored tokens on mount
 };
@@ -42,6 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [authState, setAuthState] = useState<AuthState>({
     userId: null,
     email: null,
+    name: null,
     isLoggedIn: false,
     isRestoringSession: true,
   });
@@ -59,6 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setAuthState({
             userId: tokens.userId,
             email: tokens.email,
+            name: tokens.name,
             isLoggedIn: true,
             isRestoringSession: false,
           });
@@ -78,6 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAuthState({
       userId: tokens.userId,
       email: tokens.email,
+      name: tokens.name,
       isLoggedIn: true,
       isRestoringSession: false,
     });
@@ -104,7 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = useCallback(async (): Promise<void> => {
     tokensRef.current = null;
     await clearTokens();
-    setAuthState({ userId: null, email: null, isLoggedIn: false, isRestoringSession: false });
+    setAuthState({ userId: null, email: null, name: null, isLoggedIn: false, isRestoringSession: false });
   }, []);
 
   // Returns a valid access token, refreshing silently if the current one is
@@ -123,7 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Refresh token expired — clear session (keep local interests per product decision)
     tokensRef.current = null;
     await clearTokens();
-    setAuthState({ userId: null, email: null, isLoggedIn: false, isRestoringSession: false });
+    setAuthState({ userId: null, email: null, name: null, isLoggedIn: false, isRestoringSession: false });
     return null;
   }, []);
 

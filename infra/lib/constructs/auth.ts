@@ -65,8 +65,13 @@ export class Auth extends Construct {
         // Extract with: cat AuthKey_XXX.p8 | grep -v 'BEGIN\|END' | tr -d '\n'
         privateKeyValue: cdk.SecretValue.unsafePlainText(applePrivateKey),
         scopes: ['email', 'name'],
+        // Apple only sends the name on the FIRST authorization (out-of-band, not in
+        // the id token). Map it to given_name/family_name so it lands in the Cognito
+        // user attributes and, via the profile scope, in the id token the app reads.
         attributeMapping: {
           email: cognito.ProviderAttribute.APPLE_EMAIL,
+          givenName: cognito.ProviderAttribute.APPLE_FIRST_NAME,
+          familyName: cognito.ProviderAttribute.APPLE_LAST_NAME,
         },
       });
     }
