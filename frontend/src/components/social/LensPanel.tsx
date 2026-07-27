@@ -263,6 +263,7 @@ export function LensPanel() {
           })}
 
           {/* ── FRIENDS ──────────────────────────────────────────── */}
+          {/* // note for claude: deliberately commenting out, keep this code for reference
           <View style={{ height: 1, backgroundColor: colors.border, marginVertical: 10 }} />
           <SectionLabel>Friends</SectionLabel>
 
@@ -308,6 +309,7 @@ export function LensPanel() {
               <Text style={{ color: colors.textPrimary, fontSize: 15 }}>Add a friend's link…</Text>
             </Pressable>
           )}
+          /*}
 
           {/* ── MY SCHEDULE ──────────────────────────────────────── */}
           <View style={{ height: 1, backgroundColor: colors.border, marginVertical: 10 }} />
