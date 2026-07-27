@@ -240,7 +240,6 @@ export function LensPanel() {
 
           {friends.map((friend) => {
             const active = scope.kind === 'friend' && scope.token === friend.token;
-            const level: ScopeLevel = active ? scope.level : null;
             return (
               <ScopeRow
                 key={friend.token}
@@ -254,7 +253,6 @@ export function LensPanel() {
                 >
                   {friend.label}
                 </Text>
-                {active && <StarFilterButton value={level} onChange={setLevel} />}
                 <Pressable onPress={() => handleRemoveFriend(friend.token)} hitSlop={8} style={{ marginLeft: 10 }}>
                   <Ionicons name="close-circle-outline" size={20} color={colors.notInterested} />
                 </Pressable>
