@@ -101,19 +101,6 @@ export function ArtistBlock({ event, artist, dayStart, status, categoryColor, on
               </Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-              {(true && pickedByFriend) && (
-                <View
-                  style={{
-                    width: 8,
-                    height: 8,
-                    marginRight: -1,
-                    borderRadius: 4,
-                    borderWidth: 1,
-                    borderColor: colors.accent,
-                    backgroundColor: colors.friend,
-                  }}
-                />
-              )}
               <StarIndicator status={status} size={11} />
             </View>
           </View>
