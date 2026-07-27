@@ -20,7 +20,7 @@ import type { DbArtist, DbCategory, DbEvent } from '../../types/backend';
 import type { ConflictOverlap } from '../../utils/conflictUtils';
 
 // Horizontal space kept to the left of an event's start when scrolling to it.
-const LEFT_PADDING_X = 60 * 60 * 1000 * PIXELS_PER_MS; // 1 hour
+const LEFT_PADDING_X = 15 * 60 * 1000 * PIXELS_PER_MS; // 15 minutes
 
 type Props = {
   screenKey: string;
@@ -145,7 +145,7 @@ export function TimelineView({
       const centreX = timeToX((fromMs + toMs) / 2, day) - VIEW_OFFSET_X;
       const startX  = timeToX(fromMs, day) - VIEW_OFFSET_X;
       // Centre the event's midpoint, but never scroll so far that the start loses
-      // its 1 h of left padding (long events).
+      // its left padding (long events).
       const centredOffset = centreX - scrollViewWidthRef.current / 2;
       const targetX = Math.max(0, Math.min(centredOffset, startX - LEFT_PADDING_X));
       scheduleOnUI(() => { scrollTo(horizontalScrollRef, targetX, 0, true); });
