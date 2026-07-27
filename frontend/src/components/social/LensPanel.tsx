@@ -3,23 +3,19 @@ import {
   ActivityIndicator,
   Pressable,
   ScrollView,
-  TextInput,
   View,
   useWindowDimensions,
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text } from '../ui/Text';
 import { FriendAvatar } from './FriendAvatar';
-import { StarFilterButton } from '../InterestFilterControl';
 import { useLens, useLensPanel } from '../../context/LensContext';
 import { useSocialData, useSocialActions } from '../../context/SocialContext';
 import { useAuth } from '../../context/AuthContext';
-import { useOpenSharedSchedule } from '../../hooks/useOpenSharedSchedule';
 import { useFeedback } from '../../context/ScreenUIContext';
-import { type InterestStatus, useInterestCycle } from '../../context/InterestContext';
-import { type LensScope, type ScopeLevel } from '../../utils/interestUtils';
+import { useInterestCycle } from '../../context/InterestContext';
+import { type LensScope } from '../../utils/interestUtils';
 import { shareLink, copyToClipboard } from '../../utils/shareLink';
-import { extractShareToken } from '../../adapters/baShareApiAdapter';
 import {
   colors,
   OVERLAY_PANEL_MARGIN,
@@ -89,10 +85,6 @@ export function LensPanel() {
   const { refreshFromServer } = useInterestCycle();
   const { isLoggedIn } = useAuth();
   const showFeedback = useFeedback();
-  const openSharedSchedule = useOpenSharedSchedule();
-
-  const [addOpen, setAddOpen] = useState(false);
-  const [tokenInput, setTokenInput] = useState('');
   const [busy, setBusy] = useState(false);
 
   const selectScope = useCallback(
@@ -111,16 +103,6 @@ export function LensPanel() {
       close();
     },
     [refreshFriend, refreshFromServer, setScope, close],
-  );
-
-  const setLevel = useCallback(
-    (next: InterestStatus | null) => {
-      // StarFilterButton only ever emits null/'maybe'/'must_see'.
-      const level: ScopeLevel = next === 'maybe' || next === 'must_see' ? next : null;
-      if (scope.kind === 'me') { setScope({ kind: 'me', level }); }
-      else if (scope.kind === 'friend') { setScope({ kind: 'friend', token: scope.token, level }); }
-    },
-    [scope, setScope],
   );
 
   /*
@@ -183,7 +165,6 @@ export function LensPanel() {
 
   if (!isOpen) { return null; }
 
-  const myLevel: ScopeLevel = scope.kind === 'me' ? scope.level : null;
   const isWide = width >= WIDE_SCREEN_WIDTH_BREAKPOINT;
 
   return (
@@ -236,9 +217,6 @@ export function LensPanel() {
             onPress={() => selectScope({ kind: 'me', level: null })}
           >
             <Text style={{ color: colors.textPrimary, fontSize: 15, flex: 1 }}>My picks</Text>
-            {scope.kind === 'me' && (
-              <StarFilterButton value={myLevel} onChange={setLevel} />
-            )}
           </ScopeRow>
 
           {friends.map((friend) => {
