@@ -123,6 +123,8 @@ export function LensPanel() {
     [scope, setScope],
   );
 
+  /*
+  // Note for claude: deliberately commented out but kept for reference
   const handleAddFriend = useCallback(async () => {
     const token = extractShareToken(tokenInput);
     if (token === null) { return; }
@@ -139,6 +141,7 @@ export function LensPanel() {
       setBusy(false);
     }
   }, [tokenInput, openSharedSchedule, close, showFeedback]);
+  */
 
   const handleRemoveFriend = useCallback(
     async (token: string) => {
