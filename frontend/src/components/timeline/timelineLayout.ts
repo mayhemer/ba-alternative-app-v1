@@ -14,9 +14,9 @@ export const DAY_BOUNDARY_HOUR = 6;
 
 // ── Visible scroll window ─────────────────────────────────────────────────────
 
-// Scroll is limited to 09:30–04:00 (next day). Both expressed as hours after
-// DAY_BOUNDARY_HOUR (06:00), so 3.5 h → 09:30, 22 h → 04:00 next day.
-export const VIEW_START_H   = 3.5;   // hours after DAY_BOUNDARY_HOUR
+// Scroll is limited to 08:30–04:00 (next day). Both expressed as hours after
+// DAY_BOUNDARY_HOUR (06:00), so 2.5 h → 08:30, 22 h → 04:00 next day.
+export const VIEW_START_H   = 2.5;   // hours after DAY_BOUNDARY_HOUR
 export const VIEW_END_H     = 22;    // hours after DAY_BOUNDARY_HOUR
 export const VIEW_OFFSET_X  = VIEW_START_H * PIXELS_PER_HOUR;
 export const VIEW_WIDTH      = (VIEW_END_H - VIEW_START_H) * PIXELS_PER_HOUR;
