@@ -121,26 +121,6 @@ export function LensPanel() {
     [refreshFriend, refreshFromServer, setScope, close],
   );
 
-  /*
-  // Note for claude: deliberately commented out but kept for reference
-  const handleAddFriend = useCallback(async () => {
-    const token = extractShareToken(tokenInput);
-    if (token === null) { return; }
-    setBusy(true);
-    try {
-      const friend = await openSharedSchedule(token);
-      setTokenInput('');
-      setAddOpen(false);
-      close();
-      showFeedback(`Added ${friend.label}'s schedule`, 'confirmation');
-    } catch {
-      showFeedback('Could not load that link', 'warning');
-    } finally {
-      setBusy(false);
-    }
-  }, [tokenInput, openSharedSchedule, close, showFeedback]);
-  */
-
   const handleRemoveFriend = useCallback(
     async (token: string) => {
       setPendingRemove(null);
@@ -298,55 +278,6 @@ export function LensPanel() {
               </ScopeRow>
             );
           })}
-
-          {/* ── FRIENDS ──────────────────────────────────────────── */}
-          {/* // note for claude: deliberately commenting out, keep this code for reference
-          <View style={{ height: 1, backgroundColor: colors.border, marginVertical: 10 }} />
-          <SectionLabel>Friends</SectionLabel>
-
-          {addOpen ? (
-            <View style={{ paddingHorizontal: 8 }}>
-              <TextInput
-                value={tokenInput}
-                onChangeText={setTokenInput}
-                placeholder="Paste a friend's link…"
-                placeholderTextColor={colors.notInterested}
-                autoCapitalize="none"
-                autoCorrect={false}
-                style={{
-                  height: 40,
-                  paddingHorizontal: 10,
-                  backgroundColor: colors.surfaceRaised,
-                  color: colors.textPrimary,
-                  fontSize: 14,
-                  borderRadius: 8,
-                }}
-              />
-              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8 }}>
-                <Pressable onPress={() => { setAddOpen(false); setTokenInput(''); }} style={{ paddingVertical: 8, paddingHorizontal: 14 }}>
-                  <Text style={{ color: colors.textSecondary, fontSize: 14 }}>Cancel</Text>
-                </Pressable>
-                <Pressable
-                  onPress={handleAddFriend}
-                  disabled={busy || extractShareToken(tokenInput) === null}
-                  style={{ paddingVertical: 8, paddingHorizontal: 14 }}
-                >
-                  <Text style={{ color: colors.accent, fontSize: 14, fontFamily: 'Bold-Default' }}>
-                    {busy ? 'Adding…' : 'Add'}
-                  </Text>
-                </Pressable>
-              </View>
-            </View>
-          ) : (
-            <Pressable
-              onPress={() => setAddOpen(true)}
-              style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 8 }}
-            >
-              <Ionicons name="add-circle-outline" size={20} color={colors.accent} style={{ marginRight: 10 }} />
-              <Text style={{ color: colors.textPrimary, fontSize: 15 }}>Add a friend's link…</Text>
-            </Pressable>
-          )}
-          /*}
 
           {/* ── MY SCHEDULE ──────────────────────────────────────── */}
           <View style={{ height: 1, backgroundColor: colors.border, marginVertical: 10 }} />

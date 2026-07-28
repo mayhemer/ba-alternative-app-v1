@@ -5,7 +5,7 @@ import type { SharedValue } from 'react-native-reanimated';
 import type { DbArtist, DbCategory, DbEvent } from '../../types/backend';
 import type { InterestStatus } from '../../cache/cacheService';
 import type { ConflictOverlap } from '../../utils/conflictUtils';
-import { decodeCategoryColor, dimColor } from '../../utils/color';
+import { decodeCategoryColor } from '../../utils/color';
 import { getCategoryLocalized } from '../../utils/localization';
 import { CANVAS_WIDTH, LANE_HEIGHT, STRIP_HEIGHT, VIEW_OFFSET_X } from './timelineLayout';
 import { ArtistBlock } from './ArtistBlock';
@@ -44,7 +44,6 @@ export function CategoryLane({
 }: Props) {
   const title = getCategoryLocalized(category.localized, 'title');
   const categoryColor = decodeCategoryColor(category.color);
-  const dimmedColor   = dimColor(categoryColor, 60);
 
   // Translates the title right in sync with horizontal scroll so it stays
   // pinned to the left visual edge of the viewport.

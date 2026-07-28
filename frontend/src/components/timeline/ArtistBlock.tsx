@@ -9,7 +9,6 @@ import { fitFontSize } from '../../utils/textFit';
 import { colors } from '../../styling/tokens';
 import { dimColor } from '../../utils/color';
 import { StarIndicator } from '../StarButton';
-import { useSocialData } from '../../context/SocialContext';
 import type { ConflictOverlap } from '../../utils/conflictUtils';
 
 // Block chrome — shared between the rendered styles and the label width maths
@@ -75,8 +74,6 @@ export function ArtistBlock({ event, artist, dayStart, status, categoryColor, on
   const width = Math.max(MIN_BLOCK_WIDTH, right - x);
 
   const { bg, border } = blockStyle(status, categoryColor);
-  const { friendsByArtist } = useSocialData();
-  const pickedByFriend = friendsByArtist[artist.artistId] !== undefined;
 
   const showLabel = width >= 40;
 

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
-    "tscheck": "npx tsc --noEmit",
+    "tscheck": "npx tsc --noEmit --noUnusedLocals --noUnusedParameters",
     "gen:icons": "node scripts/gen-icons.js",
     "start": "npx expo start",
     "android": "npx expo run:android",

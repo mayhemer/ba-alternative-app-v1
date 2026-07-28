@@ -5,7 +5,7 @@ import { useArtistDetail as useArtistDetailContext } from '../context/ArtistDeta
 import { useInterest } from '../context/InterestContext';
 import { useConflictDetail } from '../context/ConflictDetailContext';
 import { getArtistLocalized } from '../utils/localization';
-import { useStartProgress, useFeedback } from '../context/ScreenUIContext';
+import { useStartProgress } from '../context/ScreenUIContext';
 import { getArtistEvents, getArtists } from '../cache/cacheService';
 import { eventsOverlap } from '../utils/conflictUtils';
 import { useSelectedSlug } from '../store/AppContext';
@@ -21,7 +21,6 @@ export function useArtistDerived(artist: DbArtist) {
   const { openConflict } = useConflictDetail();
   const selectedSlug = useSelectedSlug();
   const startProgress = useStartProgress();
-  const showFeedback  = useFeedback();
   const { width, height, contentPadding } = useLayoutMode();
 
   const status  = getStatus(artist.artistId);
