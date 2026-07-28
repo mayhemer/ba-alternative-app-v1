@@ -10,6 +10,7 @@ import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 import { useFocusEffect } from '@react-navigation/native';
 import { useInterest } from '../../context/InterestContext';
 import { useTimelineFilter } from '../../context/TimelineFilterContext';
+import { useLayoutMode } from '../../hooks/useLayoutMode';
 import { getScroll, setScroll } from '../../store/uiStatePersistence';
 import { CategoryLane } from './CategoryLane';
 import type { LaneEvent } from './CategoryLane';
@@ -49,6 +50,7 @@ export function TimelineView({
   const scrollViewWidthRef = useRef(0);
   const { getStatus } = useInterest();
   const { scrollToTimeSignal } = useTimelineFilter();
+  const { bottomClearance } = useLayoutMode();
 
   // ── Horizontal scroll tracking ──────────────────────────────────────────────
 
@@ -183,7 +185,7 @@ export function TimelineView({
           {/* Clipping wrapper sized to the visible window only */}
           <View style={{ width: VIEW_WIDTH, overflow: 'hidden' }}>
             {/* Full canvas shifted left so 09:30 aligns with x=0 */}
-            <View style={{ width: CANVAS_WIDTH, position: 'relative', transform: [{ translateX: -VIEW_OFFSET_X }], paddingBottom: Math.max(30, areaHeight - canvasHeight)}}>
+            <View style={{ width: CANVAS_WIDTH, position: 'relative', transform: [{ translateX: -VIEW_OFFSET_X }], paddingBottom: Math.max(30 + bottomClearance, areaHeight - canvasHeight)}}>
               {visibleCategories.map((cat) => (
                 <CategoryLane
                   key={cat.categoryId}

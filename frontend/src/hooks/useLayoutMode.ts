@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useWindowDimensions } from 'react-native';
 import {
+  BOTTOM_OVERLAY_CLEARANCE,
   COMPACT_DIMENSION_BREAKPOINT,
   SHORT_VIEWPORT_BREAKPOINT,
 } from '../styling/tokens';
@@ -18,11 +19,16 @@ export type LayoutMode = {
   isWide: boolean;
   /**
    * Vertical budget is tight — a phone in landscape, or a short desktop window.
-   * Drives the TopBar collapse and drops the artist sheet's half-height snap.
+   * The TopBar is dropped and the BottomBar floats over the content.
    */
   isShort: boolean;
   /** Horizontal padding for centred content; 0 once there is width to spare. */
   contentPadding: number;
+  /**
+   * Bottom padding a screen's scrollable content needs so its last row clears
+   * the floating BottomBar. 0 when the bar is in-flow and takes its own space.
+   */
+  bottomClearance: number;
   width: number;
   height: number;
 };
@@ -32,10 +38,12 @@ export function useLayoutMode(): LayoutMode {
 
   return useMemo(() => {
     const isWide = Math.min(width, height) >= COMPACT_DIMENSION_BREAKPOINT;
+    const isShort = height < SHORT_VIEWPORT_BREAKPOINT;
     return {
       isWide,
-      isShort: height < SHORT_VIEWPORT_BREAKPOINT,
+      isShort,
       contentPadding: isWide ? 0 : 16,
+      bottomClearance: isShort ? BOTTOM_OVERLAY_CLEARANCE : 0,
       width,
       height,
     };

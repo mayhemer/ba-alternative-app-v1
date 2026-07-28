@@ -4,6 +4,7 @@ import { Text } from '../components/ui/Text';
 import { useTopBar, useBottomBar } from '../context/ScreenUIContext';
 import { useAppContext } from '../store/AppContext';
 import { useAuth } from '../context/AuthContext';
+import { useLayoutMode } from '../hooks/useLayoutMode';
 import { getSlugs } from '../adapters/slugAdapter';
 
 // ── Account section ───────────────────────────────────────────────────────────
@@ -119,6 +120,7 @@ export function SettingsScreen() {
 
   const { state, setSelectedSlug } = useAppContext();
   const { selectedSlug } = state;
+  const { bottomClearance } = useLayoutMode();
 
   const [slugs, setSlugs] = React.useState<string[]>([]);
 
@@ -131,7 +133,7 @@ export function SettingsScreen() {
     // fill a portrait phone, and overflow well past a landscape one.
     <ScrollView
       className="flex-1 bg-background"
-      contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 32, paddingBottom: 32 }}
+      contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 32, paddingBottom: 32 + bottomClearance }}
     >
       <AccountSection />
 

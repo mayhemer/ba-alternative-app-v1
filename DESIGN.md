@@ -92,7 +92,13 @@ Separately, `MAX_CONTENT_WIDTH` (700) caps centred content so a desktop window s
 `left`/`right` or content sits under a notched phone's sensor housing:
 
 ```
-{!isShort && <TopBar />} / navigator (flex-1, with LensPanel overlaid) / <BottomBar />
+{!isShort && <TopBar />}
+<View flex-1>
+  navigator
+  <LensPanel />                 ← absolute, inset 0
+  {isShort && <BottomBar />}    ← absolute, floats over the content
+</View>
+{!isShort && <BottomBar />}     ← in-flow, solid
 ```
 
 **On short viewports the TopBar is simply not rendered.** No overlay, no animation, no scroll
@@ -100,11 +106,38 @@ coupling — the layout below it is untouched and the timeline keeps its origina
 the timeline a permanent 56 pt rather than the scroll-dependent amount a collapsing bar would.
 
 Its two controls move into the BottomBar instead, which becomes a three-slot row when `isShort`:
-`DrawerButton` left, the screen's `bottomBar.ContentComponent` in a `flex-1` centre, the screen's
+`DrawerButton` left, the screen's `bottomBar.ContentComponent` in the centre, the screen's
 `topBar.RightComponent` right. `BottomBar` reads both off `ScreenUIContext`, so **no screen needs
 to know about this** — `useTopBar({ RightComponent })` keeps working unchanged. The bar, which
 normally renders `null` when a screen contributes no content, also renders when `isShort` so that
 Conflicts and Settings still get a hamburger.
+
+The centre slot is capped at `DAY_SWITCHER_MAX_FRACTION` (40 %) of the viewport width — stretched
+across an 844 pt landscape phone the day buttons look out of proportion. `DaySwitcher` needs no
+knowledge of this: it is already `width: '100%'`, `alignSelf: 'center'`, capped at
+`CONTENT_MAX_WIDTH`, so it fills whatever slot it is given.
+
+### Floating BottomBar (short viewports)
+
+When `isShort` the bar leaves the flex column and is absolutely anchored to the bottom *inside* the
+content view, so lanes and list rows show through beneath it — worth roughly another 60 pt of
+timeline. It drops its `bg-surface` and top border in favour of a `LinearGradient`
+(`expo-linear-gradient`) fading transparent → `colors.background` behind the row: the day buttons
+carry their own opaque backgrounds, but the bare hamburger and lens icons need the scrim to stay
+legible over a bright lane block.
+
+Note the two mount points are **not interchangeable**. The in-flow bar stays a *sibling* of the
+content view rather than being nested inside it, because `LensPanel` is `position: absolute;
+inset: 0` within that view — nesting would newly draw the lens backdrop over the DaySwitcher.
+
+Screens whose content scrolls must clear the floating bar. `useLayoutMode().bottomClearance` gives
+`BOTTOM_OVERLAY_CLEARANCE` when short and `0` otherwise; it is added to the bottom padding of the
+four scrollers (`TimelineView`'s canvas, `ArtistListScreen`'s `SectionList`, `ConflictsScreen`,
+`SettingsScreen`) and subtracted from `LensPanel`'s `maxHeight`. It is deliberately a generous
+constant rather than the bar's measured height — the clearance only has to be *at least* the bar
+height, and a few extra px at the end of a scroll are invisible, whereas coupling the two would
+mean either pinning the bar to a fixed height (risking a clipped `DaySwitcher`) or plumbing an
+`onLayout` measurement through a context.
 
 `DrawerButton` (`src/components/layout/DrawerButton.tsx`) is shared between the two bars rather
 than duplicated: it carries the coupling that opening the drawer dismisses the lens panel — the

@@ -18,13 +18,25 @@ export const MAX_CONTENT_WIDTH = 700;
 // true for tablets and desktop windows, false for a phone in either orientation.
 export const COMPACT_DIMENSION_BREAKPOINT = 600;
 
-// Below this height the vertical budget is tight enough that the TopBar collapses
-// on scroll and the artist sheet stops offering its half-height presentation.
+// Below this height the vertical budget is tight enough to drop the TopBar
+// entirely and float the BottomBar over the content instead.
 export const SHORT_VIEWPORT_BREAKPOINT = 500;
 
-// Height of the TopBar. It is laid out as an overlay above the screen content,
-// so this doubles as the content area's top padding and the collapse distance.
+// Height of the TopBar.
 export const TOPBAR_HEIGHT = 56;
+
+// Bottom padding scrollable content needs to clear the floating BottomBar on a
+// short viewport. Deliberately a generous constant rather than the bar's
+// measured height: it only has to be *at least* that, and a few extra px at the
+// end of a scroll are invisible, whereas coupling the two would mean either
+// pinning the bar to a fixed height (risking a clipped DaySwitcher) or plumbing
+// an onLayout measurement through a context.
+export const BOTTOM_OVERLAY_CLEARANCE = 76;
+
+// Share of the viewport width the day-switch group may occupy when the BottomBar
+// is a floating three-slot row; full width across an 844 pt landscape phone
+// stretches the buttons out of proportion.
+export const DAY_SWITCHER_MAX_FRACTION = 0.4;
 
 // Gap between a floating overlay panel and the screen edges / the TopBar above it.
 export const OVERLAY_PANEL_MARGIN = 10;

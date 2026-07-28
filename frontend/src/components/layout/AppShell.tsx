@@ -68,8 +68,15 @@ export function AppShell() {
           </NavigationContainer>
           {/* View/share lens panel — drops from under the TopBar over the content */}
           <LensPanel />
+          {/* Short viewports: the bar floats over the content, reclaiming its
+              height for the timeline. Screens add BOTTOM_OVERLAY_CLEARANCE so
+              their last row scrolls clear of it. */}
+          {isShort && <BottomBar />}
         </View>
-        <BottomBar />
+        {/* Otherwise in-flow, and kept a sibling of the content view rather than
+            nested inside it — LensPanel is `inset: 0` within that view, so
+            nesting would newly draw the lens backdrop over the DaySwitcher. */}
+        {!isShort && <BottomBar />}
       </SafeAreaView>
 
       {/* Artist detail bottom sheet — always mounted, sheet manages its own visibility */}

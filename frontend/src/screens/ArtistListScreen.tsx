@@ -18,6 +18,7 @@ import { useArtistDetail } from '../context/ArtistDetailContext';
 import { ArtistRow } from '../components/ArtistRow';
 import { SectionSeparator } from '../components/SectionSeparator';
 import { LensChip } from '../components/social/LensChip';
+import { useLayoutMode } from '../hooks/useLayoutMode';
 import { matchesScope } from '../utils/interestUtils';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -71,6 +72,7 @@ function ArtistListScreenInner() {
   const { scope } = useLens();
   const { getFriend } = useSocialData();
   const { openDetail } = useArtistDetail();
+  const { bottomClearance } = useLayoutMode();
 
   const friendInterests =
     scope.kind === 'friend' ? getFriend(scope.token)?.interests : undefined;
@@ -144,6 +146,7 @@ function ArtistListScreenInner() {
       }
       stickySectionHeadersEnabled
       className="flex-1 bg-background"
+      contentContainerStyle={{ paddingBottom: bottomClearance }}
     />
   );
 }

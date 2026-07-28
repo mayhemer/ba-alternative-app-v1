@@ -79,7 +79,7 @@ function ScopeRow({ active, onPress, children }: RowProps) {
 export function LensPanel() {
   const { isOpen, close } = useLensPanel();
   const { scope, setScope } = useLens();
-  const { isWide, height } = useLayoutMode();
+  const { isWide, height, bottomClearance } = useLayoutMode();
   const { friends, myShare } = useSocialData();
   const { shareMine, revokeMine, removeFriend, refreshFriend } = useSocialActions();
   const { refreshFromServer } = useInterestCycle();
@@ -193,8 +193,8 @@ export function LensPanel() {
           borderRadius: OVERLAY_PANEL_RADIUS,
           // Measured against the real viewport rather than a percentage, so a
           // short screen leaves the panel a usable amount of room without
-          // pushing it past the bottom edge.
-          maxHeight: height - OVERLAY_PANEL_MARGIN * 2,
+          // pushing it past the bottom edge or behind the floating BottomBar.
+          maxHeight: height - OVERLAY_PANEL_MARGIN * 2 - bottomClearance,
           paddingHorizontal: 12,
           paddingTop: 10,
           paddingBottom: 14,

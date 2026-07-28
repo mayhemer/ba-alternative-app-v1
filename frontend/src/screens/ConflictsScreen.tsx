@@ -6,6 +6,7 @@ import { useConflictDetail } from '../context/ConflictDetailContext';
 import { useConflicts } from '../context/ConflictContext';
 import { formatTime, formatDayLabel } from '../components/timeline/timelineLayout';
 import { useTopBar, useBottomBar } from '../context/ScreenUIContext';
+import { useLayoutMode } from '../hooks/useLayoutMode';
 import { colors, MAX_CONTENT_WIDTH } from '../styling/tokens';
 import { StarIndicator } from '../components/StarButton';
 import type { ConflictEntry } from '../utils/conflictUtils';
@@ -17,6 +18,7 @@ export function ConflictsScreen() {
   const { getStatus } = useInterest();
   const { openConflict } = useConflictDetail();
   const { entries } = useConflicts();
+  const { bottomClearance } = useLayoutMode();
 
   const handleCardPress = useCallback((entry: ConflictEntry): void => {
     openConflict(entry.event, entry.overlappingEvents);
@@ -35,7 +37,7 @@ export function ConflictsScreen() {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: colors.background }}
-      contentContainerStyle={{ padding: 16, maxWidth: MAX_CONTENT_WIDTH, width: '100%', alignSelf: 'center' }}
+      contentContainerStyle={{ padding: 16, paddingBottom: 16 + bottomClearance, maxWidth: MAX_CONTENT_WIDTH, width: '100%', alignSelf: 'center' }}
     >
       {entries.map((entry, index) => {
         const nextEntry = entries[index + 1];
