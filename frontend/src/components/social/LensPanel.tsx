@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -22,6 +22,11 @@ import {
   OVERLAY_PANEL_RADIUS,
   OVERLAY_PANEL_MAX_WIDTH,
 } from '../../styling/tokens';
+
+// The avatar is the tallest thing in a friend row, so it sets the row height.
+// Capping the trailing action slot to the same height keeps the row from
+// growing when the ✕ is swapped for the Cancel / Remove pair.
+const FRIEND_AVATAR_SIZE = 22;
 
 // ── Section header ──────────────────────────────────────────────────────────────
 
@@ -87,6 +92,17 @@ export function LensPanel() {
   const showFeedback = useFeedback();
   const [busy, setBusy] = useState(false);
 
+  // Removing a friend is destructive and was a single tap away, so the ✕ now
+  // only arms the row; a second, differently-placed tap confirms. Held here
+  // rather than per row so that arming one row disarms any other.
+  const [pendingRemove, setPendingRemove] = useState<string | null>(null);
+
+  // The panel stays mounted while closed, so drop any armed row on close —
+  // reopening should never present a half-completed destructive action.
+  useEffect(() => {
+    if (!isOpen) { setPendingRemove(null); }
+  }, [isOpen]);
+
   const selectScope = useCallback(
     (next: LensScope) => {
       // Refresh the latest data for the chosen source before showing it — my view
@@ -127,6 +143,7 @@ export function LensPanel() {
 
   const handleRemoveFriend = useCallback(
     async (token: string) => {
+      setPendingRemove(null);
       if (scope.kind === 'friend' && scope.token === token) { setScope({ kind: 'all' }); }
       await removeFriend(token);
     },
@@ -222,22 +239,62 @@ export function LensPanel() {
 
           {friends.map((friend) => {
             const active = scope.kind === 'friend' && scope.token === friend.token;
+            const confirming = pendingRemove === friend.token;
             return (
               <ScopeRow
                 key={friend.token}
                 active={active}
-                onPress={() => selectScope({ kind: 'friend', token: friend.token, level: null })}
+                // While armed the row is an escape hatch rather than a selector:
+                // tapping anywhere outside the explicit Remove backs out.
+                onPress={() =>
+                  confirming
+                    ? setPendingRemove(null)
+                    : selectScope({ kind: 'friend', token: friend.token, level: null })
+                }
               >
-                <FriendAvatar label={friend.label} avatarUrl={friend.avatarUrl} size={22} />
+                <FriendAvatar label={friend.label} avatarUrl={friend.avatarUrl} size={FRIEND_AVATAR_SIZE} />
                 <Text
                   numberOfLines={1}
                   style={{ color: colors.textPrimary, fontSize: 15, flex: 1, marginLeft: 8 }}
                 >
                   {friend.label}
                 </Text>
-                <Pressable onPress={() => handleRemoveFriend(friend.token)} hitSlop={8} style={{ marginLeft: 10 }}>
-                  <Ionicons name="close-circle-outline" size={20} color={colors.notInterested} />
-                </Pressable>
+                {confirming ? (
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      height: FRIEND_AVATAR_SIZE,
+                    }}
+                  >
+                    <Pressable
+                      onPress={() => setPendingRemove(null)}
+                      hitSlop={8}
+                      style={{ paddingHorizontal: 10 }}
+                    >
+                      <Text style={{ color: colors.textSecondary, fontSize: 13 }}>Cancel</Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => handleRemoveFriend(friend.token)}
+                      hitSlop={8}
+                      style={{ paddingLeft: 10 }}
+                    >
+                      <Text style={{ color: colors.danger, fontSize: 13, fontFamily: 'Bold-Default' }}>
+                        Remove
+                      </Text>
+                    </Pressable>
+                  </View>
+                ) : (
+                  <Pressable
+                    onPress={() => setPendingRemove(friend.token)}
+                    hitSlop={8}
+                    style={{ marginLeft: 10 }}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Remove ${friend.label}`}
+                  >
+                    <Ionicons name="close-circle-outline" size={20} color={colors.notInterested} />
+                  </Pressable>
+                )}
               </ScopeRow>
             );
           })}
