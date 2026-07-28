@@ -7,6 +7,7 @@ import React, {
   useState,
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useExclusiveOverlay } from '../hooks/useExclusiveOverlay';
 import { type LensScope, DEFAULT_SCOPE } from '../utils/interestUtils';
 
 // The "lens" is the global source+filter that the artist list and both timelines
@@ -58,6 +59,14 @@ export function LensProvider({ children }: { children: React.ReactNode }) {
 
   const toggle = useCallback((): void => { setIsOpen((prev) => !prev); }, []);
   const close = useCallback((): void => { setIsOpen(false); }, []);
+
+  // Screen exclusivity: the panel closes when another overlay opens, and
+  // announces itself whenever it becomes visible. Driven off `isOpen` rather
+  // than from `toggle` so every route to opening the panel is covered.
+  const notifyOpening = useExclusiveOverlay(close);
+  useEffect(() => {
+    if (isOpen) { notifyOpening(); }
+  }, [isOpen, notifyOpening]);
 
   const scopeValue = useMemo(() => ({ scope, setScope: setScopeState }), [scope]);
   const panelValue = useMemo(() => ({ isOpen, toggle, close }), [isOpen, toggle, close]);

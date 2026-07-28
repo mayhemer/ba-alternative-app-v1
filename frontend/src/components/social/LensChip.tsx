@@ -1,10 +1,8 @@
 import React, { useCallback } from 'react';
 import { Pressable, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { DrawerActions } from '@react-navigation/native';
 import { useLens, useLensPanel } from '../../context/LensContext';
 import { useSocialData } from '../../context/SocialContext';
-import { navigationRef } from '../../navigation/navigationRef';
 import { getStarIconProps } from '../StarButton';
 import { FriendAvatar } from './FriendAvatar';
 import type { InterestStatus } from '../../context/InterestContext';
@@ -41,15 +39,11 @@ export function LensChip() {
   const friend = scope.kind === 'friend' ? getFriend(scope.token) : undefined;
   const star = getStarIconProps(scopeStarStatus(scope));
 
-  // The drawer and the lens panel are mutually exclusive overlays — opening the
-  // panel dismisses the drawer. A no-op when the drawer is already closed, and on
-  // wide screens where it is permanent. The reverse direction lives in TopBar.
+  // Dismissing the drawer is handled by the exclusivity hub — see
+  // utils/overlayHub. This only has to toggle its own panel.
   const handlePress = useCallback((): void => {
-    if (!isOpen) {
-      navigationRef.dispatch(DrawerActions.closeDrawer());
-    }
     toggle();
-  }, [isOpen, toggle]);
+  }, [toggle]);
 
   return (
     <Pressable
