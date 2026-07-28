@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Platform, useWindowDimensions } from 'react-native';
+import { Platform } from 'react-native';
 import { getFeedbackLabel } from '../components/StarButton';
 import { useArtistDetail as useArtistDetailContext } from '../context/ArtistDetailContext';
 import { useInterest } from '../context/InterestContext';
@@ -10,7 +10,8 @@ import { getArtistEvents, getArtists } from '../cache/cacheService';
 import { eventsOverlap } from '../utils/conflictUtils';
 import { useSelectedSlug } from '../store/AppContext';
 import type { DbArtist, DbEvent } from '../types/backend';
-import { MAX_CONTENT_WIDTH, PADDING_BREAKPOINT } from '../styling/tokens';
+import { MAX_CONTENT_WIDTH } from '../styling/tokens';
+import { useLayoutMode } from './useLayoutMode';
 
 // ── Shared derived values ─────────────────────────────────────────────────────
 
@@ -21,7 +22,7 @@ export function useArtistDerived(artist: DbArtist) {
   const selectedSlug = useSelectedSlug();
   const startProgress = useStartProgress();
   const showFeedback  = useFeedback();
-  const { width } = useWindowDimensions();
+  const { width, height, contentPadding } = useLayoutMode();
 
   const status  = getStatus(artist.artistId);
   const genre   = getArtistLocalized(artist.localized, 'genre');
@@ -29,9 +30,14 @@ export function useArtistDerived(artist: DbArtist) {
   const content = getArtistLocalized(artist.localized, 'content');
 
   const innerWidth = Math.min(width, MAX_CONTENT_WIDTH);
-  const hPad       = width >= PADDING_BREAKPOINT ? 0 : 16;
+  const hPad       = contentPadding;
   const isWeb      = Platform.OS === 'web';
   const meta       = [genre, country].filter(Boolean).join('  ·  ');
+
+  // Hero keeps its 3:2 aspect, but never grows past half the viewport — at the
+  // full 700 pt content width it would otherwise be 466 pt tall, more than a
+  // landscape phone has to give.
+  const heroHeight = Math.round(Math.min(innerWidth * 0.666, height * 0.5));
 
   const artistNameForURL = encodeURIComponent(artist.name.toLocaleLowerCase());
   let artistWebDomain = '';
@@ -72,6 +78,6 @@ export function useArtistDerived(artist: DbArtist) {
     startProgress(getFeedbackLabel(next)).wrap(promise);
   }
 
-  return { closeDetail, expandDetail, status, content, innerWidth, hPad, isWeb, meta, artistNameForURL, artistWebDomain, handleStarPress, width, conflictMap, openConflict };
+  return { closeDetail, expandDetail, status, content, innerWidth, heroHeight, hPad, isWeb, meta, artistNameForURL, artistWebDomain, handleStarPress, width, conflictMap, openConflict };
 }
 

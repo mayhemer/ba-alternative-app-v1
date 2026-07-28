@@ -14,6 +14,7 @@ import { LensPanel } from '../social/LensPanel';
 import { useShareLinkHandler } from '../../navigation/useShareLinkHandler';
 import { AppNavigator } from '../../navigation/AppNavigator';
 import { navigationRef } from '../../navigation/navigationRef';
+import { useLayoutMode } from '../../hooks/useLayoutMode';
 import { colors } from '../../styling/tokens';
 
 const NAV_STATE_KEY = 'navigation:state';
@@ -21,6 +22,7 @@ const NAV_STATE_KEY = 'navigation:state';
 export function AppShell() {
   const [initialState, setInitialState] = useState<NavigationState | undefined>(undefined);
   const [isReady, setIsReady] = useState(false);
+  const { isShort } = useLayoutMode();
 
   // Handle incoming add-friend share links (cold start + while running).
   useShareLinkHandler();
@@ -49,9 +51,13 @@ export function AppShell() {
   return (
     <GestureHandlerRootView className="flex-1">
 
-      {/* Main app layout — TopBar, screen content, BottomBar */}
-      <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
-        <TopBar />
+      {/* Main app layout — TopBar, screen content, BottomBar.
+          left/right edges matter in landscape: without them content sits under
+          a notched phone's sensor housing. */}
+      <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom', 'left', 'right']}>
+        {/* Dropped on short viewports to give the timeline back its 56 px — the
+            hamburger and the lens chip move into the BottomBar there. */}
+        {!isShort && <TopBar />}
         <View className="flex-1">
           <NavigationContainer
             ref={navigationRef}

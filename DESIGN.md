@@ -64,6 +64,78 @@ full account.
 
 ---
 
+## Layout, Orientation & App Chrome
+
+The app rotates freely (`app.json` → `orientation: "default"`) on phones, tablets and web. There
+is no orientation library and no per-screen lock; every screen reflows.
+
+### Layout mode
+
+`src/hooks/useLayoutMode.ts` is the single source of responsive truth. Breakpoints test a
+**dimension, never width alone** — a landscape phone is wide (844 pt) but not roomy, and treating
+it as a desktop hands it a permanent drawer and zero padding.
+
+| Flag | Test | Drives |
+|------|------|--------|
+| `isWide` | `min(width, height) ≥ 600` | Permanent drawer, hamburger hidden, right-pinned lens panel, expanded artist sheet |
+| `isShort` | `height < 500` | TopBar hidden, its controls move to the BottomBar |
+| `contentPadding` | `isWide ? 0 : 16` | Horizontal padding for centred content |
+
+`isWide` is false for a phone in **either** orientation and true for tablets and desktop windows.
+It also keeps an iPad in a narrow Split View column on the compact layout.
+
+Separately, `MAX_CONTENT_WIDTH` (700) caps centred content so a desktop window stays readable.
+
+### Chrome layout
+
+`AppShell` is a plain flex column inside a `SafeAreaView` on all four edges — landscape needs
+`left`/`right` or content sits under a notched phone's sensor housing:
+
+```
+{!isShort && <TopBar />} / navigator (flex-1, with LensPanel overlaid) / <BottomBar />
+```
+
+**On short viewports the TopBar is simply not rendered.** No overlay, no animation, no scroll
+coupling — the layout below it is untouched and the timeline keeps its original geometry. This buys
+the timeline a permanent 56 pt rather than the scroll-dependent amount a collapsing bar would.
+
+Its two controls move into the BottomBar instead, which becomes a three-slot row when `isShort`:
+`DrawerButton` left, the screen's `bottomBar.ContentComponent` in a `flex-1` centre, the screen's
+`topBar.RightComponent` right. `BottomBar` reads both off `ScreenUIContext`, so **no screen needs
+to know about this** — `useTopBar({ RightComponent })` keeps working unchanged. The bar, which
+normally renders `null` when a screen contributes no content, also renders when `isShort` so that
+Conflicts and Settings still get a hamburger.
+
+`DrawerButton` (`src/components/layout/DrawerButton.tsx`) is shared between the two bars rather
+than duplicated: it carries the coupling that opening the drawer dismisses the lens panel — the
+counterpart to the same rule in `LensChip`. It renders nothing when `isWide`, where the drawer is
+permanent.
+
+`LeftComponent` exists in `TopBarConfig` but no screen sets it; the BottomBar ignores it.
+
+### Overlays across rotation
+
+`ArtistDetailSheet`'s `snapPoints` are re-measured when the viewport changes, so they **must keep a
+constant length**. `snapToIndex` is called imperatively from an effect, and `@gorhom/bottom-sheet`
+does not adopt a new `snapPoints` prop until after the render commits — an index valid only for the
+new array throws `'index' was provided but out of the provided snap points range`. Both stops
+therefore always exist; only their sizes change. For the same reason that effect is keyed on
+`detailState` alone, never on `snapPoints`: the sheet re-snaps itself when they change.
+
+The collapsed stop is sized in points, not a percentage — `'40%'` of a landscape phone is ~150 px,
+barely the title row. It is floored at 260 px and capped at 75 % of the viewport.
+
+### Landscape trade-off on the timeline
+
+Landscape roughly doubles the visible time span but costs lane height. After BottomBar, ruler and
+safe areas a 390 pt viewport shows ~2.5 category lanes rather than 4–5 — dropping the TopBar is
+what keeps that from being ~2. Lane geometry (`LANE_HEIGHT`, `STRIP_HEIGHT`) stays fixed — those
+constants are read by `ArtistBlock`, `NowLine`, `CategoryLane`, `useTimelineData` and the cached
+sub-row layout in `cacheService.ts`, so making them viewport-dependent is a far wider change than
+it appears.
+
+---
+
 ## Multi-Edition / Multi-Festival Support
 
 The official API serves multiple festivals and multiple annual editions of the same festival.

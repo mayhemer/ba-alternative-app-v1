@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, View, ActivityIndicator } from 'react-native';
+import { ScrollView, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import { Text } from '../components/ui/Text';
 import { useTopBar, useBottomBar } from '../context/ScreenUIContext';
 import { useAppContext } from '../store/AppContext';
@@ -127,7 +127,12 @@ export function SettingsScreen() {
   }, []);
 
   return (
-    <View className="flex-1 bg-background px-6 pt-8">
+    // Scrollable: the account block, sign-in buttons and edition list already
+    // fill a portrait phone, and overflow well past a landscape one.
+    <ScrollView
+      className="flex-1 bg-background"
+      contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 32, paddingBottom: 32 }}
+    >
       <AccountSection />
 
       <Text className="text-textSecondary text-xs tracking-widest uppercase mb-4">
@@ -159,6 +164,6 @@ export function SettingsScreen() {
           </TouchableOpacity>
         );
       })}
-    </View>
+    </ScrollView>
   );
 }

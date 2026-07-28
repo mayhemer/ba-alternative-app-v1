@@ -82,7 +82,7 @@ export function ArtistDetailHeader({ artist }: Props) {
 // ── Body (scrollable content) ─────────────────────────────────────────────────
 
 export function ArtistDetailBody({ artist }: Props) {
-  const { closeDetail, content, innerWidth, hPad, isWeb, artistNameForURL, artistWebDomain, width, conflictMap, openConflict } = useArtistDerived(artist);
+  const { closeDetail, content, innerWidth, heroHeight, hPad, isWeb, artistNameForURL, artistWebDomain, width, conflictMap, openConflict } = useArtistDerived(artist);
   const { setSelectedDayStart, requestScrollToTime } = useTimelineFilter();
 
   // Jump to this artist's event on the timeline: select its day, center its time,
@@ -102,7 +102,7 @@ export function ArtistDetailBody({ artist }: Props) {
     closeDetail();
   }, [artist.isPlayable, setSelectedDayStart, requestScrollToTime, closeDetail]);
 
-  const imageHeight = Math.round(innerWidth * 0.666);
+  const imageHeight = heroHeight;
   const htmlWidth   = innerWidth - hPad * 2;
   const [imageLoading, setImageLoading] = useState(true);
 
@@ -210,7 +210,7 @@ export function ArtistDetailBody({ artist }: Props) {
             onLoadEnd={() => setImageLoading(false)}
           />
           {imageLoading && (
-            <View style={{ position: 'absolute', top: 50, left: 0, right: 0, alignItems: 'center' }}>
+            <View style={{ position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center' }}>
               <ActivityIndicator size="large" color={colors.accent} />
             </View>
           )}

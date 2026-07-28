@@ -4,7 +4,6 @@ import {
   Pressable,
   ScrollView,
   View,
-  useWindowDimensions,
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text } from '../ui/Text';
@@ -16,11 +15,12 @@ import { useFeedback } from '../../context/ScreenUIContext';
 import { useInterestCycle } from '../../context/InterestContext';
 import { type LensScope } from '../../utils/interestUtils';
 import { shareLink, copyToClipboard } from '../../utils/shareLink';
+import { useLayoutMode } from '../../hooks/useLayoutMode';
 import {
   colors,
   OVERLAY_PANEL_MARGIN,
   OVERLAY_PANEL_RADIUS,
-  WIDE_SCREEN_WIDTH_BREAKPOINT,
+  OVERLAY_PANEL_MAX_WIDTH,
 } from '../../styling/tokens';
 
 // ── Section header ──────────────────────────────────────────────────────────────
@@ -79,7 +79,7 @@ function ScopeRow({ active, onPress, children }: RowProps) {
 export function LensPanel() {
   const { isOpen, close } = useLensPanel();
   const { scope, setScope } = useLens();
-  const { width } = useWindowDimensions();
+  const { isWide, height } = useLayoutMode();
   const { friends, myShare } = useSocialData();
   const { shareMine, revokeMine, removeFriend, refreshFriend } = useSocialActions();
   const { refreshFromServer } = useInterestCycle();
@@ -165,8 +165,6 @@ export function LensPanel() {
 
   if (!isOpen) { return null; }
 
-  const isWide = width >= WIDE_SCREEN_WIDTH_BREAKPOINT;
-
   return (
     <>
       {/* Backdrop — taps outside the card dismiss the panel */}
@@ -188,12 +186,15 @@ export function LensPanel() {
           top: OVERLAY_PANEL_MARGIN,
           left: isWide ? undefined : OVERLAY_PANEL_MARGIN,
           right: OVERLAY_PANEL_MARGIN,
-          width: isWide ? WIDE_SCREEN_WIDTH_BREAKPOINT - OVERLAY_PANEL_MARGIN * 2 : undefined,
+          width: isWide ? OVERLAY_PANEL_MAX_WIDTH : undefined,
           backgroundColor: colors.surface,
           borderWidth: 1,
           borderColor: colors.border,
           borderRadius: OVERLAY_PANEL_RADIUS,
-          maxHeight: '85%',
+          // Measured against the real viewport rather than a percentage, so a
+          // short screen leaves the panel a usable amount of room without
+          // pushing it past the bottom edge.
+          maxHeight: height - OVERLAY_PANEL_MARGIN * 2,
           paddingHorizontal: 12,
           paddingTop: 10,
           paddingBottom: 14,

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect } from 'react';
-import { View, useWindowDimensions } from 'react-native';
+import { View } from 'react-native';
 import { Text } from '../components/ui/Text';
 import { useSelectedSlug } from '../store/AppContext';
 import { getFestivalDays } from '../cache/cacheService';
@@ -18,7 +18,7 @@ import {
   getFestivalDayStart,
 } from '../components/timeline/timelineLayout';
 import { currentTimeMs } from '../utils/clock';
-import { PADDING_BREAKPOINT } from '../styling/tokens';
+import { useLayoutMode } from '../hooks/useLayoutMode';
 
 // ── Shared TopBar / BottomBar slot components ─────────────────────────────────
 
@@ -99,11 +99,14 @@ export function BaseTimelineScreen({ title, screenKey, BottomBarComponent, filte
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
-  const { width } = useWindowDimensions();
+  const { isWide } = useLayoutMode();
 
+  // A roomy viewport has space to show the whole sheet at once; elsewhere it
+  // opens at the collapsed stop, which stays usable on short screens because
+  // ArtistDetailSheet floors it in points rather than a percentage.
   const handleBlockPress = useCallback((_event: DbEvent, artist: DbArtist): void => {
-    openDetail(artist, width >= PADDING_BREAKPOINT ? 'expanded' : 'collapsed');
-  }, [openDetail, width]);
+    openDetail(artist, isWide ? 'expanded' : 'collapsed');
+  }, [openDetail, isWide]);
 
   // ── Render ──────────────────────────────────────────────────────────────────
 

@@ -35,7 +35,9 @@ export function FeedbackToast() {
       activeOpacity={feedback.variant === 'progress' ? 1 : 0.8}
       style={{
         position: 'absolute',
-        top: top + 12,
+        // The top inset is 0 in landscape, which would leave the toast flush
+        // against the screen edge — keep a floor under it.
+        top: Math.max(top, 12) + 12,
         alignSelf: 'center',
         flexDirection: 'row',
         alignItems: 'center',
