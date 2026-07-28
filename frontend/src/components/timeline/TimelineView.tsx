@@ -15,6 +15,7 @@ import { getScroll, setScroll } from '../../store/uiStatePersistence';
 import { CategoryLane } from './CategoryLane';
 import type { LaneEvent } from './CategoryLane';
 import { TimeRuler } from './TimeRuler';
+import { LaneLabelOverlay } from './LaneLabelOverlay';
 import { CANVAS_WIDTH, VIEW_OFFSET_X, VIEW_WIDTH, PIXELS_PER_MS, timeToX } from './timelineLayout';
 import { currentTimeMs } from '../../utils/clock';
 import type { DbArtist, DbCategory, DbEvent } from '../../types/backend';
@@ -28,6 +29,7 @@ type Props = {
   visibleCategories: DbCategory[];
   eventsByCategory: Record<string, LaneEvent[]>;
   laneHeights: Record<string, number>;
+  laneOffsets: Record<string, number>;
   categorySubRows?: Record<string, Record<string, number>>;
   canvasHeight: number;
   selectedDayStart: number;
@@ -40,6 +42,7 @@ export function TimelineView({
   visibleCategories,
   eventsByCategory,
   laneHeights,
+  laneOffsets,
   categorySubRows,
   canvasHeight,
   selectedDayStart,
@@ -174,36 +177,41 @@ export function TimelineView({
     <View style={{ flex: 1 }} onLayout={(e) => { setAreaHeight(e.nativeEvent.layout.height); }}>
       <TimeRuler dayStart={selectedDayStart} scrollX={scrollX} nowX={nowX} />
       <ScrollView className="flex-1 bg-background" showsVerticalScrollIndicator={false}>
-        <Animated.ScrollView
-          ref={horizontalScrollRef}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          scrollEventThrottle={16}
-          onScroll={onScroll}
-          onLayout={(e) => { scrollViewWidthRef.current = e.nativeEvent.layout.width; }}
-        >
-          {/* Clipping wrapper sized to the visible window only */}
-          <View style={{ width: VIEW_WIDTH, overflow: 'hidden' }}>
-            {/* Full canvas shifted left so 09:30 aligns with x=0 */}
-            <View style={{ width: CANVAS_WIDTH, position: 'relative', transform: [{ translateX: -VIEW_OFFSET_X }], paddingBottom: Math.max(30 + bottomClearance, areaHeight - canvasHeight)}}>
-              {visibleCategories.map((cat) => (
-                <CategoryLane
-                  key={cat.categoryId}
-                  category={cat}
-                  events={eventsByCategory[cat.categoryId] ?? []}
-                  dayStart={selectedDayStart}
-                  scrollX={scrollX}
-                  nowX={nowX}
-                  getStatus={getStatus}
-                  onBlockPress={onBlockPress}
-                  laneHeight={laneHeights[cat.categoryId]}
-                  eventSubRows={categorySubRows?.[cat.categoryId]}
-                  conflictOverlaps={conflictOverlaps}
-                />
-              ))}
+        {/* Wrapper so the label overlay can sit beside the horizontal scroller:
+            inside the vertical one (so it scrolls with the lanes) but outside the
+            horizontal one (so horizontal scroll cannot move it). */}
+        <View>
+          <Animated.ScrollView
+            ref={horizontalScrollRef}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            scrollEventThrottle={16}
+            onScroll={onScroll}
+            onLayout={(e) => { scrollViewWidthRef.current = e.nativeEvent.layout.width; }}
+          >
+            {/* Clipping wrapper sized to the visible window only */}
+            <View style={{ width: VIEW_WIDTH, overflow: 'hidden' }}>
+              {/* Full canvas shifted left so 09:30 aligns with x=0 */}
+              <View style={{ width: CANVAS_WIDTH, position: 'relative', transform: [{ translateX: -VIEW_OFFSET_X }], paddingBottom: Math.max(30 + bottomClearance, areaHeight - canvasHeight)}}>
+                {visibleCategories.map((cat) => (
+                  <CategoryLane
+                    key={cat.categoryId}
+                    category={cat}
+                    events={eventsByCategory[cat.categoryId] ?? []}
+                    dayStart={selectedDayStart}
+                    nowX={nowX}
+                    getStatus={getStatus}
+                    onBlockPress={onBlockPress}
+                    laneHeight={laneHeights[cat.categoryId]}
+                    eventSubRows={categorySubRows?.[cat.categoryId]}
+                    conflictOverlaps={conflictOverlaps}
+                  />
+                ))}
+              </View>
             </View>
-          </View>
-        </Animated.ScrollView>
+          </Animated.ScrollView>
+          <LaneLabelOverlay categories={visibleCategories} laneOffsets={laneOffsets} />
+        </View>
       </ScrollView>
     </View>
   );

@@ -46,7 +46,7 @@ export function BaseTimelineScreen({ title, screenKey, BottomBarComponent, filte
     setSelectedDayStart,
   } = useTimelineFilter();
 
-  const { events, eventsByCategory, visibleCategories, laneHeights, categorySubRows, canvasHeight, conflictOverlaps } =
+  const { events, eventsByCategory, visibleCategories, laneHeights, laneOffsets, categorySubRows, canvasHeight, conflictOverlaps } =
     useTimelineData({ filterArtist, useSubRows });
 
   useTopBar({ title, RightComponent: TopBarRight });
@@ -126,6 +126,7 @@ export function BaseTimelineScreen({ title, screenKey, BottomBarComponent, filte
       visibleCategories={visibleCategories}
       eventsByCategory={eventsByCategory}
       laneHeights={laneHeights}
+      laneOffsets={laneOffsets}
       categorySubRows={categorySubRows}
       canvasHeight={canvasHeight}
       selectedDayStart={selectedDayStart}

@@ -167,6 +167,36 @@ constants are read by `ArtistBlock`, `NowLine`, `CategoryLane`, `useTimelineData
 sub-row layout in `cacheService.ts`, so making them viewport-dependent is a far wider change than
 it appears.
 
+### Timeline rendering: never counter-animate against scroll
+
+**Nothing in the timeline may hold its position by animating against the scroll offset.** Every
+route to that offset — `useAnimatedScrollHandler`, Reanimated's `useScrollOffset` — reads sampled
+scroll *events*, and events are not synchronised to the frame in which the scrolled content is
+composited. The correction therefore always lands a frame behind, which reads as jitter: mild on a
+fast phone, obvious on slow devices, and worst on web, where DOM scroll events are asynchronous to
+the compositor. This is structural, not a tuning problem.
+
+The fix is always to remove the scroll dependency rather than to smooth it. `TimelineView` nests the
+horizontal `Animated.ScrollView` *inside* the vertical `ScrollView`, which gives a useful seam:
+
+> anything mounted as a sibling of the horizontal scroller scrolls vertically with the lanes but is
+> immune to horizontal scroll by construction — there is nothing to animate, so nothing can lag.
+
+`LaneLabelOverlay` uses exactly that seam to pin category titles to the viewport's left edge. It
+replaced a per-lane `useAnimatedStyle` that counter-translated each title by
+`scrollX + VIEW_OFFSET_X`, which jittered.
+
+The cost is that an overlay sits outside the lanes and so cannot infer positions from layout: it has
+to be told where each strip is. `useTimelineData.laneOffsets` owns that accumulation, next to the
+identical one behind `canvasHeight`, so the lane stack's geometry has a single owner and cannot
+drift when sub-rows change a lane's height. Any future left- or top-pinned timeline chrome should
+follow the same pattern.
+
+Note this seam does **not** help with anything whose *content* depends on scroll position — e.g. a
+sticky title on a long event, where which title to show changes as you scroll. Those need a design
+with no continuous scroll dependency at all (repeating the label at fixed intervals, say), not a
+smoother animation.
+
 ---
 
 ## Multi-Edition / Multi-Festival Support

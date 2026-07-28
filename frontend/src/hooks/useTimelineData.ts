@@ -31,6 +31,8 @@ export type TimelineData = {
   eventsByCategory: Record<string, LaneEvent[]>;
   visibleCategories: DbCategory[];
   laneHeights: Record<string, number>;
+  /** Y of each category's title strip, measured from the top of the lane stack. */
+  laneOffsets: Record<string, number>;
   categorySubRows: Record<string, Record<string, number>>;
   canvasHeight: number;
   conflictOverlaps: Map<string, ConflictOverlap[]>;
@@ -125,6 +127,23 @@ export function useTimelineData({ filterArtist, useSubRows = false }: Options = 
     return map;
   }, [visibleCategories, useSubRows, selectedSlug, selectedDayStart]);
 
+  // Where each lane's title strip starts. Owned here, alongside canvasHeight and
+  // from the same inputs, so the label overlay — which is rendered outside the
+  // horizontally-scrolling layer and therefore cannot infer positions from
+  // layout — stays in step with the lanes it labels.
+  //
+  // Measured from the top of the lane stack, i.e. excluding RULER_HEIGHT: the
+  // ruler sits outside both scrollers, so the first strip is at y = 0.
+  const laneOffsets = useMemo<Record<string, number>>(() => {
+    const map: Record<string, number> = {};
+    let y = 0;
+    for (const cat of visibleCategories) {
+      map[cat.categoryId] = y;
+      y += STRIP_HEIGHT + (laneHeights[cat.categoryId] ?? LANE_HEIGHT);
+    }
+    return map;
+  }, [visibleCategories, laneHeights]);
+
   const canvasHeight = useMemo<number>(() => {
     return RULER_HEIGHT + visibleCategories.reduce((sum, cat) => {
       return sum + STRIP_HEIGHT + (laneHeights[cat.categoryId] ?? LANE_HEIGHT);
@@ -140,6 +159,7 @@ export function useTimelineData({ filterArtist, useSubRows = false }: Options = 
     eventsByCategory,
     visibleCategories,
     laneHeights,
+    laneOffsets,
     categorySubRows,
     canvasHeight,
     conflictOverlaps,

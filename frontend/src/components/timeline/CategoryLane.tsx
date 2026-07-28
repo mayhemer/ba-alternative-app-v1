@@ -1,13 +1,11 @@
 import React from 'react';
 import { View } from 'react-native';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 import type { DbArtist, DbCategory, DbEvent } from '../../types/backend';
 import type { InterestStatus } from '../../cache/cacheService';
 import type { ConflictOverlap } from '../../utils/conflictUtils';
 import { decodeCategoryColor } from '../../utils/color';
-import { getCategoryLocalized } from '../../utils/localization';
-import { CANVAS_WIDTH, LANE_HEIGHT, STRIP_HEIGHT, VIEW_OFFSET_X } from './timelineLayout';
+import { CANVAS_WIDTH, LANE_HEIGHT, STRIP_HEIGHT } from './timelineLayout';
 import { ArtistBlock } from './ArtistBlock';
 import { NowLine } from './NowLine';
 import { colors } from '../../styling/tokens';
@@ -21,7 +19,6 @@ type Props = {
   category: DbCategory;
   events: LaneEvent[];
   dayStart: number;
-  scrollX: SharedValue<number>;
   nowX: SharedValue<number>;
   getStatus: (artistId: string) => InterestStatus;
   onBlockPress: (event: DbEvent, artist: DbArtist) => void;
@@ -34,7 +31,6 @@ export function CategoryLane({
   category,
   events,
   dayStart,
-  scrollX,
   nowX,
   getStatus,
   onBlockPress,
@@ -42,42 +38,20 @@ export function CategoryLane({
   eventSubRows,
   conflictOverlaps,
 }: Props) {
-  const title = getCategoryLocalized(category.localized, 'title');
   const categoryColor = decodeCategoryColor(category.color);
-
-  // Translates the title right in sync with horizontal scroll so it stays
-  // pinned to the left visual edge of the viewport.
-  const labelStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: scrollX.value + VIEW_OFFSET_X }],
-  }));
 
   return (
     <View>
-      {/* Title strip — spans full canvas width; label sticks to the left edge */}
+      {/* Title strip — background only. The title itself is drawn by
+          LaneLabelOverlay, outside the horizontal scroller, so that it can stay
+          pinned to the left edge without being animated against the scroll. */}
       <View
         style={{
           width: CANVAS_WIDTH,
           height: STRIP_HEIGHT,
           backgroundColor: colors.timeline.stripBg,
-          justifyContent: 'center',
-          overflow: 'hidden',
         }}
-      >
-        <Animated.View style={[{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8 }, labelStyle]}>
-          <Animated.Text
-            numberOfLines={1}
-            className={'font-family: default'}
-            style={{
-              fontSize: 14,
-              //fontWeight: '300',
-              fontFamily: 'Regular-Default',
-              color: colors.textSecondary,
-            }}
-          >
-            {title}
-          </Animated.Text>
-        </Animated.View>
-      </View>
+      />
 
       {/* Events row — artist blocks positioned absolutely by time offset */}
       <View
