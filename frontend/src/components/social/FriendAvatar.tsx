@@ -51,7 +51,7 @@ export function FriendAvatar({ label, avatarUrl, size = 22, status }: Props) {
       >
         <Text
           style={{
-            fontSize: Math.round(size * 0.42),
+            fontSize: Math.round(size * 0.67),
             color: colors.white,
             fontFamily: 'Bold-Default',
           }}
