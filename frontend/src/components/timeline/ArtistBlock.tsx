@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, View } from 'react-native';
-import Svg, { Defs, Pattern, Rect } from 'react-native-svg';
+import Svg, { ClipPath, Defs, Path, Rect } from 'react-native-svg';
 import { Text } from '../ui/Text';
 import type { DbArtist, DbEvent } from '../../types/backend';
 import { type InterestStatus } from '../../cache/cacheService';
@@ -21,7 +21,29 @@ const STAR_SIZE = 11;
 const CONFLICT_BAR_HEIGHT = 10;
 const CONFLICT_BAR_RAISE = 1; // px the bar sits above the block's top edge ("over" it)
 const CONFLICT_BAR_MIN_WIDTH = 4;
-const CONFLICT_STRIPE = 2; // half-period of the 45° red / dark-red stripes
+const CONFLICT_STRIPE = 2; // perpendicular width of each 45° dark-red band
+
+// Horizontal spacing between stripe start points. At 45° the perpendicular gap
+// is step/√2, so stepping by 2·stripe·√2 makes bands and gaps equally wide.
+const CONFLICT_STRIPE_STEP = CONFLICT_STRIPE * 2 * Math.SQRT2;
+
+/**
+ * 45° hazard stripes across a w×h box, as one path of parallel segments.
+ *
+ * Drawn explicitly rather than with <Pattern patternTransform="rotate(45)">:
+ * react-native-svg discards patternTransform on iOS — RNSVGPainter applies its
+ * `_transform` only in paintLinearGradient/paintRadialGradient, never in
+ * paintPattern — so the rotation never reached the tiling and the stripes came
+ * out as repeating fragments. One Path keeps this to a single SVG node.
+ */
+function stripePath(w: number, h: number): string {
+  let d = '';
+  // Start a full box-height to the left so the first stripes still cross x=0.
+  for (let x = -h; x < w; x += CONFLICT_STRIPE_STEP) {
+    d += `M${x.toFixed(2)},${h} L${(x + h).toFixed(2)},0 `;
+  }
+  return d;
+}
 
 type Props = {
   event: DbEvent;
@@ -124,7 +146,7 @@ export function ArtistBlock({ event, artist, dayStart, status, categoryColor, on
       {/* Conflict markers — 45° red / dark-red striped bars laid OVER the block,
           one per overlap interval */}
       {conflictBars.map((bar) => {
-        const patternId = `conflictStripes-${bar.key}`;
+        const clipId = `conflictClip-${bar.key}`;
         return (
           <Svg
             key={bar.key}
@@ -133,19 +155,20 @@ export function ArtistBlock({ event, artist, dayStart, status, categoryColor, on
             height={CONFLICT_BAR_HEIGHT}
             style={{ position: 'absolute', bottom: -CONFLICT_BAR_RAISE, left: bar.left }}
           >
+            {/* The stripes start off-box on both sides so they reach the corners;
+                clip them back to the bar. */}
             <Defs>
-              <Pattern
-                id={patternId}
-                width={CONFLICT_STRIPE * 2}
-                height={CONFLICT_STRIPE * 2}
-                patternUnits="userSpaceOnUse"
-                patternTransform="rotate(45)"
-              >
-                <Rect width={CONFLICT_STRIPE * 2} height={CONFLICT_STRIPE * 2} fill={colors.danger} />
-                <Rect width={CONFLICT_STRIPE} height={CONFLICT_STRIPE * 2} fill={colors.dangerMuted} />
-              </Pattern>
+              <ClipPath id={clipId}>
+                <Rect width={bar.barWidth} height={CONFLICT_BAR_HEIGHT} />
+              </ClipPath>
             </Defs>
-            <Rect width={bar.barWidth} height={CONFLICT_BAR_HEIGHT} fill={`url(#${patternId})`} />
+            <Rect width={bar.barWidth} height={CONFLICT_BAR_HEIGHT} fill={colors.danger} />
+            <Path
+              d={stripePath(bar.barWidth, CONFLICT_BAR_HEIGHT)}
+              stroke={colors.dangerMuted}
+              strokeWidth={CONFLICT_STRIPE}
+              clipPath={`url(#${clipId})`}
+            />
           </Svg>
         );
       })}
