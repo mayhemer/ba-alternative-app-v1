@@ -31,6 +31,10 @@ export const NOW_LINE_ARROW_SIZE = 7;  // half-width and height of the now-line 
 export const NOW_BUTTON_ARROW_SIZE = 7;  // half-width and height of the now-line arrow on the day button
 export const CONTENT_MAX_WIDTH = 700; // max width for centred bottom bar / UI content
 
+// Event-block title size at full scale; narrow blocks step down once by
+// TEXT_SHRINK_SCALE — see utils/textFit.
+export const BLOCK_FONT_SIZE = 12;
+
 // ── Time helpers ──────────────────────────────────────────────────────────────
 
 /** Map a Unix-ms timestamp to a canvas X coordinate for the given day. */

@@ -9,6 +9,10 @@ export type ColorToken = keyof typeof colors;
 
 export const MAX_CONTENT_WIDTH = 700;
 
+// Single step-down applied to a label that will not fit its box at full size.
+// The one scale every fitted label shares — see utils/textFit.
+export const TEXT_SHRINK_SCALE = 0.8;
+
 // ── Layout mode breakpoints ───────────────────────────────────────────────────
 // Both are tested against a *dimension*, never against width alone: a landscape
 // phone is wide (844 pt) but not roomy, and treating it as a desktop gives it a

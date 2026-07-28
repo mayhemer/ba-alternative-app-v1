@@ -11,6 +11,7 @@ import { decodeCategoryColor } from '../utils/color';
 import { colors } from '../styling/tokens';
 import type { DbArtist, DbEvent } from '../types/backend';
 import { useArtistDerived } from '../hooks/useArtistDerived';
+import { fitFontSize } from '../utils/textFit';
 import { useTimelineFilter } from '../context/TimelineFilterContext';
 import { navigationRef } from '../navigation/navigationRef';
 import { Exclamation, ExclamationTouchable } from '../components/ui/Exclamation';
@@ -18,6 +19,19 @@ import { useSocialData } from '../context/SocialContext';
 import { FriendPickList } from '../components/social/FriendPickList';
 
 const STREAMING_ICON_SIZE = 24;
+
+// Header title size at full scale; long names step down once by
+// TEXT_SHRINK_SCALE — see utils/textFit.
+const TITLE_FONT_SIZE = 24;
+const TITLE_LINES = 3;
+const TITLE_MARGIN_RIGHT = 8;
+
+// Widths of the controls sharing the title's row, used to work out how much
+// room the title actually has.
+const STAR_BUTTON_WIDTH = 32;   // StarButton size="large" icon
+const CONFLICT_ICON_WIDTH = 24; // ExclamationTouchable default size
+const HEADER_ROW_GAP = 4;
+const WEB_CLOSE_WIDTH = 30;     // ✕ glyph plus its marginLeft
 
 const HTML_TAG_STYLES = {
   body: { color: colors.textPrimary, fontSize: 14, lineHeight: 22 },
@@ -35,6 +49,17 @@ export function ArtistDetailHeader({ artist }: Props) {
   const hasConflict = conflictMap.size > 0;
   const friends = friendsByArtist[artist.artistId] ?? [];
 
+  // Title size is picked here rather than by adjustsFontSizeToFit — see
+  // utils/textFit for why that prop cannot hold a floor under Fabric. The
+  // controls to the right of the title vary with state, so subtract only the
+  // ones actually rendered.
+  const controlsWidth =
+    STAR_BUTTON_WIDTH +
+    (hasConflict ? CONFLICT_ICON_WIDTH + HEADER_ROW_GAP : 0) +
+    (isWeb ? WEB_CLOSE_WIDTH : 0);
+  const titleWidth = innerWidth - hPad * 2 - TITLE_MARGIN_RIGHT - controlsWidth;
+  const titleFontSize = fitFontSize(artist.name.length, titleWidth, TITLE_LINES, TITLE_FONT_SIZE);
+
   return (
     <View style={{
       alignSelf: 'center',
@@ -45,16 +70,14 @@ export function ArtistDetailHeader({ artist }: Props) {
     }}>
       <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
         <Text
-          numberOfLines={3}
-          adjustsFontSizeToFit
-          minimumFontScale={0.8}
+          numberOfLines={TITLE_LINES}
           style={{
             color: colors.textPrimary,
             flex: 1,
-            fontSize: 24,
+            fontSize: titleFontSize,
             fontWeight: '700',
             fontFamily: 'Bold-Default',
-            marginRight: 8,
+            marginRight: TITLE_MARGIN_RIGHT,
           }}
         >
           {artist.name}

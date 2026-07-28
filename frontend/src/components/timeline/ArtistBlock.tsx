@@ -4,12 +4,19 @@ import Svg, { Defs, Pattern, Rect } from 'react-native-svg';
 import { Text } from '../ui/Text';
 import type { DbArtist, DbEvent } from '../../types/backend';
 import { type InterestStatus } from '../../cache/cacheService';
-import { timeToX, formatTime, LANE_HEIGHT, MIN_BLOCK_WIDTH, PIXELS_PER_MS } from './timelineLayout';
+import { timeToX, formatTime, BLOCK_FONT_SIZE, LANE_HEIGHT, MIN_BLOCK_WIDTH, PIXELS_PER_MS } from './timelineLayout';
+import { fitFontSize } from '../../utils/textFit';
 import { colors } from '../../styling/tokens';
 import { dimColor } from '../../utils/color';
 import { StarIndicator } from '../StarButton';
 import { useSocialData } from '../../context/SocialContext';
 import type { ConflictOverlap } from '../../utils/conflictUtils';
+
+// Block chrome — shared between the rendered styles and the label width maths
+// below, so the two cannot drift apart.
+const BLOCK_PADDING = 8;
+const BLOCK_BORDER_LEFT = 3;
+const STAR_SIZE = 11;
 
 const CONFLICT_BAR_HEIGHT = 10;
 const CONFLICT_BAR_RAISE = 1; // px the bar sits above the block's top edge ("over" it)
@@ -53,6 +60,15 @@ export function ArtistBlock({ event, artist, dayStart, status, categoryColor, on
 
   const oneWordArtist = artist.name.indexOf(' ') === -1;
 
+  // Title size is picked here rather than by adjustsFontSizeToFit — see
+  // utils/textFit for why that prop cannot hold a floor under Fabric.
+  // StarIndicator renders nothing for 'none', so its column only costs width
+  // when the artist is actually marked.
+  const labelLines = oneWordArtist ? 1 : 2;
+  const labelWidth =
+    width - BLOCK_BORDER_LEFT - BLOCK_PADDING * 2 - (status === 'none' ? 0 : STAR_SIZE);
+  const labelFontSize = fitFontSize(artist.name.length, labelWidth, labelLines, BLOCK_FONT_SIZE);
+
   // Conflict bar geometry — one bar per overlap interval, each spanning only the
   // overlapping portion of the block (mirrors the conflict detail mini-timeline).
   const conflictBars = (conflictOverlaps ?? []).map((interval) => {
@@ -79,20 +95,18 @@ export function ArtistBlock({ event, artist, dayStart, status, categoryColor, on
           flex: 1,
           backgroundColor: bg,
           borderColor: border,
-          borderLeftWidth: 3,
+          borderLeftWidth: BLOCK_BORDER_LEFT,
           overflow: 'hidden',
           justifyContent: 'flex-start',
-          padding: 8,
+          padding: BLOCK_PADDING,
         }}
       >
         {showLabel ? (
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', flex: 1 }}>
             <View style={{ flex: 1 }}>
               <Text
-                numberOfLines={oneWordArtist ? 1 : 2}
-                adjustsFontSizeToFit
-                minimumFontScale={0.8}
-                style={{ fontSize: 12, color: colors.textPrimary, fontFamily: 'Bold-Default' }}
+                numberOfLines={labelLines}
+                style={{ fontSize: labelFontSize, color: colors.textPrimary, fontFamily: 'Bold-Default' }}
               >
                 {artist.name}
               </Text>
@@ -101,7 +115,7 @@ export function ArtistBlock({ event, artist, dayStart, status, categoryColor, on
               </Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-              <StarIndicator status={status} size={11} />
+              <StarIndicator status={status} size={STAR_SIZE} />
             </View>
           </View>
         ) : null}
