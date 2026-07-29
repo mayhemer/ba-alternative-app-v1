@@ -4,17 +4,17 @@
   "main": "index.ts",
   "scripts": {
     "tscheck": "npx tsc --noEmit --noUnusedLocals --noUnusedParameters",
+    "doctor": "npx expo-doctor",
     "gen:icons": "node scripts/gen-icons.js",
     "start": "npx expo start",
     "android": "npx expo run:android",
+    "ios": "npx expo run:ios",
+    "ios:device": "npx expo run:ios --device",
+    "web": "npx expo start --web",
     "prebuild:ios": "npx expo prebuild --platform ios --clean",
     "build:ios:preview": "eas build --platform ios --profile preview",
     "build:android:preview": "eas build --platform android --profile preview",
-    "doctor": "npx expo-doctor",
-    "ios": "npx expo run:ios",
-    "ios:device": "npx expo run:ios --device",
-    "build:web": "npx expo export --platform web",
-    "web": "npx expo start --web"
+    "build:web": "npx expo export --platform web"
   },
   "dependencies": {
     "@babel/core": "^7.26.0",
