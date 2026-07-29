@@ -45,9 +45,7 @@ type Props = { artist: DbArtist };
 
 export function ArtistDetailHeader({ artist }: Props) {
   const { closeDetail, expandDetail, status, innerWidth, hPad, isWeb, meta, handleStarPress, conflictMap } = useArtistDerived(artist);
-  const { friendsByArtist } = useSocialData();
   const hasConflict = conflictMap.size > 0;
-  const friends = friendsByArtist[artist.artistId] ?? [];
 
   // Title size is picked here rather than by adjustsFontSizeToFit — see
   // utils/textFit for why that prop cannot hold a floor under Fabric. The
@@ -97,7 +95,6 @@ export function ArtistDetailHeader({ artist }: Props) {
           {meta}
         </Text>
       )}
-      <FriendPickList friends={friends} />
     </View>
   );
 }
@@ -107,6 +104,8 @@ export function ArtistDetailHeader({ artist }: Props) {
 export function ArtistDetailBody({ artist }: Props) {
   const { closeDetail, content, innerWidth, heroHeight, hPad, isWeb, artistNameForURL, artistWebDomain, width, conflictMap, openConflict } = useArtistDerived(artist);
   const { setSelectedDayStart, requestScrollToTime } = useTimelineFilter();
+  const { friendsByArtist } = useSocialData();
+  const friends = friendsByArtist[artist.artistId] ?? [];
 
   // Jump to this artist's event on the timeline: select its day, center its time,
   // switch to the matching timeline tab (support vs main), and close the sheet.
@@ -151,6 +150,13 @@ export function ArtistDetailBody({ artist }: Props) {
   return (
     <View style={{ width, alignItems: 'center' }}>
       <View style={{ width: innerWidth }}>
+
+        {/* Friends who picked this artist. Lives here rather than in the sticky
+            header so that expanding the list scrolls with the content instead of
+            growing the header. Renders nothing when no friend picked. */}
+        <View style={{ paddingHorizontal: hPad }}>
+          <FriendPickList friends={friends} />
+        </View>
 
         {/* External links to the band */}
         {(artist.isPlayable || artist.url !== '') && (
