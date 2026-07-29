@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
+import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedScrollHandler,
@@ -16,13 +17,57 @@ import { CategoryLane } from './CategoryLane';
 import type { LaneEvent } from './CategoryLane';
 import { TimeRuler } from './TimeRuler';
 import { LaneLabelOverlay } from './LaneLabelOverlay';
-import { CANVAS_WIDTH, VIEW_OFFSET_X, VIEW_WIDTH, PIXELS_PER_MS, labelRepeatPx, timeToX } from './timelineLayout';
+import {
+  CANVAS_WIDTH,
+  LANE_HEIGHT,
+  RULER_HEIGHT,
+  STRIP_HEIGHT,
+  VIEW_OFFSET_X,
+  VIEW_WIDTH,
+  PIXELS_PER_MS,
+  labelRepeatPx,
+  timeToX,
+} from './timelineLayout';
 import { currentTimeMs } from '../../utils/clock';
 import type { DbArtist, DbCategory, DbEvent } from '../../types/backend';
 import type { ConflictOverlap } from '../../utils/conflictUtils';
 
+// Stable identity for a category that ended up with no events, so the lane's
+// memo is not defeated by a fresh literal on every render.
+const NO_LANE_EVENTS: LaneEvent[] = [];
+
 // Horizontal space kept to the left of an event's start when scrolling to it.
 const LEFT_PADDING_X = 15 * 60 * 1000 * PIXELS_PER_MS; // 15 minutes
+
+// ── Progressive mount ─────────────────────────────────────────────────────────
+//
+// A festival day is ~75 blocks across ~15 lanes, and the canvas is roughly nine
+// phone screens wide by three tall — so mounting a day in one go creates several
+// hundred native views of which about a tenth can be seen. On a low-end Android
+// that pinned the UI thread for well over a second on every day switch.
+//
+// The day is mounted in slices instead: first the span actually on screen, then
+// one further viewport in every direction per frame until the whole day is up.
+// The window only ever grows and stops once the day is complete, so a settled
+// day behaves exactly as before — scrolling and panning trigger no JS render.
+// The lanes themselves are always rendered at full height, so nothing reflows as
+// blocks appear.
+
+// Viewport assumed for the first slice, before onLayout has measured anything,
+// and a floor under the growth step so a degenerate measurement cannot leave the
+// window creeping towards the end of the canvas for hundreds of frames.
+const MOUNT_FALLBACK_WIDTH = 420;
+const MOUNT_FALLBACK_HEIGHT = 640;
+const MOUNT_MIN_STEP = 200;
+
+/** Canvas-X span currently mounted, plus the day it was anchored for. */
+type MountWindow = { day: number; fromX: number; toX: number; fromY: number; toY: number };
+
+// Anything outside the scrollable window is permanently clipped, so the X span
+// is held within it — those blocks are then never mounted at all.
+function clampToViewWindow(x: number): number {
+  return Math.min(VIEW_OFFSET_X + VIEW_WIDTH, Math.max(VIEW_OFFSET_X, x));
+}
 
 type Props = {
   screenKey: string;
@@ -97,6 +142,14 @@ export function TimelineView({
     },
   }, [persistCurrentScroll]);
 
+  // Vertical offset of the lane stack. Only ever read at the moment of a day
+  // switch, to know which lanes to mount first, so a coarsely-sampled ref is
+  // enough — and unlike a shared value it can be read during render.
+  const scrollYRef = useRef(0);
+  const onVerticalScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>): void => {
+    scrollYRef.current = e.nativeEvent.contentOffset.y;
+  }, []);
+
   // ── Now-line position ────────────────────────────────────────────────────────
   // Computed once here and shared with every NowLine. A single interval keeps it
   // current; the value is consumed on the UI thread, so updates cause no JS re-renders.
@@ -138,6 +191,55 @@ export function TimelineView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDayStart]);
 
+  // ── Progressive mount window ────────────────────────────────────────────────
+
+  const mountWidth  = Math.max(MOUNT_MIN_STEP, viewportWidth > 0 ? viewportWidth : MOUNT_FALLBACK_WIDTH);
+  const mountHeight = Math.max(MOUNT_MIN_STEP, areaHeight    > 0 ? areaHeight    : MOUNT_FALLBACK_HEIGHT);
+
+  const [mountWindow, setMountWindow] = useState<MountWindow>({ day: 0, fromX: 0, toX: 0, fromY: 0, toY: 0 });
+
+  // Re-anchored during render rather than in an effect: an effect would only run
+  // after the new day had already been rendered in full, which is the cost this
+  // whole mechanism exists to avoid. The horizontal offset is the one the restore
+  // effect above scrolls to, so the first slice is the span the user is about to
+  // see; the vertical one is wherever the lane stack is already parked.
+  if (mountWindow.day !== selectedDayStart) {
+    const anchorX = (getScroll(screenKey, selectedDayStart) ?? 0) + VIEW_OFFSET_X;
+    const anchorY = scrollYRef.current;
+    setMountWindow({
+      day: selectedDayStart,
+      fromX: clampToViewWindow(anchorX),
+      toX: clampToViewWindow(anchorX + mountWidth),
+      fromY: anchorY,
+      toY: anchorY + mountHeight,
+    });
+  }
+
+  // laneOffsets are measured from the top of the lane stack; canvasHeight counts
+  // the ruler, which sits outside both scrollers.
+  const laneStackHeight = canvasHeight - RULER_HEIGHT;
+  const mountComplete =
+    mountWindow.fromX <= VIEW_OFFSET_X &&
+    mountWindow.toX   >= VIEW_OFFSET_X + VIEW_WIDTH &&
+    mountWindow.fromY <= 0 &&
+    mountWindow.toY   >= laneStackHeight;
+
+  useEffect(() => {
+    if (mountComplete) { return; }
+    // One slice per frame: the JS thread hands this one over and the UI thread
+    // gets to draw it and process touches before the next arrives.
+    const frame = requestAnimationFrame(() => {
+      setMountWindow((w) => ({
+        day: w.day,
+        fromX: clampToViewWindow(w.fromX - mountWidth),
+        toX: clampToViewWindow(w.toX + mountWidth),
+        fromY: w.fromY - mountHeight,
+        toY: w.toY + mountHeight,
+      }));
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [mountComplete, mountWindow, mountWidth, mountHeight]);
+
   // ── Scroll to a specific time (centered) ─────────────────────────────────────
   // Fired both by the day-switcher "now" button and when navigating here from an
   // event (e.g. the artist detail). Deferred so it runs after the day-switch
@@ -157,6 +259,15 @@ export function TimelineView({
       // its left padding (long events).
       const centredOffset = centreX - scrollViewWidthRef.current / 2;
       const targetX = Math.max(0, Math.min(centredOffset, startX - LEFT_PADDING_X));
+      // A jump can land far outside the slice this day was mounted at, so widen
+      // the window to cover where we are about to be. It only ever grows, so a
+      // day that has already finished mounting is left alone.
+      setMountWindow((w) => {
+        const fromX = clampToViewWindow(Math.min(w.fromX, targetX + VIEW_OFFSET_X));
+        const toX   = clampToViewWindow(Math.max(w.toX, targetX + VIEW_OFFSET_X + scrollViewWidthRef.current));
+        if (fromX === w.fromX && toX === w.toX) { return w; }
+        return { ...w, fromX, toX };
+      });
       scheduleOnUI(() => { scrollTo(horizontalScrollRef, targetX, 0, true); });
     }, 120);
     return () => clearTimeout(timer);
@@ -182,7 +293,12 @@ export function TimelineView({
   return (
     <View style={{ flex: 1 }} onLayout={(e) => { setAreaHeight(e.nativeEvent.layout.height); }}>
       <TimeRuler dayStart={selectedDayStart} scrollX={scrollX} nowX={nowX} />
-      <ScrollView className="flex-1 bg-background" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        className="flex-1 bg-background"
+        showsVerticalScrollIndicator={false}
+        scrollEventThrottle={100}
+        onScroll={onVerticalScroll}
+      >
         {/* Wrapper so the label overlay can sit beside the horizontal scroller:
             inside the vertical one (so it scrolls with the lanes) but outside the
             horizontal one (so horizontal scroll cannot move it). */}
@@ -203,21 +319,32 @@ export function TimelineView({
             <View style={{ width: VIEW_WIDTH, overflow: 'hidden' }}>
               {/* Full canvas shifted left so 09:30 aligns with x=0 */}
               <View style={{ width: CANVAS_WIDTH, position: 'relative', transform: [{ translateX: -VIEW_OFFSET_X }], paddingBottom: Math.max(30 + bottomClearance, areaHeight - canvasHeight)}}>
-                {visibleCategories.map((cat) => (
-                  <CategoryLane
-                    key={cat.categoryId}
-                    category={cat}
-                    events={eventsByCategory[cat.categoryId] ?? []}
-                    dayStart={selectedDayStart}
-                    nowX={nowX}
-                    getStatus={getStatus}
-                    onBlockPress={onBlockPress}
-                    labelRepeat={labelRepeat}
-                    laneHeight={laneHeights[cat.categoryId]}
-                    eventSubRows={categorySubRows?.[cat.categoryId]}
-                    conflictOverlaps={conflictOverlaps}
-                  />
-                ))}
+                {visibleCategories.map((cat) => {
+                  const laneTop    = laneOffsets[cat.categoryId] ?? 0;
+                  const laneBottom = laneTop + STRIP_HEIGHT + (laneHeights[cat.categoryId] ?? LANE_HEIGHT);
+                  // A lane below the window ignores the X span, so feed it a
+                  // constant one — its props then stop changing per step and its
+                  // memo skips it outright.
+                  const mountEvents = laneBottom >= mountWindow.fromY && laneTop <= mountWindow.toY;
+                  return (
+                    <CategoryLane
+                      key={cat.categoryId}
+                      category={cat}
+                      events={eventsByCategory[cat.categoryId] ?? NO_LANE_EVENTS}
+                      dayStart={selectedDayStart}
+                      nowX={nowX}
+                      getStatus={getStatus}
+                      onBlockPress={onBlockPress}
+                      labelRepeat={labelRepeat}
+                      laneHeight={laneHeights[cat.categoryId]}
+                      eventSubRows={categorySubRows?.[cat.categoryId]}
+                      conflictOverlaps={conflictOverlaps}
+                      mountEvents={mountEvents}
+                      mountFromX={mountEvents ? mountWindow.fromX : 0}
+                      mountToX={mountEvents ? mountWindow.toX : 0}
+                    />
+                  );
+                })}
               </View>
             </View>
           </Animated.ScrollView>

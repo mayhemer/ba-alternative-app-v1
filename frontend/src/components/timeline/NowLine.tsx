@@ -12,7 +12,7 @@ type Props = {
   showArrow?: boolean;
 };
 
-export function NowLine({ nowX, canvasHeight, top = 0, showArrow = false }: Props) {
+function NowLineBase({ nowX, canvasHeight, top = 0, showArrow = false }: Props) {
   // Position and visibility are driven on the UI thread — no JS re-renders.
   const lineStyle = useAnimatedStyle(() => {
     const x = nowX.value;
@@ -58,3 +58,7 @@ export function NowLine({ nowX, canvasHeight, top = 0, showArrow = false }: Prop
     </Animated.View>
   );
 }
+
+// One per lane, and all its props are stable — memoising keeps the whole set out
+// of every progressive-mount step.
+export const NowLine = React.memo(NowLineBase);

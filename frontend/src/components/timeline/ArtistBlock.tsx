@@ -66,7 +66,13 @@ type Props = {
   categoryColor: string;
   /** Gap between repeated labels on long blocks; scales with the viewport. */
   labelRepeat: number;
-  onPress: () => void;
+  /**
+   * Takes the block's own event/artist rather than being pre-bound by the lane:
+   * a per-block closure would be a fresh function on every lane render and defeat
+   * the memoisation below, which is what keeps a day's progressive mount from
+   * re-rendering everything already on screen at each step.
+   */
+  onPress: (event: DbEvent, artist: DbArtist) => void;
   subRow?: number;
   conflictOverlaps?: ConflictOverlap[];
 };
@@ -84,7 +90,7 @@ function blockStyle(_status: InterestStatus, categoryColor: string): BlockStyle 
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function ArtistBlock({ event, artist, dayStart, status, categoryColor, labelRepeat, onPress, subRow = 0, conflictOverlaps }: Props) {
+function ArtistBlockBase({ event, artist, dayStart, status, categoryColor, labelRepeat, onPress, subRow = 0, conflictOverlaps }: Props) {
   const x     = timeToX(event.dateFrom, dayStart);
   const right = timeToX(event.dateTo,   dayStart);
   const width = Math.max(MIN_BLOCK_WIDTH, right - x);
@@ -162,7 +168,7 @@ export function ArtistBlock({ event, artist, dayStart, status, categoryColor, la
       }}
     >
       <TouchableOpacity
-        onPress={onPress}
+        onPress={() => { onPress(event, artist); }}
         style={{
           flex: 1,
           backgroundColor: bg,
@@ -199,9 +205,10 @@ export function ArtistBlock({ event, artist, dayStart, status, categoryColor, la
                 </View>
               ))}
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-              <StarIndicator status={status} size={STAR_SIZE} />
-            </View>
+            {/* Rendered bare rather than in a row wrapper: StarIndicator is a
+                single glyph, so the wrapper only ever added one more native view
+                per block — and there are ~75 blocks in a day. */}
+            <StarIndicator status={status} size={STAR_SIZE} />
           </View>
         ) : null}
       </TouchableOpacity>
@@ -238,3 +245,13 @@ export function ArtistBlock({ event, artist, dayStart, status, categoryColor, la
     </View>
   );
 }
+
+/**
+ * Memoised: a day's blocks are mounted progressively (see TimelineView), so a
+ * lane re-renders once per expansion step. Every prop is either a primitive or
+ * an object owned by the cache / a memo — `event` and `artist` come straight from
+ * cacheService, `onPress` is a stable callback, and `conflictOverlaps` is
+ * `undefined` for all but the conflicting blocks — so a shallow compare skips
+ * everything already on screen and only the newly-revealed blocks render.
+ */
+export const ArtistBlock = React.memo(ArtistBlockBase);

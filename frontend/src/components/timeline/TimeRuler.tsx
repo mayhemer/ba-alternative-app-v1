@@ -13,7 +13,7 @@ type Props = {
   nowX: SharedValue<number>;
 };
 
-export function TimeRuler(_props: Props) {
+function TimeRulerBase(_props: Props) {
   const { scrollX, nowX } = _props;
   const ticks = Array.from({ length: 25 }, (_, i) => i);
 
@@ -53,3 +53,8 @@ export function TimeRuler(_props: Props) {
     </View>
   );
 }
+
+// 25 hour ticks, each a view plus a text. Nothing here depends on anything that
+// changes while a day is mounting progressively, so memoising keeps the ruler
+// out of every expansion step.
+export const TimeRuler = React.memo(TimeRulerBase);

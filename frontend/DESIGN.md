@@ -148,6 +148,31 @@ Three states, applied consistently across all views:
 
 - DaySwitcher.
 
+### Progressive mount
+
+The canvas is far larger than the viewport — roughly nine phone screens wide by
+three tall — so a festival day's ~75 blocks amount to several hundred native
+views of which about a tenth can be seen. Mounting a day in one go blocked the
+UI thread for well over a second on a low-end Android at every day switch.
+
+A day is therefore mounted in slices. `TimelineView` anchors a canvas window at
+the offsets the day is about to be shown at — the persisted horizontal scroll
+for that day, and the current vertical scroll — renders only the blocks inside
+it, then grows the window by one viewport in every direction per frame until the
+whole day is up. Lanes are always rendered at full height, so nothing reflows as
+blocks appear.
+
+The window only grows and stops once the day is complete, so a settled day
+behaves exactly as it did before: scrolling and panning drive no JS render at
+all. `CategoryLane` and `ArtistBlock` are memoised to make this work — without
+them each expansion step would re-render everything already on screen. That is
+also why a block takes `onPress(event, artist)` rather than a pre-bound closure:
+the closure would be a new function on every lane render.
+
+Blurred screens are frozen (`freezeOnBlur`), because the selected day is shared
+by both timeline screens and a switch would otherwise repeat the whole mount for
+one that is not on screen.
+
 ---
 
 ## UI Component Inventory

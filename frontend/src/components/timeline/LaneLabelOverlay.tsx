@@ -30,7 +30,7 @@ type Props = {
  * strip offsets come from useTimelineData, which owns the same accumulation that
  * produces canvasHeight.
  */
-export function LaneLabelOverlay({ categories, laneOffsets }: Props) {
+function LaneLabelOverlayBase({ categories, laneOffsets }: Props) {
   return (
     <View
       pointerEvents="none"
@@ -60,3 +60,7 @@ export function LaneLabelOverlay({ categories, laneOffsets }: Props) {
     </View>
   );
 }
+
+// Both props come from useTimelineData memos, so this only re-renders when the
+// lane stack itself changes — not once per progressive-mount step.
+export const LaneLabelOverlay = React.memo(LaneLabelOverlayBase);
