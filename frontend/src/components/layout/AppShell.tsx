@@ -79,10 +79,11 @@ export function AppShell() {
         {!isShort && <BottomBar />}
       </SafeAreaView>
 
-      {/* Artist detail bottom sheet — always mounted, sheet manages its own visibility */}
+      {/* Artist detail bottom sheet — in the tree only while it has an artist to
+          show, see hooks/useBottomSheetMount */}
       <ArtistDetailSheet />
 
-      {/* Conflict detail sheet — always mounted, sheet manages its own visibility */}
+      {/* Conflict detail sheet — likewise only while it has a conflict to show */}
       <ConflictDetailSheet />
 
       {/* Feedback toast — rendered last so it's always above backdrop and sheet */}

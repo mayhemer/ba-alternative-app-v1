@@ -158,6 +158,22 @@ therefore always exist; only their sizes change. For the same reason that effect
 The collapsed stop is sized in points, not a percentage — `'40%'` of a landscape phone is ~150 px,
 barely the title row. It is floored at 260 px and capped at 75 % of the viewport.
 
+Both sheets are in the tree **only while they have something to show**, which `useBottomSheetMount`
+(`src/hooks/useBottomSheetMount.ts`) arranges. A mounted-but-closed sheet does not survive a
+rotation: `@gorhom/bottom-sheet` (through 5.2.14) never re-evaluates a closed sheet's resting
+position when its container is resized, because `getEvaluatedPosition` ends at
+`detents[currentIndex]` and the closed index is `-1`, so `evaluatePosition` bails on the resulting
+`undefined`. A sheet closed in landscape stays parked at the landscape container height, which after
+a rotation to portrait sits half-way up the far taller container — an empty grey panel. (Portrait →
+landscape hides the flaw: the stale, larger height is below the shorter container.) Opening is
+therefore expressed as the sheet's mount `index`, not `snapToIndex`, since a freshly mounted sheet
+drops `snapToIndex` until its first layout; the unmount waits for `onClose` so the slide-down still
+plays when the detail is dismissed from code rather than by gesture.
+
+`enableDynamicSizing` — on by default — is off on both sheets: it splices a content-sized stop into
+`detents` and re-sorts, so with short content index 1 stops being `'100%'` and mounting at a fixed
+index lands on the wrong stop.
+
 ### Landscape trade-off on the timeline
 
 Landscape roughly doubles the visible time span but costs lane height. After BottomBar, ruler and

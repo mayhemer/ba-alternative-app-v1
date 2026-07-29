@@ -9,6 +9,7 @@ import { useConflictDetail } from '../../context/ConflictDetailContext';
 import { useArtistDetail } from '../../context/ArtistDetailContext';
 import { useInterest } from '../../context/InterestContext';
 import { useCacheRefresh, useSelectedSlug } from '../../store/AppContext';
+import { useBottomSheetMount } from '../../hooks/useBottomSheetMount';
 import { getArtists, getStages } from '../../cache/cacheService';
 import { getStageLocalized } from '../../utils/localization';
 import { StarIndicator } from '../StarButton';
@@ -266,17 +267,29 @@ export function ConflictDetailSheet() {
   const bumpRevision = useCallback(() => setCacheRevision((n) => n + 1), []);
   useCacheRefresh(bumpRevision);
 
+  const { mountIndex, onClosed } = useBottomSheetMount(
+    conflictState.sourceEvent !== null,
+    0,
+    sheetRef,
+  );
+
+  // Opening and closing belong to useBottomSheetMount; this only re-expands the
+  // sheet when a different conflict is opened while it is already on screen.
   useEffect(() => {
-    if (conflictState.sourceEvent === null) {
-      sheetRef.current?.close();
-    } else {
-      sheetRef.current?.expand();
-    }
-  }, [conflictState.sourceEvent]);
+    if (mountIndex === null || conflictState.sourceEvent === null) { return; }
+    sheetRef.current?.expand();
+  }, [conflictState.sourceEvent, mountIndex]);
 
   const handleClose = useCallback((): void => {
     closeConflict();
   }, [closeConflict]);
+
+  // The sheet's own `onClose`, which fires once its slide-down has finished — only
+  // then may the sheet leave the tree.
+  const handleSheetClosed = useCallback((): void => {
+    onClosed();
+    closeConflict();
+  }, [onClosed, closeConflict]);
 
   const artistById = useMemo(() => {
     void cacheRevision; // invalidate when cache refreshes
@@ -391,15 +404,20 @@ export function ConflictDetailSheet() {
     );
   }
 
+  // Nothing to show — and a mounted-but-closed sheet is exactly what resurfaces
+  // as an empty panel after a rotation. See useBottomSheetMount.
+  if (mountIndex === null) { return null; }
+
   return (
     <BottomSheet
       ref={sheetRef}
-      index={-1}
+      index={mountIndex}
       snapPoints={SNAP_POINTS}
+      enableDynamicSizing={false}
       topInset={top}
       animationConfigs={{ reduceMotion: ReduceMotion.Never }}
       enablePanDownToClose
-      onClose={handleClose}
+      onClose={handleSheetClosed}
       backdropComponent={Backdrop}
       handleIndicatorStyle={{
         backgroundColor: colors.borderMid,
