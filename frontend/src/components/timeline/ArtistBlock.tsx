@@ -4,7 +4,14 @@ import Svg, { ClipPath, Defs, Path, Rect } from 'react-native-svg';
 import { Text } from '../ui/Text';
 import type { DbArtist, DbEvent } from '../../types/backend';
 import { type InterestStatus } from '../../cache/cacheService';
-import { timeToX, formatTime, BLOCK_FONT_SIZE, LANE_HEIGHT, MIN_BLOCK_WIDTH, PIXELS_PER_MS } from './timelineLayout';
+import {
+  timeToX,
+  formatTime,
+  BLOCK_FONT_SIZE,
+  LANE_HEIGHT,
+  MIN_BLOCK_WIDTH,
+  PIXELS_PER_MS,
+} from './timelineLayout';
 import { fitFontSize } from '../../utils/textFit';
 import { colors } from '../../styling/tokens';
 import { dimColor } from '../../utils/color';
@@ -16,6 +23,13 @@ import type { ConflictOverlap } from '../../utils/conflictUtils';
 const BLOCK_PADDING = 8;
 const BLOCK_BORDER_LEFT = 3;
 const STAR_SIZE = 11;
+
+// Repeated labels on long blocks. A repeat is skipped rather than rendered as a
+// clipped sliver once less than this remains before the star.
+const LABEL_MIN_WIDTH = 90;
+// Breathing room between one copy and the next, so a long name ellipsizes
+// instead of running into the following one.
+const LABEL_GAP = 12;
 
 const CONFLICT_BAR_HEIGHT = 10;
 const CONFLICT_BAR_RAISE = 1; // px the bar sits above the block's top edge ("over" it)
@@ -50,6 +64,8 @@ type Props = {
   dayStart: number;
   status: InterestStatus;
   categoryColor: string;
+  /** Gap between repeated labels on long blocks; scales with the viewport. */
+  labelRepeat: number;
   onPress: () => void;
   subRow?: number;
   conflictOverlaps?: ConflictOverlap[];
@@ -68,7 +84,7 @@ function blockStyle(_status: InterestStatus, categoryColor: string): BlockStyle 
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function ArtistBlock({ event, artist, dayStart, status, categoryColor, onPress, subRow = 0, conflictOverlaps }: Props) {
+export function ArtistBlock({ event, artist, dayStart, status, categoryColor, labelRepeat, onPress, subRow = 0, conflictOverlaps }: Props) {
   const x     = timeToX(event.dateFrom, dayStart);
   const right = timeToX(event.dateTo,   dayStart);
   const width = Math.max(MIN_BLOCK_WIDTH, right - x);
@@ -86,7 +102,44 @@ export function ArtistBlock({ event, artist, dayStart, status, categoryColor, on
   const labelLines = oneWordArtist ? 1 : 2;
   const labelWidth =
     width - BLOCK_BORDER_LEFT - BLOCK_PADDING * 2 - (status === 'none' ? 0 : STAR_SIZE);
-  const labelFontSize = fitFontSize(artist.name.length, labelWidth, labelLines, BLOCK_FONT_SIZE);
+
+  // Long blocks repeat their label so one is always near the viewport, offset
+  // from the block's own start. Offsets are measured from the first label, so
+  // the loop bound is the width that label has to work with. No explicit
+  // "is this long?" test is needed — a short block simply produces none.
+  const labelRepeats: number[] = [];
+  for (
+    let offset = labelRepeat;
+    offset + LABEL_MIN_WIDTH <= labelWidth;
+    offset += labelRepeat
+  ) {
+    labelRepeats.push(offset);
+  }
+  const isRepeating = labelRepeats.length > 0;
+  const labelSegmentWidth = labelRepeat - LABEL_GAP;
+
+  // Every copy must be sized alike, so a repeating block measures its font
+  // against one segment rather than the block's full width.
+  const labelFontSize = fitFontSize(
+    artist.name.length,
+    isRepeating ? Math.min(labelWidth, labelSegmentWidth) : labelWidth,
+    labelLines,
+    BLOCK_FONT_SIZE,
+  );
+
+  const labelContent = (
+    <>
+      <Text
+        numberOfLines={labelLines}
+        style={{ fontSize: labelFontSize, color: colors.textPrimary, fontFamily: 'Bold-Default' }}
+      >
+        {artist.name}
+      </Text>
+      <Text numberOfLines={1} style={{ fontSize: 10, color: colors.textPrimary }}>
+        {formatTime(event.dateFrom)}–{formatTime(event.dateTo)}
+      </Text>
+    </>
+  );
 
   // Conflict bar geometry — one bar per overlap interval, each spanning only the
   // overlapping portion of the block (mirrors the conflict detail mini-timeline).
@@ -122,16 +175,29 @@ export function ArtistBlock({ event, artist, dayStart, status, categoryColor, on
       >
         {showLabel ? (
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', flex: 1 }}>
+            {/* Label area. Repeats are positioned against this box, so their
+                offsets are measured from the first label rather than from the
+                block's border — no padding arithmetic. The block already clips,
+                and the offsets stay clear of the star. */}
             <View style={{ flex: 1 }}>
-              <Text
-                numberOfLines={labelLines}
-                style={{ fontSize: labelFontSize, color: colors.textPrimary, fontFamily: 'Bold-Default' }}
-              >
-                {artist.name}
-              </Text>
-              <Text numberOfLines={1} style={{ fontSize: 10, color: colors.textPrimary }}>
-                {formatTime(event.dateFrom)}–{formatTime(event.dateTo)}
-              </Text>
+              {isRepeating ? (
+                <View style={{ maxWidth: labelSegmentWidth }}>{labelContent}</View>
+              ) : (
+                labelContent
+              )}
+              {labelRepeats.map((offset) => (
+                <View
+                  key={offset}
+                  style={{
+                    position: 'absolute',
+                    left: offset,
+                    top: 0,
+                    width: Math.min(labelSegmentWidth, labelWidth - offset),
+                  }}
+                >
+                  {labelContent}
+                </View>
+              ))}
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
               <StarIndicator status={status} size={STAR_SIZE} />

@@ -35,6 +35,48 @@ export const CONTENT_MAX_WIDTH = 700; // max width for centred bottom bar / UI c
 // TEXT_SHRINK_SCALE — see utils/textFit.
 export const BLOCK_FONT_SIZE = 12;
 
+// ── Repeated labels on long blocks ────────────────────────────────────────────
+
+// A long set can span more than the viewport, leaving a wide colour box whose
+// title has scrolled off to the left. Rather than sticking the title to the
+// viewport's edge — which would mean animating against the scroll offset, and
+// so jittering (see DESIGN.md) — the title is simply repeated along the block.
+//
+// The gap scales with the viewport rather than being fixed, because no single
+// interval suits both orientations: one dense enough for portrait litters a
+// landscape screen, and one sparse enough for landscape leaves portrait with
+// bare stretches. Scaling makes repeats appear only when a block is genuinely
+// wider than the screen, and vanish on viewports that can show it whole.
+//
+// Calibrated so the ratio reproduces the gap that reads well on the reference
+// device; it works out a little over one screenful.
+const LABEL_REPEAT_REFERENCE_WIDTH = 402;              // iPhone 17 Pro, portrait
+const LABEL_REPEAT_REFERENCE_PX = 2.5 * PIXELS_PER_HOUR;
+const LABEL_REPEAT_RATIO = LABEL_REPEAT_REFERENCE_PX / LABEL_REPEAT_REFERENCE_WIDTH;
+
+// Quantised to half-hours so that dragging a window edge on web crosses a
+// handful of thresholds rather than changing the value every pixel — each change
+// re-renders every block on screen. The reference gap is a whole number of steps,
+// so quantising leaves the calibration exact.
+const LABEL_REPEAT_STEP_PX = 0.5 * PIXELS_PER_HOUR;
+const LABEL_REPEAT_MIN_PX = PIXELS_PER_HOUR;
+
+/**
+ * Gap between repeated copies of a block's label, for a given timeline viewport
+ * width. Pass the *measured* width of the scroller, not the window: the two
+ * differ whenever the permanent drawer or a safe-area inset takes space.
+ */
+export function labelRepeatPx(viewportWidth: number): number {
+  // Before the first onLayout there is nothing to scale from; fall back to the
+  // reference rather than flashing a burst of very dense labels.
+  if (viewportWidth <= 0) {
+    return LABEL_REPEAT_REFERENCE_PX;
+  }
+  const stepped =
+    Math.round((viewportWidth * LABEL_REPEAT_RATIO) / LABEL_REPEAT_STEP_PX) * LABEL_REPEAT_STEP_PX;
+  return Math.max(LABEL_REPEAT_MIN_PX, stepped);
+}
+
 // ── Time helpers ──────────────────────────────────────────────────────────────
 
 /** Map a Unix-ms timestamp to a canvas X coordinate for the given day. */

@@ -22,6 +22,8 @@ type Props = {
   nowX: SharedValue<number>;
   getStatus: (artistId: string) => InterestStatus;
   onBlockPress: (event: DbEvent, artist: DbArtist) => void;
+  /** Gap between repeated labels on long blocks; scales with the viewport. */
+  labelRepeat: number;
   laneHeight?: number;
   eventSubRows?: Record<string, number>;
   conflictOverlaps: Map<string, ConflictOverlap[]>;
@@ -34,6 +36,7 @@ export function CategoryLane({
   nowX,
   getStatus,
   onBlockPress,
+  labelRepeat,
   laneHeight = LANE_HEIGHT,
   eventSubRows,
   conflictOverlaps,
@@ -73,6 +76,7 @@ export function CategoryLane({
             dayStart={dayStart}
             status={getStatus(artist.artistId)}
             categoryColor={categoryColor}
+            labelRepeat={labelRepeat}
             onPress={() => onBlockPress(event, artist)}
             subRow={eventSubRows?.[event.eventId]}
             conflictOverlaps={conflictOverlaps.get(event.eventId)}

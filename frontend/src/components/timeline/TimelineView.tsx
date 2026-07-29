@@ -16,7 +16,7 @@ import { CategoryLane } from './CategoryLane';
 import type { LaneEvent } from './CategoryLane';
 import { TimeRuler } from './TimeRuler';
 import { LaneLabelOverlay } from './LaneLabelOverlay';
-import { CANVAS_WIDTH, VIEW_OFFSET_X, VIEW_WIDTH, PIXELS_PER_MS, timeToX } from './timelineLayout';
+import { CANVAS_WIDTH, VIEW_OFFSET_X, VIEW_WIDTH, PIXELS_PER_MS, labelRepeatPx, timeToX } from './timelineLayout';
 import { currentTimeMs } from '../../utils/clock';
 import type { DbArtist, DbCategory, DbEvent } from '../../types/backend';
 import type { ConflictOverlap } from '../../utils/conflictUtils';
@@ -50,7 +50,11 @@ export function TimelineView({
   conflictOverlaps,
 }: Props) {
   const [areaHeight, setAreaHeight] = useState(0);
+  // The same measurement in two forms: a ref for the scroll-to-event centring,
+  // which reads it imperatively, and state for the label spacing, which has to
+  // re-render the lanes when the viewport resizes.
   const scrollViewWidthRef = useRef(0);
+  const [viewportWidth, setViewportWidth] = useState(0);
   const { getStatus } = useInterest();
   const { scrollToTimeSignal } = useTimelineFilter();
   const { bottomClearance } = useLayoutMode();
@@ -173,6 +177,8 @@ export function TimelineView({
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
+  const labelRepeat = labelRepeatPx(viewportWidth);
+
   return (
     <View style={{ flex: 1 }} onLayout={(e) => { setAreaHeight(e.nativeEvent.layout.height); }}>
       <TimeRuler dayStart={selectedDayStart} scrollX={scrollX} nowX={nowX} />
@@ -187,7 +193,11 @@ export function TimelineView({
             showsHorizontalScrollIndicator={false}
             scrollEventThrottle={16}
             onScroll={onScroll}
-            onLayout={(e) => { scrollViewWidthRef.current = e.nativeEvent.layout.width; }}
+            onLayout={(e) => {
+              const measured = e.nativeEvent.layout.width;
+              scrollViewWidthRef.current = measured;
+              setViewportWidth(measured);
+            }}
           >
             {/* Clipping wrapper sized to the visible window only */}
             <View style={{ width: VIEW_WIDTH, overflow: 'hidden' }}>
@@ -202,6 +212,7 @@ export function TimelineView({
                     nowX={nowX}
                     getStatus={getStatus}
                     onBlockPress={onBlockPress}
+                    labelRepeat={labelRepeat}
                     laneHeight={laneHeights[cat.categoryId]}
                     eventSubRows={categorySubRows?.[cat.categoryId]}
                     conflictOverlaps={conflictOverlaps}
