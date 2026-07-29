@@ -13,6 +13,11 @@ import type { DbArtist, DbEvent } from '../types/backend';
 import { MAX_CONTENT_WIDTH } from '../styling/tokens';
 import { useLayoutMode } from './useLayoutMode';
 
+// Hero box height as a fraction of its width — 3:2.
+const HERO_ASPECT = 0.666;
+// …and its ceiling as a fraction of the viewport height.
+const HERO_MAX_VIEWPORT_FRACTION = 1;
+
 // ── Shared derived values ─────────────────────────────────────────────────────
 
 export function useArtistDerived(artist: DbArtist) {
@@ -33,10 +38,16 @@ export function useArtistDerived(artist: DbArtist) {
   const isWeb      = Platform.OS === 'web';
   const meta       = [genre, country].filter(Boolean).join('  ·  ');
 
-  // Hero keeps its 3:2 aspect, but never grows past half the viewport — at the
-  // full 700 pt content width it would otherwise be 466 pt tall, more than a
-  // landscape phone has to give.
-  const heroHeight = Math.round(Math.min(innerWidth * 0.666, height * 0.5));
+  // Hero keeps its 3:2 aspect, capped against the viewport height.
+  //
+  // The cap is a full viewport rather than half of one, and only ever binds in
+  // landscape (in portrait the width-derived height is the smaller of the two).
+  // The image is laid out `contentFit: 'contain'` in a box the full content
+  // width, so on a wide screen it is the box's *height* that limits it: halving
+  // that height did not crop the image, it shrank it and padded the sides with
+  // black. Letting the box fill the viewport is what makes the image large,
+  // accepting that it no longer fits on screen alongside the rest of the detail.
+  const heroHeight = Math.round(Math.min(innerWidth * HERO_ASPECT, height * HERO_MAX_VIEWPORT_FRACTION));
 
   const artistNameForURL = encodeURIComponent(artist.name.toLocaleLowerCase());
   let artistWebDomain = '';
