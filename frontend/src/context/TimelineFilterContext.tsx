@@ -19,6 +19,15 @@ import { currentTimeMs } from '../utils/clock';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
+export type ScrollToTimeSignal = {
+  screenKey: string;
+  fromMs: number;
+  toMs: number;
+  /** Lane to centre vertically; undefined leaves the vertical offset alone. */
+  categoryId?: string;
+  counter: number;
+};
+
 type TimelineFilterContextValue = {
   // Available festival days (Unix ms of each day's 06:00).
   // Set by TimelineScreen when it loads events; [] until then.
@@ -35,8 +44,11 @@ type TimelineFilterContextValue = {
 
   // Signals a specific screen's TimelineView to scroll to an event: its centre is
   // centred in the view, but the start is kept visible with 1 h of space to its left.
-  scrollToTimeSignal: { screenKey: string; fromMs: number; toMs: number; counter: number };
-  requestScrollToTime: (screenKey: string, fromMs: number, toMs: number) => void;
+  // categoryId, when given, also centres that category's lane vertically; the
+  // "now" button omits it, since jumping to the current time should not move the
+  // lane the user is looking at.
+  scrollToTimeSignal: ScrollToTimeSignal;
+  requestScrollToTime: (screenKey: string, fromMs: number, toMs: number, categoryId?: string) => void;
 
   // Convenience wrapper: scroll so the current time is centred.
   requestScrollToNow: (screenKey: string) => void;
@@ -54,7 +66,7 @@ export function TimelineFilterProvider({ children }: { children: React.ReactNode
   const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(
     () => new Set(getUiState('hiddenCategories')),
   );
-  const [scrollToTimeSignal, setScrollToTimeSignal] = useState<{ screenKey: string; fromMs: number; toMs: number; counter: number }>({ screenKey: '', fromMs: 0, toMs: 0, counter: 0 });
+  const [scrollToTimeSignal, setScrollToTimeSignal] = useState<ScrollToTimeSignal>({ screenKey: '', fromMs: 0, toMs: 0, counter: 0 });
 
   // ── Stable callbacks ───────────────────────────────────────────────────────
 
@@ -71,8 +83,8 @@ export function TimelineFilterProvider({ children }: { children: React.ReactNode
     });
   }, []);
 
-  const requestScrollToTime = useCallback((screenKey: string, fromMs: number, toMs: number): void => {
-    setScrollToTimeSignal((prev) => ({ screenKey, fromMs, toMs, counter: prev.counter + 1 }));
+  const requestScrollToTime = useCallback((screenKey: string, fromMs: number, toMs: number, categoryId?: string): void => {
+    setScrollToTimeSignal((prev) => ({ screenKey, fromMs, toMs, categoryId, counter: prev.counter + 1 }));
   }, []);
 
   const requestScrollToNow = useCallback((screenKey: string): void => {

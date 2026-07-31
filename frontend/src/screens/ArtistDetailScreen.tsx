@@ -107,13 +107,14 @@ export function ArtistDetailBody({ artist }: Props) {
   const { friendsByArtist } = useSocialData();
   const friends = friendsByArtist[artist.artistId] ?? [];
 
-  // Jump to this artist's event on the timeline: select its day, center its time,
-  // switch to the matching timeline tab (support vs main), and close the sheet.
+  // Jump to this artist's event on the timeline: select its day, center its time
+  // and its category's lane, switch to the matching timeline tab (support vs
+  // main), and close the sheet.
   const handleEventPress = useCallback((event: DbEvent): void => {
     const isSupport = !artist.isPlayable;
     const screenKey = isSupport ? 'support' : 'timeline';
     setSelectedDayStart(getFestivalDayStart(event.dateFrom));
-    requestScrollToTime(screenKey, event.dateFrom, event.dateTo);
+    requestScrollToTime(screenKey, event.dateFrom, event.dateTo, event.categoryId);
     if (navigationRef.isReady()) {
       if (isSupport) {
         navigationRef.navigate('SupportTimeline');

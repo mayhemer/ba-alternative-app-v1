@@ -156,6 +156,10 @@ export function TimelineView({
     scrollYRef.current = e.nativeEvent.contentOffset.y;
   }, []);
 
+  // Imperative handle for the scroll-to-event jump below. A plain ref is enough:
+  // unlike the horizontal offset, this one is never read on the UI thread.
+  const verticalScrollRef = useRef<ScrollView>(null);
+
   // ── Now-line position ────────────────────────────────────────────────────────
   // Computed once here and shared with every NowLine. A single interval keeps it
   // current; the value is consumed on the UI thread, so updates cause no JS re-renders.
@@ -246,16 +250,26 @@ export function TimelineView({
     return () => cancelAnimationFrame(frame);
   }, [mountComplete, mountWindow, mountWidth, mountHeight]);
 
-  // ── Scroll to a specific time (centered) ─────────────────────────────────────
+  // ── Scroll to a specific event (centered) ────────────────────────────────────
   // Fired both by the day-switcher "now" button and when navigating here from an
   // event (e.g. the artist detail). Deferred so it runs after the day-switch
   // restore (which may use a 50 ms timer on a fresh mount) and after the
   // ScrollView has measured its width.
+  //
+  // The signal carries a categoryId only when it means a specific event, so the
+  // "now" button scrolls in time alone and leaves the lane the user is on.
+
+  // Everything the deferred scroll needs about the lane stack, refreshed every
+  // render: the timer can outlive the render that scheduled it. Arriving from
+  // another tab, the lanes are still empty when the signal lands and only fill in
+  // once useTimelineData has read the cache — a captured laneOffsets would be {}.
+  const laneGeometryRef = useRef({ laneOffsets, laneHeights, stripHeight, areaHeight, bottomClearance });
+  laneGeometryRef.current = { laneOffsets, laneHeights, stripHeight, areaHeight, bottomClearance };
 
   useEffect(() => {
     if (scrollToTimeSignal.counter === 0) { return; }
     if (scrollToTimeSignal.screenKey !== screenKey) { return; }
-    const { fromMs, toMs } = scrollToTimeSignal;
+    const { fromMs, toMs, categoryId } = scrollToTimeSignal;
     const timer = setTimeout(() => {
       const day = selectedDayStartRef.current;
       // Content-space X (canvas is shifted left by VIEW_OFFSET_X).
@@ -265,19 +279,39 @@ export function TimelineView({
       // its left padding (long events).
       const centredOffset = centreX - scrollViewWidthRef.current / 2;
       const targetX = Math.max(0, Math.min(centredOffset, startX - LEFT_PADDING_X));
+
+      // Vertical: centre the event's lane in the space that is actually visible.
+      // The ruler sits above this scroller, and on a short viewport the floating
+      // BottomBar covers the bottom of it — centring on the raw height would park
+      // the lane behind the bar. Left undefined when the lane is unknown (a "now"
+      // jump, or a category hidden by the filter), and the offset then stands.
+      const geometry = laneGeometryRef.current;
+      const visibleHeight = Math.max(0, geometry.areaHeight - RULER_HEIGHT - geometry.bottomClearance);
+      const laneTop = categoryId === undefined ? undefined : geometry.laneOffsets[categoryId];
+      const laneSpan =
+        categoryId === undefined ? 0 : geometry.stripHeight + (geometry.laneHeights[categoryId] ?? LANE_HEIGHT);
+      const targetY =
+        laneTop === undefined ? undefined : Math.max(0, laneTop + laneSpan / 2 - visibleHeight / 2);
+
       // A jump can land far outside the slice this day was mounted at, so widen
       // the window to cover where we are about to be. It only ever grows, so a
       // day that has already finished mounting is left alone.
       setMountWindow((w) => {
         const fromX = clampToViewWindow(Math.min(w.fromX, targetX + VIEW_OFFSET_X));
         const toX   = clampToViewWindow(Math.max(w.toX, targetX + VIEW_OFFSET_X + scrollViewWidthRef.current));
-        if (fromX === w.fromX && toX === w.toX) { return w; }
-        return { ...w, fromX, toX };
+        const fromY = targetY === undefined ? w.fromY : Math.min(w.fromY, targetY);
+        const toY   = targetY === undefined ? w.toY   : Math.max(w.toY, targetY + visibleHeight);
+        if (fromX === w.fromX && toX === w.toX && fromY === w.fromY && toY === w.toY) { return w; }
+        return { ...w, fromX, toX, fromY, toY };
       });
       scheduleOnUI(() => { scrollTo(horizontalScrollRef, targetX, 0, true); });
+      if (targetY !== undefined) {
+        verticalScrollRef.current?.scrollTo({ y: targetY, animated: true });
+      }
     }, 120);
     return () => clearTimeout(timer);
-  // selectedDayStart read via ref inside the timer — the signal carries its own time
+  // selectedDayStart and the lane geometry are read via refs inside the timer —
+  // the signal carries everything else it needs
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scrollToTimeSignal]);
 
@@ -300,6 +334,7 @@ export function TimelineView({
     <View style={{ flex: 1 }} onLayout={(e) => { setAreaHeight(e.nativeEvent.layout.height); }}>
       <TimeRuler dayStart={selectedDayStart} scrollX={scrollX} nowX={nowX} />
       <ScrollView
+        ref={verticalScrollRef}
         className="flex-1 bg-background"
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={100}
