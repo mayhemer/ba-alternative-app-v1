@@ -8,6 +8,7 @@ import {
   timeToX,
   formatTime,
   BLOCK_FONT_SIZE,
+  LANE_BORDER_WIDTH,
   LANE_HEIGHT,
   MIN_BLOCK_WIDTH,
   PIXELS_PER_MS,
@@ -157,14 +158,17 @@ function ArtistBlockBase({ event, artist, dayStart, status, categoryColor, label
     return { key: interval.from, left, barWidth };
   });
 
+  // A block fills its sub-row exactly. The lane's bottom border is inside the
+  // lane's height, so the space a block can occupy is LANE_HEIGHT less that
+  // border — and the gap between stacked sub-rows is the same border's width.
   return (
     <View
       style={{
         position: 'absolute',
         left: x,
-        top: 2 + subRow * LANE_HEIGHT,
+        top: subRow * LANE_HEIGHT,
         width,
-        height: LANE_HEIGHT - 4,
+        height: LANE_HEIGHT - LANE_BORDER_WIDTH,
       }}
     >
       <TouchableOpacity

@@ -5,7 +5,14 @@ import type { DbArtist, DbCategory, DbEvent } from '../../types/backend';
 import type { InterestStatus } from '../../cache/cacheService';
 import type { ConflictOverlap } from '../../utils/conflictUtils';
 import { decodeCategoryColor } from '../../utils/color';
-import { CANVAS_WIDTH, LANE_HEIGHT, MIN_BLOCK_WIDTH, STRIP_HEIGHT, timeToX } from './timelineLayout';
+import {
+  CANVAS_WIDTH,
+  LANE_BORDER_WIDTH,
+  LANE_HEIGHT,
+  MIN_BLOCK_WIDTH,
+  stripHeightFor,
+  timeToX,
+} from './timelineLayout';
 import { ArtistBlock } from './ArtistBlock';
 import { NowLine } from './NowLine';
 import { colors } from '../../styling/tokens';
@@ -29,6 +36,8 @@ type Props = {
   /** Gap between repeated labels on long blocks; scales with the viewport. */
   labelRepeat: number;
   laneHeight?: number;
+  /** Landscape: no strip is reserved, the title is drawn behind this lane instead. */
+  overlayTitles: boolean;
   eventSubRows?: Record<string, number>;
   conflictOverlaps: Map<string, ConflictOverlap[]>;
   /** False while this lane is outside the vertical mount window — see TimelineView. */
@@ -47,6 +56,7 @@ function CategoryLaneBase({
   onBlockPress,
   labelRepeat,
   laneHeight = LANE_HEIGHT,
+  overlayTitles,
   eventSubRows,
   conflictOverlaps,
   mountEvents,
@@ -54,6 +64,7 @@ function CategoryLaneBase({
   mountToX,
 }: Props) {
   const categoryColor = decodeCategoryColor(category.color);
+  const stripHeight = stripHeightFor(overlayTitles);
 
   // Only the blocks inside the mount window are rendered. The lane keeps its
   // full height either way — that comes from laneHeight, not from the blocks —
@@ -68,29 +79,26 @@ function CategoryLaneBase({
 
   return (
     <View>
-      {/* Title strip — background only. The title itself is drawn by
+      {/* Title strip — a spacer, nothing more. The title itself is drawn by
           LaneLabelOverlay, outside the horizontal scroller, so that it can stay
-          pinned to the left edge without being animated against the scroll. */}
-      <View
-        style={{
-          width: CANVAS_WIDTH,
-          height: STRIP_HEIGHT,
-          backgroundColor: colors.timeline.stripBg,
-        }}
-      />
+          pinned to the left edge without being animated against the scroll; the
+          band's colour comes from the wrapper the overlay shares with this
+          scroller. In landscape the strip collapses to zero and the title moves
+          behind the events row below. */}
+      <View style={{ width: CANVAS_WIDTH, height: stripHeight }} />
 
-      {/* Events row — artist blocks positioned absolutely by time offset */}
+      {/* Events row — artist blocks positioned absolutely by time offset.
+          Transparent on purpose: the titles are painted beneath this layer. */}
       <View
         style={{
           width: CANVAS_WIDTH,
           height: laneHeight,
-          backgroundColor: colors.surface,
-          borderBottomWidth: 2,
+          borderBottomWidth: LANE_BORDER_WIDTH,
           borderBottomColor: colors.timeline.laneBorder,
           position: 'relative',
         }}
       >
-        <NowLine nowX={nowX} canvasHeight={STRIP_HEIGHT + laneHeight} top={-STRIP_HEIGHT} />
+        <NowLine nowX={nowX} canvasHeight={stripHeight + laneHeight} top={-stripHeight} />
         {mountedEvents.map(({ event, artist }) => (
           <ArtistBlock
             key={event.eventId}

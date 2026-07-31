@@ -16,8 +16,9 @@ import {
   DAY_DURATION_MS,
   LANE_HEIGHT,
   RULER_HEIGHT,
-  STRIP_HEIGHT,
+  stripHeightFor,
 } from '../components/timeline/timelineLayout';
+import { useLayoutMode } from './useLayoutMode';
 import { matchesScope } from '../utils/interestUtils';
 import { computeConflictOverlaps, type ConflictOverlap } from '../utils/conflictUtils';
 
@@ -43,7 +44,12 @@ export function useTimelineData({ filterArtist, useSubRows = false }: Options = 
   const { getStatus, interests } = useInterest();
   const { selectedDayStart, hiddenCategories } = useTimelineFilter();
   const { scope } = useLens();
+  const { isShort } = useLayoutMode();
   const { getFriend } = useSocialData();
+
+  // Landscape drops the title strip and overlays the title on the lane instead;
+  // TimelineView derives the same value from the same flag for its own layout.
+  const stripHeight = stripHeightFor(isShort);
   const friendInterests =
     scope.kind === 'friend' ? getFriend(scope.token)?.interests : undefined;
 
@@ -139,16 +145,16 @@ export function useTimelineData({ filterArtist, useSubRows = false }: Options = 
     let y = 0;
     for (const cat of visibleCategories) {
       map[cat.categoryId] = y;
-      y += STRIP_HEIGHT + (laneHeights[cat.categoryId] ?? LANE_HEIGHT);
+      y += stripHeight + (laneHeights[cat.categoryId] ?? LANE_HEIGHT);
     }
     return map;
-  }, [visibleCategories, laneHeights]);
+  }, [visibleCategories, laneHeights, stripHeight]);
 
   const canvasHeight = useMemo<number>(() => {
     return RULER_HEIGHT + visibleCategories.reduce((sum, cat) => {
-      return sum + STRIP_HEIGHT + (laneHeights[cat.categoryId] ?? LANE_HEIGHT);
+      return sum + stripHeight + (laneHeights[cat.categoryId] ?? LANE_HEIGHT);
     }, 0);
-  }, [visibleCategories, laneHeights]);
+  }, [visibleCategories, laneHeights, stripHeight]);
 
   const conflictOverlaps = useMemo<Map<string, ConflictOverlap[]>>(() => {
     return computeConflictOverlaps(selectedSlug, interests);

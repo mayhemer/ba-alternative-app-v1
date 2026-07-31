@@ -178,10 +178,34 @@ index lands on the wrong stop.
 
 Landscape roughly doubles the visible time span but costs lane height. After BottomBar, ruler and
 safe areas a 390 pt viewport shows ~2.5 category lanes rather than 4–5 — dropping the TopBar is
-what keeps that from being ~2. Lane geometry (`LANE_HEIGHT`, `STRIP_HEIGHT`) stays fixed — those
-constants are read by `ArtistBlock`, `NowLine`, `CategoryLane`, `useTimelineData` and the cached
-sub-row layout in `cacheService.ts`, so making them viewport-dependent is a far wider change than
-it appears.
+what keeps that from being ~2.
+
+`LANE_HEIGHT` stays fixed: it is read by `ArtistBlock`, `NowLine`, the cached sub-row layout behind
+`cacheService.getCategoryDayLayout` and the mini timeline in `ConflictDetailSheet`, so making it
+viewport-dependent is a far wider change than it appears.
+
+`STRIP_HEIGHT` is the cheap one, and landscape does drop it. It has four consumers, all inside the
+timeline — `useTimelineData` (`laneOffsets`, `canvasHeight`), `CategoryLane` (spacer, `NowLine`
+span), `LaneLabelOverlay` (title box) and `TimelineView` (the mount window's `laneBottom`) — so
+`stripHeightFor(isShort)` in `timelineLayout.ts` is the single switch, and every one of them derives
+from it rather than branching itself. On a short viewport it returns 0 and the category title is
+drawn *behind* its lane instead of in a strip above it, buying back 32 pt per lane — about one extra
+lane on a landscape phone. The trigger is `useLayoutMode().isShort`, the same flag that drops the
+TopBar, so a landscape iPad keeps the strips: it has the vertical budget to spare.
+
+Overlaying means the title has to paint *under* the blocks, which sets the layer order in
+`TimelineView`: `LaneLabelOverlay` renders before the horizontal scroller, and both the strip spacer
+and the events row are transparent so it shows through. The lane band's colour therefore lives on a
+single backdrop `View` behind both — one background instead of a per-mode colour on each row, and
+identical in portrait because `stripBg`, `laneBg` and `surface` are the same value. That backdrop is
+sized to `laneStackHeight`, not left to fill its parent: the wrapper it sits in also spans the
+canvas's bottom padding, which would tint the dead space under the last lane.
+
+That padding is worth understanding before touching it. `Math.max(30 + bottomClearance, areaHeight -
+canvasHeight)` covers two unrelated needs — the usual floating-BottomBar clearance, and keeping the
+canvas at least viewport-tall. The canvas is the *horizontal* scroller's content, so the second term
+is what lets a horizontal drag below the last lane still pan the timeline when a day has only a
+couple of lanes.
 
 ### Timeline rendering: never counter-animate against scroll
 
@@ -203,10 +227,10 @@ replaced a per-lane `useAnimatedStyle` that counter-translated each title by
 `scrollX + VIEW_OFFSET_X`, which jittered.
 
 The cost is that an overlay sits outside the lanes and so cannot infer positions from layout: it has
-to be told where each strip is. `useTimelineData.laneOffsets` owns that accumulation, next to the
-identical one behind `canvasHeight`, so the lane stack's geometry has a single owner and cannot
-drift when sub-rows change a lane's height. Any future left- or top-pinned timeline chrome should
-follow the same pattern.
+to be told where each strip is, and in landscape how tall each lane is too. `useTimelineData`'s
+`laneOffsets` owns that accumulation, next to the identical one behind `canvasHeight`, so the lane
+stack's geometry has a single owner and cannot drift when sub-rows change a lane's height or when
+the strip collapses. Any future left- or top-pinned timeline chrome should follow the same pattern.
 
 Note this seam does **not** help with anything whose *content* depends on scroll position — e.g. a
 sticky title on a long event, where which title to show changes as you scroll. Those need a design

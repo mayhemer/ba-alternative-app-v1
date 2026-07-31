@@ -21,13 +21,14 @@ import {
   CANVAS_WIDTH,
   LANE_HEIGHT,
   RULER_HEIGHT,
-  STRIP_HEIGHT,
+  stripHeightFor,
   VIEW_OFFSET_X,
   VIEW_WIDTH,
   PIXELS_PER_MS,
   labelRepeatPx,
   timeToX,
 } from './timelineLayout';
+import { colors } from '../../styling/tokens';
 import { currentTimeMs } from '../../utils/clock';
 import type { DbArtist, DbCategory, DbEvent } from '../../types/backend';
 import type { ConflictOverlap } from '../../utils/conflictUtils';
@@ -102,7 +103,12 @@ export function TimelineView({
   const [viewportWidth, setViewportWidth] = useState(0);
   const { getStatus } = useInterest();
   const { scrollToTimeSignal } = useTimelineFilter();
-  const { bottomClearance } = useLayoutMode();
+  const { bottomClearance, isShort } = useLayoutMode();
+
+  // Landscape overlays the category title on its lane instead of reserving a
+  // strip above it. useTimelineData reads the same flag from the same hook, so
+  // the offsets it hands down cannot disagree with the layout rendered here.
+  const stripHeight = stripHeightFor(isShort);
 
   // ── Horizontal scroll tracking ──────────────────────────────────────────────
 
@@ -303,6 +309,29 @@ export function TimelineView({
             inside the vertical one (so it scrolls with the lanes) but outside the
             horizontal one (so horizontal scroll cannot move it). */}
         <View>
+          {/* Lane-band backdrop. The strip and the events row are both
+              transparent — that is what lets the titles show through them in
+              landscape — so the colour they used to carry lives here instead.
+              Sized to the lane stack rather than left to fill the wrapper: the
+              wrapper also spans the canvas's bottom padding, which would tint the
+              dead space under the last lane. */}
+          <View
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: laneStackHeight,
+              backgroundColor: colors.timeline.laneBg,
+            }}
+          />
+          {/* Before the scroller, so the lanes paint over the titles. */}
+          <LaneLabelOverlay
+            categories={visibleCategories}
+            laneOffsets={laneOffsets}
+            laneHeights={laneHeights}
+            overlayTitles={isShort}
+          />
           <Animated.ScrollView
             ref={horizontalScrollRef}
             horizontal
@@ -317,11 +346,15 @@ export function TimelineView({
           >
             {/* Clipping wrapper sized to the visible window only */}
             <View style={{ width: VIEW_WIDTH, overflow: 'hidden' }}>
-              {/* Full canvas shifted left so 09:30 aligns with x=0 */}
-              <View style={{ width: CANVAS_WIDTH, position: 'relative', transform: [{ translateX: -VIEW_OFFSET_X }], paddingBottom: Math.max(30 + bottomClearance, areaHeight - canvasHeight)}}>
+              {/* Full canvas shifted left so 09:30 aligns with x=0. The bottom
+                  padding is the larger of two needs: clearing the floating
+                  BottomBar, and keeping this — the horizontal scroller's content —
+                  at least as tall as the viewport, so that a horizontal drag below
+                  the last lane still pans the timeline on a day with few lanes. */}
+              <View style={{ width: CANVAS_WIDTH, position: 'relative', transform: [{ translateX: -VIEW_OFFSET_X }], paddingBottom: Math.max(bottomClearance, areaHeight - canvasHeight)}}>
                 {visibleCategories.map((cat) => {
                   const laneTop    = laneOffsets[cat.categoryId] ?? 0;
-                  const laneBottom = laneTop + STRIP_HEIGHT + (laneHeights[cat.categoryId] ?? LANE_HEIGHT);
+                  const laneBottom = laneTop + stripHeight + (laneHeights[cat.categoryId] ?? LANE_HEIGHT);
                   // A lane below the window ignores the X span, so feed it a
                   // constant one — its props then stop changing per step and its
                   // memo skips it outright.
@@ -337,6 +370,7 @@ export function TimelineView({
                       onBlockPress={onBlockPress}
                       labelRepeat={labelRepeat}
                       laneHeight={laneHeights[cat.categoryId]}
+                      overlayTitles={isShort}
                       eventSubRows={categorySubRows?.[cat.categoryId]}
                       conflictOverlaps={conflictOverlaps}
                       mountEvents={mountEvents}
@@ -348,7 +382,6 @@ export function TimelineView({
               </View>
             </View>
           </Animated.ScrollView>
-          <LaneLabelOverlay categories={visibleCategories} laneOffsets={laneOffsets} />
         </View>
       </ScrollView>
     </View>

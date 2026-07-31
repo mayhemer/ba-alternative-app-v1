@@ -26,6 +26,24 @@ export const VIEW_WIDTH      = (VIEW_END_H - VIEW_START_H) * PIXELS_PER_HOUR;
 export const RULER_HEIGHT = 32;  // hour-label ruler at the top
 export const STRIP_HEIGHT = 32;  // category title strip above each lane
 export const LANE_HEIGHT  = 80;  // events row for each category
+
+// Separator drawn at the bottom of every lane. RN's box model is border-box, so
+// this eats into LANE_HEIGHT rather than adding to it — which is why a block that
+// fills its sub-row is LANE_HEIGHT - LANE_BORDER_WIDTH tall (see ArtistBlock).
+export const LANE_BORDER_WIDTH = 2;
+
+/**
+ * Height reserved above a lane for its title strip. Zero on a short viewport: the
+ * title is drawn over the lane there instead (see LaneLabelOverlay), because a
+ * landscape phone shows ~2.5 lanes and a 32 pt strip each is a third of them.
+ *
+ * The lane stack's geometry is accumulated in two places that must agree —
+ * useTimelineData (laneOffsets, canvasHeight) and CategoryLane's flow layout — so
+ * both derive the strip height from here rather than branching on their own.
+ */
+export function stripHeightFor(overlayTitles: boolean): number {
+  return overlayTitles ? 0 : STRIP_HEIGHT;
+}
 export const MIN_BLOCK_WIDTH = 4; // minimum rendered width for very short sets
 export const NOW_LINE_ARROW_SIZE = 7;  // half-width and height of the now-line arrow
 export const NOW_BUTTON_ARROW_SIZE = 7;  // half-width and height of the now-line arrow on the day button
