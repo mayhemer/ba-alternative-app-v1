@@ -25,7 +25,7 @@ export const VIEW_WIDTH      = (VIEW_END_H - VIEW_START_H) * PIXELS_PER_HOUR;
 
 export const RULER_HEIGHT = 32;  // hour-label ruler at the top
 export const STRIP_HEIGHT = 32;  // category title strip above each lane
-export const LANE_HEIGHT  = 80;  // events row for each category
+export const LANE_HEIGHT  = 70;  // events row for each category
 
 // Separator drawn at the bottom of every lane. RN's box model is border-box, so
 // this eats into LANE_HEIGHT rather than adding to it — which is why a block that
