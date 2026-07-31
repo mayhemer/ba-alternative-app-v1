@@ -19,7 +19,7 @@
         "credentialsSource": "local"
       },
       "android": {
-        "buildType": "apk"
+        "gradleCommand": ":app:assembleRelease -PreactNativeArchitectures=arm64-v8a"
       }
     },
     "production": {
