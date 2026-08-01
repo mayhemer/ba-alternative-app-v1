@@ -4,13 +4,23 @@ import type { DataCollector } from '../cache/cacheService';
 // All data source adapters must implement this interface.
 // Swap the concrete adapter at the usage site to change the data source.
 
+export type ValidationResult = {
+  /** true = cached data is current, no fetch needed; false = server has newer data. */
+  upToDate: boolean;
+  /**
+   * The server's own last-rebuild time. Store this as the watermark for the next
+   * `validate` call once the matching data is in the cache — a local clock
+   * reading would be compared against the wrong scale and suppress all updates.
+   */
+  serverSyncedAt: number;
+};
+
 export interface DataAdapter {
   /**
-   * Check if the data for this slug is up-to-date.
-   * @returns true  = local data is current, no fetch needed
-   * @returns false = server has newer data, fetch required
+   * Check whether the data cached for this slug is still current.
+   * @param since the watermark from the last successful populate (0 = nothing cached).
    */
-  validate(slug: string, lastSyncTime: number): Promise<boolean>;
+  validate(slug: string, since: number): Promise<ValidationResult>;
 
   /**
    * Fetch all data for this slug and write it to the collector.

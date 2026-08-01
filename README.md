@@ -300,8 +300,13 @@ Alpha. In practical terms:
 
 - The full flow works end-to-end on iOS, Android and web: browse, star, detect conflicts, sign in,
   share, follow a friend.
-- The startup/initial-sync path is the weakest area and is knowingly slated for a rewrite; it works,
-  but its cache-to-React synchronisation is more fragile than it should be.
+- The startup path now loads from a persisted cache first and only then checks the server, so a cold
+  start works offline and the freshness check actually skips unchanged data (see *Client-side cache
+  and freshness* in `DESIGN.md`).
+- What remains in that area is known and written down rather than fixed: the festival cache lives
+  outside React and is bridged to it by a hand-rolled event emitter, so a consumer that forgets to
+  subscribe silently reads stale data; and the sync service is a module singleton, which leaves a
+  narrow race on edition switching. Both are scheduled after the festival, deliberately not before.
 - Localization is not done — English UI over EN/CS data.
 - Android app-link verification needs the release keystore fingerprint published before deep links
   verify on Android.

@@ -10,14 +10,16 @@ type AppState = {
   selectedSlug: string | null;
   isLoading: boolean;
   lastError: string | null;
-  lastSyncTime: number;
 };
 
+// The sync watermark deliberately does NOT live here. It belongs to the data it
+// describes, so cacheService owns it and persists it alongside the datasets —
+// keeping it in React state also meant a re-render of every context consumer on
+// each poll, for a value nothing rendered.
 type AppAction =
   | { type: 'SET_SLUG'; slug: string }
   | { type: 'SET_LOADING'; loading: boolean }
-  | { type: 'SET_ERROR'; error: string | null }
-  | { type: 'SET_SYNC_TIME'; time: number };
+  | { type: 'SET_ERROR'; error: string | null };
 
 type CacheRefreshListener = () => void;
 
@@ -26,7 +28,6 @@ type AppContextValue = {
   setSelectedSlug: (slug: string) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
-  setSyncTime: (time: number) => void;
   subscribeToCacheRefresh: (listener: CacheRefreshListener) => () => void;
   emitCacheRefresh: () => void;
   getRefreshEpoch: () => number;
@@ -49,8 +50,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, isLoading: action.loading };
     case 'SET_ERROR':
       return { ...state, lastError: action.error };
-    case 'SET_SYNC_TIME':
-      return { ...state, lastSyncTime: action.time };
   }
 }
 
@@ -65,7 +64,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     selectedSlug: null,
     isLoading: true,
     lastError: null,
-    lastSyncTime: 0,
   });
 
   // Event emitter for cache refresh notifications.
@@ -108,10 +106,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'SET_ERROR', error });
   }, []);
 
-  const setSyncTime = useCallback((time: number): void => {
-    dispatch({ type: 'SET_SYNC_TIME', time });
-  }, []);
-
   const subscribeToCacheRefresh = useCallback((listener: CacheRefreshListener): () => void => {
     refreshListeners.current.add(listener);
     return () => {
@@ -131,7 +125,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setSelectedSlug,
     setLoading,
     setError,
-    setSyncTime,
     subscribeToCacheRefresh,
     emitCacheRefresh,
     getRefreshEpoch,

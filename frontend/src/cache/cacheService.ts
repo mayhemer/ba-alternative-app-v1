@@ -17,11 +17,16 @@ export type DbCategoryDayLayout = {
 // Key: `${categoryId}_${dayStart}`
 export type DbLayoutMap = Record<string, DbCategoryDayLayout>;
 
-export type CacheData = {
+// The four datasets exactly as the API serves them. Everything else in
+// CacheData is derived from these, so this is all that gets persisted.
+export type FestivalRawData = {
   artists: DbArtist[];
   categories: DbCategory[];
   stages: DbStage[];
   events: DbEvent[];
+};
+
+export type CacheData = FestivalRawData & {
   artistEventMap: DbArtistEventMap;
   festivalDays: DbFestivalDays;
   layoutMap: DbLayoutMap;
@@ -50,6 +55,12 @@ export type LocalInterest = {
 // Public festival data — keyed by slug
 const festivalCache: Record<string, CacheData> = {};
 
+// Sync watermark per slug: the server's own `lastSyncedAt` that the cached data
+// corresponds to. NOT a local clock reading — /validity compares the value we
+// send against the server's last rebuild time, so sending Date.now() would make
+// the server answer "unchanged" forever and updates would never arrive.
+const syncWatermark: Record<string, number> = {};
+
 // User interest data — keyed by slug → artistId
 const interestCache: Record<string, Record<string, LocalInterest>> = {};
 
@@ -58,6 +69,19 @@ const interestCache: Record<string, Record<string, LocalInterest>> = {};
 function interestStorageKey(slug: string): string {
   return `user:interests:${slug}`;
 }
+
+function festivalStorageKey(slug: string): string {
+  return `festival:data:${slug}`;
+}
+
+// Bumped when the persisted shape changes; a mismatch discards the stored copy
+// rather than feeding a stale shape into the UI.
+const FESTIVAL_CACHE_VERSION = 1;
+
+type PersistedFestival = {
+  version: number;
+  syncedAt: number;
+} & FestivalRawData;
 
 // ── Festival data — public read API (UI only) ─────────────────────────────────
 
@@ -93,11 +117,75 @@ export function hasCachedData(slug: string): boolean {
   return festivalCache[slug] !== undefined;
 }
 
+/**
+ * The server-side `lastSyncedAt` the cached data for this slug corresponds to.
+ * 0 when nothing is cached, which makes /validity report "changed" and forces a
+ * full fetch — the correct fallback.
+ */
+export function getSyncWatermark(slug: string): number {
+  return syncWatermark[slug] ?? 0;
+}
+
 // ── Festival data — write API (background sync service only) ──────────────────
 
-export function populateCache(slug: string, data: CacheData): void {
+/**
+ * Atomically replaces the in-memory data for a slug and persists the raw
+ * datasets so the next cold start can render before (or without) the network.
+ * `syncedAt` must be the server's own last-rebuild time — see `syncWatermark`.
+ *
+ * Persistence is fire-and-forget: a failed write only costs the offline start,
+ * never the running session.
+ */
+export function populateCache(slug: string, data: CacheData, syncedAt: number): void {
   // Atomic replacement — JS is single-threaded, so no partial reads are possible.
   festivalCache[slug] = { ...data };
+  syncWatermark[slug] = syncedAt;
+
+  const persisted: PersistedFestival = {
+    version: FESTIVAL_CACHE_VERSION,
+    syncedAt,
+    artists: data.artists,
+    categories: data.categories,
+    stages: data.stages,
+    events: data.events,
+  };
+  AsyncStorage.setItem(festivalStorageKey(slug), JSON.stringify(persisted)).catch((err: unknown) => {
+    // Typically a web localStorage quota overflow. The session is unaffected.
+    if (__DEV__) { console.warn('[cache] festival data not persisted', err); }
+  });
+}
+
+/**
+ * Loads the persisted datasets for a slug into memory, rebuilding the derived
+ * structures. Returns true when usable data is now in the cache.
+ *
+ * In-memory data always wins: a live session is at least as fresh as the disk
+ * copy it was written from, so an already-populated slug short-circuits.
+ * Never rejects — a missing, corrupt or outdated entry simply means "no data".
+ */
+export async function hydrateFestivalCache(slug: string): Promise<boolean> {
+  if (hasCachedData(slug)) {
+    return true;
+  }
+
+  try {
+    const stored = await AsyncStorage.getItem(festivalStorageKey(slug));
+    if (stored === null) {
+      return false;
+    }
+
+    const parsed = JSON.parse(stored) as PersistedFestival;
+    if (parsed.version !== FESTIVAL_CACHE_VERSION || !Array.isArray(parsed.events)) {
+      return false;
+    }
+
+    festivalCache[slug] = buildCacheData(parsed);
+    syncWatermark[slug] = parsed.syncedAt ?? 0;
+    return true;
+  } catch (err: unknown) {
+    if (__DEV__) { console.warn('[cache] festival data not restored', err); }
+    return false;
+  }
 }
 
 // ── Layout map builder ────────────────────────────────────────────────────────
@@ -150,6 +238,27 @@ function buildLayoutMap(events: DbEvent[], festivalDays: DbFestivalDays): DbLayo
   return layoutMap;
 }
 
+// ── Derived structure builder ─────────────────────────────────────────────────
+
+// The single place where the derived views are computed, shared by a fresh
+// fetch (collector.build) and by a restore from AsyncStorage — so restored data
+// can never differ in shape from fetched data.
+function buildCacheData(raw: FestivalRawData): CacheData {
+  const { artists, categories, stages, events } = raw;
+  const festivalDays = deriveFestivalDays(events);
+
+  const artistEventMap: DbArtistEventMap = {};
+  for (const event of events) {
+    if (artistEventMap[event.artistId] === undefined) {
+      artistEventMap[event.artistId] = [];
+    }
+    artistEventMap[event.artistId].push(event);
+  }
+
+  const layoutMap = buildLayoutMap(events, festivalDays);
+  return { artists, categories, stages, events, artistEventMap, festivalDays, layoutMap };
+}
+
 // ── DataCollector factory ─────────────────────────────────────────────────────
 // Used by adapters to collect fetched data before an atomic cache update.
 
@@ -173,16 +282,7 @@ export function createDataCollector(): DataCollector & { build(): CacheData } {
       events = data;
     },
     build(): CacheData {
-      const festivalDays = deriveFestivalDays(events);
-      const artistEventMap: DbArtistEventMap = {};
-      for (const event of events) {
-        if (artistEventMap[event.artistId] === undefined) {
-          artistEventMap[event.artistId] = [];
-        }
-        artistEventMap[event.artistId].push(event);
-      }
-      const layoutMap = buildLayoutMap(events, festivalDays);
-      return { artists, categories, stages, events, artistEventMap, festivalDays, layoutMap };
+      return buildCacheData({ artists, categories, stages, events });
     },
   };
 }

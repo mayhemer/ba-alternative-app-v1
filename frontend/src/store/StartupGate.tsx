@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useAppContext } from './AppContext';
 import { SplashScreen } from '../screens/SplashScreen';
 import { startSync, stop as stopSync } from '../sync/backgroundSyncService';
@@ -15,24 +15,23 @@ import { hydrateLocalState } from './uiStatePersistence';
 //
 // Replaces the previous RootGate, which blocked the splash only on the external
 // load and let providers hydrate local state late (causing the restore races).
+//
+// "External data load" resolves from whichever source produces data first — the
+// persisted cache or the network — so this gate no longer implies a round trip.
 
 export function StartupGate({ children }: { children: React.ReactNode }) {
-  const { state, setSyncTime, emitCacheRefresh } = useAppContext();
-  const { selectedSlug, lastSyncTime } = state;
+  const { state, emitCacheRefresh } = useAppContext();
+  const { selectedSlug } = state;
 
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Stable ref so the sync callbacks always read the latest sync time.
-  const lastSyncTimeRef = useRef(lastSyncTime);
-  useEffect(() => { lastSyncTimeRef.current = lastSyncTime; }, [lastSyncTime]);
 
   const runStartup = useCallback((slug: string): void => {
     setReady(false);
     setError(null);
 
     const externalLoad = new Promise<void>((resolve, reject) => {
-      startSync(slug, lastSyncTimeRef.current, {
+      startSync(slug, {
         onFirstLoadSuccess: () => {
           // Festival cache is populated — notify cache-reading consumers.
           emitCacheRefresh();
@@ -40,14 +39,13 @@ export function StartupGate({ children }: { children: React.ReactNode }) {
         },
         onFirstLoadError: (err) => { reject(err); },
         onRefreshComplete: () => emitCacheRefresh(),
-        onSyncTimeUpdated: (time) => setSyncTime(time),
       });
     });
 
     Promise.all([externalLoad, hydrateLocalState(slug)])
       .then(() => { setReady(true); })
       .catch((err) => { setError(err instanceof Error ? err.message : String(err)); });
-  }, [emitCacheRefresh, setSyncTime]);
+  }, [emitCacheRefresh]);
 
   // (Re-)run startup whenever the slug changes. Held until the slug resolves
   // (null) so we boot once under the correct slug.

@@ -1,5 +1,11 @@
 import { baPublicApiAdapter } from '../adapters/baPublicApiAdapter';
-import { createDataCollector, hasCachedData, populateCache } from '../cache/cacheService';
+import {
+  createDataCollector,
+  getSyncWatermark,
+  hasCachedData,
+  hydrateFestivalCache,
+  populateCache,
+} from '../cache/cacheService';
 import { getSyncInterval } from './festivalConfig';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -8,7 +14,6 @@ type SyncCallbacks = {
   onFirstLoadSuccess: () => void;
   onFirstLoadError: (error: Error) => void;
   onRefreshComplete: () => void;
-  onSyncTimeUpdated: (time: number) => void;
 };
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -18,32 +23,31 @@ let isFirstLoad = true;
 
 // ── Core sync logic ───────────────────────────────────────────────────────────
 
-async function runSync(
-  slug: string,
-  lastSyncTime: number,
-  callbacks: SyncCallbacks,
-): Promise<void> {
+// The watermark is read from the cache on every run rather than carried in a
+// parameter: it advances with each successful populate, and a captured copy
+// would keep asking /validity about the state the app booted in — which always
+// answers "changed" and turns every poll into a full re-download.
+async function runSync(slug: string, callbacks: SyncCallbacks): Promise<void> {
   try {
-    const isUpToDate = await baPublicApiAdapter.validate(slug, lastSyncTime);
+    const { upToDate, serverSyncedAt } = await baPublicApiAdapter.validate(
+      slug,
+      getSyncWatermark(slug),
+    );
 
-    if (isUpToDate && hasCachedData(slug)) {
-      if (isFirstLoad) {
-        isFirstLoad = false;
-        callbacks.onFirstLoadSuccess();
-      }
+    if (upToDate && hasCachedData(slug)) {
+      finishFirstLoad(callbacks);
       return;
     }
 
     const collector = createDataCollector();
     await baPublicApiAdapter.populate(slug, collector);
-    populateCache(slug, collector.build());
-
-    const now = Date.now();
-    callbacks.onSyncTimeUpdated(now);
+    // Written together: the data and the server time it corresponds to. Taken
+    // from the validate response, so a rebuild that lands between the two calls
+    // is picked up by the next run instead of being skipped.
+    populateCache(slug, collector.build(), serverSyncedAt);
 
     if (isFirstLoad) {
-      isFirstLoad = false;
-      callbacks.onFirstLoadSuccess();
+      finishFirstLoad(callbacks);
     } else {
       callbacks.onRefreshComplete();
     }
@@ -58,45 +62,51 @@ async function runSync(
   }
 }
 
+function finishFirstLoad(callbacks: SyncCallbacks): void {
+  if (!isFirstLoad) {
+    return;
+  }
+  isFirstLoad = false;
+  callbacks.onFirstLoadSuccess();
+}
+
 // ── Scheduling ─────────────────────────────────────────────────────────────────
 
-function scheduleNext(
-  slug: string,
-  lastSyncTime: number,
-  callbacks: SyncCallbacks,
-): void {
+function scheduleNext(slug: string, callbacks: SyncCallbacks): void {
   const interval = getSyncInterval(slug);
 
   // TODO: have something smarter?  check how this works on sleep/resume/kill/restart
   intervalHandle = setTimeout(() => {
-    runSync(slug, lastSyncTime, callbacks).then(() => {
-      scheduleNext(slug, lastSyncTime, callbacks);
+    runSync(slug, callbacks).then(() => {
+      scheduleNext(slug, callbacks);
     });
   }, interval);
 }
 
 // ── Public API ─────────────────────────────────────────────────────────────────
 
-export function startSync(
-  slug: string,
-  lastSyncTime: number,
-  callbacks: SyncCallbacks,
-): void {
-  stop();
-  isFirstLoad = true;
+// Startup order: persisted data first, network second. A restore releases the
+// splash immediately and lets the freshness check run behind an already usable
+// UI — so a cold start with no connectivity opens on the last known schedule
+// instead of the error screen.
+async function bootstrap(slug: string, callbacks: SyncCallbacks): Promise<void> {
+  const restored = await hydrateFestivalCache(slug);
+  if (restored) {
+    finishFirstLoad(callbacks);
+  }
 
-  // Run immediately on start, then schedule recurring checks.
-  runSync(slug, lastSyncTime, callbacks).then(() => {
-    scheduleNext(slug, lastSyncTime, callbacks);
-  });
+  await runSync(slug, callbacks);
+  scheduleNext(slug, callbacks);
 }
 
-export function triggerManualSync(
-  slug: string,
-  lastSyncTime: number,
-  callbacks: SyncCallbacks,
-): void {
-  runSync(slug, lastSyncTime, callbacks);
+export function startSync(slug: string, callbacks: SyncCallbacks): void {
+  stop();
+  isFirstLoad = true;
+  void bootstrap(slug, callbacks);
+}
+
+export function triggerManualSync(slug: string, callbacks: SyncCallbacks): void {
+  runSync(slug, callbacks);
 }
 
 export function stop(): void {
