@@ -236,7 +236,8 @@ export function ArtistDetailBody({ artist }: Props) {
             source={{ uri: artist.thumbUrl }}
             style={{ width: innerWidth, height: imageHeight }}
             contentFit="contain"
-            cachePolicy="memory"
+            // Same URL the artist row renders, so this shares its cache entry.
+            cachePolicy="memory-disk"
             onLoadEnd={() => setImageLoading(false)}
           />
           {imageLoading && (

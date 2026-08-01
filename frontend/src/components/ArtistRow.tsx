@@ -45,11 +45,16 @@ export const ArtistRow = React.memo(function ArtistRow({ artist, status, onPress
       {/* Thumbnail */}
       <View className="w-18 h-14 mr-3 bg-surface overflow-hidden">
         {artist.thumbUrl !== '' ? (
+          // Disk-backed on purpose: the list unmounts rows as they scroll off, so a
+          // memory-only policy re-downloads ~280 kB per row every time one comes back.
+          // The corpus is bounded (~44 MB for a full edition, and the detail hero reuses
+          // this exact URL) and both platforms evict it themselves — Glide by a 250 MB
+          // LRU, SDWebImage by a one-week age limit.
           <ExpoImage
             source={{ uri: artist.thumbUrl }}
             style={{ width: 75, height: 56 }}
             contentFit="cover"
-            cachePolicy="memory"
+            cachePolicy="memory-disk"
           />
         ) : (
           <View className="w-14 h-14 bg-surface" />

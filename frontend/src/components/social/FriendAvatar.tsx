@@ -35,7 +35,7 @@ export function FriendAvatar({ label, avatarUrl, size = 22, status }: Props) {
         source={{ uri: avatarUrl }}
         style={{ width: size, height: size, borderRadius: radius, ...ring }}
         contentFit="cover"
-        cachePolicy="memory"
+        cachePolicy="memory-disk"
       />
     ) : (
       <View
