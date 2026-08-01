@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import * as NativeSplash from 'expo-splash-screen';
 import { useAppContext } from './AppContext';
 import { SplashScreen } from '../screens/SplashScreen';
 import { startSync, stop as stopSync } from '../sync/backgroundSyncService';
@@ -25,6 +26,18 @@ export function StartupGate({ children }: { children: React.ReactNode }) {
 
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Hand over from the native splash once this gate has painted — normally its own
+  // loading screen, or the app itself when a persisted cache makes startup instant.
+  // Deliberately not keyed on `ready`: the handover has to happen either way, and a
+  // gate that finishes in one frame would otherwise leave the native splash up
+  // forever. One frame of delay so the handover lands on painted content.
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      NativeSplash.hideAsync().catch(() => undefined);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   const runStartup = useCallback((slug: string): void => {
     setReady(false);

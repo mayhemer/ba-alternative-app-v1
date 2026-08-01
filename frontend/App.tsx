@@ -17,6 +17,13 @@ import { ArtistListFilterProvider } from './src/context/ArtistListFilterContext'
 import { TimelineFilterProvider } from './src/context/TimelineFilterContext';
 import { AppShell } from './src/components/layout/AppShell';
 import { Image as ExpoImage } from 'expo-image';
+import * as SplashScreen from 'expo-splash-screen';
+
+// Module scope on purpose. The native splash auto-hides as soon as the root view
+// renders — before any effect could run — which is what left a white window while
+// the JS bundle was still being evaluated. Holding it here means the BA image stays
+// up until StartupGate has painted; StartupGate owns the handover.
+SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 // ── App content: full provider tree, mounted once startup hydration completes ─
 
