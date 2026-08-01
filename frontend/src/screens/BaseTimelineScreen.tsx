@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect } from 'react';
-import { View } from 'react-native';
-import { Text } from '../components/ui/Text';
+import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { useSelectedSlug } from '../store/AppContext';
 import { getFestivalDays } from '../cache/cacheService';
 import type { DbArtist, DbEvent } from '../types/backend';
@@ -111,13 +110,7 @@ export function BaseTimelineScreen({ title, screenKey, BottomBarComponent, filte
   // ── Render ──────────────────────────────────────────────────────────────────
 
   if (selectedDayStart === 0) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <Text className="text-textSecondary text-sm tracking-widest uppercase">
-          Loading schedule…
-        </Text>
-      </View>
-    );
+    return <LoadingScreen message="Loading schedule…" />;
   }
 
   return (

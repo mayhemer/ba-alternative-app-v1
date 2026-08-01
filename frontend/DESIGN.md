@@ -180,6 +180,17 @@ one that is not on screen.
 ### Layout
 - `AppShell` — wraps every screen. Contains TopBar, ScreenContent, BottomBar.
 - `SideDrawer` — overlays from left edge. Contains NavMenu.
+- `LoadingScreen` — the one full-screen "waiting" presentation (spinner + caption),
+  taking only the caption as a prop. Used by the startup splash ("Loading brutal
+  data"), the timeline ("Loading schedule…") and the artist list ("Loading
+  artists…"), which a cold start shows back to back — they are one component rather
+  than three lookalikes so they cannot drift apart.
+
+  A waiting state is only for *data not loaded yet*. "Nothing matches the current
+  filters" is an answer, not a wait, and keeps its own empty-state message. Screens
+  must also read the cache synchronously when they mount (`useState` initialiser,
+  not a mount effect) — the cache is already populated by `StartupGate`, so deferring
+  the read by a frame paints an empty list and flashes the empty-state message.
 
 ### Top Bar
 - `TopBar` — fixed top. Normal mode and Message mode. No layout shift between modes. Overlaid by ArtistDetailScreen when fully expanded.

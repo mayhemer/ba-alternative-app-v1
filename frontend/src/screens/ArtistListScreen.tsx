@@ -17,6 +17,7 @@ import { useSocialData } from '../context/SocialContext';
 import { useArtistDetail } from '../context/ArtistDetailContext';
 import { ArtistRow } from '../components/ArtistRow';
 import { SectionSeparator } from '../components/SectionSeparator';
+import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { LensChip } from '../components/social/LensChip';
 import { useLayoutMode } from '../hooks/useLayoutMode';
 import { matchesScope } from '../utils/interestUtils';
@@ -77,7 +78,12 @@ function ArtistListScreenInner() {
   const friendInterests =
     scope.kind === 'friend' ? getFriend(scope.token)?.interests : undefined;
 
-  const [allArtists, setAllArtists] = useState<DbArtist[]>([]);
+  // Seeded synchronously, not from the mount effect: StartupGate has already
+  // populated the cache by the time this screen mounts, so reading it a frame later
+  // painted one empty list — long enough to flash "No artists found" on first run.
+  const [allArtists, setAllArtists] = useState<DbArtist[]>(
+    () => getArtists(selectedSlug).filter((a) => a.isPlayable),
+  );
 
   const loadArtists = useCallback(() => {
     const playable = getArtists(selectedSlug).filter((a) => a.isPlayable);
@@ -117,6 +123,13 @@ function ArtistListScreenInner() {
   const renderItem = useCallback(({ item }: { item: DbArtist }) => (
     <ArtistRow artist={item} status={getStatus(item.artistId)} onPress={handleRowPress} />
   ), [getStatus, handleRowPress]);
+
+  // Nothing cached yet is a wait, not an answer — the same state the timeline shows
+  // while its days are still being derived. Filters only ever narrow `allArtists`,
+  // so an empty one cannot be a filtered-out result; that case is ListEmptyComponent.
+  if (allArtists.length === 0) {
+    return <LoadingScreen message="Loading artists…" />;
+  }
 
   return (
     <SectionList<DbArtist, Section>
