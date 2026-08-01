@@ -62,12 +62,14 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    // 'memory' must match the policy the icons render with in ArtistDetailScreen —
+    // a prefetch into a different cache than the one the view reads leaves them cold.
     ExpoImage.prefetch([
       require('./assets/spotify-icon-72.png'),
       require('./assets/tidal-icon-72.png'),
       require('./assets/metal-archives-icon-72.png'),
       require('./assets/setlist-fm-icon-72.png'),
-    ]);
+    ], 'memory');
   }, []);
 
   return (

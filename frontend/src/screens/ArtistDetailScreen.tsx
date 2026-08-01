@@ -176,6 +176,12 @@ export function ArtistDetailBody({ artist }: Props) {
                   source={require('../../assets/spotify-icon-72.png')}
                   style={{ width: STREAMING_ICON_SIZE, height: STREAMING_ICON_SIZE }}
                   contentFit="contain"
+                  // Bundled assets: the bundle is already their persistent copy, so a
+                  // disk-cache round trip buys nothing and puts them in the same queue
+                  // as the hero's ~300 kB download — which is what kept them blank
+                  // until it finished. Memory + high priority keeps them independent.
+                  cachePolicy="memory"
+                  priority="high"
                 />
               </TouchableOpacity>
             )}
@@ -185,6 +191,12 @@ export function ArtistDetailBody({ artist }: Props) {
                   source={require('../../assets/tidal-icon-72.png')}
                   style={{ width: STREAMING_ICON_SIZE, height: STREAMING_ICON_SIZE }}
                   contentFit="contain"
+                  // Bundled assets: the bundle is already their persistent copy, so a
+                  // disk-cache round trip buys nothing and puts them in the same queue
+                  // as the hero's ~300 kB download — which is what kept them blank
+                  // until it finished. Memory + high priority keeps them independent.
+                  cachePolicy="memory"
+                  priority="high"
                 />
               </TouchableOpacity>
             )}
@@ -194,6 +206,12 @@ export function ArtistDetailBody({ artist }: Props) {
                   source={require('../../assets/metal-archives-icon-72.png')}
                   style={{ width: STREAMING_ICON_SIZE, height: STREAMING_ICON_SIZE }}
                   contentFit="contain"
+                  // Bundled assets: the bundle is already their persistent copy, so a
+                  // disk-cache round trip buys nothing and puts them in the same queue
+                  // as the hero's ~300 kB download — which is what kept them blank
+                  // until it finished. Memory + high priority keeps them independent.
+                  cachePolicy="memory"
+                  priority="high"
                 />
               </TouchableOpacity>
             )}
@@ -203,6 +221,12 @@ export function ArtistDetailBody({ artist }: Props) {
                   source={require('../../assets/setlist-fm-icon-72.png')}
                   style={{ width: STREAMING_ICON_SIZE, height: STREAMING_ICON_SIZE }}
                   contentFit="contain"
+                  // Bundled assets: the bundle is already their persistent copy, so a
+                  // disk-cache round trip buys nothing and puts them in the same queue
+                  // as the hero's ~300 kB download — which is what kept them blank
+                  // until it finished. Memory + high priority keeps them independent.
+                  cachePolicy="memory"
+                  priority="high"
                 />
               </TouchableOpacity>
             )}
