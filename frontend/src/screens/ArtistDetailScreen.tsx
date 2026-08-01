@@ -134,7 +134,11 @@ export function ArtistDetailBody({ artist }: Props) {
   useEffect(() => {
     if (!isWeb) { return; }
     function handleKeyDown(e: KeyboardEvent): void {
-      if (e.key === 'Escape') { closeDetail(); }
+      if (e.key !== 'Escape') { return; }
+      // Escape's browser default action is "stop loading" — it aborts every
+      // in-flight request, which on this screen means the pending images.
+      e.preventDefault();
+      closeDetail();
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);

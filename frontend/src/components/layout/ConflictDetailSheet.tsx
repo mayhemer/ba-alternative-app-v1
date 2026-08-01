@@ -336,6 +336,9 @@ export function ConflictDetailSheet() {
     if (conflictState.sourceEvent === null) { return; }
     function handleKeyDown(e: KeyboardEvent): void {
       if (e.key === 'Escape') {
+        // stopPropagation only silences other listeners; preventDefault is what
+        // stops the browser aborting in-flight requests (its Escape default).
+        e.preventDefault();
         e.stopPropagation();
         closeConflict();
       }
