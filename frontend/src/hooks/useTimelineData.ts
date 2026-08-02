@@ -78,6 +78,11 @@ export function useTimelineData({ filterArtist, useSubRows = false }: Options = 
       map[a.artistId] = a;
     }
     return map;
+    // `revision` is the dependency ESLint cannot see: the body reads a ref, so the
+    // counter loadData bumps is the only signal that its contents changed. It is
+    // not redundant — drop it and the map freezes at whatever was cached on mount,
+    // so a slug switch or a background sync never reaches the timeline.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [revision]);
 
   // Keep getStatus accessible inside the memo without depending on its identity.
@@ -112,6 +117,8 @@ export function useTimelineData({ filterArtist, useSubRows = false }: Options = 
           !hiddenCategories.has(c.categoryId) &&
           (eventsByCategory[c.categoryId]?.length ?? 0) > 0,
       );
+    // Same as artistById above: `revision` stands in for categoriesRef's contents.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [revision, hiddenCategories, eventsByCategory]);
 
   const laneHeights = useMemo<Record<string, number>>(() => {
