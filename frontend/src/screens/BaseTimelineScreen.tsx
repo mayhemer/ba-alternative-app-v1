@@ -9,13 +9,8 @@ import { useTimelineFilter } from '../context/TimelineFilterContext';
 import { TimelineView } from '../components/timeline/TimelineView';
 import { LensChip } from '../components/social/LensChip';
 import { useTimelineData } from '../hooks/useTimelineData';
-import { getScroll, getSelectedDay, setScroll, setSelectedDay } from '../store/uiStatePersistence';
-import {
-  DAY_DURATION_MS,
-  VIEW_OFFSET_X,
-  PIXELS_PER_MS,
-  getFestivalDayStart,
-} from '../components/timeline/timelineLayout';
+import { getSelectedDay, setSelectedDay } from '../store/uiStatePersistence';
+import { getFestivalDayStart } from '../components/timeline/timelineLayout';
 import { currentTimeMs } from '../utils/clock';
 import { useLayoutMode } from '../hooks/useLayoutMode';
 
@@ -58,20 +53,9 @@ export function BaseTimelineScreen({ title, screenKey, BottomBarComponent, filte
     setFestivalDays(days);
     if (days.length === 0) { return; }
 
-    // Prebuild default scroll positions (30 min before first event) for days
-    // that have no saved position yet. Reads the hydrated snapshot directly, so
-    // a persisted scroll for a day is never overwritten by a default.
-    for (const day of days) {
-      if (getScroll(screenKey, day) !== undefined) { continue; }
-      const dayEnd = day + DAY_DURATION_MS;
-      const dayEvents = events.filter((e) => e.dateFrom >= day && e.dateFrom < dayEnd);
-      if (dayEvents.length > 0) {
-        const firstEventMs = Math.min(...dayEvents.map((e) => e.dateFrom));
-        const thirtyMinMs = 30 * 60 * 1000;
-        const defaultX = Math.max(0, (firstEventMs - thirtyMinMs - day) * PIXELS_PER_MS - VIEW_OFFSET_X);
-        setScroll(screenKey, day, defaultX);
-      }
-    }
+    // No default scroll positions are prebuilt here any more. TimelineView derives
+    // them from the day it is about to show (`defaultScrollX`), which is the only
+    // way the value cannot arrive after the view that reads it.
 
     if (days.includes(selectedDayStart)) { return; }
     // Restore the persisted day if it is still valid, else fall back to today,
@@ -84,8 +68,11 @@ export function BaseTimelineScreen({ title, screenKey, BottomBarComponent, filte
     const today = getFestivalDayStart(currentTimeMs());
     const todayDay = days.find((d) => d === today);
     setSelectedDayStart(todayDay ?? days[0]);
-    // selectedDayStart intentionally omitted — only re-run when events change,
-    // not on every day-switch (which would fight the user's selection).
+    // `events` is kept as the "data arrived" signal even though the body no longer
+    // reads it — getFestivalDays reads the same cache, and this is what re-runs the
+    // effect when a sync repopulates it (same pattern as `revision` in
+    // ConflictContext). selectedDayStart is intentionally omitted: re-running on
+    // every day switch would fight the user's selection.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [events, screenKey, setFestivalDays, setSelectedDayStart]);
 

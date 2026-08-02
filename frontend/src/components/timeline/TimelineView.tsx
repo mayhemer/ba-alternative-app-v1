@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import Animated, {
@@ -27,6 +27,7 @@ import {
   PIXELS_PER_MS,
   labelRepeatPx,
   timeToX,
+  defaultScrollX,
 } from './timelineLayout';
 import { colors } from '../../styling/tokens';
 import { currentTimeMs } from '../../utils/clock';
@@ -110,10 +111,53 @@ export function TimelineView({
   // the offsets it hands down cannot disagree with the layout rendered here.
   const stripHeight = stripHeightFor(isShort);
 
+  // ── Default landing position ────────────────────────────────────────────────
+
+  // Earliest event of the day *as this screen renders it* — so the support
+  // timeline aims at its own first event, not the main stage's.
+  const firstEventMs = useMemo<number | undefined>(() => {
+    let earliest: number | undefined;
+    for (const laneEvents of Object.values(eventsByCategory)) {
+      for (const { event } of laneEvents) {
+        if (earliest === undefined || event.dateFrom < earliest) {
+          earliest = event.dateFrom;
+        }
+      }
+    }
+    return earliest;
+  }, [eventsByCategory]);
+
+  // Read imperatively by the persist guard, which must keep a stable identity —
+  // it feeds useAnimatedScrollHandler's dependency list.
+  const firstEventMsRef = useRef(firstEventMs);
+  firstEventMsRef.current = firstEventMs;
+
+  // Where a day opens: the persisted offset if the user ever scrolled it, else
+  // derived from that day's first event.
+  const landingX = useCallback((day: number): number => {
+    return getScroll(screenKey, day) ?? defaultScrollX(firstEventMsRef.current, day);
+  }, [screenKey]);
+
   // ── Horizontal scroll tracking ──────────────────────────────────────────────
 
   const horizontalScrollRef = useAnimatedRef<Animated.ScrollView>();
-  const scrollX = useSharedValue(0);
+
+  // Captured once, for the very first day this view shows. It is handed to the
+  // ScrollView as `contentOffset`, which iOS re-applies whenever the prop changes
+  // — so it must never change again, or a later render would yank the view out
+  // from under the user. Day switches scroll imperatively instead.
+  const mountOffsetRef = useRef<number | null>(null);
+  if (mountOffsetRef.current === null) {
+    mountOffsetRef.current = landingX(selectedDayStart);
+  }
+  const mountOffset = mountOffsetRef.current;
+  const mountContentOffset = useRef({ x: mountOffset, y: 0 }).current;
+
+  // Seeded to the same offset the view mounts at: TimeRuler positions itself from
+  // scrollX, so a zero here would draw the ruler out of step with the lanes until
+  // the first scroll event — and any position persisted before then would record a
+  // place the user was never at.
+  const scrollX = useSharedValue(mountOffset);
   const lastPersist = useSharedValue(0);
 
   const selectedDayStartRef = useRef(selectedDayStart);
@@ -122,9 +166,13 @@ export function TimelineView({
   // Persist the settled scroll offset for the current day. Called on JS thread
   // from the scroll-gesture-end worklets, so it reads the current day from a ref.
   const persistCurrentScroll = useCallback((x: number): void => {
-    if (selectedDayStartRef.current !== 0) {
-      setScroll(screenKey, selectedDayStartRef.current, x);
-    }
+    if (selectedDayStartRef.current === 0) { return; }
+    // A day with nothing on it has no position worth remembering, and the one it
+    // would store is exactly the left-edge fallback — which would then outrank the
+    // derived default once the day does have events (lens switched back to "all",
+    // say), pinning it to 08:30 for good.
+    if (firstEventMsRef.current === undefined) { return; }
+    setScroll(screenKey, selectedDayStartRef.current, x);
   }, [screenKey]);
 
   const onScroll = useAnimatedScrollHandler({
@@ -187,9 +235,13 @@ export function TimelineView({
     }
     prevDayRef.current = selectedDayStart;
 
-    const savedX = getScroll(screenKey, selectedDayStart) ?? 0;
+    const savedX = landingX(selectedDayStart);
 
     if (prevDay === 0) {
+      // The first day is already mounted at this offset via `contentOffset`, which
+      // both native platforms honour. This is the web fallback (react-native-web
+      // ignores the prop), and on native a no-op — or a correction, should iOS have
+      // clamped the mount offset against a content size it did not have yet.
       const timer = setTimeout(() => {
         scheduleOnUI(() => { scrollTo(horizontalScrollRef, savedX, 0, false); });
       }, 50);
@@ -214,7 +266,7 @@ export function TimelineView({
   // effect above scrolls to, so the first slice is the span the user is about to
   // see; the vertical one is wherever the lane stack is already parked.
   if (mountWindow.day !== selectedDayStart) {
-    const anchorX = (getScroll(screenKey, selectedDayStart) ?? 0) + VIEW_OFFSET_X;
+    const anchorX = landingX(selectedDayStart) + VIEW_OFFSET_X;
     const anchorY = scrollYRef.current;
     setMountWindow({
       day: selectedDayStart,
@@ -318,12 +370,10 @@ export function TimelineView({
   // Save scroll position when the screen loses focus (navigating away).
   useFocusEffect(
     useCallback(() => {
-      return () => {
-        if (selectedDayStartRef.current !== 0) {
-          setScroll(screenKey, selectedDayStartRef.current, scrollX.value);
-        }
-      };
-    }, [scrollX, screenKey]),
+      // Routed through persistCurrentScroll rather than calling setScroll directly,
+      // so leaving a day with nothing on it inherits the same guard.
+      return () => { persistCurrentScroll(scrollX.value); };
+    }, [scrollX, persistCurrentScroll]),
   );
 
   // ── Render ──────────────────────────────────────────────────────────────────
@@ -373,6 +423,11 @@ export function TimelineView({
             showsHorizontalScrollIndicator={false}
             scrollEventThrottle={16}
             onScroll={onScroll}
+            // Mounts already at the day's landing position instead of scrolling
+            // there afterwards, so there is no window in which the view, scrollX
+            // and the mount anchor disagree. Ignored by react-native-web; the
+            // restore effect's first-mount branch covers that.
+            contentOffset={mountContentOffset}
             onLayout={(e) => {
               const measured = e.nativeEvent.layout.width;
               scrollViewWidthRef.current = measured;

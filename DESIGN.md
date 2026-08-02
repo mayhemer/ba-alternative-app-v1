@@ -207,6 +207,37 @@ canvas at least viewport-tall. The canvas is the *horizontal* scroller's content
 is what lets a horizontal drag below the last lane still pan the timeline when a day has only a
 couple of lanes.
 
+### Timeline landing position
+
+A day the user has never scrolled opens 30 minutes before its first event, not at the window's left
+edge. Note the left edge is 08:30 by construction — `VIEW_START_H` is where the scrollable window
+starts — so "scroll offset 0" *is* 08:30; there is no 08:30 default anywhere to change.
+
+`defaultScrollX(firstEventMs, dayStart)` in `timelineLayout.ts` owns the calculation, and
+`TimelineView` calls it at both places that need it: the day-restore effect and the progressive-mount
+anchor. Those two must agree or the mount window prepares a different span from the one the view
+lands on. The 06:00 boundary needs no handling — `dayStart` is already the 06:00 start and `timeToX`
+is relative to it. `firstEventMs` comes from `eventsByCategory`, i.e. the day as *this screen*
+renders it, so the support timeline aims at its own first event.
+
+The view **mounts** at that offset via the ScrollView's `contentOffset` rather than scrolling there
+afterwards, and `scrollX` is seeded to the same value. Both native platforms honour the prop
+(react-native-web does not; the restore effect's first-mount branch is its fallback). The prop object
+must keep a stable identity — iOS re-applies `contentOffset` whenever it changes, which would yank a
+scrolled view back.
+
+That is not polish, it is what makes the offset race-free. While a view is scrolling *towards* its
+position, `scrollX` still holds the old one, and every path that persists a scroll offset — including
+losing focus and switching days — would record a place the user was never at. Mounting in position
+leaves no such window, and so needs no logic to tell our own scrolling apart from the user's.
+
+The one case ordering cannot fix: a day with no events to aim at. The default is then 0, and
+persisting it would outrank the real default once the day does have events (lens switched back to
+"all", say). `persistCurrentScroll` therefore stores nothing while the day is empty, and the
+focus-loss path routes through it for the same reason.
+
+This whole area is the worked example behind `.claude/skills/derived-state-races`.
+
 ### Timeline rendering: never counter-animate against scroll
 
 **Nothing in the timeline may hold its position by animating against the scroll offset.** Every

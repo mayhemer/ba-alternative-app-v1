@@ -53,9 +53,13 @@ export function useTimelineData({ filterArtist, useSubRows = false }: Options = 
   const friendInterests =
     scope.kind === 'friend' ? getFriend(scope.token)?.interests : undefined;
 
-  const eventsRef     = useRef<DbEvent[]>([]);
-  const artistsRef    = useRef<DbArtist[]>([]);
-  const categoriesRef = useRef<DbCategory[]>([]);
+  // Seeded from the cache during the first render, not from the mount effect
+  // below: StartupGate has already populated it, and reading a frame later left
+  // the first render with no events at all — long enough for consumers to act on
+  // an empty timeline (see DESIGN.md).
+  const eventsRef     = useRef<DbEvent[]>(getEvents(selectedSlug));
+  const artistsRef    = useRef<DbArtist[]>(getArtists(selectedSlug));
+  const categoriesRef = useRef<DbCategory[]>(getCategories(selectedSlug));
   const [revision, setRevision] = useState(0);
 
   const loadData = useCallback(() => {

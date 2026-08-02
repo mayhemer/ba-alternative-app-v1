@@ -102,6 +102,30 @@ export function timeToX(timestampMs: number, dayStartMs: number): number {
   return Math.max(0, (timestampMs - dayStartMs) * PIXELS_PER_MS);
 }
 
+// How much empty time to leave to the left of the day's first event when the
+// timeline opens on a day the user has never scrolled.
+export const TIMELINE_PRE_ROLL_MS = 15 * 60 * 1000;
+
+/**
+ * Content-space X that puts the day's first event `TIMELINE_PRE_ROLL_MS` in from
+ * the left edge — the position a day opens at when nothing was persisted for it.
+ *
+ * Derived where it is read rather than precomputed into storage: a precomputed
+ * default has to win a race against the view that consumes it, and loses (see
+ * DESIGN.md). Returns 0 — i.e. the window's left edge, 08:30 — when the day has
+ * no events to aim at.
+ *
+ * The 06:00 day boundary needs no special handling here: `dayStartMs` is already
+ * the 06:00 start and `timeToX` is relative to it, so an early first event
+ * clamps to the left edge on its own.
+ */
+export function defaultScrollX(firstEventMs: number | undefined, dayStartMs: number): number {
+  if (firstEventMs === undefined) {
+    return 0;
+  }
+  return Math.max(0, timeToX(firstEventMs - TIMELINE_PRE_ROLL_MS, dayStartMs) - VIEW_OFFSET_X);
+}
+
 /**
  * Return the festival-day start (06:00 local) that contains the given timestamp.
  * Events before 06:00 belong to the previous calendar day.
