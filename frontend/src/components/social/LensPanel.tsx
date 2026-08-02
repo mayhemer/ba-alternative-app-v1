@@ -15,6 +15,7 @@ import { useFeedback } from '../../context/ScreenUIContext';
 import { useInterestCycle } from '../../context/InterestContext';
 import { type LensScope } from '../../utils/interestUtils';
 import { shareLink, copyToClipboard } from '../../utils/shareLink';
+import { navigationRef } from '../../navigation/navigationRef';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
 import {
   colors,
@@ -129,6 +130,15 @@ export function LensPanel() {
     },
     [removeFriend, scope, setScope],
   );
+
+  // The panel renders above NavigationContainer, so it navigates through the
+  // module-level ref rather than useNavigation.
+  const goToSettings = useCallback(() => {
+    if (navigationRef.isReady()) {
+      navigationRef.navigate('Settings');
+    }
+    close();
+  }, [close]);
 
   const handleShareMine = useCallback(async () => {
     setBusy(true);
@@ -284,9 +294,29 @@ export function LensPanel() {
           <SectionLabel>My schedule</SectionLabel>
 
           {!isLoggedIn ? (
-            <Text style={{ color: colors.notInterested, fontSize: 13, paddingHorizontal: 8, paddingVertical: 8 }}>
-              Sign in (Settings) to share your schedule.
-            </Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                paddingHorizontal: 8,
+                paddingVertical: 8,
+              }}
+            >
+              <Pressable
+                onPress={goToSettings}
+                hitSlop={20}
+                accessibilityRole="link"
+                accessibilityLabel="Sign in"
+              >
+                <Text style={{ color: colors.accent, fontSize: 13, fontFamily: 'Bold-Default' }}>
+                  Sign in
+                </Text>
+              </Pressable>
+              <Text style={{ color: colors.notInterested, fontSize: 13 }}>
+                {' to share your schedule.'}
+              </Text>
+            </View>
           ) : (
             <>
               <Pressable
