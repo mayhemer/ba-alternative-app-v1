@@ -13,6 +13,8 @@ import { FeedbackToast } from './FeedbackToast';
 import { LensPanel } from '../social/LensPanel';
 import { useShareLinkHandler } from '../../navigation/useShareLinkHandler';
 import { AppNavigator } from '../../navigation/AppNavigator';
+import { BackHistoryTracker } from '../../navigation/BackHistoryTracker';
+import { observe, type ScreenName } from '../../navigation/backHistory';
 import { navigationRef } from '../../navigation/navigationRef';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
 import { colors } from '../../styling/tokens';
@@ -41,6 +43,13 @@ export function AppShell() {
   const handleStateChange = useCallback((state: NavigationState | undefined): void => {
     if (state !== undefined) {
       void AsyncStorage.setItem(NAV_STATE_KEY, JSON.stringify(state));
+      // The back history's only source for the current screen — the navigator's
+      // own state never reaches the contexts BackHistoryTracker watches. The
+      // drawer's open/closed entry in `state.history` is deliberately ignored.
+      const route = state.routes[state.index];
+      if (route !== undefined) {
+        observe({ screen: route.name as ScreenName });
+      }
     }
   }, []);
 
@@ -66,6 +75,11 @@ export function AppShell() {
           >
             <AppNavigator />
           </NavigationContainer>
+          {/* Back-button history. Its position here is load-bearing: a sibling
+              immediately after NavigationContainer is what registers its back
+              handler *after* the navigator's, and so ahead of it in RN's
+              last-registered-first queue. See navigation/BackHistoryTracker. */}
+          <BackHistoryTracker />
           {/* View/share lens panel — drops from under the TopBar over the content */}
           <LensPanel />
           {/* Short viewports: the bar floats over the content, reclaiming its

@@ -102,7 +102,7 @@ export function ArtistDetailHeader({ artist }: Props) {
 // ── Body (scrollable content) ─────────────────────────────────────────────────
 
 export function ArtistDetailBody({ artist }: Props) {
-  const { closeDetail, content, innerWidth, heroHeight, hPad, isWeb, artistNameForURL, artistWebDomain, width, conflictMap, openConflict } = useArtistDerived(artist);
+  const { closeDetail, content, innerWidth, heroHeight, hPad, artistNameForURL, artistWebDomain, width, conflictMap, openConflict } = useArtistDerived(artist);
   const { setSelectedDayStart, requestScrollToTime } = useTimelineFilter();
   const { friendsByArtist } = useSocialData();
   const friends = friendsByArtist[artist.artistId] ?? [];
@@ -131,18 +131,8 @@ export function ArtistDetailBody({ artist }: Props) {
 
   useEffect(() => { setImageLoading(true); }, [artist.artistId]);
 
-  useEffect(() => {
-    if (!isWeb) { return; }
-    function handleKeyDown(e: KeyboardEvent): void {
-      if (e.key !== 'Escape') { return; }
-      // Escape's browser default action is "stop loading" — it aborts every
-      // in-flight request, which on this screen means the pending images.
-      e.preventDefault();
-      closeDetail();
-    }
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isWeb, closeDetail]);
+  // Escape-to-close lives in navigation/BackHistoryTracker, which owns the one
+  // dismissal order shared by the back button and the keyboard.
 
   const artistEvents = getArtistEvents(artist.slug, artist.artistId);
   const stagesForSlug = getStages(artist.slug);

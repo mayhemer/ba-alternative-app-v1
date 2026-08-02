@@ -43,6 +43,35 @@
 - Back button candidate — placement TBD (TopBar vs BottomBar).
 - Fed per screen similarly to TopBar.
 
+### Back history
+
+Android's hardware back button — and the browser's back button on web — walk back
+through *positions* the user has been in. A position is one tuple: the screen, the
+selected festival day, the lens scope, and which sheet is open (artist / conflict).
+
+- **What is a position**: switching section from the drawer nav, jumping to an event
+  from the artist detail view, switching the day on a timeline, opening the artist or
+  conflict sheet, changing the lens filter.
+- **What is not**: opening the drawer or the lens panel, hidden categories, the artist
+  list's search query, and expanding the artist sheet from collapsed. The drawer is
+  left to React Navigation, which already closes it on back; the lens panel is closed
+  by a back press but is never a place you return *to*.
+- One user action is one back press, even when it moves several fields at once
+  ("go to timeline" from the artist sheet changes screen + day + closes the sheet).
+- Dismissing a sheet by swipe, backdrop or Escape is itself a backward move, so it
+  never needs a second press to undo.
+
+Implementation is two files — `navigation/backHistory.ts` (the stack, platform-free)
+and `navigation/BackHistoryTracker.tsx` (observes the contexts, restores a position,
+owns the per-platform trigger). Because positions are *observed* rather than pushed
+by each call site, adding a screen or a new way of opening a sheet needs no changes.
+
+Positions hold artist/event **ids**, re-resolved against the live cache when restored:
+a reference that no longer exists (artist dropped by a cache refresh, conflict gone
+after un-starring, friend removed) simply does not restore that part. The history is
+in memory only — a cold start does not retrace the last session — and is thrown away
+when the festival edition changes, since ids are scoped to an edition.
+
 ---
 
 ## Interest / Star System

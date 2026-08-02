@@ -44,9 +44,12 @@ export function useShareLinkHandler(): void {
       }
 
       // On web, strip the token from the address bar so a refresh won't re-add it.
+      // The existing state object is carried over rather than replaced: the back
+      // history mirrors its depth into it (navigation/BackHistoryTracker), and
+      // this runs at cold start, right when that baseline entry is seeded.
       if (Platform.OS === 'web') {
         const history = globalThis.history as History | undefined;
-        history?.replaceState?.({}, '', '/');
+        history?.replaceState?.(history.state, '', '/');
       }
     }
 
