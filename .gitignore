@@ -1,1 +1,5 @@
 node_modules
+
+# Either contain sensitive info or are generated
+graphify-out/.graphify_python
+**/graphify-out/**cache**
