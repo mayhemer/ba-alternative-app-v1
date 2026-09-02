@@ -3,3 +3,4 @@ node_modules
 # Either contain sensitive info or are generated
 graphify-out/.graphify_python
 **/graphify-out/**cache**
+**/graphify-out/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]
