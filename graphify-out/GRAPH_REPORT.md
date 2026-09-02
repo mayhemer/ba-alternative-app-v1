@@ -1,7 +1,7 @@
 # Graph Report - app  (2026-09-02)
 
 ## Corpus Check
-- 151 files · ~416,633 words
+- 151 files · ~416,650 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `cf5e621a`
+- Built from commit: `c7980b0b`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -90,6 +90,7 @@
 - types.ts
 - Coding guidelines
 - Timeline View
+- expo
 - Navigation
 - LaneLabelOverlay.tsx
 - graphify reference: query, path, explain
@@ -109,7 +110,6 @@
 - .claude/CLAUDE.md
 - extraction-spec.md
 - expo-auth-session
-- expo-crypto
 - @gorhom/bottom-sheet
 - tailwindcss
 
@@ -208,7 +208,7 @@ Nodes (11): RowProps, ColorToken, colors, OVERLAY_PANEL_MARGIN, OVERLAY_PANEL_MA
 
 ### Community 15 - "dependencies"
 Cohesion: 0.22
-Nodes (9): babel-preset-expo, expo, expo-asset, expo-splash-screen, dependencies, babel-preset-expo, expo, expo-asset (+1 more)
+Nodes (9): babel-preset-expo, expo-asset, expo-crypto, expo-splash-screen, dependencies, babel-preset-expo, expo-asset, expo-crypto (+1 more)
 
 ### Community 16 - "What You Must Do When Invoked"
 Cohesion: 0.08

@@ -57,7 +57,7 @@ maps, news, shuttle buses, merch, cashless).
 | Lens | One global scope — *everything* / *my picks* / *a friend's picks* — applied to both the list and the timelines |
 | Sharing | Mint a read-only share link for the current edition; friends are added by opening the link (universal/app link → deep link into the app); revocable |
 | Account | Sign in with Google or Apple via Cognito; picks then sync across devices |
-| Editions | Data is partitioned per festival edition (`ba2019` … `ba2027`); switchable in Settings |
+| Editions | Data is partitioned per festival edition (`ba2019`, `ba2022` … `ba2027` — no 2020/2021, both cancelled); switchable in Settings |
 | Platforms | iOS, Android and web from one codebase; free rotation, phone/tablet/desktop layouts; UI state (last screen, per-day scroll position) restored across restarts |
 
 Not there yet: localization (the UI is English-only, although the data carries EN/CS), push

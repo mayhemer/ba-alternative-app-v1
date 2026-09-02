@@ -20,16 +20,7 @@ export const FESTIVAL_CONFIGS: FestivalConfig[] = [
     startDate: new Date('2019-08-06T00:00:00+02:00').getTime(),
     endDate:   new Date('2019-08-10T23:59:59+02:00').getTime(),
   },
-  {
-    slug: 'ba2020',
-    startDate: new Date('2020-08-04T00:00:00+02:00').getTime(),
-    endDate:   new Date('2020-08-08T23:59:59+02:00').getTime(),
-  },
-  {
-    slug: 'ba2021',
-    startDate: new Date('2021-08-03T00:00:00+02:00').getTime(),
-    endDate:   new Date('2021-08-07T23:59:59+02:00').getTime(),
-  },
+  // No 2020 or 2021 edition — both were cancelled (COVID-19).
   {
     slug: 'ba2022',
     startDate: new Date('2022-08-02T00:00:00+02:00').getTime(),
