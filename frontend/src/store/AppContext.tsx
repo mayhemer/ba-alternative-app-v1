@@ -38,7 +38,7 @@ type AppContextValue = {
 const STORAGE_KEY_SLUG = 'app:selectedSlug';
 // TODO: Change the default slug automatically for the first installation to be
 // the next year when we e.g. one month after BA ended.
-const DEFAULT_SLUG = 'ba2026';
+const DEFAULT_SLUG = 'ba2027';
 
 // ── Reducer ───────────────────────────────────────────────────────────────────
 

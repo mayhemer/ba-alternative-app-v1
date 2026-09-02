@@ -17,7 +17,7 @@
     ]
   },
   "context": {
-    "festivalSlugs": "ba2024,ba2025,ba2026",
+    "festivalSlugs": "ba2019,ba2020,ba2021,ba2022,ba2023,ba2024,ba2025,ba2026,ba2027",
     "@aws-cdk/aws-signer:signingProfileNamePassedToCfn": true,
     "@aws-cdk/aws-ecs-patterns:secGroupsDisablesImplicitOpenListener": true,
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,

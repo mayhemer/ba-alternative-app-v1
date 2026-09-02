@@ -10,23 +10,55 @@ export type FestivalConfig = {
   endDate: number;   // festival end   (last day, 23:59 local time)
 };
 
-// Brutal Assault typically runs for ~5 days in August at Josefov fortress, CZ.
-// Placeholder dates — update before each edition.
+// Brutal Assault runs at Josefov fortress, CZ: the main programme is the first
+// Wednesday of August through the Saturday, preceded by the Tuesday warm-up.
+// The spans below cover the full schedule including that warm-up — Tue 00:00
+// through Sat 23:59, five days.
 export const FESTIVAL_CONFIGS: FestivalConfig[] = [
   {
+    slug: 'ba2019',
+    startDate: new Date('2019-08-06T00:00:00+02:00').getTime(),
+    endDate:   new Date('2019-08-10T23:59:59+02:00').getTime(),
+  },
+  {
+    slug: 'ba2020',
+    startDate: new Date('2020-08-04T00:00:00+02:00').getTime(),
+    endDate:   new Date('2020-08-08T23:59:59+02:00').getTime(),
+  },
+  {
+    slug: 'ba2021',
+    startDate: new Date('2021-08-03T00:00:00+02:00').getTime(),
+    endDate:   new Date('2021-08-07T23:59:59+02:00').getTime(),
+  },
+  {
+    slug: 'ba2022',
+    startDate: new Date('2022-08-02T00:00:00+02:00').getTime(),
+    endDate:   new Date('2022-08-06T23:59:59+02:00').getTime(),
+  },
+  {
+    slug: 'ba2023',
+    startDate: new Date('2023-08-01T00:00:00+02:00').getTime(),
+    endDate:   new Date('2023-08-05T23:59:59+02:00').getTime(),
+  },
+  {
     slug: 'ba2024',
-    startDate: new Date('2024-08-07T00:00:00+02:00').getTime(),
-    endDate:   new Date('2024-08-11T23:59:59+02:00').getTime(),
+    startDate: new Date('2024-08-06T00:00:00+02:00').getTime(),
+    endDate:   new Date('2024-08-10T23:59:59+02:00').getTime(),
   },
   {
     slug: 'ba2025',
-    startDate: new Date('2025-08-06T00:00:00+02:00').getTime(),
-    endDate:   new Date('2025-08-10T23:59:59+02:00').getTime(),
+    startDate: new Date('2025-08-05T00:00:00+02:00').getTime(),
+    endDate:   new Date('2025-08-09T23:59:59+02:00').getTime(),
   },
   {
     slug: 'ba2026',
-    startDate: new Date('2026-08-05T00:00:00+02:00').getTime(),
-    endDate:   new Date('2026-08-09T23:59:59+02:00').getTime(),
+    startDate: new Date('2026-08-04T00:00:00+02:00').getTime(),
+    endDate:   new Date('2026-08-08T23:59:59+02:00').getTime(),
+  },
+  {
+    slug: 'ba2027',
+    startDate: new Date('2027-08-03T00:00:00+02:00').getTime(),
+    endDate:   new Date('2027-08-07T23:59:59+02:00').getTime(),
   },
 ];
 
