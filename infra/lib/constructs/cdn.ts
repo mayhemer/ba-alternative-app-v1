@@ -51,6 +51,20 @@ export class Cdn extends Construct {
       cookieBehavior: cloudfront.CacheCookieBehavior.none(),
     });
 
+    // The sync watermark is polled by every running app on a timer, so it is by
+    // far the most-requested path. A short TTL collapses the whole fleet onto one
+    // origin request per slug per window while still surfacing a rebuild promptly.
+    const validityCache = new cloudfront.CachePolicy(this, 'ValidityCache', {
+      cachePolicyName: 'ba-validity-cache',
+      comment: '30-second cache for the sync watermark endpoint',
+      defaultTtl: cdk.Duration.seconds(30),
+      maxTtl: cdk.Duration.seconds(60),
+      minTtl: cdk.Duration.seconds(0),
+      queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
+      headerBehavior: cloudfront.CacheHeaderBehavior.allowList('Origin'),
+      cookieBehavior: cloudfront.CacheCookieBehavior.none(),
+    });
+
     // For authenticated routes: no caching + forward every viewer header to the
     // origin so API Gateway receives Origin, Authorization, and the CORS preflight
     // headers (Access-Control-Request-Method / -Headers) unmodified.
@@ -120,6 +134,13 @@ export class Cdn extends Construct {
           origin: apiOrigin,
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           cachePolicy: shortCache,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
+          cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
+        },
+        '/*/validity': {
+          origin: apiOrigin,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          cachePolicy: validityCache,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
           cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
         },

@@ -56,9 +56,9 @@ export type LocalInterest = {
 const festivalCache: Record<string, CacheData> = {};
 
 // Sync watermark per slug: the server's own `lastSyncedAt` that the cached data
-// corresponds to. NOT a local clock reading — /validity compares the value we
-// send against the server's last rebuild time, so sending Date.now() would make
-// the server answer "unchanged" forever and updates would never arrive.
+// corresponds to. NOT a local clock reading — it is compared against the server's
+// last rebuild time reported by /validity, so storing Date.now() here would look
+// newer than every rebuild and updates would never arrive.
 const syncWatermark: Record<string, number> = {};
 
 // User interest data — keyed by slug → artistId
@@ -119,7 +119,7 @@ export function hasCachedData(slug: string): boolean {
 
 /**
  * The server-side `lastSyncedAt` the cached data for this slug corresponds to.
- * 0 when nothing is cached, which makes /validity report "changed" and forces a
+ * 0 when nothing is cached, so every /validity reading looks newer and forces a
  * full fetch — the correct fallback.
  */
 export function getSyncWatermark(slug: string): number {

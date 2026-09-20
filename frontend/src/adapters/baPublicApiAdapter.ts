@@ -20,11 +20,12 @@ async function apiFetch<T>(path: string): Promise<T> {
 
 export const baPublicApiAdapter: DataAdapter = {
   async validate(slug: string, since: number): Promise<ValidationResult> {
-    type ValidityResponse = { changed: boolean; lastSyncedAt: number };
-    const result = await apiFetch<ValidityResponse>(`/${slug}/validity/${since}`);
-    // The endpoint answers `changed: lastSyncedAt > since`, so `lastSyncedAt` is
-    // the value to carry forward as the next watermark.
-    return { upToDate: !result.changed, serverSyncedAt: result.lastSyncedAt };
+    type ValidityResponse = { lastSyncedAt: number };
+    const result = await apiFetch<ValidityResponse>(`/${slug}/validity`);
+    // The comparison is done here rather than server-side so the response is
+    // identical for every caller and can be cached at the edge. `lastSyncedAt`
+    // is the value to carry forward as the next watermark.
+    return { upToDate: result.lastSyncedAt <= since, serverSyncedAt: result.lastSyncedAt };
   },
 
   async populate(slug: string, collector: DataCollector): Promise<void> {

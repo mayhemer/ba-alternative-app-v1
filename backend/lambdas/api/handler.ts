@@ -56,12 +56,13 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
       case 'GET /{slug}/schedule':
         return json(await queryAll<DbEvent>(tables.events, p.slug!));
 
-      case 'GET /{slug}/validity/{time}': {
-        const clientTime = Number(p.time);
-        if (isNaN(clientTime)) return badRequest('time must be a number');
+      // The caller's watermark is deliberately NOT part of this request: with the
+      // response identical for every caller, CloudFront can serve the whole
+      // polling fleet from one cached object. The client compares the two values.
+      case 'GET /{slug}/validity': {
         const entries = await querySyncState(tables.syncState, p.slug!);
         const lastSyncedAt = Math.max(0, ...entries.map(e => e.lastSyncedAt));
-        return json({ changed: lastSyncedAt > clientTime, lastSyncedAt });
+        return json({ lastSyncedAt });
       }
 
       case 'GET /share/{token}': {
