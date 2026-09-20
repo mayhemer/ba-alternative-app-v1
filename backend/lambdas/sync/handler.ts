@@ -108,7 +108,9 @@ async function syncSlug(slug: string, config: Config): Promise<void> {
       lastSyncedAt: now,
       dataVersion: String(now),
     });
-    invalidationPaths.push(`/${slug}/artists`);
+    // The trailing wildcard covers the per-artist bio paths; CloudFront bills a
+    // wildcard as a single path.
+    invalidationPaths.push(`/${slug}/artists`, `/${slug}/artists/*`);
     console.log(`[${slug}] Artists rebuilt — ${newItems.length} items`);
   }
 

@@ -1,4 +1,5 @@
 import type { DataCollector } from '../cache/cacheService';
+import type { DbArtistBioLocalized } from '../types/backend';
 
 // ── Adapter interface ─────────────────────────────────────────────────────────
 // All data source adapters must implement this interface.
@@ -28,4 +29,10 @@ export interface DataAdapter {
    * with the collected data once this resolves.
    */
   populate(slug: string, collector: DataCollector): Promise<void>;
+
+  /**
+   * Fetch one artist's bios, which `populate` deliberately leaves out — they
+   * dominate the artists payload but are only read on the detail screen.
+   */
+  fetchArtistBio(slug: string, artistId: string): Promise<DbArtistBioLocalized[]>;
 }

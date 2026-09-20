@@ -31,7 +31,6 @@ export function useArtistDerived(artist: DbArtist) {
   const status  = getStatus(artist.artistId);
   const genre   = getArtistLocalized(artist.localized, 'genre');
   const country = getArtistLocalized(artist.localized, 'country');
-  const content = getArtistLocalized(artist.localized, 'content');
 
   const innerWidth = Math.min(width, MAX_CONTENT_WIDTH);
   const hPad       = contentPadding;
@@ -88,6 +87,6 @@ export function useArtistDerived(artist: DbArtist) {
     startProgress(getFeedbackLabel(next)).wrap(promise);
   }
 
-  return { closeDetail, expandDetail, status, content, innerWidth, heroHeight, hPad, isWeb, meta, artistNameForURL, artistWebDomain, handleStarPress, width, conflictMap, openConflict };
+  return { closeDetail, expandDetail, status, innerWidth, heroHeight, hPad, isWeb, meta, artistNameForURL, artistWebDomain, handleStarPress, width, conflictMap, openConflict };
 }
 

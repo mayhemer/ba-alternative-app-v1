@@ -1,4 +1,4 @@
-import type { DbArtist, DbCategory, DbEvent, DbStage } from '../types/backend';
+import type { DbArtist, DbArtistBioLocalized, DbCategory, DbEvent, DbStage } from '../types/backend';
 import type { DataCollector } from '../cache/cacheService';
 import type { DataAdapter, ValidationResult } from './dataAdapter';
 
@@ -40,5 +40,9 @@ export const baPublicApiAdapter: DataAdapter = {
     collector.setCategories(categories);
     collector.setStages(stages);
     collector.setEvents(events);
+  },
+
+  async fetchArtistBio(slug: string, artistId: string): Promise<DbArtistBioLocalized[]> {
+    return apiFetch<DbArtistBioLocalized[]>(`/${slug}/artists/${artistId}/bio`);
   },
 };

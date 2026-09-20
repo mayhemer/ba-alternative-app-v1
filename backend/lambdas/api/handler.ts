@@ -13,7 +13,10 @@ import {
   queryUserInterestsBySlug,
   querySyncState,
 } from './db';
-import type { DbArtist, DbCategory, DbStage, DbEvent, DbUserInterest, DbShareToken } from '../../shared/types';
+import type {
+  DbArtist, DbArtistListItem, DbArtistBio, DbCategory, DbStage, DbEvent,
+  DbUserInterest, DbShareToken,
+} from '../../shared/types';
 
 // ── Config (read lazily so tests can set process.env) ─────────────────────────
 
@@ -45,7 +48,20 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
       // ── Public ──────────────────────────────────────────────────────────────
 
       case 'GET /{slug}/artists':
-        return json(await queryAll<DbArtist>(tables.artists, p.slug!));
+        return json(toListItems(await queryAll<DbArtist>(tables.artists, p.slug!)));
+
+      case 'GET /{slug}/artists/{artistId}/bio': {
+        const artist = await getItem<DbArtist>(tables.artists, {
+          slug: p.slug!,
+          artistId: p.artistId!,
+        });
+        if (artist === null) { return notFound('Artist not found'); }
+        const bios: DbArtistBio[] = artist.localized.map(l => ({
+          language: l.language,
+          content: l.content,
+        }));
+        return json(bios);
+      }
 
       case 'GET /{slug}/categories':
         return json(await queryAll<DbCategory>(tables.categories, p.slug!));
@@ -163,6 +179,16 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+// Drops the per-language bio from every artist. This trims bytes on the wire,
+// not DynamoDB read units — the full item is still read, since `content` sits
+// inside a list of maps and cannot be removed by a ProjectionExpression.
+function toListItems(artists: DbArtist[]): DbArtistListItem[] {
+  return artists.map(({ localized, ...artist }) => ({
+    ...artist,
+    localized: localized.map(({ content: _content, ...rest }) => rest),
+  }));
+}
 
 const CT_JSON = { 'Content-Type': 'application/json' };
 

@@ -19,6 +19,18 @@ export interface DbArtist {
   localized: DbArtistLocalized[];
 }
 
+/**
+ * An artist as the list endpoint serves it: the stored shape minus the bio.
+ * `content` is roughly three quarters of the artists payload and is only read
+ * on the detail screen, so it is fetched per artist instead — see DbArtistBio.
+ */
+export type DbArtistListItem = Omit<DbArtist, 'localized'> & {
+  localized: Omit<DbArtistLocalized, 'content'>[];
+};
+
+/** One language's bio, served on its own by GET /{slug}/artists/{artistId}/bio. */
+export type DbArtistBio = Pick<DbArtistLocalized, 'language' | 'content'>;
+
 export interface DbStageLocalized {
   language: string;
   name: string;

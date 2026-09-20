@@ -11,6 +11,7 @@ import { decodeCategoryColor } from '../utils/color';
 import { colors } from '../styling/tokens';
 import type { DbArtist, DbEvent } from '../types/backend';
 import { useArtistDerived } from '../hooks/useArtistDerived';
+import { useArtistBio } from '../hooks/useArtistBio';
 import { fitFontSize } from '../utils/textFit';
 import { useTimelineFilter } from '../context/TimelineFilterContext';
 import { navigationRef } from '../navigation/navigationRef';
@@ -102,7 +103,8 @@ export function ArtistDetailHeader({ artist }: Props) {
 // ── Body (scrollable content) ─────────────────────────────────────────────────
 
 export function ArtistDetailBody({ artist }: Props) {
-  const { closeDetail, content, innerWidth, heroHeight, hPad, artistNameForURL, artistWebDomain, width, conflictMap, openConflict } = useArtistDerived(artist);
+  const { closeDetail, innerWidth, heroHeight, hPad, artistNameForURL, artistWebDomain, width, conflictMap, openConflict } = useArtistDerived(artist);
+  const content = useArtistBio(artist);
   const { setSelectedDayStart, requestScrollToTime } = useTimelineFilter();
   const { friendsByArtist } = useSocialData();
   const friends = friendsByArtist[artist.artistId] ?? [];

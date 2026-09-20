@@ -1,12 +1,19 @@
 // Types mirrored from app/backend/shared/types.ts
 // Keep in sync when the backend schema changes.
 
+// Mirrors the backend's DbArtistListItem: the artists endpoint omits the bio,
+// which is fetched per artist from /{slug}/artists/{artistId}/bio.
 export interface DbArtistLocalized {
   language: string;
   name: string;
-  content: string;
   genre: string;
   country: string;
+}
+
+/** One language's artist bio, fetched on demand when a detail screen opens. */
+export interface DbArtistBioLocalized {
+  language: string;
+  content: string;
 }
 
 export interface DbArtist {

@@ -166,6 +166,7 @@ describe('both dirty', () => {
     expect(distId).toBe('DIST123');
     expect(paths).toEqual(expect.arrayContaining([
       '/ba2025/artists',
+      '/ba2025/artists/*',
       '/ba2025/schedule',
       '/ba2025/categories',
       '/ba2025/stages',
@@ -194,11 +195,11 @@ describe('only artists dirty', () => {
     expect(mockBatchPut.mock.calls[0][0]).toBe('ba-artists');
   });
 
-  it('invalidates only the artists path', async () => {
+  it('invalidates only the artists paths', async () => {
     setEnv();
     await handler(EVENT);
     const [, paths] = mockInvalidatePaths.mock.calls[0];
-    expect(paths).toEqual(['/ba2025/artists']);
+    expect(paths).toEqual(['/ba2025/artists', '/ba2025/artists/*']);
   });
 });
 
@@ -232,6 +233,7 @@ describe('only schedule dirty', () => {
     await handler(EVENT);
     const [, paths] = mockInvalidatePaths.mock.calls[0];
     expect(paths).not.toContain('/ba2025/artists');
+    expect(paths).not.toContain('/ba2025/artists/*');
     expect(paths).toEqual(expect.arrayContaining([
       '/ba2025/schedule',
       '/ba2025/categories',
