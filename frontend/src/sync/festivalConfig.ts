@@ -53,9 +53,14 @@ export const FESTIVAL_CONFIGS: FestivalConfig[] = [
   },
 ];
 
-// Sync intervals in milliseconds
+// Sync intervals in milliseconds.
+//
+// The during-festival poll is the single most-requested path in the backend:
+// every running app hits it on this timer. At one minute it produced roughly
+// three times the requests of a three-minute poll for no practical gain — a
+// schedule change still surfaces within a few minutes either way.
 export const SYNC_INTERVAL_BEFORE_FESTIVAL_MS = 30 * 60 * 1000; // 30 minutes
-export const SYNC_INTERVAL_DURING_FESTIVAL_MS =      60 * 1000; //  1 minute
+export const SYNC_INTERVAL_DURING_FESTIVAL_MS =  3 * 60 * 1000; //  3 minutes
 export const SYNC_INTERVAL_DEFAULT_MS          =  5 * 60 * 1000; //  5 minutes (fallback)
 
 export function getSyncInterval(slug: string): number {
