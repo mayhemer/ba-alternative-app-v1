@@ -20,7 +20,7 @@ jest.mock('./cloudfront', () => ({
   invalidatePaths: jest.fn(),
 }));
 
-import { handler } from './handler';
+import { handler, activeSlugs } from './handler';
 import { fetchChanges, fetchArtists, fetchSchedule } from './official-api';
 import { getSyncState, putSyncState, queryAllKeys, batchPut, batchDelete } from './db';
 import { invalidatePaths } from './cloudfront';
@@ -304,5 +304,45 @@ describe('multiple slugs', () => {
     const slugs = mockPutSyncState.mock.calls.map(c => c[1].slug);
     expect(slugs.filter(s => s === 'ba2025')).toHaveLength(2);
     expect(slugs.filter(s => s === 'ba2024')).toHaveLength(2);
+  });
+});
+
+// ── Slug selection ────────────────────────────────────────────────────────────
+
+describe('activeSlugs', () => {
+  const NOW = Date.parse('2026-09-20T12:00:00+02:00');
+
+  it('keeps editions that have not ended yet', () => {
+    const raw = 'ba2026:2026-08-08T23:59:59+02:00,ba2027:2027-08-07T23:59:59+02:00';
+    expect(activeSlugs(raw, NOW)).toEqual(['ba2027']);
+  });
+
+  it('keeps an edition that is still running', () => {
+    const raw = 'ba2026:2026-08-08T23:59:59+02:00';
+    const during = Date.parse('2026-08-06T21:00:00+02:00');
+    expect(activeSlugs(raw, during)).toEqual(['ba2026']);
+  });
+
+  it('drops an edition the moment its end timestamp passes', () => {
+    const raw = 'ba2026:2026-08-08T23:59:59+02:00';
+    const endsAt = Date.parse('2026-08-08T23:59:59+02:00');
+    expect(activeSlugs(raw, endsAt)).toEqual(['ba2026']);
+    expect(activeSlugs(raw, endsAt + 1000)).toEqual([]);
+  });
+
+  it('always syncs a bare slug with no end timestamp', () => {
+    expect(activeSlugs('ba2025,ba2024', NOW)).toEqual(['ba2025', 'ba2024']);
+  });
+
+  it('syncs anyway when the end timestamp cannot be parsed', () => {
+    expect(activeSlugs('ba2026:not-a-date', NOW)).toEqual(['ba2026']);
+  });
+
+  it('ignores blank entries and surrounding whitespace', () => {
+    expect(activeSlugs(' ba2027 : 2027-08-07T23:59:59+02:00 ,, ', NOW)).toEqual(['ba2027']);
+  });
+
+  it('returns nothing for an empty setting', () => {
+    expect(activeSlugs('', NOW)).toEqual([]);
   });
 });

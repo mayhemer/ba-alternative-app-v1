@@ -66,8 +66,11 @@ export class Lambdas extends Construct {
       timeout: cdk.Duration.minutes(5),
       environment: {
         ...tableEnv,
-        // FESTIVAL_SLUGS: comma-separated official slugs to sync, e.g. "ba2026,ba2025"
-        // Set via: cdk deploy --context festivalSlugs=ba2026,ba2025
+        // FESTIVAL_SLUGS: comma-separated `slug:<ISO end timestamp>` entries. An
+        // edition stops being polled once its end timestamp has passed, so the
+        // list can hold every edition and still only fetch the live one. A bare
+        // slug with no timestamp is always synced.
+        // Set via: cdk deploy --context festivalSlugs=ba2026:2026-08-08T23:59:59+02:00
         FESTIVAL_SLUGS: this.node.tryGetContext('festivalSlugs') ?? '',
       },
       bundling,

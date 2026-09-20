@@ -23,7 +23,7 @@ type Config = ReturnType<typeof getConfig>;
 function getConfig() {
   const env = process.env as Record<string, string>;
   return {
-    slugs: (env.FESTIVAL_SLUGS ?? '').split(',').map(s => s.trim()).filter(Boolean),
+    slugs: activeSlugs(env.FESTIVAL_SLUGS ?? '', Date.now()),
     tables: {
       artists:    env.ARTISTS_TABLE,
       stages:     env.STAGES_TABLE,
@@ -44,6 +44,50 @@ const SCHEDULE_OFFICIAL_TABLES = new Set([
   'db_stage',
   'db_stage_localized',
 ]);
+
+/**
+ * Parses FESTIVAL_SLUGS and keeps only the editions still worth polling.
+ *
+ * Each entry is either `slug` or `slug:<ISO end timestamp>`. A dated entry
+ * drops out once its edition has ended — the official data for a finished
+ * festival never changes again, so polling it only burns requests against the
+ * official API. An undated entry is always synced.
+ */
+export function activeSlugs(raw: string, now: number): string[] {
+  const slugs: string[] = [];
+
+  for (const entry of raw.split(',')) {
+    const trimmed = entry.trim();
+    if (trimmed === '') {
+      continue;
+    }
+
+    // Split on the FIRST colon only — the ISO timestamp contains colons too.
+    const separator = trimmed.indexOf(':');
+    if (separator === -1) {
+      slugs.push(trimmed);
+      continue;
+    }
+
+    const slug = trimmed.slice(0, separator).trim();
+    if (slug === '') {
+      continue;
+    }
+
+    const endsAt = Date.parse(trimmed.slice(separator + 1).trim());
+    if (Number.isNaN(endsAt)) {
+      console.warn(`[${slug}] unparsable end date in FESTIVAL_SLUGS — syncing anyway`);
+      slugs.push(slug);
+      continue;
+    }
+
+    if (now <= endsAt) {
+      slugs.push(slug);
+    }
+  }
+
+  return slugs;
+}
 
 // ── Entry point ───────────────────────────────────────────────────────────────
 
