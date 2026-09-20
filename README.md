@@ -104,8 +104,8 @@ Roughly 8k lines of TypeScript/TSX in the frontend, ~1.5k in the Lambdas, plus t
 
 Two Lambdas, deliberately separated:
 
-- **sync** — the only component that talks to the official API. Triggered by EventBridge (hourly)
-  and manually via `POST /sync`. It never serves user traffic.
+- **sync** — the only component that talks to the official API. Triggered by EventBridge (hourly);
+  that schedule is its only trigger. It never serves user traffic.
 - **api** — serves the app. Reads DynamoDB only. It never calls the official API, so an upstream
   outage degrades to "slightly stale data" rather than an error.
 
@@ -118,7 +118,8 @@ This is the part most worth reviewing, so it is spelled out:
   (all with `?time=0`). Nothing is ever written back, and no authenticated official endpoint is
   touched.
 - **Polling is cheap by design.** The steady-state cost is one `/changes` request per edition per
-  hour. The full datasets are fetched only when a monitored table's timestamp has actually
+  hour, and only editions that have not ended yet are polled at all — `FESTIVAL_SLUGS` carries an
+  ISO end timestamp per slug and a finished edition drops out of the run. The full datasets are fetched only when a monitored table's timestamp has actually
   advanced. `/changes` tables watched: `db_artist`, `db_artist_localized`, `db_schedule`,
   `db_schedule_category(_localized)`, `db_stage(_localized)`.
 - **No client ever reaches the official API.** All app traffic terminates at CloudFront in front
@@ -155,15 +156,20 @@ configuration change on our side, not a redesign.
 | Method | Path | Auth | Cache |
 |---|---|---|---|
 | GET | `/{slug}/artists`, `/categories`, `/stages` | — | CloudFront, 1 h |
+| GET | `/{slug}/artists/{artistId}/bio` | — | CloudFront, 1 h |
 | GET | `/{slug}/schedule` | — | CloudFront, 5 min |
-| GET | `/{slug}/validity/{time}` | — | — |
+| GET | `/{slug}/validity` | — | CloudFront, 30 s |
 | GET | `/share/{token}` | — | — |
-| POST | `/sync` | — | manual sync trigger (async invoke) |
 | GET/PUT/DELETE | `/user/{slug}/schedule[/{artistId}]` | Cognito JWT | none |
 | POST | `/{slug}/share`, DELETE `/share/{token}` | Cognito JWT | none |
 
 The sync Lambda issues a CloudFront invalidation for the affected paths after a rebuild, so a
 schedule change propagates in seconds rather than waiting out the TTL.
+
+`/{slug}/artists` omits the per-language bio, which is roughly three quarters of the payload and is
+only read on one screen; the detail view fetches it per artist and caches it. `/{slug}/validity`
+deliberately takes no caller watermark, so every poller shares one cached response and the client
+does the comparison itself.
 
 Share links carry only an opaque 48-hex token; the display name and avatar attached to a share are
 read server-side from Cognito with the caller's own access token, never accepted from the request
@@ -193,9 +199,9 @@ adapter (HTTP)  ──▶  cacheService (in-memory, single source for the UI)  �
 
 - `src/adapters/*` are swappable fetchers behind one interface (`validate` / `populate`), so the
   backend origin is a single implementation, not a constant sprinkled across the app.
-- `src/sync/backgroundSyncService.ts` checks `/{slug}/validity/{lastSyncTime}` first and skips the
-  fetch entirely when nothing changed. The polling interval is festival-date aware — 1 minute
-  during the event, 30 minutes outside it.
+- `src/sync/backgroundSyncService.ts` checks `/{slug}/validity` first and skips the fetch entirely
+  when nothing changed. The polling interval is festival-date aware — 3 minutes during the event,
+  30 minutes outside it.
 - The interest state is local-first with `updatedAt` timestamps; on sign-in, local and cloud sets
   are merged by latest-write-wins per `slug#artistId`.
 

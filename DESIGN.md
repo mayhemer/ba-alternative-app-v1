@@ -367,11 +367,12 @@ dataVersion          string   (hash or counter — for cache busting)
 
 | Method | Path | Description |
 |---|---|---|
-| GET | /:slug/artists | Full cleaned artist list for this edition |
+| GET | /:slug/artists | Cleaned artist list for this edition, without bios |
+| GET | /:slug/artists/:artistId/bio | That artist's bio, per language — fetched on demand |
 | GET | /:slug/categories | Full category list for this edition |
 | GET | /:slug/stages | All stages for this edition |
 | GET | /:slug/schedule | All events for this edition (normalized, ID refs only) |
-| GET | /:slug/validity/:time | Returns whether data has changed since client's last fetch |
+| GET | /:slug/validity | Returns the server's last rebuild time; the client compares it against its own watermark |
 | GET | /user/:slug/schedule | Authenticated user's interests for this edition |
 | PUT | /user/:slug/schedule/:artistId | Set status for a band in this edition |
 | DELETE | /user/:slug/schedule/:artistId | Remove status for a band in this edition |
@@ -380,7 +381,11 @@ dataVersion          string   (hash or counter — for cache busting)
 | DELETE | /share/:token | Revoke share token (authenticated, must own token) |
 
 All read endpoints for public data (`/:slug/artists`, `/:slug/schedule`, etc.) are served via **CloudFront**
-with short TTLs. User endpoints bypass CloudFront (auth required, personalized).
+with short TTLs, gzip and brotli enabled. User endpoints bypass CloudFront (auth required, personalized).
+
+Bios are split out of the artist list because they dominate its size but are only read on the detail
+screen; the app caches and persists each one it fetches. `/:slug/validity` carries no caller-specific
+value for the same reason — it is polled by every running app, so it has to be cacheable.
 
 > **CloudFront cache paths** use `/:slug/artists`, `/:slug/schedule`, etc. The slug is part of the
 > cache key, so editions are cached independently.
