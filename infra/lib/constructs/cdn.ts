@@ -38,6 +38,10 @@ export class Cdn extends Construct {
       queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
       headerBehavior: cloudfront.CacheHeaderBehavior.allowList('Origin'),
       cookieBehavior: cloudfront.CacheCookieBehavior.none(),
+      // Required for CloudFront to compress at all: `compress` on the behaviour
+      // (true by default) only takes effect when the cache policy also opts in.
+      enableAcceptEncodingGzip: true,
+      enableAcceptEncodingBrotli: true,
     });
 
     const shortCache = new cloudfront.CachePolicy(this, 'ShortCache', {
@@ -49,6 +53,10 @@ export class Cdn extends Construct {
       queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
       headerBehavior: cloudfront.CacheHeaderBehavior.allowList('Origin'),
       cookieBehavior: cloudfront.CacheCookieBehavior.none(),
+      // Required for CloudFront to compress at all: `compress` on the behaviour
+      // (true by default) only takes effect when the cache policy also opts in.
+      enableAcceptEncodingGzip: true,
+      enableAcceptEncodingBrotli: true,
     });
 
     // The sync watermark is polled by every running app on a timer, so it is by
@@ -63,6 +71,10 @@ export class Cdn extends Construct {
       queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(),
       headerBehavior: cloudfront.CacheHeaderBehavior.allowList('Origin'),
       cookieBehavior: cloudfront.CacheCookieBehavior.none(),
+      // Required for CloudFront to compress at all: `compress` on the behaviour
+      // (true by default) only takes effect when the cache policy also opts in.
+      enableAcceptEncodingGzip: true,
+      enableAcceptEncodingBrotli: true,
     });
 
     // For authenticated routes: no caching + forward every viewer header to the
