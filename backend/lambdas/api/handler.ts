@@ -5,7 +5,6 @@ import type {
   APIGatewayEventRequestContextJWTAuthorizer,
 } from 'aws-lambda';
 import { randomBytes } from 'node:crypto';
-import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 import {
   queryAll,
   getItem,
@@ -21,7 +20,6 @@ import type { DbArtist, DbCategory, DbStage, DbEvent, DbUserInterest, DbShareTok
 function getConfig() {
   const env = process.env as Record<string, string>;
   return {
-    syncFunctionArn: env.SYNC_FUNCTION_ARN,
     userInfoUrl:     env.COGNITO_USER_INFO_URL,
     tables: {
       artists:       env.ARTISTS_TABLE,
@@ -35,12 +33,10 @@ function getConfig() {
   };
 }
 
-const lambdaClient = new LambdaClient({});
-
 // ── Entry point ───────────────────────────────────────────────────────────────
 
 export async function handler(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> {
-  const { syncFunctionArn, tables, userInfoUrl } = getConfig();
+  const { tables, userInfoUrl } = getConfig();
   const p = event.pathParameters ?? {};
 
   try {
@@ -67,13 +63,6 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
         const lastSyncedAt = Math.max(0, ...entries.map(e => e.lastSyncedAt));
         return json({ changed: lastSyncedAt > clientTime, lastSyncedAt });
       }
-
-      case 'POST /sync':
-        await lambdaClient.send(new InvokeCommand({
-          FunctionName: syncFunctionArn,
-          InvocationType: 'Event', // async — returns immediately, sync runs in background
-        }));
-        return json({ message: 'Sync triggered' }, 202);
 
       case 'GET /share/{token}': {
         const tokenItem = await getItem<DbShareToken>(tables.shareTokens, { token: p.token! });

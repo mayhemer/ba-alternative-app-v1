@@ -88,18 +88,13 @@ export class Lambdas extends Construct {
       table.grantReadWriteData(this.syncFn);
     }
 
-    // EventBridge scheduled rule — disabled; sync is triggered manually via POST /sync.
-    // Re-enable by setting enabled: true (or removing the flag) before deploying.
+    // EventBridge scheduled rule — the only trigger for the sync Lambda.
     const syncRule = new events.Rule(this, 'SyncSchedule', {
       ruleName: 'ba-sync-schedule',
-      description: 'Trigger BA sync Lambda — disabled; use POST /sync API endpoint instead',
+      description: 'Trigger BA sync Lambda hourly',
       schedule: events.Schedule.rate(cdk.Duration.hours(1)),
       enabled: true,
     });
     syncRule.addTarget(new targets.LambdaFunction(this.syncFn));
-
-    // Allow API Lambda to invoke sync Lambda asynchronously (for POST /sync endpoint)
-    this.syncFn.grantInvoke(this.apiFn);
-    this.apiFn.addEnvironment('SYNC_FUNCTION_ARN', this.syncFn.functionArn);
   }
 }

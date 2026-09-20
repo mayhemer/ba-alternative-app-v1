@@ -52,7 +52,6 @@ export class Api extends Construct {
       [HttpMethod.GET, '/{slug}/schedule'],
       [HttpMethod.GET, '/{slug}/validity/{time}'],
       [HttpMethod.GET, '/share/{token}'],
-      [HttpMethod.POST, '/sync'],
     ];
 
     for (const [method, path] of publicRoutes) {
