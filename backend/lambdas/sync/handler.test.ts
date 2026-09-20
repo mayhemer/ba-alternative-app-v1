@@ -345,4 +345,16 @@ describe('activeSlugs', () => {
   it('returns nothing for an empty setting', () => {
     expect(activeSlugs('', NOW)).toEqual([]);
   });
+
+  it('syncs anyway when the entry ends at a bare colon', () => {
+    expect(activeSlugs('ba2026:', NOW)).toEqual(['ba2026']);
+  });
+
+  it('skips an entry with no slug before the colon', () => {
+    expect(activeSlugs(':2027-08-07T23:59:59+02:00', NOW)).toEqual([]);
+  });
+
+  it('skips a slug containing whitespace rather than calling the official API with it', () => {
+    expect(activeSlugs('ba 2027:2027-08-07T23:59:59+02:00', NOW)).toEqual([]);
+  });
 });

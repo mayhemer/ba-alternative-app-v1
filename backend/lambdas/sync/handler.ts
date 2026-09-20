@@ -45,6 +45,12 @@ const SCHEDULE_OFFICIAL_TABLES = new Set([
   'db_stage_localized',
 ]);
 
+// One FESTIVAL_SLUGS entry: `slug` or `slug:<ISO end timestamp>`. The slug
+// capture excludes ':' so it stops at the first one and the timestamp keeps its
+// own. The date group is `(.*)` rather than something stricter so that a
+// trailing-colon typo still yields a slug to warn about instead of vanishing.
+const ENTRY_PATTERN = /^\s*([^\s:]+)\s*(?::(.*))?$/;
+
 /**
  * Parses FESTIVAL_SLUGS and keeps only the editions still worth polling.
  *
@@ -57,24 +63,20 @@ export function activeSlugs(raw: string, now: number): string[] {
   const slugs: string[] = [];
 
   for (const entry of raw.split(',')) {
-    const trimmed = entry.trim();
-    if (trimmed === '') {
+    const match = ENTRY_PATTERN.exec(entry);
+    if (match === null) {
+      continue; // blank entry, or nothing usable before the colon
+    }
+
+    const [, slug, endsAtText] = match;
+    if (endsAtText === undefined) {
+      slugs.push(slug);
       continue;
     }
 
-    // Split on the FIRST colon only — the ISO timestamp contains colons too.
-    const separator = trimmed.indexOf(':');
-    if (separator === -1) {
-      slugs.push(trimmed);
-      continue;
-    }
-
-    const slug = trimmed.slice(0, separator).trim();
-    if (slug === '') {
-      continue;
-    }
-
-    const endsAt = Date.parse(trimmed.slice(separator + 1).trim());
+    // Trimmed explicitly: Date.parse only tolerates surrounding whitespace
+    // through V8's lenient fallback parser, which is not worth relying on.
+    const endsAt = Date.parse(endsAtText.trim());
     if (Number.isNaN(endsAt)) {
       console.warn(`[${slug}] unparsable end date in FESTIVAL_SLUGS — syncing anyway`);
       slugs.push(slug);
