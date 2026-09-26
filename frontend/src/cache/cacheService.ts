@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type {
-  DbArtist, DbArtistBioLocalized, DbArtistBios, DbCategory, DbEvent, DbStage,
-  DbUserInterest,
+  DbArtist, DbArtistBioLocalized, DbArtistBios, DbArtistLocalized, DbCategory,
+  DbEvent, DbStage, DbUserInterest,
 } from '../types/backend';
 import { deriveFestivalDays, DAY_DURATION_MS } from '../components/timeline/timelineLayout';
 
@@ -101,9 +101,10 @@ function bioStorageKey(slug: string): string {
   return `${BIO_KEY_PREFIX}${slug}`;
 }
 
-// Bumped when the persisted shape changes; a mismatch discards the stored copy
-// rather than feeding a stale shape into the UI.
-const FESTIVAL_CACHE_VERSION = 1;
+// Bumped when the persisted shape changes. A version this build knows how to
+// upgrade is migrated in place; anything else discards the stored copy rather
+// than feeding a stale shape into the UI.
+const FESTIVAL_CACHE_VERSION = 2;
 
 type PersistedFestival = {
   version: number;
@@ -262,8 +263,14 @@ export async function hydrateFestivalCache(slug: string): Promise<boolean> {
       return false;
     }
 
-    const parsed = JSON.parse(stored) as PersistedFestival;
-    if (parsed.version !== FESTIVAL_CACHE_VERSION || !Array.isArray(parsed.events)) {
+    let parsed = JSON.parse(stored) as PersistedFestival;
+    if (!Array.isArray(parsed.events)) {
+      return false;
+    }
+    if (parsed.version === 1) {
+      parsed = upgradeFromV1(slug, parsed);
+    }
+    if (parsed.version !== FESTIVAL_CACHE_VERSION) {
       return false;
     }
 
@@ -293,6 +300,49 @@ async function hydrateBioCache(slug: string): Promise<void> {
   } catch (err: unknown) {
     if (__DEV__) { console.warn('[cache] artist bios not restored', err); }
   }
+}
+
+// v1 carried each artist's bio inline; v2 keeps bios in their own store. The
+// blob is upgraded rather than discarded on purpose — discarding is what
+// `hydrateFestivalCache` does for an unknown version, and for this one it would
+// throw away the cached schedule of anyone who takes the new build and then
+// opens the app offline, which is the case the persisted cache exists for.
+type PersistedArtistV1 = Omit<DbArtist, 'localized'> & {
+  localized: (DbArtistLocalized & { content?: string })[];
+};
+
+function upgradeFromV1(slug: string, parsed: PersistedFestival): PersistedFestival {
+  const legacy = parsed.artists as unknown as PersistedArtistV1[];
+
+  // Lift the inline bios across, so an upgrading user keeps every one of them
+  // offline instead of refetching. Skipped if a bio store already exists — that
+  // one came from the server and is at least as good.
+  if (!hasBios(slug)) {
+    const entries: DbArtistBios[] = legacy.map((artist) => ({
+      artistId: artist.artistId,
+      localized: artist.localized
+        .filter((l) => l.content !== undefined)
+        .map((l) => ({ language: l.language, content: l.content ?? '' })),
+    }));
+    // Stamped with the blob's own watermark: the bios were written together
+    // with these artists, so they are exactly as current as the artists are.
+    putArtistBios(slug, entries, parsed.syncedAt);
+  }
+
+  const upgraded: PersistedFestival = {
+    ...parsed,
+    version: FESTIVAL_CACHE_VERSION,
+    artists: legacy.map(({ localized, ...artist }) => ({
+      ...artist,
+      localized: localized.map(({ content: _content, ...rest }) => rest),
+    })),
+  };
+
+  AsyncStorage.setItem(festivalStorageKey(slug), JSON.stringify(upgraded)).catch((err: unknown) => {
+    if (__DEV__) { console.warn('[cache] upgraded festival data not persisted', err); }
+  });
+
+  return upgraded;
 }
 
 /**
