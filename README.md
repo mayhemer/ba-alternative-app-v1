@@ -156,7 +156,7 @@ configuration change on our side, not a redesign.
 | Method | Path | Auth | Cache |
 |---|---|---|---|
 | GET | `/{slug}/artists`, `/categories`, `/stages` | — | CloudFront, 1 h |
-| GET | `/{slug}/artists/{artistId}/bio` | — | CloudFront, 1 h |
+| GET | `/{slug}/bios` | — | CloudFront, 1 h |
 | GET | `/{slug}/schedule` | — | CloudFront, 5 min |
 | GET | `/{slug}/validity` | — | CloudFront, 30 s |
 | GET | `/share/{token}` | — | — |
@@ -166,10 +166,15 @@ configuration change on our side, not a redesign.
 The sync Lambda issues a CloudFront invalidation for the affected paths after a rebuild, so a
 schedule change propagates in seconds rather than waiting out the TTL.
 
-`/{slug}/artists` omits the per-language bio, which is roughly three quarters of the payload and is
-only read on one screen; the detail view fetches it per artist and caches it. `/{slug}/validity`
-deliberately takes no caller watermark, so every poller shares one cached response and the client
-does the comparison itself.
+`/{slug}/artists` omits the per-language bio — roughly three quarters of the payload, and only read
+on one screen. The bios come from `/{slug}/bios` instead, fetched for the whole edition alongside
+the datasets rather than before them: the list paints on ~16 KiB while the bios follow, and every
+one of them is still available offline. Per-artist fetching was measured and rejected — 260 requests
+per user per populate costs far more in request charges than the bytes it saves.
+
+`/{slug}/validity` deliberately takes no caller watermark, so every poller shares one cached
+response and the client does the comparison itself. It reports `artistsSyncedAt` alongside
+`lastSyncedAt` so the client can keep its cached bios through a schedule-only change.
 
 Share links carry only an opaque 48-hex token; the display name and avatar attached to a share are
 read server-side from Cognito with the caller's own access token, never accepted from the request

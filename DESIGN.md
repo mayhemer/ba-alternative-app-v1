@@ -368,11 +368,11 @@ dataVersion          string   (hash or counter — for cache busting)
 | Method | Path | Description |
 |---|---|---|
 | GET | /:slug/artists | Cleaned artist list for this edition, without bios |
-| GET | /:slug/artists/:artistId/bio | That artist's bio, per language — fetched on demand |
+| GET | /:slug/bios | Every artist's bio for this edition, per language — fetched alongside the datasets |
 | GET | /:slug/categories | Full category list for this edition |
 | GET | /:slug/stages | All stages for this edition |
 | GET | /:slug/schedule | All events for this edition (normalized, ID refs only) |
-| GET | /:slug/validity | Returns the server's last rebuild time; the client compares it against its own watermark |
+| GET | /:slug/validity | Returns the server's last rebuild time (overall and artists-only); the client compares against its own watermark |
 | GET | /user/:slug/schedule | Authenticated user's interests for this edition |
 | PUT | /user/:slug/schedule/:artistId | Set status for a band in this edition |
 | DELETE | /user/:slug/schedule/:artistId | Remove status for a band in this edition |
@@ -384,8 +384,13 @@ All read endpoints for public data (`/:slug/artists`, `/:slug/schedule`, etc.) a
 with short TTLs, gzip and brotli enabled. User endpoints bypass CloudFront (auth required, personalized).
 
 Bios are split out of the artist list because they dominate its size but are only read on the detail
-screen; the app caches and persists each one it fetches. `/:slug/validity` carries no caller-specific
-value for the same reason — it is polled by every running app, so it has to be cacheable.
+screen. They are fetched for the whole edition in one request, started beside the dataset fetch and
+never awaited before first paint, then cached and persisted — so the list paints fast *and* every
+bio is readable offline. Only the active edition's bios are kept; the rest are evicted on switch.
+
+`/:slug/validity` carries no caller-specific value — it is polled by every running app, so it has to
+be cacheable. It reports the artists' watermark separately so a schedule-only rebuild, the common
+one mid-festival, does not discard cached bios.
 
 > **CloudFront cache paths** use `/:slug/artists`, `/:slug/schedule`, etc. The slug is part of the
 > cache key, so editions are cached independently.
@@ -506,13 +511,14 @@ usable UI. A cold start with no connectivity opens on the last known schedule
 instead of the error screen. Only a first-ever run with no stored data can still
 end on the error screen.
 
-**The freshness watermark is server time, not local time.** `/{slug}/validity/{t}`
-answers `changed: lastSyncedAt > t`, where `lastSyncedAt` is when *the backend*
-last rebuilt that edition. The client therefore stores the `lastSyncedAt` it was
-told, alongside the data it belongs to, and sends that back on the next check:
+**The freshness watermark is server time, not local time.** `/{slug}/validity`
+reports `lastSyncedAt`, when *the backend* last rebuilt that edition, and the
+client compares it against its own stored copy. The client therefore stores the
+`lastSyncedAt` it was told, alongside the data it belongs to, and compares that
+on the next check:
 
 ```
-validate(slug, watermark) → { upToDate, serverSyncedAt }
+validate(slug, watermark) → { upToDate, serverSyncedAt, artistsSyncedAt }
    upToDate && cached   → nothing to do
    otherwise            → populate() → store data + serverSyncedAt together
 ```
