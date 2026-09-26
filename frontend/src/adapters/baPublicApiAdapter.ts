@@ -1,4 +1,4 @@
-import type { DbArtist, DbArtistBioLocalized, DbCategory, DbEvent, DbStage } from '../types/backend';
+import type { DbArtist, DbArtistBios, DbCategory, DbEvent, DbStage } from '../types/backend';
 import type { DataCollector } from '../cache/cacheService';
 import type { DataAdapter, ValidationResult } from './dataAdapter';
 
@@ -20,12 +20,16 @@ async function apiFetch<T>(path: string): Promise<T> {
 
 export const baPublicApiAdapter: DataAdapter = {
   async validate(slug: string, since: number): Promise<ValidationResult> {
-    type ValidityResponse = { lastSyncedAt: number };
+    type ValidityResponse = { lastSyncedAt: number; artistsSyncedAt: number };
     const result = await apiFetch<ValidityResponse>(`/${slug}/validity`);
     // The comparison is done here rather than server-side so the response is
     // identical for every caller and can be cached at the edge. `lastSyncedAt`
     // is the value to carry forward as the next watermark.
-    return { upToDate: result.lastSyncedAt <= since, serverSyncedAt: result.lastSyncedAt };
+    return {
+      upToDate: result.lastSyncedAt <= since,
+      serverSyncedAt: result.lastSyncedAt,
+      artistsSyncedAt: result.artistsSyncedAt,
+    };
   },
 
   async populate(slug: string, collector: DataCollector): Promise<void> {
@@ -42,7 +46,7 @@ export const baPublicApiAdapter: DataAdapter = {
     collector.setEvents(events);
   },
 
-  async fetchArtistBio(slug: string, artistId: string): Promise<DbArtistBioLocalized[]> {
-    return apiFetch<DbArtistBioLocalized[]>(`/${slug}/artists/${artistId}/bio`);
+  async fetchAllBios(slug: string): Promise<DbArtistBios[]> {
+    return apiFetch<DbArtistBios[]>(`/${slug}/bios`);
   },
 };

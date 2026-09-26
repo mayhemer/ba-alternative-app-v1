@@ -10,10 +10,16 @@ export interface DbArtistLocalized {
   country: string;
 }
 
-/** One language's artist bio, fetched on demand when a detail screen opens. */
+/** One language's artist bio. */
 export interface DbArtistBioLocalized {
   language: string;
   content: string;
+}
+
+/** One artist's bios, as the bulk /{slug}/bios response carries them. */
+export interface DbArtistBios {
+  artistId: string;
+  localized: DbArtistBioLocalized[];
 }
 
 export interface DbArtist {

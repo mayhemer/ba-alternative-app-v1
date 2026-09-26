@@ -104,7 +104,7 @@ export function ArtistDetailHeader({ artist }: Props) {
 
 export function ArtistDetailBody({ artist }: Props) {
   const { closeDetail, innerWidth, heroHeight, hPad, artistNameForURL, artistWebDomain, width, conflictMap, openConflict } = useArtistDerived(artist);
-  const content = useArtistBio(artist);
+  const bio = useArtistBio(artist);
   const { setSelectedDayStart, requestScrollToTime } = useTimelineFilter();
   const { friendsByArtist } = useSocialData();
   const friends = friendsByArtist[artist.artistId] ?? [];
@@ -142,7 +142,8 @@ export function ArtistDetailBody({ artist }: Props) {
   const categoriesForSlug = getCategories(artist.slug);
   const categoryById = Object.fromEntries(categoriesForSlug.map((c) => [c.categoryId, c]));
 
-  const htmlSource = useMemo(() => ({ html: content }), [content]);
+  const bioHtml = bio.state === 'ready' ? bio.content : '';
+  const htmlSource = useMemo(() => ({ html: bioHtml }), [bioHtml]);
 
   return (
     <View style={{ width, alignItems: 'center' }}>
@@ -320,7 +321,24 @@ export function ArtistDetailBody({ artist }: Props) {
           </View>
         }
 
-        {content !== '' && (
+        {/* Three outcomes, deliberately distinct: the bios are still on their
+            way, they could not be fetched (offline), or they arrived and this
+            artist simply has none — the last renders nothing, as before. */}
+        {bio.state === 'loading' && (
+          <View style={{ paddingHorizontal: hPad, paddingTop: 16, paddingBottom: 32 }}>
+            <ActivityIndicator color={colors.accent} />
+          </View>
+        )}
+
+        {bio.state === 'unavailable' && (
+          <View style={{ paddingHorizontal: hPad, paddingTop: 16, paddingBottom: 32 }}>
+            <Text style={{ fontSize: 13, color: colors.textSecondary }}>
+              Biography unavailable offline.
+            </Text>
+          </View>
+        )}
+
+        {bio.state === 'ready' && bio.content !== '' && (
           <View style={{ paddingHorizontal: hPad, paddingTop: 16, paddingBottom: 32 }}>
             <RenderHtml contentWidth={htmlWidth} source={htmlSource} tagsStyles={HTML_TAG_STYLES} />
           </View>

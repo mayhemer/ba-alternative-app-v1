@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type {
-  DbArtist, DbArtistBioLocalized, DbCategory, DbEvent, DbStage, DbUserInterest,
+  DbArtist, DbArtistBioLocalized, DbArtistBios, DbCategory, DbEvent, DbStage,
+  DbUserInterest,
 } from '../types/backend';
 import { deriveFestivalDays, DAY_DURATION_MS } from '../components/timeline/timelineLayout';
 
@@ -63,11 +64,23 @@ const festivalCache: Record<string, CacheData> = {};
 // newer than every rebuild and updates would never arrive.
 const syncWatermark: Record<string, number> = {};
 
-// Artist bios, fetched one artist at a time because the artists endpoint no
-// longer carries them. Keyed slug → artistId. Persisted apart from the main
-// datasets so an artist the user opened stays readable offline without
-// inflating the festival blob for everyone else.
-const bioCache: Record<string, Record<string, DbArtistBioLocalized[]>> = {};
+// Artist bios, fetched for the whole edition in one request because the artists
+// endpoint no longer carries them. Persisted apart from the main datasets so
+// the list can paint before they arrive.
+//
+// Stamped with the server's `artistsSyncedAt` rather than the overall sync
+// watermark: the bios only go stale when the artists themselves are rebuilt, so
+// a schedule-only change — the common one mid-festival — must not discard them.
+type BioStore = {
+  artistsSyncedAt: number;
+  bios: Record<string, DbArtistBioLocalized[]>;
+};
+
+const bioCache: Record<string, BioStore> = {};
+
+// Whether a bulk bio fetch is in flight for a slug. Lets the detail screen tell
+// "still on its way" from "we tried and there is no network".
+const biosLoading: Record<string, boolean> = {};
 
 // User interest data — keyed by slug → artistId
 const interestCache: Record<string, Record<string, LocalInterest>> = {};
@@ -129,23 +142,59 @@ export function hasCachedData(slug: string): boolean {
   return festivalCache[slug] !== undefined;
 }
 
-/** Cached bios for one artist, or undefined when they have not been fetched yet. */
+/** Cached bios for one artist, or undefined when this edition's bios are not loaded. */
 export function getArtistBio(slug: string, artistId: string): DbArtistBioLocalized[] | undefined {
-  return bioCache[slug]?.[artistId];
+  return bioCache[slug]?.bios[artistId];
 }
 
-/** Stores one artist's bios and persists the slug's bio map. */
-export function putArtistBio(
-  slug: string,
-  artistId: string,
-  localized: DbArtistBioLocalized[],
-): void {
-  const forSlug = bioCache[slug] ?? {};
-  forSlug[artistId] = localized;
-  bioCache[slug] = forSlug;
+/** True once this edition's bios are in the cache, whether or not any artist has one. */
+export function hasBios(slug: string): boolean {
+  return bioCache[slug] !== undefined && bioCache[slug].artistsSyncedAt > 0;
+}
 
-  AsyncStorage.setItem(bioStorageKey(slug), JSON.stringify(forSlug)).catch((err: unknown) => {
+/** True while a bulk bio fetch for this edition is running. */
+export function areBiosLoading(slug: string): boolean {
+  return biosLoading[slug] === true;
+}
+
+/** Set by the sync service around its bulk bio fetch. */
+export function setBiosLoading(slug: string, loading: boolean): void {
+  biosLoading[slug] = loading;
+}
+
+/** Replaces this edition's bios with a freshly fetched set and persists them. */
+export function putArtistBios(
+  slug: string,
+  entries: DbArtistBios[],
+  artistsSyncedAt: number,
+): void {
+  const bios: Record<string, DbArtistBioLocalized[]> = {};
+  for (const entry of entries) {
+    bios[entry.artistId] = entry.localized;
+  }
+
+  const store: BioStore = { artistsSyncedAt, bios };
+  bioCache[slug] = store;
+
+  AsyncStorage.setItem(bioStorageKey(slug), JSON.stringify(store)).catch((err: unknown) => {
     if (__DEV__) { console.warn('[cache] artist bios not persisted', err); }
+  });
+}
+
+/**
+ * Discards this edition's bios when the server rebuilt its artists after the
+ * cached copy was taken. A schedule-only change leaves `artistsSyncedAt`
+ * untouched and the bios stand.
+ */
+export function invalidateBiosIfStale(slug: string, artistsSyncedAt: number): void {
+  const store = bioCache[slug];
+  if (store === undefined || store.artistsSyncedAt >= artistsSyncedAt) {
+    return;
+  }
+
+  delete bioCache[slug];
+  AsyncStorage.removeItem(bioStorageKey(slug)).catch((err: unknown) => {
+    if (__DEV__) { console.warn('[cache] stale artist bios not cleared', err); }
   });
 }
 
@@ -186,12 +235,6 @@ export function populateCache(slug: string, data: CacheData, syncedAt: number): 
     if (__DEV__) { console.warn('[cache] festival data not persisted', err); }
   });
 
-  // The artists were rebuilt, so any bio held for them may be stale. Dropping
-  // the map costs one refetch per artist the user actually opens again.
-  delete bioCache[slug];
-  AsyncStorage.removeItem(bioStorageKey(slug)).catch((err: unknown) => {
-    if (__DEV__) { console.warn('[cache] artist bios not cleared', err); }
-  });
 }
 
 /**
@@ -240,11 +283,10 @@ async function hydrateBioCache(slug: string): Promise<void> {
 
   try {
     const stored = await AsyncStorage.getItem(bioStorageKey(slug));
-    bioCache[slug] = stored === null
-      ? {}
-      : (JSON.parse(stored) as Record<string, DbArtistBioLocalized[]>);
+    if (stored !== null) {
+      bioCache[slug] = JSON.parse(stored) as BioStore;
+    }
   } catch (err: unknown) {
-    bioCache[slug] = {};
     if (__DEV__) { console.warn('[cache] artist bios not restored', err); }
   }
 }

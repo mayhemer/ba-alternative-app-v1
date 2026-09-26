@@ -1,66 +1,42 @@
-import { useEffect, useState } from 'react';
-import { baPublicApiAdapter } from '../adapters/baPublicApiAdapter';
-import { getArtistBio, putArtistBio } from '../cache/cacheService';
+import { useCallback, useEffect, useState } from 'react';
+import { areBiosLoading, getArtistBio, hasBios } from '../cache/cacheService';
 import { getArtistBioLocalized } from '../utils/localization';
-import type { DbArtist, DbArtistBioLocalized } from '../types/backend';
-
-// In-flight fetches keyed `slug#artistId`. The detail screen mounts the header
-// and the body separately and each remount would otherwise start its own
-// request for the same bio.
-const inFlight = new Map<string, Promise<DbArtistBioLocalized[]>>();
-
-function fetchBioOnce(slug: string, artistId: string): Promise<DbArtistBioLocalized[]> {
-  const key = `${slug}#${artistId}`;
-  const pending = inFlight.get(key);
-  if (pending !== undefined) {
-    return pending;
-  }
-
-  const request = baPublicApiAdapter
-    .fetchArtistBio(slug, artistId)
-    .finally(() => inFlight.delete(key));
-  inFlight.set(key, request);
-  return request;
-}
+import { useCacheRefresh } from '../store/AppContext';
+import type { DbArtist } from '../types/backend';
 
 /**
- * The artist's bio in the current language, or '' while it is still loading —
- * which is also what an artist without a bio returns, so the caller renders the
- * same "no bio" layout either way and the text simply appears once it arrives.
- *
- * Bios are not part of the artists payload; they are fetched per artist and
- * cached (and persisted) on first open.
+ * Why this is a state rather than a plain string: the bios are not part of the
+ * artists payload, so at the moment a detail screen opens they may still be in
+ * flight, or may have failed with no network. Collapsing all three cases to ''
+ * renders "no bio" for an artist that has one, with nothing to tell the user
+ * why — so the three are kept apart.
  */
-export function useArtistBio(artist: DbArtist): string {
+export type ArtistBio =
+  | { state: 'loading' }
+  | { state: 'unavailable' }
+  | { state: 'ready'; content: string };
+
+export function useArtistBio(artist: DbArtist): ArtistBio {
   const { slug, artistId } = artist;
-  const [bio, setBio] = useState<DbArtistBioLocalized[] | undefined>(
-    () => getArtistBio(slug, artistId),
-  );
 
-  useEffect(() => {
-    const cached = getArtistBio(slug, artistId);
-    if (cached !== undefined) {
-      setBio(cached);
-      return;
+  const read = useCallback((): ArtistBio => {
+    const localized = getArtistBio(slug, artistId);
+    if (localized !== undefined) {
+      return { state: 'ready', content: getArtistBioLocalized(localized) };
     }
-
-    let cancelled = false;
-    setBio(undefined);
-
-    fetchBioOnce(slug, artistId)
-      .then((localized) => {
-        putArtistBio(slug, artistId, localized);
-        if (!cancelled) {
-          setBio(localized);
-        }
-      })
-      .catch(() => {
-        // Offline, or the artist has no entry any more. The detail screen just
-        // renders without a bio; the next open retries.
-      });
-
-    return () => { cancelled = true; };
+    // Bios are loaded and this artist is not among them — it genuinely has none.
+    if (hasBios(slug)) {
+      return { state: 'ready', content: '' };
+    }
+    return areBiosLoading(slug) ? { state: 'loading' } : { state: 'unavailable' };
   }, [slug, artistId]);
 
-  return bio === undefined ? '' : getArtistBioLocalized(bio);
+  const [bio, setBio] = useState<ArtistBio>(read);
+
+  // Re-reads when the sync service stores the bios or gives up on them, and
+  // when the screen is pointed at a different artist.
+  useCacheRefresh(useCallback(() => { setBio(read()); }, [read]));
+  useEffect(() => { setBio(read()); }, [read]);
+
+  return bio;
 }

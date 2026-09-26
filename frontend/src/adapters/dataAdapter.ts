@@ -1,5 +1,5 @@
 import type { DataCollector } from '../cache/cacheService';
-import type { DbArtistBioLocalized } from '../types/backend';
+import type { DbArtistBios } from '../types/backend';
 
 // ── Adapter interface ─────────────────────────────────────────────────────────
 // All data source adapters must implement this interface.
@@ -14,6 +14,12 @@ export type ValidationResult = {
    * reading would be compared against the wrong scale and suppress all updates.
    */
   serverSyncedAt: number;
+  /**
+   * When the artists were last rebuilt, which moves independently of
+   * `serverSyncedAt`. Cached bios stay valid while this holds steady, so a
+   * schedule-only change no longer discards them.
+   */
+  artistsSyncedAt: number;
 };
 
 export interface DataAdapter {
@@ -31,8 +37,9 @@ export interface DataAdapter {
   populate(slug: string, collector: DataCollector): Promise<void>;
 
   /**
-   * Fetch one artist's bios, which `populate` deliberately leaves out — they
-   * dominate the artists payload but are only read on the detail screen.
+   * Fetch every artist's bios for this edition in one request. `populate`
+   * leaves them out so the list can paint sooner; this runs alongside it, not
+   * before it, and keeps the app fully readable offline.
    */
-  fetchArtistBio(slug: string, artistId: string): Promise<DbArtistBioLocalized[]>;
+  fetchAllBios(slug: string): Promise<DbArtistBios[]>;
 }

@@ -2,9 +2,13 @@ import { baPublicApiAdapter } from '../adapters/baPublicApiAdapter';
 import {
   createDataCollector,
   getSyncWatermark,
+  hasBios,
   hasCachedData,
   hydrateFestivalCache,
+  invalidateBiosIfStale,
   populateCache,
+  putArtistBios,
+  setBiosLoading,
 } from '../cache/cacheService';
 import { getSyncInterval } from './festivalConfig';
 
@@ -29,15 +33,27 @@ let isFirstLoad = true;
 // answers "changed" and turns every poll into a full re-download.
 async function runSync(slug: string, callbacks: SyncCallbacks): Promise<void> {
   try {
-    const { upToDate, serverSyncedAt } = await baPublicApiAdapter.validate(
+    const { upToDate, serverSyncedAt, artistsSyncedAt } = await baPublicApiAdapter.validate(
       slug,
       getSyncWatermark(slug),
     );
 
+    // Bios outlive a schedule-only change, so this only bites when the artists
+    // themselves were rebuilt.
+    invalidateBiosIfStale(slug, artistsSyncedAt);
+
     if (upToDate && hasCachedData(slug)) {
+      // Still worth a look: a previous run may have loaded the datasets while
+      // the bios failed, or the invalidation above may have just dropped them.
+      void syncBios(slug, artistsSyncedAt, callbacks);
       finishFirstLoad(callbacks);
       return;
     }
+
+    // Deliberately not awaited: the bios are an order of magnitude larger than
+    // the datasets, and making the first paint wait for them is exactly what
+    // splitting them out of the artists payload was meant to avoid.
+    void syncBios(slug, artistsSyncedAt, callbacks);
 
     const collector = createDataCollector();
     await baPublicApiAdapter.populate(slug, collector);
@@ -59,6 +75,36 @@ async function runSync(slug: string, callbacks: SyncCallbacks): Promise<void> {
       );
     }
     // Subsequent failures are silent — keep existing cache, retry on next interval.
+  }
+}
+
+// Fetches this edition's bios unless they are already cached. Runs beside the
+// dataset fetch rather than before it and never rejects: without bios the
+// detail screen says so, which is strictly better than blocking the app.
+let biosInFlight: string | null = null;
+
+async function syncBios(
+  slug: string,
+  artistsSyncedAt: number,
+  callbacks: SyncCallbacks,
+): Promise<void> {
+  if (hasBios(slug) || biosInFlight === slug) {
+    return;
+  }
+
+  biosInFlight = slug;
+  setBiosLoading(slug, true);
+  try {
+    const entries = await baPublicApiAdapter.fetchAllBios(slug);
+    putArtistBios(slug, entries, artistsSyncedAt);
+  } catch (error) {
+    if (__DEV__) { console.warn('[sync] artist bios not fetched', error); }
+  } finally {
+    biosInFlight = null;
+    setBiosLoading(slug, false);
+    // Either way the answer changed: a detail screen on a spinner has to learn
+    // that the bios arrived, or that they are not coming.
+    callbacks.onRefreshComplete();
   }
 }
 
