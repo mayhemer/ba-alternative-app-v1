@@ -8,9 +8,9 @@ import { Text } from '../ui/Text';
 import { useConflictDetail } from '../../context/ConflictDetailContext';
 import { useArtistDetail } from '../../context/ArtistDetailContext';
 import { useInterest } from '../../context/InterestContext';
-import { useCacheRefresh, useSelectedSlug } from '../../store/AppContext';
+import { useSelectedSlug } from '../../store/AppContext';
+import { useArtists, useStages } from '../../store/cacheStore';
 import { useBottomSheetMount } from '../../hooks/useBottomSheetMount';
-import { getArtists, getStages } from '../../cache/cacheService';
 import { getStageLocalized } from '../../utils/localization';
 import { StarIndicator } from '../StarButton';
 import {
@@ -262,10 +262,9 @@ export function ConflictDetailSheet() {
   const { top } = useSafeAreaInsets();
   const sheetRef = useRef<BottomSheet>(null);
 
-  // Increment to force artistById/stageById recompute when cache is refreshed.
-  const [cacheRevision, setCacheRevision] = useState(0);
-  const bumpRevision = useCallback(() => setCacheRevision((n) => n + 1), []);
-  useCacheRefresh(bumpRevision);
+  // Subscribed reads, so a sync landing while the sheet is open updates it.
+  const artists = useArtists(selectedSlug);
+  const stages  = useStages(selectedSlug);
 
   const { mountIndex, onClosed } = useBottomSheetMount(
     conflictState.sourceEvent !== null,
@@ -291,17 +290,15 @@ export function ConflictDetailSheet() {
     closeConflict();
   }, [onClosed, closeConflict]);
 
-  const artistById = useMemo(() => {
-    void cacheRevision; // invalidate when cache refreshes
-    const list = getArtists(selectedSlug);
-    return Object.fromEntries(list.map((a) => [a.artistId, a]));
-  }, [selectedSlug, cacheRevision]);
+  const artistById = useMemo(
+    () => Object.fromEntries(artists.map((a) => [a.artistId, a])),
+    [artists],
+  );
 
-  const stageById = useMemo(() => {
-    void cacheRevision; // invalidate when cache refreshes
-    const list = getStages(selectedSlug);
-    return Object.fromEntries(list.map((s) => [s.stageId, s]));
-  }, [selectedSlug, cacheRevision]);
+  const stageById = useMemo(
+    () => Object.fromEntries(stages.map((s) => [s.stageId, s])),
+    [stages],
+  );
 
   const handleEventPress = useCallback((event: DbEvent): void => {
     const artist = artistById[event.artistId];

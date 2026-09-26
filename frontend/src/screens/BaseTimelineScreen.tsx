@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { useSelectedSlug } from '../store/AppContext';
-import { getFestivalDays } from '../cache/cacheService';
+import { useFestivalDays } from '../store/cacheStore';
 import type { DbArtist, DbEvent } from '../types/backend';
 import { useTopBar, useBottomBar } from '../context/ScreenUIContext';
 import { useArtistDetail } from '../context/ArtistDetailContext';
@@ -40,7 +40,7 @@ export function BaseTimelineScreen({ title, screenKey, BottomBarComponent, filte
     setSelectedDayStart,
   } = useTimelineFilter();
 
-  const { events, eventsByCategory, visibleCategories, laneHeights, laneOffsets, categorySubRows, canvasHeight, conflictOverlaps } =
+  const { eventsByCategory, visibleCategories, laneHeights, laneOffsets, categorySubRows, canvasHeight, conflictOverlaps } =
     useTimelineData({ filterArtist, useSubRows });
 
   useTopBar({ title, RightComponent: TopBarRight });
@@ -48,8 +48,18 @@ export function BaseTimelineScreen({ title, screenKey, BottomBarComponent, filte
 
   // ── Festival-day initialisation ─────────────────────────────────────────────
 
+  // The days themselves, subscribed — so this effect re-runs when a sync
+  // repopulates the cache. It used to depend on `events` as a stand-in for
+  // "the cache changed", which needed an exhaustive-deps suppression to keep.
+  const days = useFestivalDays(selectedSlug);
+
+  // Latest selected day without making it a trigger: re-running this effect on
+  // every day switch would fight the user's own selection. A ref says exactly
+  // that, where omitting a real dependency only hid it from ESLint.
+  const selectedDayRef = useRef(selectedDayStart);
+  selectedDayRef.current = selectedDayStart;
+
   useEffect(() => {
-    const days = getFestivalDays(selectedSlug);
     setFestivalDays(days);
     if (days.length === 0) { return; }
 
@@ -57,7 +67,7 @@ export function BaseTimelineScreen({ title, screenKey, BottomBarComponent, filte
     // them from the day it is about to show (`defaultScrollX`), which is the only
     // way the value cannot arrive after the view that reads it.
 
-    if (days.includes(selectedDayStart)) { return; }
+    if (days.includes(selectedDayRef.current)) { return; }
     // Restore the persisted day if it is still valid, else fall back to today,
     // else the first festival day.
     const persistedDay = getSelectedDay(screenKey);
@@ -68,13 +78,7 @@ export function BaseTimelineScreen({ title, screenKey, BottomBarComponent, filte
     const today = getFestivalDayStart(currentTimeMs());
     const todayDay = days.find((d) => d === today);
     setSelectedDayStart(todayDay ?? days[0]);
-    // `events` is kept as the "data arrived" signal even though the body no longer
-    // reads it — getFestivalDays reads the same cache, and this is what re-runs the
-    // effect when a sync repopulates it (same pattern as `revision` in
-    // ConflictContext). selectedDayStart is intentionally omitted: re-running on
-    // every day switch would fight the user's selection.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [events, screenKey, setFestivalDays, setSelectedDayStart]);
+  }, [days, screenKey, setFestivalDays, setSelectedDayStart]);
 
   // Persist the selected day per screen whenever it changes (day switch / restore).
   useEffect(() => {

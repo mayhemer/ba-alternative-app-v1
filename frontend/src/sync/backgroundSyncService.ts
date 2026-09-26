@@ -14,10 +14,12 @@ import { getSyncInterval } from './festivalConfig';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
+// Only the first-load outcome is reported. Telling React about refreshed data
+// is no longer this service's job: every cacheService write notifies the cache
+// store's subscribers directly, so a consumer cannot miss one.
 type SyncCallbacks = {
   onFirstLoadSuccess: () => void;
   onFirstLoadError: (error: Error) => void;
-  onRefreshComplete: () => void;
 };
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -45,7 +47,7 @@ async function runSync(slug: string, callbacks: SyncCallbacks): Promise<void> {
     if (upToDate && hasCachedData(slug)) {
       // Still worth a look: a previous run may have loaded the datasets while
       // the bios failed, or the invalidation above may have just dropped them.
-      void syncBios(slug, artistsSyncedAt, callbacks);
+      void syncBios(slug, artistsSyncedAt);
       finishFirstLoad(callbacks);
       return;
     }
@@ -53,7 +55,7 @@ async function runSync(slug: string, callbacks: SyncCallbacks): Promise<void> {
     // Deliberately not awaited: the bios are an order of magnitude larger than
     // the datasets, and making the first paint wait for them is exactly what
     // splitting them out of the artists payload was meant to avoid.
-    void syncBios(slug, artistsSyncedAt, callbacks);
+    void syncBios(slug, artistsSyncedAt);
 
     const collector = createDataCollector();
     await baPublicApiAdapter.populate(slug, collector);
@@ -62,11 +64,9 @@ async function runSync(slug: string, callbacks: SyncCallbacks): Promise<void> {
     // is picked up by the next run instead of being skipped.
     populateCache(slug, collector.build(), serverSyncedAt);
 
-    if (isFirstLoad) {
-      finishFirstLoad(callbacks);
-    } else {
-      callbacks.onRefreshComplete();
-    }
+    // Nothing to announce on a refresh — populateCache has already notified the
+    // cache store's subscribers.
+    finishFirstLoad(callbacks);
   } catch (error) {
     if (isFirstLoad) {
       isFirstLoad = false;
@@ -86,7 +86,6 @@ let biosInFlight: string | null = null;
 async function syncBios(
   slug: string,
   artistsSyncedAt: number,
-  callbacks: SyncCallbacks,
 ): Promise<void> {
   if (hasBios(slug) || biosInFlight === slug) {
     return;
@@ -101,10 +100,10 @@ async function syncBios(
     if (__DEV__) { console.warn('[sync] artist bios not fetched', error); }
   } finally {
     biosInFlight = null;
-    setBiosLoading(slug, false);
     // Either way the answer changed: a detail screen on a spinner has to learn
-    // that the bios arrived, or that they are not coming.
-    callbacks.onRefreshComplete();
+    // that the bios arrived, or that they are not coming. Clearing the flag is
+    // itself a cache mutation, so the store notifies for us.
+    setBiosLoading(slug, false);
   }
 }
 

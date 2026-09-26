@@ -21,7 +21,7 @@ import { hydrateLocalState } from './uiStatePersistence';
 // persisted cache or the network — so this gate no longer implies a round trip.
 
 export function StartupGate({ children }: { children: React.ReactNode }) {
-  const { state, emitCacheRefresh } = useAppContext();
+  const { state } = useAppContext();
   const { selectedSlug } = state;
 
   const [ready, setReady] = useState(false);
@@ -45,20 +45,17 @@ export function StartupGate({ children }: { children: React.ReactNode }) {
 
     const externalLoad = new Promise<void>((resolve, reject) => {
       startSync(slug, {
-        onFirstLoadSuccess: () => {
-          // Festival cache is populated — notify cache-reading consumers.
-          emitCacheRefresh();
-          resolve();
-        },
+        // Cache-reading consumers are notified by cacheService itself, so this
+        // only has to release the gate.
+        onFirstLoadSuccess: () => { resolve(); },
         onFirstLoadError: (err) => { reject(err); },
-        onRefreshComplete: () => emitCacheRefresh(),
       });
     });
 
     Promise.all([externalLoad, hydrateLocalState(slug)])
       .then(() => { setReady(true); })
       .catch((err) => { setError(err instanceof Error ? err.message : String(err)); });
-  }, [emitCacheRefresh]);
+  }, []);
 
   // (Re-)run startup whenever the slug changes. Held until the slug resolves
   // (null) so we boot once under the correct slug.

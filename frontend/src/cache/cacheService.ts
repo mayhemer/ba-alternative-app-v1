@@ -85,6 +85,40 @@ const biosLoading: Record<string, boolean> = {};
 // User interest data — keyed by slug → artistId
 const interestCache: Record<string, Record<string, LocalInterest>> = {};
 
+// ── Change notification ───────────────────────────────────────────────────────
+
+// The cache lives outside React, so React has to be told when it changes. This
+// is the whole bridge: a monotonic version plus a listener set, consumed through
+// `useSyncExternalStore` (see store/cacheStore.ts).
+//
+// It replaces the old AppContext event emitter, where subscribing was optional
+// and most readers simply didn't — they re-rendered because a subscribed parent
+// happened to, which is what made the June 2026 "empty conflicts view" bug
+// possible. Here a component cannot read cached data without subscribing to it,
+// so the invariant is structural rather than remembered.
+let cacheVersion = 0;
+const cacheListeners = new Set<() => void>();
+
+/** Subscribe to cache mutations. Returns the unsubscribe function. */
+export function subscribeToCache(listener: () => void): () => void {
+  cacheListeners.add(listener);
+  return () => { cacheListeners.delete(listener); };
+}
+
+/** Monotonic counter, bumped once per mutation. Stable between mutations. */
+export function getCacheVersion(): number {
+  return cacheVersion;
+}
+
+// Every write path below ends here. Listeners are copied before iteration so a
+// listener that unsubscribes during the notification cannot corrupt the walk.
+function notifyCacheChanged(): void {
+  cacheVersion += 1;
+  for (const listener of [...cacheListeners]) {
+    listener();
+  }
+}
+
 // ── AsyncStorage keys ─────────────────────────────────────────────────────────
 
 function interestStorageKey(slug: string): string {
@@ -113,32 +147,64 @@ type PersistedFestival = {
 
 // ── Festival data — public read API (UI only) ─────────────────────────────────
 
+// Shared "nothing cached" values. These are returned by reference rather than
+// freshly allocated per call because the getters are read through
+// useSyncExternalStore: React compares snapshots by identity, and a `?? []`
+// that builds a new array on every read is an infinite render loop.
+// Frozen so a caller cannot mutate the shared instance.
+const EMPTY_ARTISTS  = Object.freeze([]) as unknown as DbArtist[];
+const EMPTY_CATEGORIES = Object.freeze([]) as unknown as DbCategory[];
+const EMPTY_STAGES   = Object.freeze([]) as unknown as DbStage[];
+const EMPTY_EVENTS   = Object.freeze([]) as unknown as DbEvent[];
+const EMPTY_DAYS     = Object.freeze([]) as unknown as DbFestivalDays;
+const EMPTY_LAYOUT: DbCategoryDayLayout = Object.freeze({
+  subRowCount: 1,
+  eventSubRows: Object.freeze({}) as Record<string, number>,
+});
+const EMPTY_ARTIST_EVENTS = Object.freeze({}) as DbArtistEventMap;
+const EMPTY_LAYOUT_MAP    = Object.freeze({}) as DbLayoutMap;
+
 export function getArtists(slug: string): DbArtist[] {
-  return festivalCache[slug]?.artists ?? [];
+  return festivalCache[slug]?.artists ?? EMPTY_ARTISTS;
 }
 
 export function getCategories(slug: string): DbCategory[] {
-  return festivalCache[slug]?.categories ?? [];
+  return festivalCache[slug]?.categories ?? EMPTY_CATEGORIES;
 }
 
 export function getStages(slug: string): DbStage[] {
-  return festivalCache[slug]?.stages ?? [];
+  return festivalCache[slug]?.stages ?? EMPTY_STAGES;
 }
 
 export function getFestivalDays(slug: string): DbFestivalDays {
-  return festivalCache[slug]?.festivalDays ?? [];
+  return festivalCache[slug]?.festivalDays ?? EMPTY_DAYS;
 }
 
 export function getEvents(slug: string): DbEvent[] {
-  return festivalCache[slug]?.events ?? [];
+  return festivalCache[slug]?.events ?? EMPTY_EVENTS;
 }
 
 export function getArtistEvents(slug: string, artistId: string): DbEvent[] {
-  return festivalCache[slug]?.artistEventMap[artistId] ?? [];
+  return festivalCache[slug]?.artistEventMap[artistId] ?? EMPTY_EVENTS;
+}
+
+/**
+ * The whole artistId → events map, by reference. Callers that need lookups for
+ * many artists take this rather than calling `getArtistEvents` in a loop: it is
+ * one stable value they can depend on, so a derived computation over it has an
+ * honest dependency instead of a hidden read.
+ */
+export function getArtistEventMap(slug: string): DbArtistEventMap {
+  return festivalCache[slug]?.artistEventMap ?? EMPTY_ARTIST_EVENTS;
+}
+
+/** The whole per-category/day layout map, by reference. Same rationale. */
+export function getLayoutMap(slug: string): DbLayoutMap {
+  return festivalCache[slug]?.layoutMap ?? EMPTY_LAYOUT_MAP;
 }
 
 export function getCategoryDayLayout(slug: string, categoryId: string, dayStart: number): DbCategoryDayLayout {
-  return festivalCache[slug]?.layoutMap[`${categoryId}_${dayStart}`] ?? { subRowCount: 1, eventSubRows: {} };
+  return festivalCache[slug]?.layoutMap[`${categoryId}_${dayStart}`] ?? EMPTY_LAYOUT;
 }
 
 export function hasCachedData(slug: string): boolean {
@@ -162,7 +228,13 @@ export function areBiosLoading(slug: string): boolean {
 
 /** Set by the sync service around its bulk bio fetch. */
 export function setBiosLoading(slug: string, loading: boolean): void {
+  if (biosLoading[slug] === loading) {
+    return;
+  }
   biosLoading[slug] = loading;
+  // A detail screen on a spinner has to learn that the bios arrived — or that
+  // they are not coming — so the loading flag is part of the observed state.
+  notifyCacheChanged();
 }
 
 /** Replaces this edition's bios with a freshly fetched set and persists them. */
@@ -182,6 +254,8 @@ export function putArtistBios(
   AsyncStorage.setItem(bioStorageKey(slug), JSON.stringify(store)).catch((err: unknown) => {
     if (__DEV__) { console.warn('[cache] artist bios not persisted', err); }
   });
+
+  notifyCacheChanged();
 }
 
 /**
@@ -199,6 +273,8 @@ export function invalidateBiosIfStale(slug: string, artistsSyncedAt: number): vo
   AsyncStorage.removeItem(bioStorageKey(slug)).catch((err: unknown) => {
     if (__DEV__) { console.warn('[cache] stale artist bios not cleared', err); }
   });
+
+  notifyCacheChanged();
 }
 
 /**
@@ -238,6 +314,9 @@ export function populateCache(slug: string, data: CacheData, syncedAt: number): 
     if (__DEV__) { console.warn('[cache] festival data not persisted', err); }
   });
 
+  // After the in-memory swap, not after the write: readers are served from
+  // memory, and the persist is fire-and-forget.
+  notifyCacheChanged();
 }
 
 /**
@@ -276,6 +355,7 @@ export async function hydrateFestivalCache(slug: string): Promise<boolean> {
 
     festivalCache[slug] = buildCacheData(parsed);
     syncWatermark[slug] = parsed.syncedAt ?? 0;
+    notifyCacheChanged();
     return true;
   } catch (err: unknown) {
     if (__DEV__) { console.warn('[cache] festival data not restored', err); }
@@ -296,6 +376,7 @@ async function hydrateBioCache(slug: string): Promise<void> {
     const stored = await AsyncStorage.getItem(bioStorageKey(slug));
     if (stored !== null) {
       bioCache[slug] = JSON.parse(stored) as BioStore;
+      notifyCacheChanged();
     }
   } catch (err: unknown) {
     if (__DEV__) { console.warn('[cache] artist bios not restored', err); }
@@ -475,14 +556,6 @@ export function createDataCollector(): DataCollector & { build(): CacheData } {
 }
 
 // ── Interest data — read API ──────────────────────────────────────────────────
-
-/**
- * Returns the in-memory interest map for a slug.
- * Only valid after hydrateInterests() has been called for this slug.
- */
-export function getInterests(slug: string): Record<string, LocalInterest> {
-  return interestCache[slug] ?? {};
-}
 
 // ── Interest data — write API ─────────────────────────────────────────────────
 

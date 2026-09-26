@@ -34,7 +34,7 @@ src/
   navigation/     # Navigator, back-history tracking, share-link handling
   screens/        # Screen components
   components/     # Reusable UI components
-  store/          # App context + startup gate + UI-state persistence
+  store/          # App context + cache store binding + startup gate + UI-state persistence
   styling/        # Design tokens
   sync/           # Background sync service + festival date config
   types/          # Backend type re-exports
@@ -59,8 +59,8 @@ type AppState = {
   the startup read resolves, and always falls back to `DEFAULT_SLUG` — it can never stay null
   and deadlock the startup gate.
 - Slug switcher lives in Settings screen only.
-- Context also exposes the cache-refresh emitter (`subscribeToCacheRefresh` / `emitCacheRefresh`)
-  and a monotonic `getRefreshEpoch()`.
+- Context exposes only the slug and the loading/error setters. Cache-change
+  notification deliberately does **not** live here — see *Cache change notification* below.
 
 **The sync watermark deliberately does not live here.** It belongs to the data it describes, so
 `cacheService` owns it and persists it alongside the datasets. Holding it in React state also
@@ -105,10 +105,24 @@ function getArtistEvents(slug: string, artistId: string): DbEvent[];
 function getCategoryDayLayout(slug, categoryId, dayStart): DbCategoryDayLayout;
 function getArtistBio(slug: string, artistId: string): DbArtistBioLocalized[] | undefined;
 
+function getArtistEventMap(slug: string): DbArtistEventMap;
+function getLayoutMap(slug: string): DbLayoutMap;
+
 function populateCache(slug: string, data: CacheData, syncedAt: number): void;
 function getSyncWatermark(slug: string): number;
 async function hydrateFestivalCache(slug: string): Promise<boolean>;
+
+function subscribeToCache(listener: () => void): () => void;
+function getCacheVersion(): number;
 ```
+
+- **Every getter returns a referentially stable value** between mutations. The "nothing
+  cached" cases return shared frozen constants rather than a fresh `[]`, because these
+  getters are read through `useSyncExternalStore`, which compares snapshots by identity —
+  a snapshot that allocates on each read re-renders forever.
+- Callers needing lookups across many artists or lanes take `getArtistEventMap` /
+  `getLayoutMap` rather than calling the per-key getter in a loop: one stable value they
+  can depend on, instead of a hidden read.
 
 - In-memory cache for the session, backed by **AsyncStorage persistence** (shipped 2026-08-01):
   `festival:data:{slug}`, roughly 800 kB per edition. Only the raw datasets are stored; derived
@@ -184,7 +198,7 @@ factory call site.
    c. If `upToDate` and data is cached → done.
    d. Otherwise create a `DataCollector`, `adapter.populate(...)`, then
       `cacheService.populateCache(slug, data, serverSyncedAt)`.
-   e. Emit `cacheRefreshed` (via the gate's callbacks).
+   e. Nothing to announce — `populateCache` notified the cache store itself.
 4. Can be triggered manually (`triggerManualSync`).
 
 ### Interval configuration
@@ -250,31 +264,51 @@ proposed path if it is picked up again.
 
 ---
 
-## UI Refresh Pattern
+## Cache change notification
 
-- `AppContext` exposes a `cacheRefreshed` event.
-- Components subscribe via `useCacheRefresh(callback)`.
-- On event: component re-reads from cache and re-renders.
-- React Native has no built-in event bus; the emitter is a lightweight custom implementation
-  inside Context.
-- A monotonic `refreshEpoch` lets late-mounting subscribers detect a refresh that fired before
-  they subscribed.
-- Components handle their own change detection — no centrally pushed diffs.
+`cacheService` owns a monotonic `cacheVersion` and a listener set; every write path
+(`populateCache`, `hydrateFestivalCache`, `putArtistBios`, `setBiosLoading`,
+`invalidateBiosIfStale`) ends by bumping it and notifying. `src/store/cacheStore.ts` binds
+that to React with `useSyncExternalStore`:
 
-**Known weakness** — see *Deferred / known gaps* below. Only some cache-reading modules actually
-subscribe; the rest are correct because a subscribed parent happens to re-render them.
+```typescript
+useArtists(slug) / useCategories(slug) / useStages(slug) / useEvents(slug)
+useFestivalDays(slug) / useArtistEvents(slug, id) / useArtistEventMap(slug)
+useLayoutMap(slug) / useArtistBio(slug, id) / useHasBios(slug) / useBiosLoading(slug)
+useCacheSnapshot(getSnapshot)   // escape hatch, stable snapshots only
+```
+
+**These hooks are the only sanctioned way for a component to read the cache.** Subscribing is
+a side effect of reading, so a component physically cannot consume cached data without being
+re-rendered when it changes — the invariant is structural rather than remembered.
+
+This replaced an opt-in emitter on `AppContext` (`useCacheRefresh`), where subscribing was a
+separate step most readers skipped; they re-rendered only because a subscribed parent happened
+to, and stopped being correct when that coincidence broke. It caused the June 2026 "empty
+conflicts view" bug and the timeline's vanishing conflict bars.
+
+Consequences worth keeping in mind when adding a reader:
+
+- To derive something that **allocates** (a `Map`, a sorted array), read the inputs with these
+  hooks and compute in a `useMemo` over them. The memo then depends on the real data, so no
+  change counter and no `exhaustive-deps` suppression is needed.
+- Pure helpers over cache data take that data as arguments rather than reading the cache
+  themselves — `conflictUtils` takes a `ConflictInputs`. A helper that reaches into the cache
+  has a dependency React cannot see.
+- An **imperative** read at call time (not during render) needs no subscription and should not
+  take one; `navigation/BackHistoryTracker` re-resolves ids against the live cache this way.
 
 ---
 
 ## Data Hooks
 
-The planned `useArtists()` / `useCategories()` / `useStages()` / `useEvents()` convention was
-**not** built. Components read `cacheService` directly and subscribe with `useCacheRefresh`. The
-hooks that do exist are derived-data and UI concerns rather than thin cache wrappers:
+The `useArtists()` / `useCategories()` / `useStages()` / `useEvents()` convention lives in
+`store/cacheStore.ts` — see *Cache change notification* above. Alongside them, `src/hooks/`
+holds the derived-data and UI concerns rather than thin cache wrappers:
 
 ```
 useTimelineData   — lanes, layout and day data for a timeline screen
-useArtistDerived  — per-artist derived fields
+useArtistDerived  — per-artist derived fields, incl. the detail conflict map
 useArtistBio      — bio for the detail screen, incl. loading/absent states
 useLayoutMode / useBottomSheetMount / useExclusiveOverlay
 ```
@@ -313,14 +347,17 @@ Carried in `ROADMAP.md` under BETA; both were deliberately not done before the 2
   `onRefreshComplete` instead of `onFirstLoadSuccess`, `StartupGate`'s `Promise.all` never settles,
   and the splash hangs with no error. Fix: one instance per startup run with a generation token.
   (`stop()` clears the timer but cannot cancel an in-flight fetch.)
-- **The cache→React bridge is an event emitter, not a subscribable store.** `festivalCache` lives
-  outside React; only some of the modules that read it subscribe. This caused the June 2026 "empty
-  conflicts view" bug; the epoch latch in `useCacheRefresh` and the eslint-disable in
-  `ConflictContext` are patches around the missing invariant. Fix: `useSyncExternalStore` over the
-  cache with a version counter, so forgetting to subscribe becomes impossible. Both patches should
-  disappear with it — if they survive, the invariant still is not enforced.
+- ~~**The cache→React bridge is an event emitter, not a subscribable store.**~~ **Done** — the
+  emitter was replaced by `useSyncExternalStore` over a version counter owned by `cacheService`
+  (see *Cache change notification*). The patches it existed to work around are gone with it: the
+  epoch latch in `useCacheRefresh`, the eslint-disables in `ConflictContext`, `useTimelineData`
+  and `BaseTimelineScreen`, and the `void cacheRevision` trick in `ConflictDetailSheet`.
 
 Smaller open items: `slugAdapter` is still a mockup; category **reorder** persistence was planned
 and never built (hiding is persisted); `AppContext` has a TODO to roll the default slug forward
 automatically once an edition is over; `scheduleNext` has no `AppState` handling for
 sleep/resume/kill.
+
+Three `exhaustive-deps` suppressions remain in the tree (`InterestContext`, and two in
+`TimelineView`). They concern scroll/day/auth effect *triggers*, not cache reads, and are
+out of scope for the cache-store work above.

@@ -1,8 +1,20 @@
-import { getArtists, getArtistEvents, getStages } from '../cache/cacheService';
+import type { DbArtistEventMap } from '../cache/cacheService';
 import { getStageLocalized } from './localization';
-import type { DbArtist, DbEvent } from '../types/backend';
+import type { DbArtist, DbEvent, DbStage } from '../types/backend';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
+
+/**
+ * Everything these computations need from the festival cache, passed in rather
+ * than read here. Keeping them pure is what lets callers memoise on the real
+ * data: a function that reaches into the cache itself has a dependency React
+ * cannot see, which is how the timeline's conflict bars went stale.
+ */
+export type ConflictInputs = {
+  artists: DbArtist[];
+  stages: DbStage[];
+  artistEvents: DbArtistEventMap;
+};
 
 export type ConflictEntry = {
   leader: boolean;
@@ -18,15 +30,13 @@ export type ConflictEntry = {
 const EVENT_DURATION_MAX_FOR_CONFLICT_ELIGIBILITY_MS = 2 * 60 * 60 * 1000;
 
 /**
- * Computes all must_see conflict entries for a given slug and interest map.
+ * Computes all must_see conflict entries for an interest map and cache inputs.
  * Single source of truth — used by both ConflictContext and ConflictDetailSheet.
  */
 export function computeConflictEntries(
-  slug: string,
   interests: Record<string, string>,
+  { artists, stages, artistEvents }: ConflictInputs,
 ): ConflictEntry[] {
-  const artists = getArtists(slug);
-  const stages  = getStages(slug);
   const stageById  = Object.fromEntries(stages.map((s) => [s.stageId, s]));
   const artistById = Object.fromEntries(artists.map((a) => [a.artistId, a]));
 
@@ -35,7 +45,7 @@ export function computeConflictEntries(
   const markedEvents: DbEvent[] = [];
   for (const artist of artists) {
     if ((interests[artist.artistId] ?? 'none') === 'must_see') {
-      markedEvents.push(...getArtistEvents(slug, artist.artistId));
+      markedEvents.push(...(artistEvents[artist.artistId] ?? []));
     }
   }
 
@@ -85,11 +95,11 @@ export type ConflictOverlap = { from: number; to: number };
  * O(k log k) over the (small) number of conflicts that event has.
  */
 export function computeConflictOverlaps(
-  slug: string,
   interests: Record<string, string>,
+  inputs: ConflictInputs,
 ): Map<string, ConflictOverlap[]> {
   const map = new Map<string, ConflictOverlap[]>();
-  for (const entry of computeConflictEntries(slug, interests)) {
+  for (const entry of computeConflictEntries(interests, inputs)) {
     // Pairwise intersections of this event with each event it conflicts with.
     const intervals: ConflictOverlap[] = [];
     for (const other of entry.overlappingEvents) {

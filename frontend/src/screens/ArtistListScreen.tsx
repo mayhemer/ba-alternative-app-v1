@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   SectionList,
   TextInput,
@@ -6,9 +6,8 @@ import {
 } from 'react-native';
 import { Text } from '../components/ui/Text';
 import type { DbArtist } from '../types/backend';
-import { getArtists } from '../cache/cacheService';
 import { useSelectedSlug } from '../store/AppContext';
-import { useCacheRefresh } from '../store/AppContext';
+import { useArtists } from '../store/cacheStore';
 import { useTopBar, useBottomBar } from '../context/ScreenUIContext';
 import { useInterest } from '../context/InterestContext';
 import { useArtistListFilter } from '../context/ArtistListFilterContext';
@@ -78,23 +77,15 @@ function ArtistListScreenInner() {
   const friendInterests =
     scope.kind === 'friend' ? getFriend(scope.token)?.interests : undefined;
 
-  // Seeded synchronously, not from the mount effect: StartupGate has already
-  // populated the cache by the time this screen mounts, so reading it a frame later
-  // painted one empty list — long enough to flash "No artists found" on first run.
-  const [allArtists, setAllArtists] = useState<DbArtist[]>(
-    () => getArtists(selectedSlug).filter((a) => a.isPlayable),
+  // Read through the cache store: present on the first render (StartupGate has
+  // already populated the cache, so no empty frame flashing "No artists found")
+  // and re-rendered by the subscription when a sync lands. Derived rather than
+  // copied into state, so there is no second source of truth to fall behind.
+  const artists = useArtists(selectedSlug);
+  const allArtists = useMemo(
+    () => artists.filter((a) => a.isPlayable),
+    [artists],
   );
-
-  const loadArtists = useCallback(() => {
-    const playable = getArtists(selectedSlug).filter((a) => a.isPlayable);
-    setAllArtists(playable);
-  }, [selectedSlug]);
-
-  useEffect(() => {
-    loadArtists();
-  }, [loadArtists]);
-
-  useCacheRefresh(loadArtists);
 
   useTopBar({ title: 'Artists', RightComponent: ArtistListTopBarRight });
   useBottomBar({});

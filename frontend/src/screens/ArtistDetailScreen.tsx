@@ -6,7 +6,7 @@ import { Text } from '../components/ui/Text';
 import { StarButton } from '../components/StarButton';
 import { getStageLocalized } from '../utils/localization';
 import { formatTime, formatDayLabel, getFestivalDayStart } from '../components/timeline/timelineLayout';
-import { getArtistEvents, getStages, getCategories } from '../cache/cacheService';
+import { useArtistEvents, useCategories, useStages } from '../store/cacheStore';
 import { decodeCategoryColor } from '../utils/color';
 import { colors } from '../styling/tokens';
 import type { DbArtist, DbEvent } from '../types/backend';
@@ -136,11 +136,26 @@ export function ArtistDetailBody({ artist }: Props) {
   // Escape-to-close lives in navigation/BackHistoryTracker, which owns the one
   // dismissal order shared by the back button and the keyboard.
 
-  const artistEvents = getArtistEvents(artist.slug, artist.artistId);
-  const stagesForSlug = getStages(artist.slug);
-  const stageById = Object.fromEntries(stagesForSlug.map((s) => [s.stageId, s]));
-  const categoriesForSlug = getCategories(artist.slug);
-  const categoryById = Object.fromEntries(categoriesForSlug.map((c) => [c.categoryId, c]));
+  // Subscribed reads: this body used to call the cache getters straight through
+  // and re-rendered only because useArtistBio (a subscriber) sat beside it.
+  const cachedArtistEvents = useArtistEvents(artist.slug, artist.artistId);
+  // Sorted copy: the hook hands back the cache's own array, so sorting it in
+  // place (as this render used to) reordered the cached data for every other
+  // reader — and would now attempt to write to the shared frozen empty value.
+  const artistEvents = useMemo(
+    () => [...cachedArtistEvents].sort((a, b) => a.dateFrom - b.dateFrom),
+    [cachedArtistEvents],
+  );
+  const stagesForSlug = useStages(artist.slug);
+  const categoriesForSlug = useCategories(artist.slug);
+  const stageById = useMemo(
+    () => Object.fromEntries(stagesForSlug.map((s) => [s.stageId, s])),
+    [stagesForSlug],
+  );
+  const categoryById = useMemo(
+    () => Object.fromEntries(categoriesForSlug.map((c) => [c.categoryId, c])),
+    [categoriesForSlug],
+  );
 
   const bioHtml = bio.state === 'ready' ? bio.content : '';
   const htmlSource = useMemo(() => ({ html: bioHtml }), [bioHtml]);
@@ -271,7 +286,7 @@ export function ArtistDetailBody({ artist }: Props) {
         {/* ── Event info ── */}
         {artistEvents.length !== 0 &&
           <View style={{ marginVertical: 30 }}>
-            {artistEvents.sort((a, b) => a.dateFrom - b.dateFrom).map((event) => {
+            {artistEvents.map((event) => {
               const stage = stageById[event.stageId];
               const category = categoryById[event.categoryId];
               const borderColor = category !== undefined ? decodeCategoryColor(category.color) : colors.textPrimary;

@@ -6,7 +6,7 @@ import { useInterest } from '../context/InterestContext';
 import { useConflictDetail } from '../context/ConflictDetailContext';
 import { getArtistLocalized } from '../utils/localization';
 import { useStartProgress } from '../context/ScreenUIContext';
-import { getArtistEvents, getArtists } from '../cache/cacheService';
+import { useArtistEventMap, useArtists } from '../store/cacheStore';
 import { eventsOverlap } from '../utils/conflictUtils';
 import { useSelectedSlug } from '../store/AppContext';
 import type { DbArtist, DbEvent } from '../types/backend';
@@ -54,22 +54,26 @@ export function useArtistDerived(artist: DbArtist) {
     if (artist.url !== '') { artistWebDomain = new URL(artist.url).hostname.replace(/^www\./, ''); }
   } catch (_) { /* invalid URL */ }
 
+  // Subscribed cache reads. This hook previously read the cache directly and
+  // depended only on [selectedSlug, artist, interests], so the detail screen's
+  // conflict marker was recomputed on a star press but never on a sync — it was
+  // correct only when a sibling subscriber happened to re-render the component.
+  const allArtists  = useArtists(selectedSlug);
+  const artistEvents = useArtistEventMap(selectedSlug);
+
   // Per-event conflict map: eventId → overlapping events from other marked artists.
   const conflictMap = useMemo<Map<string, DbEvent[]>>(() => {
     const map = new Map<string, DbEvent[]>();
     const localInterest = interests[artist.artistId] ?? 'none';
     if (localInterest !== 'must_see') { return map; }
 
-    const artistEvents = getArtistEvents(selectedSlug, artist.artistId);
-    const allArtists   = getArtists(selectedSlug);
-    for (const event of artistEvents) {
+    for (const event of artistEvents[artist.artistId] ?? []) {
       const overlapping: DbEvent[] = [];
       for (const other of allArtists) {
         if (other.artistId === artist.artistId) { continue; }
         const otherStatus = interests[other.artistId] ?? 'none';
         if (otherStatus !== 'must_see') { continue; }
-        const otherEvents = getArtistEvents(selectedSlug, other.artistId);
-        for (const otherEvent of otherEvents) {
+        for (const otherEvent of artistEvents[other.artistId] ?? []) {
           if (eventsOverlap(event, otherEvent)) {
             overlapping.push(otherEvent);
           }
@@ -80,7 +84,7 @@ export function useArtistDerived(artist: DbArtist) {
       }
     }
     return map;
-  }, [selectedSlug, artist, interests]);
+  }, [artist, interests, allArtists, artistEvents]);
 
   function handleStarPress(): void {
     const { next, promise } = cycleStatus(artist.artistId);

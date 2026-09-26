@@ -1,11 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useCacheRefresh, useSelectedSlug } from '../store/AppContext';
+import { useMemo } from 'react';
+import { useSelectedSlug } from '../store/AppContext';
 import {
-  getArtists,
-  getCategories,
-  getEvents,
-  getCategoryDayLayout,
-} from '../cache/cacheService';
+  useArtistEventMap,
+  useArtists,
+  useCategories,
+  useEvents,
+  useLayoutMap,
+  useStages,
+} from '../store/cacheStore';
 import { useInterest } from '../context/InterestContext';
 import { useTimelineFilter } from '../context/TimelineFilterContext';
 import { useLens } from '../context/LensContext';
@@ -53,96 +55,78 @@ export function useTimelineData({ filterArtist, useSubRows = false }: Options = 
   const friendInterests =
     scope.kind === 'friend' ? getFriend(scope.token)?.interests : undefined;
 
-  // Seeded from the cache during the first render, not from the mount effect
-  // below: StartupGate has already populated it, and reading a frame later left
-  // the first render with no events at all — long enough for consumers to act on
-  // an empty timeline (see DESIGN.md).
-  const eventsRef     = useRef<DbEvent[]>(getEvents(selectedSlug));
-  const artistsRef    = useRef<DbArtist[]>(getArtists(selectedSlug));
-  const categoriesRef = useRef<DbCategory[]>(getCategories(selectedSlug));
-  const [revision, setRevision] = useState(0);
-
-  const loadData = useCallback(() => {
-    eventsRef.current     = getEvents(selectedSlug);
-    artistsRef.current    = getArtists(selectedSlug);
-    categoriesRef.current = getCategories(selectedSlug);
-    setRevision((r) => r + 1);
-  }, [selectedSlug]);
-
-  useEffect(() => { loadData(); }, [loadData]);
-  useCacheRefresh(loadData);
+  // Read straight from the cache store. Each hook subscribes as a side effect of
+  // reading, and returns a referentially stable value, so every memo below can
+  // depend on the data itself: the old refs-plus-revision-counter arrangement
+  // (and the exhaustive-deps suppressions it needed) is gone. Values are present
+  // on the first render — StartupGate has already populated the cache — so no
+  // mount effect and no empty first frame.
+  const events     = useEvents(selectedSlug);
+  const artists    = useArtists(selectedSlug);
+  const categories = useCategories(selectedSlug);
+  const stages     = useStages(selectedSlug);
+  const artistEvents = useArtistEventMap(selectedSlug);
+  const layoutMap  = useLayoutMap(selectedSlug);
 
   const artistById = useMemo<Record<string, DbArtist>>(() => {
     const map: Record<string, DbArtist> = {};
-    for (const a of artistsRef.current) {
+    for (const a of artists) {
       map[a.artistId] = a;
     }
     return map;
-    // `revision` is the dependency ESLint cannot see: the body reads a ref, so the
-    // counter loadData bumps is the only signal that its contents changed. It is
-    // not redundant — drop it and the map freezes at whatever was cached on mount,
-    // so a slug switch or a background sync never reaches the timeline.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [revision]);
-
-  // Keep getStatus accessible inside the memo without depending on its identity.
-  // getStatus is a useCallback derived from interests and changes on every toggle,
-  // so we read it via a ref and depend on the raw interests data instead.
-  const getStatusRef = useRef(getStatus);
-  getStatusRef.current = getStatus;
+  }, [artists]);
 
   const eventsByCategory = useMemo<Record<string, LaneEvent[]>>(() => {
     if (selectedDayStart === 0) { return {}; }
     const dayEnd = selectedDayStart + DAY_DURATION_MS;
     const grouped: Record<string, LaneEvent[]> = {};
 
-    for (const event of eventsRef.current) {
+    for (const event of events) {
       if (event.dateFrom < selectedDayStart || event.dateFrom >= dayEnd) { continue; }
       const artist = artistById[event.artistId];
       if (artist === undefined) { continue; }
       if (filterArtist !== undefined && !filterArtist(artist)) { continue; }
-      if (!matchesScope(scope, getStatusRef.current(artist.artistId), friendInterests?.[artist.artistId])) { continue; }
+      if (!matchesScope(scope, getStatus(artist.artistId), friendInterests?.[artist.artistId])) { continue; }
       if (grouped[event.categoryId] === undefined) { grouped[event.categoryId] = []; }
       grouped[event.categoryId].push({ event, artist });
     }
     return grouped;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [artistById, selectedDayStart, scope, friendInterests, interests, filterArtist]);
+    // `getStatus` rather than the raw interest map: it is a useCallback over
+    // exactly that map, so it changes identity at the same moments and is the
+    // honest dependency for the call above.
+  }, [events, artistById, selectedDayStart, scope, friendInterests, getStatus, filterArtist]);
 
   const visibleCategories = useMemo<DbCategory[]>(() => {
-    return [...categoriesRef.current]
+    return [...categories]
       .sort((a, b) => parseInt(a.categoryId) - parseInt(b.categoryId))
       .filter(
         (c) =>
           !hiddenCategories.has(c.categoryId) &&
           (eventsByCategory[c.categoryId]?.length ?? 0) > 0,
       );
-    // Same as artistById above: `revision` stands in for categoriesRef's contents.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [revision, hiddenCategories, eventsByCategory]);
+  }, [categories, hiddenCategories, eventsByCategory]);
 
   const laneHeights = useMemo<Record<string, number>>(() => {
     const map: Record<string, number> = {};
     for (const cat of visibleCategories) {
       if (useSubRows) {
-        const layout = getCategoryDayLayout(selectedSlug, cat.categoryId, selectedDayStart);
-        map[cat.categoryId] = layout.subRowCount * LANE_HEIGHT;
+        const layout = layoutMap[`${cat.categoryId}_${selectedDayStart}`];
+        map[cat.categoryId] = (layout?.subRowCount ?? 1) * LANE_HEIGHT;
       } else {
         map[cat.categoryId] = LANE_HEIGHT;
       }
     }
     return map;
-  }, [visibleCategories, useSubRows, selectedSlug, selectedDayStart]);
+  }, [visibleCategories, useSubRows, layoutMap, selectedDayStart]);
 
   const categorySubRows = useMemo<Record<string, Record<string, number>>>(() => {
     if (!useSubRows) { return {}; }
     const map: Record<string, Record<string, number>> = {};
     for (const cat of visibleCategories) {
-      const layout = getCategoryDayLayout(selectedSlug, cat.categoryId, selectedDayStart);
-      map[cat.categoryId] = layout.eventSubRows;
+      map[cat.categoryId] = layoutMap[`${cat.categoryId}_${selectedDayStart}`]?.eventSubRows ?? {};
     }
     return map;
-  }, [visibleCategories, useSubRows, selectedSlug, selectedDayStart]);
+  }, [visibleCategories, useSubRows, layoutMap, selectedDayStart]);
 
   // Where each lane's title strip starts. Owned here, alongside canvasHeight and
   // from the same inputs, so the label overlay — which is rendered outside the
@@ -167,12 +151,17 @@ export function useTimelineData({ filterArtist, useSubRows = false }: Options = 
     }, 0);
   }, [visibleCategories, laneHeights, stripHeight]);
 
+  // This memo is why the timeline's conflict bars used to vanish: it read the
+  // cache through computeConflictOverlaps but depended only on the slug and the
+  // interest map, so a background sync (or a first load that landed after mount)
+  // never recomputed it — while toggling a star did, which is exactly how the
+  // bug presented. The cache inputs are now dependencies.
   const conflictOverlaps = useMemo<Map<string, ConflictOverlap[]>>(() => {
-    return computeConflictOverlaps(selectedSlug, interests);
-  }, [selectedSlug, interests]);
+    return computeConflictOverlaps(interests, { artists, stages, artistEvents });
+  }, [interests, artists, stages, artistEvents]);
 
   return {
-    events: eventsRef.current,
+    events,
     eventsByCategory,
     visibleCategories,
     laneHeights,
