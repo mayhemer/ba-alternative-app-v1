@@ -162,14 +162,24 @@ describe('GET /{slug}/validity', () => {
     const { statusCode, body } = await call('GET /{slug}/validity', { slug: 'ba2025' });
 
     expect(statusCode).toBe(200);
-    expect(body).toEqual({ lastSyncedAt: 2000 });
+    expect(body).toEqual({ lastSyncedAt: 2000, artistsSyncedAt: 1000 });
   });
 
-  it('reports 0 when the slug has never been synced', async () => {
+  it('holds artistsSyncedAt steady when only the schedule was rebuilt', async () => {
+    mockQuerySyncState.mockResolvedValue([syncState('artists', 1000), syncState('schedule', 5000)]);
+
+    const { body } = await call('GET /{slug}/validity', { slug: 'ba2025' });
+
+    // The overall watermark moves so the client repopulates, but the artists
+    // one does not — which is what lets it keep its cached bios.
+    expect(body).toEqual({ lastSyncedAt: 5000, artistsSyncedAt: 1000 });
+  });
+
+  it('reports 0 for both when the slug has never been synced', async () => {
     mockQuerySyncState.mockResolvedValue([]);
 
     const { body } = await call('GET /{slug}/validity', { slug: 'ba2099' });
 
-    expect(body).toEqual({ lastSyncedAt: 0 });
+    expect(body).toEqual({ lastSyncedAt: 0, artistsSyncedAt: 0 });
   });
 });

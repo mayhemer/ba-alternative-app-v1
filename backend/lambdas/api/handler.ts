@@ -76,11 +76,21 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
 
       // The caller's watermark is deliberately NOT part of this request: with the
       // response identical for every caller, CloudFront can serve the whole
-      // polling fleet from one cached object. The client compares the two values.
+      // polling fleet from one cached object. The client compares the values.
+      //
+      // `artistsSyncedAt` is reported separately so the client can tell an
+      // artist rebuild from a schedule-only one and keep its cached bios
+      // through the latter, which is the common case during a festival.
       case 'GET /{slug}/validity': {
         const entries = await querySyncState(tables.syncState, p.slug!);
-        const lastSyncedAt = Math.max(0, ...entries.map(e => e.lastSyncedAt));
-        return json({ lastSyncedAt });
+        const syncedAtFor = (group: string): number => Math.max(
+          0,
+          ...entries.filter(e => e.tableName === group).map(e => e.lastSyncedAt),
+        );
+        return json({
+          lastSyncedAt:    Math.max(0, ...entries.map(e => e.lastSyncedAt)),
+          artistsSyncedAt: syncedAtFor('artists'),
+        });
       }
 
       case 'GET /share/{token}': {
