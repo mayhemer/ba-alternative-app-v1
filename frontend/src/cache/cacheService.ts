@@ -95,8 +95,10 @@ function festivalStorageKey(slug: string): string {
   return `festival:data:${slug}`;
 }
 
+const BIO_KEY_PREFIX = 'festival:bios:';
+
 function bioStorageKey(slug: string): string {
-  return `festival:bios:${slug}`;
+  return `${BIO_KEY_PREFIX}${slug}`;
 }
 
 // Bumped when the persisted shape changes; a mismatch discards the stored copy
@@ -275,8 +277,10 @@ export async function hydrateFestivalCache(slug: string): Promise<boolean> {
 }
 
 // Loads the persisted bio map for a slug. Never rejects — a missing or corrupt
-// entry just means every bio is refetched on demand.
+// entry just means the bios are refetched.
 async function hydrateBioCache(slug: string): Promise<void> {
+  await evictBiosExcept(slug);
+
   if (bioCache[slug] !== undefined) {
     return;
   }
@@ -288,6 +292,36 @@ async function hydrateBioCache(slug: string): Promise<void> {
     }
   } catch (err: unknown) {
     if (__DEV__) { console.warn('[cache] artist bios not restored', err); }
+  }
+}
+
+/**
+ * Keeps at most one edition's bios. They are by far the largest thing the app
+ * persists (~440 KiB per edition against a ~5 MiB browser quota), and holding
+ * every visited edition's set would eventually crowd out the datasets that make
+ * an offline start work — or the user's own picks.
+ *
+ * Hooked here rather than on an edition-switch event because
+ * `hydrateFestivalCache` already runs exactly once per slug, on startup and on
+ * every switch, so no other code path can bypass it. Switching back re-fetches
+ * one request's worth.
+ */
+async function evictBiosExcept(slug: string): Promise<void> {
+  const stale = Object.keys(bioCache).filter((cached) => cached !== slug);
+  for (const cached of stale) {
+    delete bioCache[cached];
+  }
+
+  try {
+    const keys = await AsyncStorage.getAllKeys();
+    const orphaned = keys.filter(
+      (key) => key.startsWith(BIO_KEY_PREFIX) && key !== bioStorageKey(slug),
+    );
+    if (orphaned.length > 0) {
+      await AsyncStorage.multiRemove(orphaned);
+    }
+  } catch (err: unknown) {
+    if (__DEV__) { console.warn('[cache] other editions\' bios not evicted', err); }
   }
 }
 
