@@ -2,7 +2,7 @@
 // Keep in sync when the backend schema changes.
 
 // Mirrors the backend's DbArtistListItem: the artists endpoint omits the bio,
-// which is fetched per artist from /{slug}/artists/{artistId}/bio.
+// which comes from /{slug}/bios for the whole edition at once.
 export interface DbArtistLocalized {
   language: string;
   name: string;
