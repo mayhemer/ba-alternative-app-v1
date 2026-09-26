@@ -203,8 +203,9 @@ it reports no environment variables for the profile. That changes only if a stag
 `app.json` declares iOS `associatedDomains` and an Android `autoVerify` intent filter for
 `ba.janbambas.cz/add-friend`. Both require files served from the web host, which live in
 `frontend/public/.well-known/` — `expo export` copies `public/` verbatim into `dist/`, so they ship with
-the normal `scripts/deploy-frontend` run. `assetlinks.json` needs the real Android SHA-256 filled in
-before Android app links will verify.
+the normal `scripts/deploy-frontend` run. `assetlinks.json` carries the real Android SHA-256 from the
+EAS-managed keystore; it must be refreshed if that keystore is ever replaced, or Android app links
+stop verifying.
 
 `public/.htaccess` ships alongside them and does two things the host does not do by default:
 

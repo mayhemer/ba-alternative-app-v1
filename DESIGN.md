@@ -54,13 +54,18 @@ full account.
 - Token stored in DynamoDB with optional expiry
 
 ### Future Features (architecture must support, not built in V1)
-- Conflict detection — flag overlapping "Will Go" slots
-- Push notifications / reminders before a set starts
-- Friends' schedules — follow another user's personal schedule
-- Overlay a friend's schedule on top of your own in the timeline
-- Offline mode — full local-first data layer, sync on reconnect
-- Share with a specific account (not just a secret link)
-- Band genre / bio / media
+
+Status added after the fact — this was the V1 brief, and most of the list has since shipped.
+
+| Feature | Status |
+|---|---|
+| Conflict detection — flag overlapping "Will Go" slots | **Shipped** — `conflictUtils` + `ConflictContext`, striped bars on timeline blocks, a Conflicts screen and a detail sheet |
+| Push notifications / reminders before a set starts | Not built |
+| Friends' schedules — follow another user's personal schedule | **Shipped** — share tokens, `SocialContext`, friend facepile in the artist list |
+| Overlay a friend's schedule on top of your own in the timeline | **Partial** — the lens scope switches the timeline to a friend's picks; there is no simultaneous two-schedule overlay, and no friend indicator on timeline blocks |
+| Offline mode — full local-first data layer, sync on reconnect | **Shipped** — festival cache persisted per slug and loaded before the network; interests are local-first and merge on login |
+| Share with a specific account (not just a secret link) | Not built |
+| Band genre / bio / media | **Shipped** — genre/country on artist rows, bios fetched from `/{slug}/bios` and cached separately |
 
 ---
 
@@ -602,7 +607,8 @@ Token has no userId exposed. No automatic expiry — user revokes via DELETE.
 - [x] Confirm whether `?time={ts}` is incremental or always full — always full; full rebuild strategy adopted (`?time=0`)
 - [x] Decide final web hosting — operator's own server
 - [x] Share tokens: no automatic expiry; user revokes explicitly via `DELETE /share/:token`
-- [ ] Design the friend overlay UX in timeline view (V2)
+- [ ] Friend overlay UX in the timeline (V2) — partially answered by the lens scope (view the
+      timeline *as* a friend); a simultaneous overlay of your schedule and theirs is still open
 - [ ] Admin / observability endpoints — deferred, design later
 
 ---

@@ -24,10 +24,16 @@
 ### Side Drawer
 
 - Swipe from left edge of screen opens the side drawer — edge-only, not a general left swipe.
-- Hamburger button also opens it — placement TBD.
-- Contains navigation between main sections: Artist List, Timeline, Settings, and future sections.
+- Hamburger button also opens it. It sits in the TopBar's left slot normally, and in the
+  BottomBar's left slot on short viewports where the TopBar is not rendered; on wide screens it
+  is not rendered at all, because the drawer is permanent there (`DrawerButton`).
+- Contains navigation between the main sections: Artists, Program, Support Program, Conflicts,
+  Settings.
 - Dismissed by tapping outside or swiping left.
-- Exception: when ArtistDetailScreen is fully expanded, swipe-from-left closes the detail view instead of opening the drawer. Back button (TBD: TopBar or BottomBar) is used for navigation in this state.
+- Exception: when ArtistDetailScreen is fully expanded, swipe-from-left closes the detail view
+  instead of opening the drawer. There is **no in-app back button** — backward movement is the
+  platform's own (Android hardware back, web popstate), handled by `BackHistoryTracker`, plus a
+  web-only ✕ in the detail header. See the back-history section above.
 
 ### Top Bar
 
@@ -170,8 +176,18 @@ Three states, applied consistently across all views:
 
 ### Conflict Detection
 
-- When starring an artist creates a Must See conflict, a warning is shown via TopBar FeedbackMessage.
-- Visual conflict indicators on timeline blocks and proactive warnings: TBD future feature.
+Shipped; the original TopBar warning toast was deliberately removed — it fired on every star
+press and said nothing the block itself could not show.
+
+- **Timeline blocks** carry 45° red / dark-red striped bars, one per overlap interval, each
+  spanning only the overlapping portion of the block and laid over it
+  (`ArtistBlock`, geometry mirrors the conflict detail mini-timeline).
+- **Artist detail** shows an exclamation marker in the collapsed header (tapping it expands the
+  sheet in place) and lists an "Overlaps with N other event(s)" row per conflicting event;
+  tapping that opens `ConflictDetailSheet`.
+- **ConflictsScreen** is a dedicated list of the current conflicts.
+- Overlap computation lives in `src/utils/conflictUtils.ts`; `ConflictContext` holds the result.
+  Only `must_see` counts today — including `maybe` is an open option (TODO in `conflictUtils`).
 
 ### Bottom Bar
 
@@ -230,7 +246,7 @@ one that is not on screen.
 - `DaySwitcher` — festival day selector. Lives in BottomBar on Timeline screen.
 
 ### Navigation
-- `NavMenu` — navigation list inside SideDrawer. Links: Artist List, Timeline, Settings, future sections.
+- `NavMenu` — navigation list inside SideDrawer. Links: Artists, Program, Support Program, Conflicts, Settings.
 
 ### Interest Control
 - `StarButton` — three-state cycling button. Used in: ArtistRow, ArtistDetailScreen. Renders crisply at small sizes. Color-coded per state.
@@ -256,9 +272,13 @@ one that is not on screen.
 
 ## Open Topics for follow-on versions
 
-- Hamburger menu button placement
-- Back button placement (TopBar vs BottomBar)
-- Partial content visible in collapsed ArtistDetailScreen (BottomTray state)
-- "Expand" affordance design in collapsed state (swipe up hint, button, or both)
-- BottomBar content for Artist List and Artist Detail screens
-- Visual conflict indicators on timeline blocks (TBD future feature)
+Resolved since — kept out of this list rather than left standing: hamburger placement (TopBar,
+or BottomBar on short viewports), back navigation (platform back, no in-app button), collapsed
+ArtistDetailScreen content (name, conflict marker, star, web-only ✕) and its expand affordance
+(bottom-sheet swipe, plus the conflict marker which expands in place), and BottomBar content for
+Artist List and Artist Detail (they contribute none; the bar renders only on short viewports, to
+carry the hamburger and lens chip).
+
+Still open:
+
+- Nothing currently tracked here — see `ROADMAP.md` for feature-level work.

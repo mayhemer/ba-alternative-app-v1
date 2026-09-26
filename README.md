@@ -199,7 +199,7 @@ Data flow is deliberately boring:
 ```
 adapter (HTTP)  ──▶  cacheService (in-memory, single source for the UI)  ──▶  React contexts  ──▶  screens
         ▲                                   ▲
-  background sync                   AsyncStorage (picks, friends, UI state)
+  background sync         AsyncStorage (festival data, picks, friends, UI state)
 ```
 
 - `src/adapters/*` are swappable fetchers behind one interface (`validate` / `populate`), so the
@@ -207,6 +207,9 @@ adapter (HTTP)  ──▶  cacheService (in-memory, single source for the UI)  �
 - `src/sync/backgroundSyncService.ts` checks `/{slug}/validity` first and skips the fetch entirely
   when nothing changed. The polling interval is festival-date aware — 3 minutes during the event,
   30 minutes outside it.
+- Startup reads the persisted cache before the network, so a cold start with no connectivity opens
+  on the last known schedule rather than an error screen. The freshness watermark is the server's
+  own `lastSyncedAt`, stored beside the data it describes.
 - The interest state is local-first with `updatedAt` timestamps; on sign-in, local and cloud sets
   are merged by latest-write-wins per `slug#artistId`.
 
