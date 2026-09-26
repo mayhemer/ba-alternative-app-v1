@@ -199,7 +199,31 @@ factory call site.
    d. Otherwise create a `DataCollector`, `adapter.populate(...)`, then
       `cacheService.populateCache(slug, data, serverSyncedAt)`.
    e. Nothing to announce — `populateCache` notified the cache store itself.
-4. Can be triggered manually (`triggerManualSync`).
+4. Can be triggered manually (`triggerManualSync()`), which refreshes the current run.
+
+### Runs and supersession
+
+State that used to be module-global — the first-load flag and the poll timer — belongs to a
+**`SyncRun`**: one per `startSync` call, holding its slug, the gate's callbacks, its own
+`isFirstLoad` and its own timer. Exactly one run is current at a time (`activeRun`), and that
+object's **identity is the generation token**: every continuation re-checks `isStale(run)` after
+each `await`, so a superseded run goes quiet instead of racing the run that replaced it.
+
+This is what closes the edition-switch hang. Sharing `isFirstLoad` let an outgoing run's late
+continuation spend the incoming run's flag; the incoming run then found it already spent, never
+called `onFirstLoadSuccess`, and `StartupGate`'s `Promise.all` never settled — splash up, no
+error. A run can now only ever spend its own flag.
+
+`clearTimeout` cancels only the *next* poll; a fetch already in flight cannot be called back. So a
+superseded run is not cancelled, it is **discarded** — allowed to finish, but forbidden to touch
+the cache, the gate or the schedule on its way out, and its pending promise abandoned. Truly
+aborting the request would need an `AbortController` threaded through the adapter.
+
+`activeRun` is assigned in exactly two places (`startSync`, after `stop()`; and `stop()`, to
+`null`), so every supersession clears the outgoing timer. `syncBios` is deliberately *not* tied to
+a run: bios are keyed by slug and stay correct even once that edition leaves the screen, and it
+touches only the cache. Its in-flight marker is a `Set` of slugs, not one slug, so two overlapping
+runs cannot clear each other's.
 
 ### Interval configuration
 
@@ -339,14 +363,14 @@ Do not duplicate. `src/types/backend.ts` re-exports; it is not a second definiti
 
 ## Deferred / known gaps
 
-Carried in `ROADMAP.md` under BETA; both were deliberately not done before the 2026 festival.
+Both were carried in `ROADMAP.md` under BETA, deliberately deferred past the 2026 festival, and
+are now done. Kept here with their rationale because the invariants they introduced are easy to
+undo by accident.
 
-- **Sync service is a module singleton, not an instance.** `isFirstLoad` in
-  `backgroundSyncService.ts` is module-global and shared by overlapping runs. Switching edition
-  while a first load is in flight can make run A consume run B's flag, so B reports
-  `onRefreshComplete` instead of `onFirstLoadSuccess`, `StartupGate`'s `Promise.all` never settles,
-  and the splash hangs with no error. Fix: one instance per startup run with a generation token.
-  (`stop()` clears the timer but cannot cancel an in-flight fetch.)
+- ~~**Sync service is a module singleton, not an instance.**~~ **Done** — state is per `SyncRun`
+  and supersession is detected by run identity; see *Runs and supersession* above. Still untested
+  automatically: there is no test suite in `frontend/`, so the edition-switch race is verified by
+  hand (switch edition on a throttled network while the first load is in flight).
 - ~~**The cache→React bridge is an event emitter, not a subscribable store.**~~ **Done** — the
   emitter was replaced by `useSyncExternalStore` over a version counter owned by `cacheService`
   (see *Cache change notification*). The patches it existed to work around are gone with it: the
