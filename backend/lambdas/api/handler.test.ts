@@ -12,11 +12,10 @@ jest.mock('./db', () => ({
 }));
 
 import { handler } from './handler';
-import { queryAll, getItem, querySyncState } from './db';
-import type { DbArtist, DbArtistListItem, DbArtistBio, DbSyncState } from '../../shared/types';
+import { queryAll, querySyncState } from './db';
+import type { DbArtist, DbArtistListItem, DbArtistBios, DbSyncState } from '../../shared/types';
 
 const mockQueryAll       = queryAll       as jest.MockedFunction<typeof queryAll>;
-const mockGetItem        = getItem        as jest.MockedFunction<typeof getItem>;
 const mockQuerySyncState = querySyncState as jest.MockedFunction<typeof querySyncState>;
 
 // ── Fixture data ──────────────────────────────────────────────────────────────
@@ -105,34 +104,44 @@ describe('GET /{slug}/artists', () => {
   });
 });
 
-// ── GET /{slug}/artists/{artistId}/bio ────────────────────────────────────────
+// ── GET /{slug}/bios ──────────────────────────────────────────────────────────
 
-describe('GET /{slug}/artists/{artistId}/bio', () => {
-  it('serves one bio per language and nothing else', async () => {
-    mockGetItem.mockResolvedValue(ARTIST);
+describe('GET /{slug}/bios', () => {
+  it('serves every artist\'s bios keyed by id, per language', async () => {
+    mockQueryAll.mockResolvedValue([ARTIST]);
 
-    const { statusCode, body } = await call(
-      'GET /{slug}/artists/{artistId}/bio',
-      { slug: 'ba2025', artistId: '42' },
-    );
+    const { statusCode, body } = await call('GET /{slug}/bios', { slug: 'ba2025' });
 
     expect(statusCode).toBe(200);
-    expect(mockGetItem).toHaveBeenCalledWith('ba-artists', { slug: 'ba2025', artistId: '42' });
-    expect(body as DbArtistBio[]).toEqual([
-      { language: 'CS', content: '<p>Dlouhý životopis</p>' },
-      { language: 'EN', content: '<p>A long bio</p>' },
-    ]);
+    expect(mockQueryAll).toHaveBeenCalledWith('ba-artists', 'ba2025');
+    expect(body as DbArtistBios[]).toEqual([{
+      artistId: '42',
+      localized: [
+        { language: 'CS', content: '<p>Dlouhý životopis</p>' },
+        { language: 'EN', content: '<p>A long bio</p>' },
+      ],
+    }]);
   });
 
-  it('404s for an unknown artist', async () => {
-    mockGetItem.mockResolvedValue(null);
+  it('carries nothing but the bios — no name, image or genre', async () => {
+    mockQueryAll.mockResolvedValue([ARTIST]);
 
-    const { statusCode } = await call(
-      'GET /{slug}/artists/{artistId}/bio',
-      { slug: 'ba2025', artistId: 'nope' },
-    );
+    const { body } = await call('GET /{slug}/bios', { slug: 'ba2025' });
+    const [entry] = body as DbArtistBios[];
 
-    expect(statusCode).toBe(404);
+    expect(Object.keys(entry).sort()).toEqual(['artistId', 'localized']);
+    for (const localized of entry.localized) {
+      expect(Object.keys(localized).sort()).toEqual(['content', 'language']);
+    }
+  });
+
+  it('serves an empty list for a slug with no artists', async () => {
+    mockQueryAll.mockResolvedValue([]);
+
+    const { statusCode, body } = await call('GET /{slug}/bios', { slug: 'ba2099' });
+
+    expect(statusCode).toBe(200);
+    expect(body).toEqual([]);
   });
 });
 

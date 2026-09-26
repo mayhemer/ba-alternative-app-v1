@@ -128,9 +128,9 @@ export class Cdn extends Construct {
           allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
           cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
         },
-        // Per-artist bios, split out of the list payload. Same cache life as the
-        // list they belong to; the wildcard covers both the slug and the id.
-        '/*/artists/*': {
+        // The edition's bios, split out of the list payload so the list paints
+        // sooner. Same cache life as the list they belong to.
+        '/*/bios': {
           origin: apiOrigin,
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           cachePolicy: longCache,

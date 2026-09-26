@@ -47,7 +47,7 @@ export class Api extends Construct {
     // Public routes — no auth required
     const publicRoutes: Array<[HttpMethod, string]> = [
       [HttpMethod.GET, '/{slug}/artists'],
-      [HttpMethod.GET, '/{slug}/artists/{artistId}/bio'],
+      [HttpMethod.GET, '/{slug}/bios'],
       [HttpMethod.GET, '/{slug}/categories'],
       [HttpMethod.GET, '/{slug}/stages'],
       [HttpMethod.GET, '/{slug}/schedule'],

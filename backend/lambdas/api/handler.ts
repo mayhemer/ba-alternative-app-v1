@@ -14,7 +14,7 @@ import {
   querySyncState,
 } from './db';
 import type {
-  DbArtist, DbArtistListItem, DbArtistBio, DbCategory, DbStage, DbEvent,
+  DbArtist, DbArtistListItem, DbArtistBios, DbCategory, DbStage, DbEvent,
   DbUserInterest, DbShareToken,
 } from '../../shared/types';
 
@@ -50,15 +50,17 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
       case 'GET /{slug}/artists':
         return json(toListItems(await queryAll<DbArtist>(tables.artists, p.slug!)));
 
-      case 'GET /{slug}/artists/{artistId}/bio': {
-        const artist = await getItem<DbArtist>(tables.artists, {
-          slug: p.slug!,
-          artistId: p.artistId!,
-        });
-        if (artist === null) { return notFound('Artist not found'); }
-        const bios: DbArtistBio[] = artist.localized.map(l => ({
-          language: l.language,
-          content: l.content,
+      // The whole edition's bios in one response. Fetched per edition rather
+      // than per artist: 260 separate requests would cost far more in request
+      // charges than the bytes they save, and one object caches at the edge.
+      case 'GET /{slug}/bios': {
+        const artists = await queryAll<DbArtist>(tables.artists, p.slug!);
+        const bios: DbArtistBios[] = artists.map(artist => ({
+          artistId: artist.artistId,
+          localized: artist.localized.map(l => ({
+            language: l.language,
+            content: l.content,
+          })),
         }));
         return json(bios);
       }
