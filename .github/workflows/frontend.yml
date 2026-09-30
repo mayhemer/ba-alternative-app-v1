@@ -1,0 +1,153 @@
+name: frontend
+
+# Everything here is the device-free half of `npm run verify`. Native E2E is
+# deliberately absent: it needs a built binary, and those come from EAS cloud
+# builds whose minutes are a real quota — unlike Actions minutes, which are free
+# on a public repo. Emulator actions are also slow and flaky, and iOS would need
+# macOS runners. Maestro stays a local, device-attached step.
+
+on:
+  push:
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend.yml'
+  pull_request:
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend.yml'
+  workflow_dispatch:
+
+# A newer push to the same branch makes the running one pointless.
+concurrency:
+  group: frontend-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: frontend
+
+jobs:
+  check:
+    name: types, lint, unit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Node 22 is required, not merely preferred: the fixture generator and
+          # the E2E servers are TypeScript run through --experimental-strip-types.
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+
+      - run: npm run tscheck
+
+      - run: npx eslint src
+
+      # Runs three times, once per platform preset — the only cheap cover for
+      # the Platform.OS divergence (token storage especially).
+      - run: npx jest --ci
+
+  e2e-web:
+    name: web end-to-end
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+
+      # Keyed on the resolved Playwright version so a bump re-downloads rather
+      # than silently running the browser the old one expected.
+      - name: Resolve Playwright version
+        id: pw
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        id: pw-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+
+      - name: Install Chromium
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+
+      # Even on a cache hit the OS libraries are not in the runner image.
+      - name: Install browser system dependencies
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
+      # The suite runs against the exported build, not the dev server.
+      - run: npm run build:web
+
+      - run: npx playwright test
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 7
+
+  perf:
+    name: performance (advisory)
+    runs-on: ubuntu-latest
+    # Never blocks a merge. Render counts are comparable anywhere, but durations
+    # on a shared runner are not, and one noisy scenario (buildSections) measured
+    # 32-72% stability even locally. Read the report; do not gate on it.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Needs history to measure the base revision as well as this one.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Measure the base revision, then this one
+        run: |
+          set -euo pipefail
+
+          BASE_BRANCH="${{ github.event.pull_request.base.ref || 'master' }}"
+          git fetch --no-tags origin "$BASE_BRANCH"
+
+          # Comparing against a base that has no perf suite is not a regression,
+          # it is a first run. Say so plainly rather than failing.
+          if ! git cat-file -e "origin/$BASE_BRANCH:frontend/jest.perf.config.ts" 2>/dev/null; then
+            echo "::notice::origin/$BASE_BRANCH has no performance suite yet — nothing to compare against."
+            echo "This becomes a real comparison once the suite reaches that branch."
+            exit 0
+          fi
+
+          CURRENT="$(git rev-parse HEAD)"
+
+          # Baseline and current are measured in the same job on the same runner,
+          # which is what cancels the machine variance that makes a committed
+          # baseline useless here.
+          git checkout --quiet "origin/$BASE_BRANCH"
+          npm ci
+          npm run test:perf:baseline
+
+          git checkout --quiet "$CURRENT"
+          npm ci
+          npm run test:perf
+
+      - name: Publish the comparison
+        if: always()
+        run: |
+          if [ -f .reassure/output.md ]; then
+            cat .reassure/output.md >> "$GITHUB_STEP_SUMMARY"
+          fi
