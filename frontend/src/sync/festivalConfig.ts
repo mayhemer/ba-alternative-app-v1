@@ -63,8 +63,14 @@ export const SYNC_INTERVAL_BEFORE_FESTIVAL_MS = 30 * 60 * 1000; // 30 minutes
 export const SYNC_INTERVAL_DURING_FESTIVAL_MS =  3 * 60 * 1000; //  3 minutes
 export const SYNC_INTERVAL_DEFAULT_MS          =  5 * 60 * 1000; //  5 minutes (fallback)
 
-export function getSyncInterval(slug: string): number {
-  const now = Date.now();
+/**
+ * The poll interval for this edition at the given instant.
+ *
+ * `now` is a parameter rather than a `Date.now()` read so the function stays
+ * pure and a test can ask for "during the festival" without moving any clock —
+ * the same shape as the backend's `activeSlugs(raw, now)`.
+ */
+export function getSyncInterval(slug: string, now: number): number {
   const config = FESTIVAL_CONFIGS.find((c) => c.slug === slug);
 
   if (config === undefined) {

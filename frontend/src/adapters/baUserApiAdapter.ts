@@ -1,8 +1,5 @@
 import type { DbUserInterest } from '../types/backend';
-
-// ── Config ────────────────────────────────────────────────────────────────────
-
-const API_ORIGIN = 'https://api.ba.janbambas.cz';
+import { API_ORIGIN } from './apiConfig';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

@@ -1,6 +1,12 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true
+    "strict": true,
+    // Metro/Babel does the building; tsc is only ever a checker here. Saying so
+    // is what lets scripts/ import backend sources by their .ts path, which is
+    // how Node's type stripper resolves them when the generator runs.
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true
   }
 }

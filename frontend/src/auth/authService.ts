@@ -2,6 +2,7 @@ import * as AuthSession from 'expo-auth-session';
 import { Platform } from 'react-native';
 import { COGNITO, COGNITO_DISCOVERY } from './cognitoConfig';
 import { type StoredTokens, saveTokens, loadTokens } from './tokenStorage';
+import { currentTimeMs } from '../utils/clock';
 
 // ── Dev-only logging ────────────────────────────────────────────────────────────
 // These payloads can include the OAuth authorization code, token-presence flags,
@@ -59,7 +60,7 @@ function tokensFromResponse(
     idToken: response.idToken!,
     // Cognito only issues a new refresh token on full sign-in, not on refresh grants.
     refreshToken: response.refreshToken ?? existingRefreshToken ?? '',
-    expiresAt: Date.now() + (response.expiresIn ?? 3600) * 1000,
+    expiresAt: currentTimeMs() + (response.expiresIn ?? 3600) * 1000,
     userId: idPayload['sub'] as string,
     email: idPayload['email'] as string,
     name: nameFromClaims(idPayload),
@@ -172,7 +173,7 @@ const SESSION_EXPIRY_BUFFER_MS = 5 * 60 * 1000; // 5 minutes
 export async function tryRestoreSession(): Promise<StoredTokens | null> {
   const stored = await loadTokens();
   if (stored === null) { return null; }
-  if (stored.expiresAt - Date.now() > SESSION_EXPIRY_BUFFER_MS) { return stored; }
+  if (stored.expiresAt - currentTimeMs() > SESSION_EXPIRY_BUFFER_MS) { return stored; }
   return refreshTokens(stored.refreshToken);
 }
 

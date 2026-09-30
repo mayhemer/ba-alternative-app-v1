@@ -11,6 +11,7 @@ import {
   setBiosLoading,
 } from '../cache/cacheService';
 import { getSyncInterval } from './festivalConfig';
+import { currentTimeMs } from '../utils/clock';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -177,7 +178,7 @@ function scheduleNext(run: SyncRun): void {
   run.timer = setTimeout(() => {
     if (isStale(run)) { return; }
     void runSync(run).then(() => { scheduleNext(run); });
-  }, getSyncInterval(run.slug));
+  }, getSyncInterval(run.slug, currentTimeMs()));
 }
 
 // ── Public API ─────────────────────────────────────────────────────────────────

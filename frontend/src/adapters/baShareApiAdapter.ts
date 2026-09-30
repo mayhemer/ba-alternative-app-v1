@@ -1,8 +1,7 @@
 import type { DbUserInterest } from '../types/backend';
+import { API_ORIGIN } from './apiConfig';
 
 // ── Config ────────────────────────────────────────────────────────────────────
-
-const API_ORIGIN = 'https://api.ba.janbambas.cz';
 
 // Public origin that hosts the web app + universal/app links. The shareable link
 // is `${SHARE_LINK_ORIGIN}/add-friend/<token>` — the token is the only thing in
