@@ -1,16 +1,16 @@
 # Graph Report - app  (2026-09-30)
 
 ## Corpus Check
-- 190 files · ~600,680 words
+- 198 files · ~605,335 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1376 nodes · 2731 edges · 125 communities (74 shown, 51 thin omitted)
+- 1404 nodes · 2837 edges · 125 communities (73 shown, 52 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 15 edges (avg confidence: 0.59)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `77eab3e6`
+- Built from commit: `986aefe0`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -29,7 +29,7 @@
 - SocialContext.tsx
 - Bottom Bar
 - api/handler.ts
-- ArtistDetailScreen.tsx
+- colors
 - dependencies
 - What You Must Do When Invoked
 - ScreenUIContext.tsx
@@ -38,10 +38,10 @@
 - .eslintrc.json
 - sync/handler.test.ts
 - sync/db.ts
-- BaseTimelineScreen.tsx
+- DbArtist
 - backgroundSyncService.test.ts
 - expo-apple-authentication
-- App.tsx
+- LensPanel.tsx
 - expo-dev-client
 - expo-font
 - expo-image
@@ -54,8 +54,8 @@
 - expo-web-browser
 - Frontend Architecture
 - Tech Stack (Design)
-- useLayoutMode
-- uiStatePersistence.ts
+- ArtistDetailScreen.tsx
+- BaseTimelineScreen.tsx
 - nativewind
 - react
 - react-dom
@@ -69,15 +69,15 @@
 - react-native-svg
 - react-native-web
 - react-native-worklets
-- cacheStore.test.tsx
+- useArtistBio.ts
 - @react-navigation/native
 - @react-navigation/native-stack
 - compilerOptions
-- timelineLayout.ts
+- AppNavigator.tsx
 - Native builds
 - Brutal Assault — alternative app
 - cacheStore.ts
-- TimelineView.tsx
+- timelineLayout.ts
 - Festival App UX — Design Decisions
 - gen-icons.js
 - General Design Principles
@@ -95,7 +95,7 @@
 - backend.ts
 - graphify reference: query, path, explain
 - Artist Detail Screen
-- useArtistDerived.ts
+- PerfProviders.tsx
 - graphify reference: add a URL and watch a folder
 - graphify reference: commit hook and native CLAUDE.md integration
 - graphify reference: incremental update and cluster-only
@@ -113,20 +113,20 @@
 - devDependencies
 - @gorhom/bottom-sheet
 - tailwindcss
-- LensContext.tsx
+- ArtistListScreen.tsx
 - drawerOverlay.ts
 - gen-fixtures.ts
-- AppShell.tsx
+- tokens.ts
 - aws-lambda
 - frontend/jest.config.ts
 - expo-crypto
 - fixtures.ts
 - expo-auth-session
-- conflictUtils.perf-test.ts
-- festivalConfig.ts
+- ArtistBlock.tsx
+- @react-navigation/drawer
 - frontend/package.json
 - test-all
-- @babel/core
+- perf.setup.ts
 - eslint-config-react-app
 - jest.perf.config.ts
 - msw
@@ -136,16 +136,16 @@
 - @types/react
 
 ## God Nodes (most connected - your core abstractions)
-1. `useLayoutMode()` - 27 edges
-2. `colors` - 24 edges
-3. `DbArtist` - 24 edges
-4. `compilerOptions` - 22 edges
-5. `scripts` - 21 edges
-6. `Text()` - 20 edges
-7. `useSelectedSlug()` - 20 edges
-8. `handler()` - 19 edges
-9. `useTimelineData()` - 18 edges
-10. `BackHistoryTracker()` - 18 edges
+1. `DbArtist` - 28 edges
+2. `useLayoutMode()` - 27 edges
+3. `colors` - 24 edges
+4. `DbEvent` - 22 edges
+5. `compilerOptions` - 22 edges
+6. `scripts` - 21 edges
+7. `Text()` - 20 edges
+8. `useSelectedSlug()` - 20 edges
+9. `handler()` - 19 edges
+10. `useTimelineData()` - 18 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `Back History System` --references--> `Navigation`  [INFERRED]
@@ -156,8 +156,8 @@
   DESIGN.md → frontend/DESIGN.md
 - `Top Bar` --references--> `Navigation`  [EXTRACTED]
   DESIGN.md → frontend/DESIGN.md
-- `useCacheSnapshot()` --indirect_call--> `subscribeToCache()`  [INFERRED]
-  frontend/src/store/cacheStore.ts → frontend/src/cache/cacheService.ts
+- `ArtistCount()` --calls--> `useArtists()`  [EXTRACTED]
+  frontend/src/store/cacheStore.test.tsx → frontend/src/store/cacheStore.ts
 
 ## Import Cycles
 - None detected.
@@ -166,19 +166,19 @@
 - **Artist Navigation and Details** — frontend_design_artistlistview, frontend_design_artistdetailscreen, frontend_design_bottomtray, frontend_design_starbutton [EXTRACTED 1.00]
 - **Timeline Rendering Pipeline** — frontend_design_timelineview, frontend_design_timelineprogressivemount, frontend_design_categorylane, frontend_design_artistblock [EXTRACTED 1.00]
 
-## Communities (125 total, 51 thin omitted)
+## Communities (125 total, 52 thin omitted)
 
 ### Community 0 - "BackHistoryTracker.tsx"
-Cohesion: 0.23
-Nodes (17): getArtists(), Appliers, flush(), goBack(), INITIAL, key(), keyWithoutDay(), notifyDepth() (+9 more)
+Cohesion: 0.15
+Nodes (22): getArtists(), ArtistDetailContext, ArtistDetailContextValue, ArtistDetailProvider(), ArtistDetailState, DetailPresentationState, useLensPanel(), Appliers (+14 more)
 
 ### Community 1 - "ConflictDetailSheet.tsx"
-Cohesion: 0.22
-Nodes (12): ConflictDetailHeader(), ConflictDetailSheet(), HeaderProps, MiniTimeline(), MiniTimelineProps, SNAP_POINTS, formatDayLabel(), formatTime() (+4 more)
+Cohesion: 0.14
+Nodes (24): ArtistRow, Props, ConflictDetailHeader(), HeaderProps, MiniTimeline(), MiniTimelineProps, SNAP_POINTS, getFeedbackLabel() (+16 more)
 
 ### Community 2 - "cacheService.ts"
-Cohesion: 0.09
-Nodes (23): bioCache, biosLoading, BioStore, buildCacheData(), buildLayoutMap(), CacheData, cacheListeners, DbCategoryDayLayout (+15 more)
+Cohesion: 0.08
+Nodes (37): bioCache, biosLoading, bioStorageKey(), BioStore, buildCacheData(), buildLayoutMap(), CacheData, cacheListeners (+29 more)
 
 ### Community 3 - "devDependencies"
 Cohesion: 0.05
@@ -186,15 +186,15 @@ Nodes (38): @aws-sdk/client-cloudfront, @aws-sdk/client-dynamodb, @aws-sdk/lib-d
 
 ### Community 4 - "InterestContext.tsx"
 Cohesion: 0.06
-Nodes (43): authedFetch(), deleteUserInterest(), fetchUserInterests(), putUserInterest(), ServerInterestStatus, hydrateInterests(), InterestStatus, interestStorageKey() (+35 more)
+Nodes (43): authedFetch(), deleteUserInterest(), fetchUserInterests(), putUserInterest(), ServerInterestStatus, hydrateInterests(), interestStorageKey(), LocalInterest (+35 more)
 
 ### Community 5 - "devDependencies"
 Cohesion: 0.05
 Nodes (36): aws-cdk, aws-cdk-lib, constructs, bin, infra, dependencies, aws-cdk-lib, constructs (+28 more)
 
 ### Community 6 - "AuthContext.tsx"
-Cohesion: 0.16
-Nodes (23): devError(), devLog(), makeRedirectUri(), nameFromClaims(), parseJwtPayload(), refreshTokens(), signIn(), SocialProvider (+15 more)
+Cohesion: 0.12
+Nodes (29): plugins, devError(), devLog(), makeRedirectUri(), nameFromClaims(), parseJwtPayload(), refreshTokens(), signIn() (+21 more)
 
 ### Community 7 - "compilerOptions"
 Cohesion: 0.07
@@ -213,8 +213,8 @@ Cohesion: 0.13
 Nodes (30): activeSlugs(), ARTISTS_OFFICIAL_TABLES, Config, getConfig(), handler(), maxTime(), SCHEDULE_OFFICIAL_TABLES, syncSlug() (+22 more)
 
 ### Community 11 - "SocialContext.tsx"
-Cohesion: 0.06
-Nodes (48): API_ORIGIN, authedFetch(), buildShareUrl(), createShareLink(), CreateShareResponse, extractShareToken(), fetchSharedSchedule(), LINK_PREFIXES (+40 more)
+Cohesion: 0.07
+Nodes (45): App(), authedFetch(), buildShareUrl(), createShareLink(), CreateShareResponse, extractShareToken(), fetchSharedSchedule(), LINK_PREFIXES (+37 more)
 
 ### Community 12 - "Bottom Bar"
 Cohesion: 0.40
@@ -224,13 +224,13 @@ Nodes (6): Artist Block, Bottom Bar, Category Lane, Day Switcher, Timeline Progr
 Cohesion: 0.09
 Nodes (41): client, deleteItem(), dynamo, getItem(), putItem(), queryAll(), querySyncState(), queryUserInterestsBySlug() (+33 more)
 
-### Community 14 - "ArtistDetailScreen.tsx"
-Cohesion: 0.05
-Nodes (58): Props, NAV_ITEMS, NavItem, SideDrawerContent(), Props, SectionSeparator(), FriendAvatar(), initialsOf() (+50 more)
+### Community 14 - "colors"
+Cohesion: 0.19
+Nodes (14): Props, SectionSeparator(), FriendAvatar(), initialsOf(), Props, FriendFacepile(), Props, LoadingScreen() (+6 more)
 
 ### Community 15 - "dependencies"
 Cohesion: 0.22
-Nodes (9): babel-preset-expo, expo-asset, expo-splash-screen, dependencies, babel-preset-expo, expo-asset, expo-splash-screen, @react-navigation/drawer (+1 more)
+Nodes (9): @babel/core, babel-preset-expo, expo-asset, expo-splash-screen, dependencies, @babel/core, babel-preset-expo, expo-asset (+1 more)
 
 ### Community 16 - "What You Must Do When Invoked"
 Cohesion: 0.08
@@ -238,7 +238,7 @@ Nodes (24): For /graphify add and --watch, For /graphify query, For the commit h
 
 ### Community 17 - "ScreenUIContext.tsx"
 Cohesion: 0.13
-Nodes (15): BottomBarConfig, defaultState, FeedbackMessage, FeedbackTracker, FeedbackVariant, ScreenUIAction, ScreenUIActionsContext, ScreenUIActionsContextValue (+7 more)
+Nodes (19): getSlugs(), BottomBarConfig, defaultState, FeedbackMessage, FeedbackTracker, FeedbackVariant, ScreenUIAction, ScreenUIActionsContext (+11 more)
 
 ### Community 18 - "compilerOptions"
 Cohesion: 0.25
@@ -256,49 +256,49 @@ Nodes (16): cf, invalidatePaths(), ARTIST_1, BASE_ENV, CHANGES, EVENT, mockBatch
 Cohesion: 0.25
 Nodes (13): batchDelete(), batchPut(), client, closeDbClient(), DocWriteRequest, dynamo, getSyncState(), putSyncState() (+5 more)
 
-### Community 23 - "BaseTimelineScreen.tsx"
-Cohesion: 0.13
-Nodes (18): DaySwitcher(), formatDate(), formatWeekday(), getCurrentDayStart(), Props, WEEKDAY_NAMES, CONTENT_MAX_WIDTH, getFestivalDayStart() (+10 more)
+### Community 23 - "DbArtist"
+Cohesion: 0.17
+Nodes (10): ArtistListScreen(), buildSections(), ARTISTS, BUDGET, SYNCED_AT, TimelineScreen(), DbArtist, DbStage (+2 more)
 
 ### Community 24 - "backgroundSyncService.test.ts"
-Cohesion: 0.13
-Nodes (10): baPublicApiAdapter, DataAdapter, ValidationResult, DataCollector, mockFetchAllBios, mockPopulate, mockValidate, SERVER_SYNCED_AT (+2 more)
+Cohesion: 0.12
+Nodes (10): API_ORIGIN, baPublicApiAdapter, DataAdapter, ValidationResult, DataCollector, mockFetchAllBios, mockPopulate, mockValidate (+2 more)
 
-### Community 26 - "App.tsx"
-Cohesion: 0.11
-Nodes (16): App(), plugins, AppShell(), ArtistDetailContext, ArtistDetailContextValue, ArtistDetailProvider(), ArtistDetailState, DetailPresentationState (+8 more)
+### Community 26 - "LensPanel.tsx"
+Cohesion: 0.23
+Nodes (8): LensPanel(), RowProps, OVERLAY_PANEL_MARGIN, OVERLAY_PANEL_MAX_WIDTH, OVERLAY_PANEL_RADIUS, copyToClipboard(), shareLink(), ShareResult
 
 ### Community 32 - "conflictUtils.ts"
-Cohesion: 0.16
-Nodes (14): computeConflictEntries(), computeConflictOverlaps(), ConflictEntry, ConflictInputs, eventsOverlap(), TODO: may want a filter that will include "maybe" into the conflict list, ARTIST_EVENTS, ARTISTS (+6 more)
+Cohesion: 0.09
+Nodes (23): DbArtistEventMap, computeConflictEntries(), computeConflictOverlaps(), ConflictEntry, ConflictInputs, ConflictOverlap, eventsOverlap(), ARTIST_EVENTS (+15 more)
 
 ### Community 37 - "Frontend Architecture"
 Cohesion: 0.10
 Nodes (19): Adapter Interface, Background Sync Service, Cache change notification, Cache Layer, Data Hooks, Deferred / known gaps, Error handling, Flow (+11 more)
 
-### Community 39 - "useLayoutMode"
-Cohesion: 0.22
-Nodes (14): getSlugs(), ArtistDetailSheet(), useArtistDetail(), useInterest(), useBottomBar(), useScreenUIActions(), useTopBar(), LayoutMode (+6 more)
-
-### Community 40 - "uiStatePersistence.ts"
-Cohesion: 0.11
-Nodes (23): ScrollToTimeSignal, TimelineFilterContext, TimelineFilterContextValue, TimelineFilterProvider(), dirty, ENTRIES, Entry, flushDirty() (+15 more)
-
-### Community 54 - "cacheStore.test.tsx"
+### Community 39 - "ArtistDetailScreen.tsx"
 Cohesion: 0.15
-Nodes (13): areBiosLoading(), getCacheVersion(), ArtistBio, useArtistBio(), ArtistCount(), ARTISTS, BioState(), SYNCED_AT (+5 more)
+Nodes (16): ArtistDetailSheet(), ConflictDetailSheet(), FriendPickList(), Exclamation(), ExclamationTouchable(), PropsTouchable, useArtistDetail(), useBottomSheetMount() (+8 more)
+
+### Community 40 - "BaseTimelineScreen.tsx"
+Cohesion: 0.05
+Nodes (47): DaySwitcher(), formatDate(), formatWeekday(), getCurrentDayStart(), Props, WEEKDAY_NAMES, CONTENT_MAX_WIDTH, getFestivalDayStart() (+39 more)
+
+### Community 54 - "useArtistBio.ts"
+Cohesion: 0.36
+Nodes (7): areBiosLoading(), ArtistBio, useArtistBio(), BioState(), useBiosLoading(), useHasBios(), getArtistBioLocalized()
 
 ### Community 57 - "compilerOptions"
 Cohesion: 0.12
 Nodes (16): compilerOptions, esModuleInterop, lib, module, outDir, resolveJsonModule, rootDir, skipLibCheck (+8 more)
 
-### Community 58 - "timelineLayout.ts"
-Cohesion: 0.15
-Nodes (15): NowLine, Props, CANVAS_WIDTH, DAY_BOUNDARY_HOUR, DAY_DURATION_MS, NOW_LINE_ARROW_SIZE, PIXELS_PER_HOUR, RULER_HEIGHT (+7 more)
+### Community 58 - "AppNavigator.tsx"
+Cohesion: 0.24
+Nodes (8): NAV_ITEMS, NavItem, SideDrawerContent(), useConflicts(), AppNavigator(), Drawer, DrawerParamList, navigationRef
 
 ### Community 59 - "Native builds"
-Cohesion: 0.12
-Nodes (15): Android — EAS-managed keystore, Build profiles (`eas.json`), Credentials, Deep links, Distributing to invited testers (no App Store), First run for iOS (saved working steps), Frontend development, Frontend expo update (+7 more)
+Cohesion: 0.10
+Nodes (19): Android — EAS-managed keystore, Build profiles (`eas.json`), CI, Credentials, Deep links, Distributing to invited testers (no App Store), First run for iOS (saved working steps), Fixtures (+11 more)
 
 ### Community 60 - "Brutal Assault — alternative app"
 Cohesion: 0.12
@@ -306,11 +306,11 @@ Nodes (15): A note on scope and trademarks, API surface, Architecture, Auth, Bru
 
 ### Community 61 - "cacheStore.ts"
 Cohesion: 0.16
-Nodes (25): DbArtistEventMap, DbFestivalDays, DbLayoutMap, getArtistBio(), getArtistEvents(), getCategories(), getFestivalDays(), getStages() (+17 more)
+Nodes (26): DbFestivalDays, DbLayoutMap, getArtistBio(), getArtistEventMap(), getArtistEvents(), getCategories(), getFestivalDays(), getLayoutMap() (+18 more)
 
-### Community 62 - "TimelineView.tsx"
+### Community 62 - "timelineLayout.ts"
 Cohesion: 0.10
-Nodes (31): ArtistBlock, ArtistBlockBase(), BlockStyle, Props, stripePath(), CategoryLane, CategoryLaneBase(), LaneEvent (+23 more)
+Nodes (35): ArtistBlock, CategoryLane, CategoryLaneBase(), LaneEvent, NO_EVENTS, Props, LaneLabelOverlay, Props (+27 more)
 
 ### Community 63 - "Festival App UX — Design Decisions"
 Cohesion: 0.17
@@ -341,8 +341,8 @@ Cohesion: 0.25
 Nodes (7): Certificate, Deploy/redeploy, Deployment instructions for the backend, Manual sync, Prerequisites, Validation, via cli
 
 ### Community 73 - "cacheService.test.ts"
-Cohesion: 0.14
-Nodes (12): getArtistEventMap(), getCategoryDayLayout(), getEvents(), getLayoutMap(), subscribeToCache(), ARTISTS, BIOS, CATEGORIES (+4 more)
+Cohesion: 0.11
+Nodes (18): createDataCollector(), getCacheVersion(), getCategoryDayLayout(), getEvents(), populateCache(), ARTISTS, BIOS, CATEGORIES (+10 more)
 
 ### Community 74 - "Coding guidelines"
 Cohesion: 0.25
@@ -357,8 +357,8 @@ Cohesion: 0.29
 Nodes (7): Back history, Back History System, Bottom Bar, Navigation, Side Drawer, Side Drawer, Top Bar
 
 ### Community 78 - "backend.ts"
-Cohesion: 0.21
-Nodes (11): LaneLabelOverlayBase(), buildSections(), ARTISTS, DbArtist, DbArtistBioLocalized, DbArtistLocalized, DbCategoryLocalized, DbShareToken (+3 more)
+Cohesion: 0.31
+Nodes (8): LaneLabelOverlayBase(), DbArtistBioLocalized, DbArtistLocalized, DbCategoryLocalized, DbShareToken, DbStageLocalized, getCategoryLocalized(), pickLanguage()
 
 ### Community 79 - "graphify reference: query, path, explain"
 Cohesion: 0.33
@@ -368,9 +368,9 @@ Nodes (5): For /graphify explain, For /graphify path, graphify reference: query,
 Cohesion: 0.70
 Nodes (5): Artist Detail Screen, Artist List View, BottomTray (Collapsed Detail), Interest/Star System, Star Button
 
-### Community 81 - "useArtistDerived.ts"
-Cohesion: 0.26
-Nodes (11): ArtistRow, getFeedbackLabel(), ConflictDetailContext, ConflictDetailContextValue, ConflictDetailProvider(), ConflictDetailState, useConflictDetail(), useStartProgress() (+3 more)
+### Community 81 - "PerfProviders.tsx"
+Cohesion: 0.18
+Nodes (13): BUDGET, ConflictDetailContext, ConflictDetailContextValue, ConflictDetailProvider(), ConflictDetailState, DbEvent, countElements(), ElementCensus (+5 more)
 
 ### Community 82 - "graphify reference: add a URL and watch a folder"
 Cohesion: 0.50
@@ -393,28 +393,28 @@ Cohesion: 0.50
 Nodes (3): config, { getDefaultConfig }, { withNativeWind }
 
 ### Community 95 - "backgroundSyncService.ts"
-Cohesion: 0.15
-Nodes (29): bioStorageKey(), createDataCollector(), evictBiosExcept(), festivalStorageKey(), getSyncWatermark(), hasBios(), hasCachedData(), hydrateBioCache() (+21 more)
+Cohesion: 0.18
+Nodes (17): getSyncWatermark(), biosInFlight, bootstrap(), finishFirstLoad(), isStale(), TODO: have something smarter? check how this works on sleep/resume/kill/restart, runSync(), scheduleNext() (+9 more)
 
 ### Community 96 - "devDependencies"
 Cohesion: 0.13
 Nodes (15): eslint, devDependencies, eslint, jest, jest-expo, @playwright/test, reassure, ts-node (+7 more)
 
-### Community 103 - "LensContext.tsx"
-Cohesion: 0.21
-Nodes (11): LensContext, LensContextValue, LensPanelContext, LensPanelContextValue, LensProvider(), DEFAULT_SCOPE, friendStatusToLocal(), LensScope (+3 more)
+### Community 103 - "ArtistListScreen.tsx"
+Cohesion: 0.17
+Nodes (19): InterestStatus, LensChip(), scopeStarStatus(), getStarIconProps(), LensContext, LensContextValue, LensPanelContext, LensPanelContextValue (+11 more)
 
 ### Community 104 - "drawerOverlay.ts"
-Cohesion: 0.22
-Nodes (11): useExclusiveOverlay(), DrawerParamList, dispatch(), DRAWER_ID, DrawerAction, openDrawer(), navigationRef, ExclusiveOverlay (+3 more)
+Cohesion: 0.26
+Nodes (10): LensProvider(), useExclusiveOverlay(), dispatch(), DRAWER_ID, DrawerAction, openDrawer(), ExclusiveOverlay, onOpening() (+2 more)
 
 ### Community 105 - "gen-fixtures.ts"
 Cohesion: 0.20
 Nodes (7): ARTISTS_SYNCED_AT, Capture, CAPTURES, EDITIONS, HERE, LAST_SYNCED_AT, OUT_ROOT
 
-### Community 106 - "AppShell.tsx"
-Cohesion: 0.27
-Nodes (9): BottomBar(), DrawerButton(), FeedbackToast(), LOGO_WIDTH, TopBar(), useScreenUI(), ScreenName, DAY_SWITCHER_MAX_FRACTION (+1 more)
+### Community 106 - "tokens.ts"
+Cohesion: 0.14
+Nodes (20): AppShell(), BottomBar(), DrawerButton(), FeedbackToast(), LOGO_WIDTH, TopBar(), useScreenUI(), useScreenUIState() (+12 more)
 
 ### Community 107 - "aws-lambda"
 Cohesion: 0.50
@@ -428,37 +428,33 @@ Nodes (3): config, shared, WEB_ONLY_IGNORES
 Cohesion: 0.31
 Nodes (6): cutNetwork(), FIXTURE_SLUG, PINNED_NOW, seedEdition(), test, useFixtureApi()
 
-### Community 112 - "conflictUtils.perf-test.ts"
-Cohesion: 0.22
-Nodes (7): ARTIST_EVENTS, ARTISTS, EVENTS, HEAVY, INPUTS, PLAYABLE, STAGES
-
-### Community 113 - "festivalConfig.ts"
-Cohesion: 0.33
-Nodes (5): FESTIVAL_CONFIGS, FestivalConfig, SYNC_INTERVAL_BEFORE_FESTIVAL_MS, SYNC_INTERVAL_DEFAULT_MS, SYNC_INTERVAL_DURING_FESTIVAL_MS
+### Community 112 - "ArtistBlock.tsx"
+Cohesion: 0.24
+Nodes (9): ArtistBlockBase(), BlockStyle, Props, stripePath(), BLOCK_FONT_SIZE, LANE_BORDER_WIDTH, MIN_BLOCK_WIDTH, PIXELS_PER_MS (+1 more)
 
 ### Community 114 - "frontend/package.json"
 Cohesion: 0.40
 Nodes (4): main, name, private, version
 
 ## Knowledge Gaps
-- **590 isolated node(s):** `config`, `shelfJestDynamodb`, `config`, `client`, `dynamo` (+585 more)
+- **600 isolated node(s):** `config`, `shelfJestDynamodb`, `config`, `client`, `dynamo` (+595 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **51 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **52 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `plugins` connect `App.tsx` to `expo`, `AuthContext.tsx`?**
+- **Why does `plugins` connect `AuthContext.tsx` to `expo`?**
   _High betweenness centrality (0.038) - this node is a cross-community bridge._
-- **Why does `expo` connect `expo` to `App.tsx`?**
+- **Why does `expo` connect `expo` to `AuthContext.tsx`?**
   _High betweenness centrality (0.033) - this node is a cross-community bridge._
+- **Why does `expo-font` connect `AuthContext.tsx` to `SocialContext.tsx`?**
+  _High betweenness centrality (0.018) - this node is a cross-community bridge._
 - **What connects `config`, `shelfJestDynamodb`, `config` to the rest of the system?**
-  _590 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _600 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `ConflictDetailSheet.tsx` be split into smaller, more focused modules?**
+  _Cohesion score 0.13793103448275862 - nodes in this community are weakly interconnected._
 - **Should `cacheService.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.09057971014492754 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08392603129445235 - nodes in this community are weakly interconnected._
 - **Should `devDependencies` be split into smaller, more focused modules?**
   _Cohesion score 0.05128205128205128 - nodes in this community are weakly interconnected._
-- **Should `InterestContext.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.06060606060606061 - nodes in this community are weakly interconnected._
-- **Should `devDependencies` be split into smaller, more focused modules?**
-  _Cohesion score 0.05405405405405406 - nodes in this community are weakly interconnected._

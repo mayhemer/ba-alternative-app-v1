@@ -28,10 +28,17 @@ import { TimelineFilterProvider } from '../../src/context/TimelineFilterContext'
 
 const Stack = createNativeStackNavigator();
 
-export function PerfProviders({ children }: { children: React.ReactElement }) {
+/**
+ * The feature providers with no navigator.
+ *
+ * Use this for anything below screen level. The navigator contributes five host
+ * elements of its own (RNSScreenStack, RNSScreen, RNCSafeAreaProvider and
+ * friends), which swamps the count of a single row or block — so an element
+ * budget measured through it would be mostly chrome.
+ */
+export function FeatureProviders({ children }: { children: React.ReactNode }) {
   return (
-    <NavigationContainer>
-      <ScreenUIProvider>
+    <ScreenUIProvider>
         <InterestProvider>
           <SocialProvider>
             <LensProvider>
@@ -40,11 +47,7 @@ export function PerfProviders({ children }: { children: React.ReactElement }) {
                   <ConflictDetailProvider>
                     <ArtistListFilterProvider>
                       <TimelineFilterProvider>
-                        <Stack.Navigator screenOptions={{ headerShown: false }}>
-                          <Stack.Screen name="subject">
-                            {() => children}
-                          </Stack.Screen>
-                        </Stack.Navigator>
+                        {children}
                       </TimelineFilterProvider>
                     </ArtistListFilterProvider>
                   </ConflictDetailProvider>
@@ -53,7 +56,21 @@ export function PerfProviders({ children }: { children: React.ReactElement }) {
             </LensProvider>
           </SocialProvider>
         </InterestProvider>
-      </ScreenUIProvider>
+    </ScreenUIProvider>
+  );
+}
+
+/** Feature providers plus a navigator, for whole screens. */
+export function PerfProviders({ children }: { children: React.ReactElement }) {
+  return (
+    <NavigationContainer>
+      <FeatureProviders>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="subject">
+            {() => children}
+          </Stack.Screen>
+        </Stack.Navigator>
+      </FeatureProviders>
     </NavigationContainer>
   );
 }
