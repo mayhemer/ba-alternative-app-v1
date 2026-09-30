@@ -15,7 +15,10 @@ const config: Config = {
   preset: 'jest-expo/ios',
   rootDir: '.',
   testMatch: ['<rootDir>/src/**/*.perf-test.[jt]s?(x)'],
-  setupFilesAfterEnv: ['<rootDir>/tests/setup/jest.setup.ts'],
+  setupFilesAfterEnv: [
+    '<rootDir>/tests/setup/jest.setup.ts',
+    '<rootDir>/tests/setup/perf.setup.ts',
+  ],
   testPathIgnorePatterns: ['<rootDir>/node_modules/'],
 };
 
