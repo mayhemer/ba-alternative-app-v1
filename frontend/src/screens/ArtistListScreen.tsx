@@ -30,7 +30,9 @@ type Section = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function buildSections(artists: DbArtist[]): Section[] {
+// Exported for the performance suite: the collated sort inside is the most
+// expensive thing the list does, and it re-runs on every keystroke.
+export function buildSections(artists: DbArtist[]): Section[] {
   const grouped: Record<string, DbArtist[]> = {};
 
   for (const artist of artists) {

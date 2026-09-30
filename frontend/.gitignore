@@ -42,3 +42,11 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Reassure per-run output (the baseline is committed; these are not)
+.reassure/output.*
+.reassure/current.perf
+
+# Playwright
+test-results/
+playwright-report/
