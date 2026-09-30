@@ -1,5 +1,5 @@
 import { measureFunction } from 'reassure';
-import { MEASURE_OPTIONS } from '../../tests/setup/perfOptions';
+import { BATCH, MEASURE_OPTIONS, repeat } from '../../tests/setup/perfOptions';
 import { computeConflictEntries, computeConflictOverlaps, type ConflictInputs } from './conflictUtils';
 import type { DbArtist, DbEvent, DbStage } from '../types/backend';
 
@@ -39,18 +39,27 @@ function starred(count: number): Record<string, string> {
 // lineup ends up with.
 const HEAVY = starred(40);
 
-test('computeConflictEntries over a full plan', async () => {
-  await measureFunction(() => computeConflictEntries(HEAVY, INPUTS), MEASURE_OPTIONS);
+test(`computeConflictEntries over a full plan (x${BATCH.conflictEntries})`, async () => {
+  await measureFunction(
+    repeat(() => computeConflictEntries(HEAVY, INPUTS), BATCH.conflictEntries),
+    MEASURE_OPTIONS,
+  );
 });
 
-test('computeConflictOverlaps over a full plan', async () => {
+test(`computeConflictOverlaps over a full plan (x${BATCH.conflictOverlaps})`, async () => {
   // Runs the whole pairing again, then merges intervals per entry. This is what
   // the timeline recomputes on every star press.
-  await measureFunction(() => computeConflictOverlaps(HEAVY, INPUTS), MEASURE_OPTIONS);
+  await measureFunction(
+    repeat(() => computeConflictOverlaps(HEAVY, INPUTS), BATCH.conflictOverlaps),
+    MEASURE_OPTIONS,
+  );
 });
 
-test('computeConflictEntries with nothing starred', async () => {
+test(`computeConflictEntries with nothing starred (x${BATCH.conflictEntriesEmpty})`, async () => {
   // The common case, and the floor the others are read against: it still walks
   // every artist to collect the marked set.
-  await measureFunction(() => computeConflictEntries({}, INPUTS), MEASURE_OPTIONS);
+  await measureFunction(
+    repeat(() => computeConflictEntries({}, INPUTS), BATCH.conflictEntriesEmpty),
+    MEASURE_OPTIONS,
+  );
 });

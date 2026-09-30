@@ -20,6 +20,14 @@ const config: Config = {
     '<rootDir>/tests/setup/perf.setup.ts',
   ],
   testPathIgnorePatterns: ['<rootDir>/node_modules/'],
+  // Generous on purpose. Each scenario repeats its subject to fill a ~20 ms
+  // window and runs 30 times, so a scenario is already seconds long — and a real
+  // regression multiplies that. At Jest's 5 s default a large slowdown makes the
+  // test *time out* instead of being measured: the run goes red with no numbers,
+  // and in CI, where this job is advisory, that failure is ignored entirely.
+  // Verified by injecting a 12x regression, which timed out at the default and
+  // is reported as a regression at this value.
+  testTimeout: 120_000,
 };
 
 export default config;
