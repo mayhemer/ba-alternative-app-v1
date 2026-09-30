@@ -1,0 +1,242 @@
+[
+  {
+    "slug": "ba2024",
+    "categoryId": "12",
+    "color": -2221743,
+    "localized": [
+      {
+        "language": "EN",
+        "title": "Marshall"
+      },
+      {
+        "language": "CS",
+        "title": "Marshall"
+      }
+    ]
+  },
+  {
+    "slug": "ba2024",
+    "categoryId": "13",
+    "color": -1,
+    "localized": [
+      {
+        "language": "CS",
+        "title": "Sea Shepherd"
+      },
+      {
+        "language": "EN",
+        "title": "Sea Shepherd"
+      }
+    ]
+  },
+  {
+    "slug": "ba2024",
+    "categoryId": "14",
+    "color": -10443113,
+    "localized": [
+      {
+        "language": "EN",
+        "title": "Obscure"
+      },
+      {
+        "language": "CS",
+        "title": "Obscure"
+      }
+    ]
+  },
+  {
+    "slug": "ba2024",
+    "categoryId": "15",
+    "color": -6380987,
+    "localized": [
+      {
+        "language": "EN",
+        "title": "KAL stage"
+      },
+      {
+        "language": "CS",
+        "title": "KAL stage"
+      }
+    ]
+  },
+  {
+    "slug": "ba2024",
+    "categoryId": "16",
+    "color": -8293037,
+    "localized": [
+      {
+        "language": "CS",
+        "title": "Octagon"
+      },
+      {
+        "language": "EN",
+        "title": "Octagon"
+      }
+    ]
+  },
+  {
+    "slug": "ba2024",
+    "categoryId": "17",
+    "color": -11188381,
+    "localized": [
+      {
+        "language": "EN",
+        "title": "Meet & Greet"
+      },
+      {
+        "language": "CS",
+        "title": "Meet & Greet"
+      }
+    ]
+  },
+  {
+    "slug": "ba2024",
+    "categoryId": "18",
+    "color": -13472075,
+    "localized": [
+      {
+        "language": "EN",
+        "title": "Voidmonger"
+      },
+      {
+        "language": "CS",
+        "title": "Voidmonger"
+      }
+    ]
+  },
+  {
+    "slug": "ba2024",
+    "categoryId": "19",
+    "color": -2385369,
+    "localized": [
+      {
+        "language": "EN",
+        "title": "Tin mouth"
+      },
+      {
+        "language": "CS",
+        "title": "Plechová huba"
+      }
+    ]
+  },
+  {
+    "slug": "ba2024",
+    "categoryId": "20",
+    "color": -13739960,
+    "localized": [
+      {
+        "language": "EN",
+        "title": "Convoy"
+      },
+      {
+        "language": "CS",
+        "title": "Convoy"
+      }
+    ]
+  },
+  {
+    "slug": "ba2024",
+    "categoryId": "21",
+    "color": -9355368,
+    "localized": [
+      {
+        "language": "CS",
+        "title": "Brutal kids"
+      },
+      {
+        "language": "EN",
+        "title": "Brutal kids"
+      }
+    ]
+  },
+  {
+    "slug": "ba2024",
+    "categoryId": "22",
+    "color": -9797499,
+    "localized": [
+      {
+        "language": "EN",
+        "title": "Lectures and workshops"
+      },
+      {
+        "language": "CS",
+        "title": "Přednášky a workshopy"
+      }
+    ]
+  },
+  {
+    "slug": "ba2024",
+    "categoryId": "23",
+    "color": -11074510,
+    "localized": [
+      {
+        "language": "EN",
+        "title": "Jazz wine bar"
+      },
+      {
+        "language": "CS",
+        "title": "Jazzová vinárna"
+      }
+    ]
+  },
+  {
+    "slug": "ba2024",
+    "categoryId": "24",
+    "color": -1166799,
+    "localized": [
+      {
+        "language": "EN",
+        "title": "Horror cinema"
+      },
+      {
+        "language": "CS",
+        "title": "Horror cinema"
+      }
+    ]
+  },
+  {
+    "slug": "ba2024",
+    "categoryId": "25",
+    "color": -7285806,
+    "localized": [
+      {
+        "language": "EN",
+        "title": "Clinic"
+      },
+      {
+        "language": "CS",
+        "title": "Klinika"
+      }
+    ]
+  },
+  {
+    "slug": "ba2024",
+    "categoryId": "26",
+    "color": -15033528,
+    "localized": [
+      {
+        "language": "EN",
+        "title": "Exhibition"
+      },
+      {
+        "language": "CS",
+        "title": "Výstava"
+      }
+    ]
+  },
+  {
+    "slug": "ba2024",
+    "categoryId": "27",
+    "color": -12103775,
+    "localized": [
+      {
+        "language": "EN",
+        "title": "Creepy hole"
+      },
+      {
+        "language": "CS",
+        "title": "Děsivá díra"
+      }
+    ]
+  }
+]

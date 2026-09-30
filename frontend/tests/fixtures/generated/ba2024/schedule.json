@@ -1,0 +1,2765 @@
+[
+  {
+    "slug": "ba2024",
+    "eventId": "12867",
+    "dateFrom": 1722931200000,
+    "dateTo": 1722978000000,
+    "artistId": "815",
+    "stageId": "543",
+    "categoryId": "26"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12862",
+    "dateFrom": 1722942000000,
+    "dateTo": 1722970800000,
+    "artistId": "814",
+    "stageId": "542",
+    "categoryId": "27"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13876",
+    "dateFrom": 1722951000000,
+    "dateTo": 1722952800000,
+    "artistId": "645",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13877",
+    "dateFrom": 1722953700000,
+    "dateTo": 1722955800000,
+    "artistId": "635",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13878",
+    "dateFrom": 1722957000000,
+    "dateTo": 1722959400000,
+    "artistId": "663",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13879",
+    "dateFrom": 1722960600000,
+    "dateTo": 1722963000000,
+    "artistId": "684",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13883",
+    "dateFrom": 1722961800000,
+    "dateTo": 1722963600000,
+    "artistId": "708",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12851",
+    "dateFrom": 1722963600000,
+    "dateTo": 1722967200000,
+    "artistId": "809",
+    "stageId": "539",
+    "categoryId": "26"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13880",
+    "dateFrom": 1722964200000,
+    "dateTo": 1722966600000,
+    "artistId": "675",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13881",
+    "dateFrom": 1722967800000,
+    "dateTo": 1722970200000,
+    "artistId": "521",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13882",
+    "dateFrom": 1722971400000,
+    "dateTo": 1722974100000,
+    "artistId": "659",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12857",
+    "dateFrom": 1723017600000,
+    "dateTo": 1723060800000,
+    "artistId": "812",
+    "stageId": "541",
+    "categoryId": "26"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12868",
+    "dateFrom": 1723017600000,
+    "dateTo": 1723064400000,
+    "artistId": "815",
+    "stageId": "543",
+    "categoryId": "26"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12853",
+    "dateFrom": 1723017600000,
+    "dateTo": 1723053600000,
+    "artistId": "811",
+    "stageId": "540",
+    "categoryId": "26"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12852",
+    "dateFrom": 1723019400000,
+    "dateTo": 1723024800000,
+    "artistId": "810",
+    "stageId": "539",
+    "categoryId": "26"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12630",
+    "dateFrom": 1723021200000,
+    "dateTo": 1723039200000,
+    "artistId": "796",
+    "stageId": "533",
+    "categoryId": "22"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13884",
+    "dateFrom": 1723023000000,
+    "dateTo": 1723024800000,
+    "artistId": "495",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12849",
+    "dateFrom": 1723024800000,
+    "dateTo": 1723060800000,
+    "artistId": "808",
+    "stageId": "539",
+    "categoryId": "26"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13885",
+    "dateFrom": 1723025100000,
+    "dateTo": 1723026900000,
+    "artistId": "652",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13886",
+    "dateFrom": 1723027200000,
+    "dateTo": 1723029300000,
+    "artistId": "489",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12608",
+    "dateFrom": 1723028400000,
+    "dateTo": 1723032000000,
+    "artistId": "791",
+    "stageId": "531",
+    "categoryId": "23"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13888",
+    "dateFrom": 1723029600000,
+    "dateTo": 1723031700000,
+    "artistId": "538",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12863",
+    "dateFrom": 1723030200000,
+    "dateTo": 1723057200000,
+    "artistId": "814",
+    "stageId": "542",
+    "categoryId": "27"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12613",
+    "dateFrom": 1723032000000,
+    "dateTo": 1723039200000,
+    "artistId": "792",
+    "stageId": "530",
+    "categoryId": "21"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13889",
+    "dateFrom": 1723032000000,
+    "dateTo": 1723034400000,
+    "artistId": "676",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12565",
+    "dateFrom": 1723032000000,
+    "dateTo": 1723037700000,
+    "artistId": "754",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13891",
+    "dateFrom": 1723033500000,
+    "dateTo": 1723035900000,
+    "artistId": "661",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12634",
+    "dateFrom": 1723033800000,
+    "dateTo": 1723039200000,
+    "artistId": "797",
+    "stageId": "528",
+    "categoryId": "25"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13887",
+    "dateFrom": 1723033800000,
+    "dateTo": 1723035600000,
+    "artistId": "709",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13892",
+    "dateFrom": 1723034700000,
+    "dateTo": 1723037400000,
+    "artistId": "482",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13921",
+    "dateFrom": 1723035600000,
+    "dateTo": 1723037400000,
+    "artistId": "718",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13894",
+    "dateFrom": 1723037400000,
+    "dateTo": 1723039800000,
+    "artistId": "660",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13896",
+    "dateFrom": 1723037700000,
+    "dateTo": 1723040400000,
+    "artistId": "503",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12566",
+    "dateFrom": 1723038000000,
+    "dateTo": 1723043400000,
+    "artistId": "755",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12617",
+    "dateFrom": 1723039200000,
+    "dateTo": 1723046400000,
+    "artistId": "793",
+    "stageId": "530",
+    "categoryId": "21"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13915",
+    "dateFrom": 1723039200000,
+    "dateTo": 1723041000000,
+    "artistId": "716",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13897",
+    "dateFrom": 1723040700000,
+    "dateTo": 1723043400000,
+    "artistId": "497",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13911",
+    "dateFrom": 1723041000000,
+    "dateTo": 1723042800000,
+    "artistId": "715",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12635",
+    "dateFrom": 1723041000000,
+    "dateTo": 1723044600000,
+    "artistId": "798",
+    "stageId": "528",
+    "categoryId": "22"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13899",
+    "dateFrom": 1723041900000,
+    "dateTo": 1723044900000,
+    "artistId": "653",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13890",
+    "dateFrom": 1723042800000,
+    "dateTo": 1723044600000,
+    "artistId": "819",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13902",
+    "dateFrom": 1723043700000,
+    "dateTo": 1723046700000,
+    "artistId": "526",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13901",
+    "dateFrom": 1723043700000,
+    "dateTo": 1723046400000,
+    "artistId": "753",
+    "stageId": "573",
+    "categoryId": "16"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12567",
+    "dateFrom": 1723043700000,
+    "dateTo": 1723049100000,
+    "artistId": "756",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13918",
+    "dateFrom": 1723044600000,
+    "dateTo": 1723046400000,
+    "artistId": "717",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12621",
+    "dateFrom": 1723046400000,
+    "dateTo": 1723053600000,
+    "artistId": "794",
+    "stageId": "530",
+    "categoryId": "21"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13893",
+    "dateFrom": 1723046400000,
+    "dateTo": 1723048200000,
+    "artistId": "711",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13904",
+    "dateFrom": 1723046700000,
+    "dateTo": 1723049400000,
+    "artistId": "554",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13905",
+    "dateFrom": 1723047000000,
+    "dateTo": 1723049700000,
+    "artistId": "540",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13906",
+    "dateFrom": 1723048200000,
+    "dateTo": 1723051800000,
+    "artistId": "702",
+    "stageId": "528",
+    "categoryId": "15"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13907",
+    "dateFrom": 1723048200000,
+    "dateTo": 1723050900000,
+    "artistId": "674",
+    "stageId": "573",
+    "categoryId": "16"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13895",
+    "dateFrom": 1723048200000,
+    "dateTo": 1723050000000,
+    "artistId": "820",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12568",
+    "dateFrom": 1723049100000,
+    "dateTo": 1723055700000,
+    "artistId": "757",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13898",
+    "dateFrom": 1723050000000,
+    "dateTo": 1723051800000,
+    "artistId": "712",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13908",
+    "dateFrom": 1723050000000,
+    "dateTo": 1723053600000,
+    "artistId": "657",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12603",
+    "dateFrom": 1723050000000,
+    "dateTo": 1723053600000,
+    "artistId": "788",
+    "stageId": "529",
+    "categoryId": "20"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13909",
+    "dateFrom": 1723051500000,
+    "dateTo": 1723054200000,
+    "artistId": "569",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13900",
+    "dateFrom": 1723051800000,
+    "dateTo": 1723053600000,
+    "artistId": "713",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13910",
+    "dateFrom": 1723052700000,
+    "dateTo": 1723055400000,
+    "artistId": "562",
+    "stageId": "573",
+    "categoryId": "16"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13912",
+    "dateFrom": 1723053600000,
+    "dateTo": 1723057200000,
+    "artistId": "706",
+    "stageId": "528",
+    "categoryId": "15"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13903",
+    "dateFrom": 1723053600000,
+    "dateTo": 1723055400000,
+    "artistId": "714",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12625",
+    "dateFrom": 1723053600000,
+    "dateTo": 1723060800000,
+    "artistId": "795",
+    "stageId": "530",
+    "categoryId": "21"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13913",
+    "dateFrom": 1723053900000,
+    "dateTo": 1723057500000,
+    "artistId": "536",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13927",
+    "dateFrom": 1723055400000,
+    "dateTo": 1723057200000,
+    "artistId": "719",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12569",
+    "dateFrom": 1723055700000,
+    "dateTo": 1723065000000,
+    "artistId": "758",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13914",
+    "dateFrom": 1723056600000,
+    "dateTo": 1723059900000,
+    "artistId": "470",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13916",
+    "dateFrom": 1723057200000,
+    "dateTo": 1723060800000,
+    "artistId": "646",
+    "stageId": "573",
+    "categoryId": "16"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13929",
+    "dateFrom": 1723057200000,
+    "dateTo": 1723059000000,
+    "artistId": "720",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13917",
+    "dateFrom": 1723057800000,
+    "dateTo": 1723061700000,
+    "artistId": "519",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13919",
+    "dateFrom": 1723059000000,
+    "dateTo": 1723062600000,
+    "artistId": "688",
+    "stageId": "528",
+    "categoryId": "15"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12596",
+    "dateFrom": 1723060800000,
+    "dateTo": 1723063500000,
+    "artistId": "785",
+    "stageId": "529",
+    "categoryId": "18"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13920",
+    "dateFrom": 1723062000000,
+    "dateTo": 1723065600000,
+    "artistId": "474",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13922",
+    "dateFrom": 1723062000000,
+    "dateTo": 1723065300000,
+    "artistId": "507",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13923",
+    "dateFrom": 1723062600000,
+    "dateTo": 1723066200000,
+    "artistId": "636",
+    "stageId": "573",
+    "categoryId": "16"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13924",
+    "dateFrom": 1723064400000,
+    "dateTo": 1723068000000,
+    "artistId": "700",
+    "stageId": "528",
+    "categoryId": "15"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12570",
+    "dateFrom": 1723065000000,
+    "dateTo": 1723070100000,
+    "artistId": "759",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13925",
+    "dateFrom": 1723065900000,
+    "dateTo": 1723069500000,
+    "artistId": "499",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12598",
+    "dateFrom": 1723066200000,
+    "dateTo": 1723075200000,
+    "artistId": "786",
+    "stageId": "529",
+    "categoryId": "18"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13926",
+    "dateFrom": 1723067100000,
+    "dateTo": 1723070100000,
+    "artistId": "518",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13928",
+    "dateFrom": 1723069800000,
+    "dateTo": 1723073400000,
+    "artistId": "553",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13930",
+    "dateFrom": 1723071900000,
+    "dateTo": 1723074600000,
+    "artistId": "668",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13931",
+    "dateFrom": 1723076400000,
+    "dateTo": 1723078500000,
+    "artistId": "496",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12869",
+    "dateFrom": 1723104000000,
+    "dateTo": 1723150800000,
+    "artistId": "815",
+    "stageId": "543",
+    "categoryId": "26"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12858",
+    "dateFrom": 1723104000000,
+    "dateTo": 1723132800000,
+    "artistId": "812",
+    "stageId": "541",
+    "categoryId": "26"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12847",
+    "dateFrom": 1723104000000,
+    "dateTo": 1723147200000,
+    "artistId": "808",
+    "stageId": "539",
+    "categoryId": "26"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12854",
+    "dateFrom": 1723104000000,
+    "dateTo": 1723140000000,
+    "artistId": "811",
+    "stageId": "540",
+    "categoryId": "26"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13932",
+    "dateFrom": 1723105800000,
+    "dateTo": 1723107600000,
+    "artistId": "481",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12571",
+    "dateFrom": 1723105800000,
+    "dateTo": 1723111500000,
+    "artistId": "760",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12631",
+    "dateFrom": 1723107600000,
+    "dateTo": 1723125600000,
+    "artistId": "796",
+    "stageId": "533",
+    "categoryId": "22"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13933",
+    "dateFrom": 1723107900000,
+    "dateTo": 1723109700000,
+    "artistId": "490",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13934",
+    "dateFrom": 1723110000000,
+    "dateTo": 1723112100000,
+    "artistId": "683",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12864",
+    "dateFrom": 1723111200000,
+    "dateTo": 1723143600000,
+    "artistId": "814",
+    "stageId": "542",
+    "categoryId": "27"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12572",
+    "dateFrom": 1723111800000,
+    "dateTo": 1723119300000,
+    "artistId": "761",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13935",
+    "dateFrom": 1723112400000,
+    "dateTo": 1723114500000,
+    "artistId": "469",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12636",
+    "dateFrom": 1723113000000,
+    "dateTo": 1723116600000,
+    "artistId": "799",
+    "stageId": "528",
+    "categoryId": "22"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13936",
+    "dateFrom": 1723114800000,
+    "dateTo": 1723116900000,
+    "artistId": "537",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12609",
+    "dateFrom": 1723114800000,
+    "dateTo": 1723118400000,
+    "artistId": "791",
+    "stageId": "531",
+    "categoryId": "23"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13937",
+    "dateFrom": 1723117200000,
+    "dateTo": 1723119300000,
+    "artistId": "561",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12614",
+    "dateFrom": 1723118400000,
+    "dateTo": 1723125600000,
+    "artistId": "792",
+    "stageId": "530",
+    "categoryId": "21"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12637",
+    "dateFrom": 1723118400000,
+    "dateTo": 1723122000000,
+    "artistId": "800",
+    "stageId": "528",
+    "categoryId": "25"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13948",
+    "dateFrom": 1723118400000,
+    "dateTo": 1723120200000,
+    "artistId": "724",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12573",
+    "dateFrom": 1723119300000,
+    "dateTo": 1723125600000,
+    "artistId": "762",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13939",
+    "dateFrom": 1723119600000,
+    "dateTo": 1723122000000,
+    "artistId": "520",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13941",
+    "dateFrom": 1723120200000,
+    "dateTo": 1723122300000,
+    "artistId": "671",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13957",
+    "dateFrom": 1723122000000,
+    "dateTo": 1723123800000,
+    "artistId": "726",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13942",
+    "dateFrom": 1723122300000,
+    "dateTo": 1723125000000,
+    "artistId": "533",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13966",
+    "dateFrom": 1723123800000,
+    "dateTo": 1723125600000,
+    "artistId": "728",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12638",
+    "dateFrom": 1723123800000,
+    "dateTo": 1723129200000,
+    "artistId": "801",
+    "stageId": "528",
+    "categoryId": "25"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13943",
+    "dateFrom": 1723124100000,
+    "dateTo": 1723126200000,
+    "artistId": "639",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13944",
+    "dateFrom": 1723125300000,
+    "dateTo": 1723128000000,
+    "artistId": "478",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12574",
+    "dateFrom": 1723125600000,
+    "dateTo": 1723131000000,
+    "artistId": "763",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13970",
+    "dateFrom": 1723125600000,
+    "dateTo": 1723127400000,
+    "artistId": "729",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12618",
+    "dateFrom": 1723125600000,
+    "dateTo": 1723132800000,
+    "artistId": "793",
+    "stageId": "530",
+    "categoryId": "21"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13940",
+    "dateFrom": 1723127400000,
+    "dateTo": 1723129200000,
+    "artistId": "722",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13946",
+    "dateFrom": 1723128000000,
+    "dateTo": 1723130400000,
+    "artistId": "525",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13947",
+    "dateFrom": 1723128300000,
+    "dateTo": 1723131600000,
+    "artistId": "498",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12611",
+    "dateFrom": 1723129200000,
+    "dateTo": 1723134600000,
+    "artistId": "790",
+    "stageId": "531",
+    "categoryId": "23"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13978",
+    "dateFrom": 1723129200000,
+    "dateTo": 1723131000000,
+    "artistId": "731",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13949",
+    "dateFrom": 1723130100000,
+    "dateTo": 1723132800000,
+    "artistId": "669",
+    "stageId": "573",
+    "categoryId": "16"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13938",
+    "dateFrom": 1723131000000,
+    "dateTo": 1723132800000,
+    "artistId": "721",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12575",
+    "dateFrom": 1723131000000,
+    "dateTo": 1723134000000,
+    "artistId": "764",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13950",
+    "dateFrom": 1723131000000,
+    "dateTo": 1723133700000,
+    "artistId": "690",
+    "stageId": "528",
+    "categoryId": "15"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13951",
+    "dateFrom": 1723131900000,
+    "dateTo": 1723135200000,
+    "artistId": "544",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13952",
+    "dateFrom": 1723132500000,
+    "dateTo": 1723135500000,
+    "artistId": "477",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13963",
+    "dateFrom": 1723132800000,
+    "dateTo": 1723134600000,
+    "artistId": "727",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12859",
+    "dateFrom": 1723132800000,
+    "dateTo": 1723147200000,
+    "artistId": "813",
+    "stageId": "541",
+    "categoryId": "26"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12622",
+    "dateFrom": 1723132800000,
+    "dateTo": 1723140000000,
+    "artistId": "794",
+    "stageId": "530",
+    "categoryId": "21"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12576",
+    "dateFrom": 1723134000000,
+    "dateTo": 1723139700000,
+    "artistId": "765",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13953",
+    "dateFrom": 1723134600000,
+    "dateTo": 1723137300000,
+    "artistId": "638",
+    "stageId": "573",
+    "categoryId": "16"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13945",
+    "dateFrom": 1723134600000,
+    "dateTo": 1723136400000,
+    "artistId": "723",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13956",
+    "dateFrom": 1723135500000,
+    "dateTo": 1723139100000,
+    "artistId": "654",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13955",
+    "dateFrom": 1723135500000,
+    "dateTo": 1723138200000,
+    "artistId": "699",
+    "stageId": "528",
+    "categoryId": "15"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13958",
+    "dateFrom": 1723137600000,
+    "dateTo": 1723140300000,
+    "artistId": "476",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12604",
+    "dateFrom": 1723138200000,
+    "dateTo": 1723141800000,
+    "artistId": "788",
+    "stageId": "529",
+    "categoryId": "20"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13959",
+    "dateFrom": 1723139100000,
+    "dateTo": 1723141800000,
+    "artistId": "570",
+    "stageId": "573",
+    "categoryId": "16"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13960",
+    "dateFrom": 1723139400000,
+    "dateTo": 1723143000000,
+    "artistId": "542",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12626",
+    "dateFrom": 1723140000000,
+    "dateTo": 1723147200000,
+    "artistId": "795",
+    "stageId": "530",
+    "categoryId": "21"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13961",
+    "dateFrom": 1723140000000,
+    "dateTo": 1723143600000,
+    "artistId": "698",
+    "stageId": "528",
+    "categoryId": "15"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12577",
+    "dateFrom": 1723140000000,
+    "dateTo": 1723146600000,
+    "artistId": "766",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13975",
+    "dateFrom": 1723140000000,
+    "dateTo": 1723141800000,
+    "artistId": "730",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13981",
+    "dateFrom": 1723141800000,
+    "dateTo": 1723143600000,
+    "artistId": "732",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13962",
+    "dateFrom": 1723142400000,
+    "dateTo": 1723145400000,
+    "artistId": "634",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13964",
+    "dateFrom": 1723143300000,
+    "dateTo": 1723147200000,
+    "artistId": "558",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13965",
+    "dateFrom": 1723143600000,
+    "dateTo": 1723146600000,
+    "artistId": "679",
+    "stageId": "573",
+    "categoryId": "16"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13954",
+    "dateFrom": 1723143600000,
+    "dateTo": 1723145400000,
+    "artistId": "725",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13967",
+    "dateFrom": 1723145400000,
+    "dateTo": 1723149000000,
+    "artistId": "705",
+    "stageId": "528",
+    "categoryId": "15"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12578",
+    "dateFrom": 1723146600000,
+    "dateTo": 1723151700000,
+    "artistId": "767",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12597",
+    "dateFrom": 1723147200000,
+    "dateTo": 1723149900000,
+    "artistId": "785",
+    "stageId": "529",
+    "categoryId": "18"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13968",
+    "dateFrom": 1723147500000,
+    "dateTo": 1723151700000,
+    "artistId": "523",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13969",
+    "dateFrom": 1723147800000,
+    "dateTo": 1723151400000,
+    "artistId": "637",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13971",
+    "dateFrom": 1723149000000,
+    "dateTo": 1723152600000,
+    "artistId": "508",
+    "stageId": "573",
+    "categoryId": "16"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13972",
+    "dateFrom": 1723150800000,
+    "dateTo": 1723154400000,
+    "artistId": "689",
+    "stageId": "528",
+    "categoryId": "15"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12579",
+    "dateFrom": 1723151700000,
+    "dateTo": 1723157700000,
+    "artistId": "768",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13973",
+    "dateFrom": 1723152000000,
+    "dateTo": 1723156200000,
+    "artistId": "484",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12599",
+    "dateFrom": 1723152600000,
+    "dateTo": 1723161600000,
+    "artistId": "786",
+    "stageId": "529",
+    "categoryId": "18"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13974",
+    "dateFrom": 1723153500000,
+    "dateTo": 1723156200000,
+    "artistId": "567",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13976",
+    "dateFrom": 1723154400000,
+    "dateTo": 1723167000000,
+    "artistId": "697",
+    "stageId": "528",
+    "categoryId": "15"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13977",
+    "dateFrom": 1723156500000,
+    "dateTo": 1723159800000,
+    "artistId": "483",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13979",
+    "dateFrom": 1723158000000,
+    "dateTo": 1723160700000,
+    "artistId": "509",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13980",
+    "dateFrom": 1723162500000,
+    "dateTo": 1723164900000,
+    "artistId": "564",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12848",
+    "dateFrom": 1723190400000,
+    "dateTo": 1723233600000,
+    "artistId": "808",
+    "stageId": "539",
+    "categoryId": "26"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12855",
+    "dateFrom": 1723190400000,
+    "dateTo": 1723226400000,
+    "artistId": "811",
+    "stageId": "540",
+    "categoryId": "26"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12870",
+    "dateFrom": 1723190400000,
+    "dateTo": 1723237200000,
+    "artistId": "815",
+    "stageId": "543",
+    "categoryId": "26"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12860",
+    "dateFrom": 1723190400000,
+    "dateTo": 1723233600000,
+    "artistId": "812",
+    "stageId": "541",
+    "categoryId": "26"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12580",
+    "dateFrom": 1723192200000,
+    "dateTo": 1723198800000,
+    "artistId": "769",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13982",
+    "dateFrom": 1723192200000,
+    "dateTo": 1723194000000,
+    "artistId": "494",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12632",
+    "dateFrom": 1723194000000,
+    "dateTo": 1723212000000,
+    "artistId": "796",
+    "stageId": "533",
+    "categoryId": "22"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13984",
+    "dateFrom": 1723194300000,
+    "dateTo": 1723196400000,
+    "artistId": "647",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13986",
+    "dateFrom": 1723196700000,
+    "dateTo": 1723198800000,
+    "artistId": "566",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12865",
+    "dateFrom": 1723197600000,
+    "dateTo": 1723230000000,
+    "artistId": "814",
+    "stageId": "542",
+    "categoryId": "27"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12581",
+    "dateFrom": 1723198800000,
+    "dateTo": 1723203900000,
+    "artistId": "770",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13987",
+    "dateFrom": 1723199100000,
+    "dateTo": 1723201200000,
+    "artistId": "492",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12612",
+    "dateFrom": 1723201200000,
+    "dateTo": 1723206600000,
+    "artistId": "790",
+    "stageId": "531",
+    "categoryId": "23"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12639",
+    "dateFrom": 1723201200000,
+    "dateTo": 1723204800000,
+    "artistId": "802",
+    "stageId": "528",
+    "categoryId": "22"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13983",
+    "dateFrom": 1723201200000,
+    "dateTo": 1723203000000,
+    "artistId": "733",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13988",
+    "dateFrom": 1723201500000,
+    "dateTo": 1723203900000,
+    "artistId": "568",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13985",
+    "dateFrom": 1723203000000,
+    "dateTo": 1723204800000,
+    "artistId": "734",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12582",
+    "dateFrom": 1723203900000,
+    "dateTo": 1723210200000,
+    "artistId": "771",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13990",
+    "dateFrom": 1723204200000,
+    "dateTo": 1723206600000,
+    "artistId": "563",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12607",
+    "dateFrom": 1723204800000,
+    "dateTo": 1723215600000,
+    "artistId": "789",
+    "stageId": "529",
+    "categoryId": "20"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12615",
+    "dateFrom": 1723204800000,
+    "dateTo": 1723212000000,
+    "artistId": "792",
+    "stageId": "530",
+    "categoryId": "21"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13991",
+    "dateFrom": 1723206600000,
+    "dateTo": 1723209000000,
+    "artistId": "475",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13992",
+    "dateFrom": 1723206900000,
+    "dateTo": 1723209300000,
+    "artistId": "487",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12640",
+    "dateFrom": 1723208400000,
+    "dateTo": 1723212000000,
+    "artistId": "803",
+    "stageId": "528",
+    "categoryId": "22"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13994",
+    "dateFrom": 1723209600000,
+    "dateTo": 1723212300000,
+    "artistId": "473",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13996",
+    "dateFrom": 1723210500000,
+    "dateTo": 1723212900000,
+    "artistId": "662",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12583",
+    "dateFrom": 1723211100000,
+    "dateTo": 1723219200000,
+    "artistId": "772",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14009",
+    "dateFrom": 1723212000000,
+    "dateTo": 1723213800000,
+    "artistId": "740",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12619",
+    "dateFrom": 1723212000000,
+    "dateTo": 1723219200000,
+    "artistId": "793",
+    "stageId": "530",
+    "categoryId": "21"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13998",
+    "dateFrom": 1723212600000,
+    "dateTo": 1723215300000,
+    "artistId": "551",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13989",
+    "dateFrom": 1723213800000,
+    "dateTo": 1723215600000,
+    "artistId": "735",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12641",
+    "dateFrom": 1723213800000,
+    "dateTo": 1723217400000,
+    "artistId": "804",
+    "stageId": "528",
+    "categoryId": "22"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13999",
+    "dateFrom": 1723215000000,
+    "dateTo": 1723217700000,
+    "artistId": "528",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14001",
+    "dateFrom": 1723215600000,
+    "dateTo": 1723218600000,
+    "artistId": "524",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14015",
+    "dateFrom": 1723215600000,
+    "dateTo": 1723217400000,
+    "artistId": "741",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14002",
+    "dateFrom": 1723216500000,
+    "dateTo": 1723218300000,
+    "artistId": "667",
+    "stageId": "573",
+    "categoryId": "16"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13997",
+    "dateFrom": 1723217400000,
+    "dateTo": 1723219200000,
+    "artistId": "817",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14003",
+    "dateFrom": 1723218900000,
+    "dateTo": 1723222200000,
+    "artistId": "479",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12623",
+    "dateFrom": 1723219200000,
+    "dateTo": 1723226400000,
+    "artistId": "794",
+    "stageId": "530",
+    "categoryId": "21"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13993",
+    "dateFrom": 1723219200000,
+    "dateTo": 1723221000000,
+    "artistId": "736",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12584",
+    "dateFrom": 1723219200000,
+    "dateTo": 1723224600000,
+    "artistId": "773",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14004",
+    "dateFrom": 1723219800000,
+    "dateTo": 1723222800000,
+    "artistId": "552",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14005",
+    "dateFrom": 1723221000000,
+    "dateTo": 1723224600000,
+    "artistId": "701",
+    "stageId": "528",
+    "categoryId": "15"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14006",
+    "dateFrom": 1723221000000,
+    "dateTo": 1723223700000,
+    "artistId": "680",
+    "stageId": "573",
+    "categoryId": "16"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "13995",
+    "dateFrom": 1723221000000,
+    "dateTo": 1723222800000,
+    "artistId": "737",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14008",
+    "dateFrom": 1723222500000,
+    "dateTo": 1723225800000,
+    "artistId": "472",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14000",
+    "dateFrom": 1723222800000,
+    "dateTo": 1723224600000,
+    "artistId": "738",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12585",
+    "dateFrom": 1723224600000,
+    "dateTo": 1723233900000,
+    "artistId": "774",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14010",
+    "dateFrom": 1723224600000,
+    "dateTo": 1723227000000,
+    "artistId": "571",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12605",
+    "dateFrom": 1723225500000,
+    "dateTo": 1723229100000,
+    "artistId": "788",
+    "stageId": "529",
+    "categoryId": "20"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14011",
+    "dateFrom": 1723225500000,
+    "dateTo": 1723228200000,
+    "artistId": "651",
+    "stageId": "573",
+    "categoryId": "16"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14012",
+    "dateFrom": 1723226100000,
+    "dateTo": 1723229400000,
+    "artistId": "640",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12627",
+    "dateFrom": 1723226400000,
+    "dateTo": 1723233600000,
+    "artistId": "795",
+    "stageId": "530",
+    "categoryId": "21"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14013",
+    "dateFrom": 1723226400000,
+    "dateTo": 1723230000000,
+    "artistId": "692",
+    "stageId": "528",
+    "categoryId": "15"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14014",
+    "dateFrom": 1723228800000,
+    "dateTo": 1723231500000,
+    "artistId": "641",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14016",
+    "dateFrom": 1723229700000,
+    "dateTo": 1723233300000,
+    "artistId": "644",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14017",
+    "dateFrom": 1723230000000,
+    "dateTo": 1723233000000,
+    "artistId": "677",
+    "stageId": "573",
+    "categoryId": "16"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14007",
+    "dateFrom": 1723230000000,
+    "dateTo": 1723231800000,
+    "artistId": "739",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14018",
+    "dateFrom": 1723231800000,
+    "dateTo": 1723235400000,
+    "artistId": "703",
+    "stageId": "528",
+    "categoryId": "15"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14027",
+    "dateFrom": 1723232700000,
+    "dateTo": 1723234500000,
+    "artistId": "742",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12600",
+    "dateFrom": 1723233600000,
+    "dateTo": 1723242600000,
+    "artistId": "786",
+    "stageId": "529",
+    "categoryId": "18"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14019",
+    "dateFrom": 1723233600000,
+    "dateTo": 1723237800000,
+    "artistId": "467",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12586",
+    "dateFrom": 1723233900000,
+    "dateTo": 1723239300000,
+    "artistId": "775",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14020",
+    "dateFrom": 1723233900000,
+    "dateTo": 1723236900000,
+    "artistId": "650",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14021",
+    "dateFrom": 1723235400000,
+    "dateTo": 1723239000000,
+    "artistId": "505",
+    "stageId": "573",
+    "categoryId": "16"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14022",
+    "dateFrom": 1723237200000,
+    "dateTo": 1723240800000,
+    "artistId": "691",
+    "stageId": "528",
+    "categoryId": "15"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14023",
+    "dateFrom": 1723238100000,
+    "dateTo": 1723242900000,
+    "artistId": "666",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12587",
+    "dateFrom": 1723239300000,
+    "dateTo": 1723245600000,
+    "artistId": "776",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14024",
+    "dateFrom": 1723239300000,
+    "dateTo": 1723242900000,
+    "artistId": "491",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14078",
+    "dateFrom": 1723240800000,
+    "dateTo": 1723253400000,
+    "artistId": "697",
+    "stageId": "528",
+    "categoryId": "15"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14025",
+    "dateFrom": 1723242600000,
+    "dateTo": 1723245300000,
+    "artistId": "707",
+    "stageId": "528",
+    "categoryId": "15"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14026",
+    "dateFrom": 1723243200000,
+    "dateTo": 1723246200000,
+    "artistId": "560",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14028",
+    "dateFrom": 1723244400000,
+    "dateTo": 1723247400000,
+    "artistId": "510",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14029",
+    "dateFrom": 1723248900000,
+    "dateTo": 1723251300000,
+    "artistId": "557",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12871",
+    "dateFrom": 1723276800000,
+    "dateTo": 1723323600000,
+    "artistId": "815",
+    "stageId": "543",
+    "categoryId": "26"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12856",
+    "dateFrom": 1723276800000,
+    "dateTo": 1723312800000,
+    "artistId": "811",
+    "stageId": "540",
+    "categoryId": "26"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12861",
+    "dateFrom": 1723276800000,
+    "dateTo": 1723320000000,
+    "artistId": "812",
+    "stageId": "541",
+    "categoryId": "26"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12850",
+    "dateFrom": 1723276800000,
+    "dateTo": 1723320000000,
+    "artistId": "808",
+    "stageId": "539",
+    "categoryId": "26"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14030",
+    "dateFrom": 1723278600000,
+    "dateTo": 1723280400000,
+    "artistId": "643",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12588",
+    "dateFrom": 1723278600000,
+    "dateTo": 1723284000000,
+    "artistId": "777",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12633",
+    "dateFrom": 1723280400000,
+    "dateTo": 1723298400000,
+    "artistId": "796",
+    "stageId": "533",
+    "categoryId": "22"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14031",
+    "dateFrom": 1723280700000,
+    "dateTo": 1723282500000,
+    "artistId": "493",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14033",
+    "dateFrom": 1723282800000,
+    "dateTo": 1723284900000,
+    "artistId": "545",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12866",
+    "dateFrom": 1723284000000,
+    "dateTo": 1723316400000,
+    "artistId": "814",
+    "stageId": "542",
+    "categoryId": "27"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12589",
+    "dateFrom": 1723284000000,
+    "dateTo": 1723290300000,
+    "artistId": "778",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14034",
+    "dateFrom": 1723285200000,
+    "dateTo": 1723287300000,
+    "artistId": "559",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12642",
+    "dateFrom": 1723287600000,
+    "dateTo": 1723291200000,
+    "artistId": "805",
+    "stageId": "528",
+    "categoryId": "22"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14035",
+    "dateFrom": 1723287600000,
+    "dateTo": 1723290000000,
+    "artistId": "543",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12610",
+    "dateFrom": 1723287600000,
+    "dateTo": 1723291200000,
+    "artistId": "791",
+    "stageId": "531",
+    "categoryId": "23"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14037",
+    "dateFrom": 1723290300000,
+    "dateTo": 1723292700000,
+    "artistId": "816",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12590",
+    "dateFrom": 1723290300000,
+    "dateTo": 1723298700000,
+    "artistId": "779",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12616",
+    "dateFrom": 1723291200000,
+    "dateTo": 1723298400000,
+    "artistId": "792",
+    "stageId": "530",
+    "categoryId": "21"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14032",
+    "dateFrom": 1723291200000,
+    "dateTo": 1723293000000,
+    "artistId": "743",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14051",
+    "dateFrom": 1723293000000,
+    "dateTo": 1723294800000,
+    "artistId": "749",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14039",
+    "dateFrom": 1723293000000,
+    "dateTo": 1723295400000,
+    "artistId": "532",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14038",
+    "dateFrom": 1723293000000,
+    "dateTo": 1723295100000,
+    "artistId": "665",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12643",
+    "dateFrom": 1723294800000,
+    "dateTo": 1723298400000,
+    "artistId": "806",
+    "stageId": "528",
+    "categoryId": "22"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12602",
+    "dateFrom": 1723294800000,
+    "dateTo": 1723300200000,
+    "artistId": "787",
+    "stageId": "529",
+    "categoryId": "19"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14040",
+    "dateFrom": 1723295700000,
+    "dateTo": 1723298100000,
+    "artistId": "656",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14059",
+    "dateFrom": 1723296600000,
+    "dateTo": 1723298400000,
+    "artistId": "751",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14042",
+    "dateFrom": 1723296900000,
+    "dateTo": 1723299300000,
+    "artistId": "672",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14057",
+    "dateFrom": 1723298400000,
+    "dateTo": 1723300200000,
+    "artistId": "750",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12620",
+    "dateFrom": 1723298400000,
+    "dateTo": 1723305600000,
+    "artistId": "793",
+    "stageId": "530",
+    "categoryId": "21"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14044",
+    "dateFrom": 1723298400000,
+    "dateTo": 1723301100000,
+    "artistId": "673",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12591",
+    "dateFrom": 1723298700000,
+    "dateTo": 1723303800000,
+    "artistId": "780",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14036",
+    "dateFrom": 1723300200000,
+    "dateTo": 1723302000000,
+    "artistId": "744",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14046",
+    "dateFrom": 1723301100000,
+    "dateTo": 1723303500000,
+    "artistId": "531",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14048",
+    "dateFrom": 1723301400000,
+    "dateTo": 1723304400000,
+    "artistId": "522",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14041",
+    "dateFrom": 1723302000000,
+    "dateTo": 1723303800000,
+    "artistId": "818",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12644",
+    "dateFrom": 1723302000000,
+    "dateTo": 1723305600000,
+    "artistId": "807",
+    "stageId": "528",
+    "categoryId": "22"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14049",
+    "dateFrom": 1723302900000,
+    "dateTo": 1723305600000,
+    "artistId": "648",
+    "stageId": "573",
+    "categoryId": "16"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12592",
+    "dateFrom": 1723303800000,
+    "dateTo": 1723311900000,
+    "artistId": "781",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14050",
+    "dateFrom": 1723304700000,
+    "dateTo": 1723307700000,
+    "artistId": "504",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14052",
+    "dateFrom": 1723305300000,
+    "dateTo": 1723307700000,
+    "artistId": "642",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12629",
+    "dateFrom": 1723305600000,
+    "dateTo": 1723312800000,
+    "artistId": "794",
+    "stageId": "530",
+    "categoryId": "21"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14043",
+    "dateFrom": 1723305600000,
+    "dateTo": 1723307400000,
+    "artistId": "746",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14053",
+    "dateFrom": 1723307400000,
+    "dateTo": 1723310100000,
+    "artistId": "681",
+    "stageId": "573",
+    "categoryId": "16"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14045",
+    "dateFrom": 1723307400000,
+    "dateTo": 1723309200000,
+    "artistId": "747",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14054",
+    "dateFrom": 1723308000000,
+    "dateTo": 1723311600000,
+    "artistId": "506",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14055",
+    "dateFrom": 1723309200000,
+    "dateTo": 1723311900000,
+    "artistId": "696",
+    "stageId": "528",
+    "categoryId": "15"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14056",
+    "dateFrom": 1723310100000,
+    "dateTo": 1723313400000,
+    "artistId": "664",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12606",
+    "dateFrom": 1723311000000,
+    "dateTo": 1723314600000,
+    "artistId": "788",
+    "stageId": "529",
+    "categoryId": "20"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14047",
+    "dateFrom": 1723311000000,
+    "dateTo": 1723312800000,
+    "artistId": "748",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14060",
+    "dateFrom": 1723311900000,
+    "dateTo": 1723314600000,
+    "artistId": "655",
+    "stageId": "573",
+    "categoryId": "16"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14058",
+    "dateFrom": 1723311900000,
+    "dateTo": 1723315500000,
+    "artistId": "534",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12593",
+    "dateFrom": 1723311900000,
+    "dateTo": 1723318200000,
+    "artistId": "782",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14074",
+    "dateFrom": 1723312800000,
+    "dateTo": 1723314600000,
+    "artistId": "752",
+    "stageId": "570",
+    "categoryId": "17"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12628",
+    "dateFrom": 1723312800000,
+    "dateTo": 1723320000000,
+    "artistId": "795",
+    "stageId": "530",
+    "categoryId": "21"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14061",
+    "dateFrom": 1723313700000,
+    "dateTo": 1723316400000,
+    "artistId": "695",
+    "stageId": "528",
+    "categoryId": "15"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14062",
+    "dateFrom": 1723315200000,
+    "dateTo": 1723317900000,
+    "artistId": "821",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14063",
+    "dateFrom": 1723315800000,
+    "dateTo": 1723320000000,
+    "artistId": "471",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14064",
+    "dateFrom": 1723316400000,
+    "dateTo": 1723320000000,
+    "artistId": "649",
+    "stageId": "573",
+    "categoryId": "16"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14065",
+    "dateFrom": 1723318200000,
+    "dateTo": 1723321800000,
+    "artistId": "704",
+    "stageId": "528",
+    "categoryId": "15"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12594",
+    "dateFrom": 1723318200000,
+    "dateTo": 1723322700000,
+    "artistId": "783",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12601",
+    "dateFrom": 1723320000000,
+    "dateTo": 1723329000000,
+    "artistId": "786",
+    "stageId": "529",
+    "categoryId": "18"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14067",
+    "dateFrom": 1723320300000,
+    "dateTo": 1723323300000,
+    "artistId": "502",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14066",
+    "dateFrom": 1723320300000,
+    "dateTo": 1723324200000,
+    "artistId": "678",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14068",
+    "dateFrom": 1723321800000,
+    "dateTo": 1723325400000,
+    "artistId": "527",
+    "stageId": "573",
+    "categoryId": "16"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "12595",
+    "dateFrom": 1723322700000,
+    "dateTo": 1723328400000,
+    "artistId": "784",
+    "stageId": "532",
+    "categoryId": "24"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14069",
+    "dateFrom": 1723323600000,
+    "dateTo": 1723327200000,
+    "artistId": "693",
+    "stageId": "528",
+    "categoryId": "15"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14070",
+    "dateFrom": 1723324500000,
+    "dateTo": 1723328700000,
+    "artistId": "468",
+    "stageId": "571",
+    "categoryId": "12"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14071",
+    "dateFrom": 1723325700000,
+    "dateTo": 1723329000000,
+    "artistId": "670",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14072",
+    "dateFrom": 1723327200000,
+    "dateTo": 1723339800000,
+    "artistId": "694",
+    "stageId": "528",
+    "categoryId": "15"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14077",
+    "dateFrom": 1723327200000,
+    "dateTo": 1723339800000,
+    "artistId": "697",
+    "stageId": "528",
+    "categoryId": "15"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14073",
+    "dateFrom": 1723329000000,
+    "dateTo": 1723332600000,
+    "artistId": "658",
+    "stageId": "572",
+    "categoryId": "13"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14075",
+    "dateFrom": 1723330800000,
+    "dateTo": 1723333500000,
+    "artistId": "682",
+    "stageId": "569",
+    "categoryId": "14"
+  },
+  {
+    "slug": "ba2024",
+    "eventId": "14076",
+    "dateFrom": 1723335300000,
+    "dateTo": 1723337700000,
+    "artistId": "500",
+    "stageId": "569",
+    "categoryId": "14"
+  }
+]
