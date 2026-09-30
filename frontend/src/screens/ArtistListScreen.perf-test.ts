@@ -1,4 +1,5 @@
 import { measureFunction } from 'reassure';
+import { MEASURE_OPTIONS } from '../../tests/setup/perfOptions';
 import { buildSections } from './ArtistListScreen';
 import type { DbArtist } from '../types/backend';
 
@@ -18,11 +19,11 @@ import artistsFixture from '../../tests/fixtures/generated/ba2025/artists.json';
 const ARTISTS = (artistsFixture as unknown as DbArtist[]).filter((a) => a.isPlayable);
 
 test('buildSections over the full lineup', async () => {
-  await measureFunction(() => buildSections(ARTISTS));
+  await measureFunction(() => buildSections(ARTISTS), MEASURE_OPTIONS);
 });
 
 test('buildSections over a typical search result', async () => {
   // What a few keystrokes narrow to — the grouping and collation still run in full.
   const narrowed = ARTISTS.filter((a) => a.name.toLowerCase().includes('a'));
-  await measureFunction(() => buildSections(narrowed));
+  await measureFunction(() => buildSections(narrowed), MEASURE_OPTIONS);
 });

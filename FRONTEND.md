@@ -85,10 +85,15 @@ Node; only a real phone measures the phone.
 ### CI
 
 `.github/workflows/frontend.yml` runs the first three layers on every push and pull request touching
-`frontend/`. The performance job is **advisory** (`continue-on-error`): render counts are comparable
-anywhere, but durations on a shared runner are not. It measures the base revision and the current one
-in the same job, which cancels the machine variance that makes a committed baseline useless there —
-and skips with a notice while the base branch has no performance suite.
+`frontend/`. The performance job is **advisory** (`continue-on-error`): render counts are comparable anywhere,
+durations are not. It measures the base revision and the current one in the same job, which cancels
+the machine variance that makes a committed baseline useless there — and skips with a notice while
+the base branch has no performance suite.
+
+Read a duration report with the noise floor in mind. Identical code compared against itself moves by
+up to ~8% locally, and the scenarios **drift together** with machine load: if every row moved the
+same way by a similar amount, nothing changed. `tests/setup/perfOptions.ts` documents the two noise
+sources and why the suite samples 30 runs after 3 warmups rather than Reassure's default 10-and-1.
 
 Native E2E is deliberately absent from CI: it needs a built binary, and those come from EAS cloud
 builds whose minutes are a real quota, unlike Actions minutes on a public repo.

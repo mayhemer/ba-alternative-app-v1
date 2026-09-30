@@ -101,9 +101,12 @@ jobs:
   perf:
     name: performance (advisory)
     runs-on: ubuntu-latest
-    # Never blocks a merge. Render counts are comparable anywhere, but durations
-    # on a shared runner are not, and one noisy scenario (buildSections) measured
-    # 32-72% stability even locally. Read the report; do not gate on it.
+    # Never blocks a merge. Render counts are comparable anywhere; durations are
+    # not. Even locally, identical code compared against itself moves by up to
+    # ~8% — and the whole suite drifts together with machine load, so a report
+    # where everything moved the same way means nothing changed. A shared runner
+    # is worse. Read it; do not gate on it. (tests/setup/perfOptions.ts has the
+    # measurements behind those numbers.)
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
