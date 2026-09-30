@@ -157,9 +157,13 @@ interface DataAdapter {
 ```
 
 `validate` returns a record rather than the originally planned bare boolean: the caller needs the
-server's clock reading. **The watermark must be the server's `lastSyncedAt`, never `Date.now()`** —
-`/validity/{t}` answers `changed: lastSyncedAt > t`, so a local reading is compared against the
-wrong scale and suppresses every future update.
+server's clock reading. `GET /{slug}/validity` takes **no** caller watermark — it answers
+`{lastSyncedAt, artistsSyncedAt}` and the *client* compares, so the response is identical for every
+poller and CloudFront serves the whole fleet one cached object.
+
+**The watermark must be the server's `lastSyncedAt`, never `Date.now()`**: the comparison is
+`result.lastSyncedAt <= since`, so a local clock reading is measured against the wrong scale and
+suppresses every future update.
 
 Bios are fetched separately from `populate` because they are an order of magnitude larger than the
 datasets; making first paint wait for them is what splitting them out was meant to avoid.
@@ -172,7 +176,7 @@ datasets; making first paint wait for them is what splitting them out was meant 
 | `baUserApiAdapter` | Authenticated interests sync |
 | `baShareApiAdapter` | Share tokens and friends' schedules |
 
-- `validate` calls `GET /{slug}/validity/{time}`.
+- `validate` calls `GET /{slug}/validity` (no time segment — see above).
 - `populate` calls `GET /{slug}/artists`, `/categories`, `/stages`, `/schedule` in parallel.
 - `fetchAllBios` calls `GET /{slug}/bios`.
 
