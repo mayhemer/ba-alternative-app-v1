@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# ── One command to check everything that runs without a device ────────────────
+#
+# Fail-fast and in cheapest-first order, so a typo is reported in seconds rather
+# than after the browser suite. Native E2E is deliberately NOT run here: Maestro
+# needs a device or simulator attached and a build installed on it, so it is
+# printed as a follow-up instead of blocking this.
+#
+#   npm run verify
+
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+step() { printf '\n\033[1m── %s ───────────────────────────────────────\033[0m\n' "$1"; }
+
+step "Types"
+npm run --silent tscheck
+
+step "Lint"
+npx eslint src
+
+step "Unit + integration (ios, android, web)"
+npx jest
+
+step "Performance regressions"
+# Compares against .reassure/baseline.perf. The baseline is machine-specific, so
+# re-record it locally with `npm run test:perf:baseline` before trusting a
+# duration change; render counts are comparable anywhere.
+if [ -f .reassure/baseline.perf ]; then
+  npm run --silent test:perf
+else
+  echo "no baseline yet — run 'npm run test:perf:baseline' first"
+fi
+
+step "Web end-to-end"
+# Needs the exported build the tests actually run against.
+npm run --silent build:web
+npx playwright test
+
+printf '\n\033[32m✓ everything that runs without a device is green\033[0m\n'
+cat <<'NEXT'
+
+Not covered above — run against a real device or simulator:
+
+  1. start the fixture API:   npm run fixtures:serve
+  2. build with the app pointed at it (the origin is inlined at build time):
+       EXPO_PUBLIC_API_ORIGIN=http://<your-lan-ip>:4010 npm run build:android:preview
+     (Android emulator uses http://10.0.2.2:4010; iOS simulator, localhost)
+  3. install that build, then:  maestro test e2e/native/
+
+NEXT
