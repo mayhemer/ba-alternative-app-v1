@@ -83,7 +83,7 @@ export async function coolDown(d: Device, maxC: number, timeoutMs = 10 * 60_000)
 
 // ── Cold start ────────────────────────────────────────────────────────────────
 
-// Matched against StartupGate's PERF_MARK_STARTUP_READY — change both together.
+// Matched against src/utils/perfMarks.ts — change both together.
 const READY_MARK = '[perf] startup:ready';
 
 export type ColdStart = { firstFrameMs: number; readyMs: number | null };
@@ -111,4 +111,30 @@ export async function coldStart(d: Device, component: string, timeoutMs = 30_000
     await sleep(250);
   }
   return { firstFrameMs, readyMs: null };
+}
+
+// ── Gaps between perf marks ───────────────────────────────────────────────────
+
+/** Empties the device log, so the next read sees only what follows. */
+export function clearLog(d: Device): void {
+  run('adb', ['-s', d.serial, 'logcat', '-c']);
+}
+
+/**
+ * Milliseconds from the last `[perf] <from>` mark to the first `[perf] <to>`
+ * after it, by the device's own log timestamps — so adb's latency is not in it.
+ * Null when either is missing: a build without marks, or work that did not
+ * finish inside the wait.
+ */
+export function markGapMs(d: Device, from: string, to: string): number | null {
+  const log = run('adb', ['-s', d.serial, 'logcat', '-d', '-v', 'epoch']).out;
+  const at = (name: string): number[] => [...log.matchAll(new RegExp(`^\\s*([\\d.]+)\\s.*\\[perf\\] ${name}`, 'gm'))]
+    .map((m) => Number(m[1]));
+  const starts = at(from);
+  if (starts.length === 0) {
+    return null;
+  }
+  const start = starts[starts.length - 1];
+  const end = at(to).find((t) => t >= start);
+  return end === undefined ? null : Math.round((end - start) * 1000);
 }

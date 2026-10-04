@@ -5,6 +5,7 @@ import { useTimelineFilter } from '../../context/TimelineFilterContext';
 import { CONTENT_MAX_WIDTH, NOW_BUTTON_ARROW_SIZE } from './timelineLayout';
 import { colors } from '../../styling/tokens';
 import { currentTimeMs } from '../../utils/clock';
+import { perfMark } from '../../utils/perfMarks';
 
 // Module-level component — registered as BottomBar ContentComponent for TimelineScreen.
 // Reads its own context directly; no props needed.
@@ -55,6 +56,9 @@ export function DaySwitcher({ screenKey }: Props) {
               if (dayStart === selectedDayStart && isToday) {
                 requestScrollToNow(screenKey);
               } else {
+                // Start of the day-switch mount the device perf runner times;
+                // TimelineView marks the end.
+                perfMark('day:select');
                 setSelectedDayStart(dayStart);
               }
             }}

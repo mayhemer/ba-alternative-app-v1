@@ -31,6 +31,7 @@ import {
 } from './timelineLayout';
 import { colors } from '../../styling/tokens';
 import { currentTimeMs } from '../../utils/clock';
+import { perfMark, perfMarksEnabled } from '../../utils/perfMarks';
 import type { DbArtist, DbCategory, DbEvent } from '../../types/backend';
 import type { ConflictOverlap } from '../../utils/conflictUtils';
 
@@ -298,6 +299,15 @@ export function TimelineView({
     });
     return () => cancelAnimationFrame(frame);
   }, [mountComplete, mountWindow, mountWidth, mountHeight]);
+
+  // The end of a day's mount, a frame after the last slice so the timestamp is
+  // paint rather than the state change. Perf builds only: the device runner
+  // times it from DaySwitcher's `day:select`.
+  useEffect(() => {
+    if (!perfMarksEnabled() || !mountComplete) { return; }
+    const frame = requestAnimationFrame(() => { perfMark('timeline:mounted'); });
+    return () => cancelAnimationFrame(frame);
+  }, [mountComplete]);
 
   // ── Scroll to a specific event (centered) ────────────────────────────────────
   // Fired both by the day-switcher "now" button and when navigating here from an

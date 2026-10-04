@@ -19,7 +19,7 @@ import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { adb, type Device, installedVersion, PACKAGE, pickDevice, shell } from './lib/adb.ts';
-import { batteryTempC, coldStart, coolDown, type Frames, type Memory, readFrames, readMemory, resetFrames } from './lib/androidMetrics.ts';
+import { batteryTempC, clearLog, coldStart, coolDown, type Frames, type Memory, markGapMs, readFrames, readMemory, resetFrames } from './lib/androidMetrics.ts';
 import { dumpUi, find, tap, tapWhenVisible, waitFor } from './lib/androidUi.ts';
 import { buildByVersion, staleness } from './lib/eas.ts';
 import { type FixtureProcess, startFixtureProcess } from './lib/fixtureProcess.ts';
@@ -30,7 +30,8 @@ const args = parseArgs(process.argv.slice(2));
 const RUNS = Number(args.runs ?? 7);
 const MAX_TEMP = Number(args['max-temp'] ?? 36);
 const LIVE = args['allow-live-api'] === true;
-const ALL = ['cold-start', 'list-fling', 'search-typing', 'day-switch'];
+// In this order on purpose: each leaves the app where the next one starts.
+const ALL = ['cold-start', 'list-fling', 'detail-open', 'search-typing', 'day-switch', 'timeline-pan'];
 const SCENARIOS = typeof args.scenarios === 'string' ? args.scenarios.split(',') : ALL;
 
 const d: Device = pickDevice(typeof args.serial === 'string' ? args.serial : undefined);
@@ -165,6 +166,30 @@ async function scenarioListFling(): Promise<void> {
   await scrollListToTop();
 }
 
+async function scenarioDetailOpen(): Promise<void> {
+  // The artist sheet: a bottom-sheet animation over the list, plus the hero
+  // image and the HTML bio rendered into it — the heaviest single tap in the app.
+  await openSection('Artists');
+  await scrollListToTop();
+  // Whichever artist is first: the phone keeps the edition it was last on. A row
+  // is the one element whose label merges name, genre and country.
+  const row = dumpUi(d).find((n) => /^[^,]+, [^,]+, /.test(n.desc || n.text));
+  if (row === undefined) {
+    throw new Error('no artist row on screen — is the lineup loaded?');
+  }
+  for (let i = 1; i <= RUNS; i++) {
+    const tempC = await coolDown(d, MAX_TEMP);
+    resetFrames(d);
+    tap(d, row);
+    await sleep(2500); // the sheet's spring, then the bio
+    const f = readFrames(d);
+    record('detail-open', framesSample(f, tempC));
+    console.log(`    run ${i}: janky ${f.jankyPct}%, p90 ${f.p90} ms over ${f.total} frames`);
+    shell(d, 'input keyevent KEYCODE_BACK'); // closes the sheet (back history)
+    await sleep(1500);
+  }
+}
+
 async function scenarioSearchTyping(): Promise<void> {
   await openSection('Artists');
   const field = find(dumpUi(d), { id: 'artist-search' }) ?? (await waitFor(d, { cls: 'android.widget.EditText' }));
@@ -188,9 +213,12 @@ async function scenarioSearchTyping(): Promise<void> {
 const WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
 async function scenarioDaySwitch(): Promise<void> {
-  // Leave search first, so the keyboard is not up over the timeline.
-  shell(d, 'input keyevent KEYCODE_BACK');
-  await sleep(800);
+  // Leave search first, so the keyboard is not up over the timeline. Only when it
+  // is up: with nothing to dismiss, BACK walks the app's history and can leave it.
+  if (/mInputShown=true/.test(shell(d, 'dumpsys input_method'))) {
+    shell(d, 'input keyevent KEYCODE_BACK');
+    await sleep(800);
+  }
   await openSection('Program');
   const days = dumpUi(d).filter((n) => WEEKDAYS.includes(n.text.toUpperCase()));
   if (days.length < 2) {
@@ -203,10 +231,45 @@ async function scenarioDaySwitch(): Promise<void> {
     await sleep(3000); // unmeasured: get back to day A and let it settle
     const tempC = await coolDown(d, MAX_TEMP);
     resetFrames(d);
+    clearLog(d);
     tap(d, b);
     await sleep(4000); // the progressive mount spreads the day over many frames
     const f = readFrames(d);
-    record('day-switch', framesSample(f, tempC));
+    // The JS side of the switch, which frame stats cannot see: from the tap's
+    // handler to the frame after the last slice of the day mounted. Null on a
+    // build older than the marks.
+    const mountMs = markGapMs(d, 'day:select', 'timeline:mounted');
+    record('day-switch', { ...framesSample(f, tempC), mountMs });
+    console.log(`    run ${i}: janky ${f.jankyPct}%, p90 ${f.p90} ms, slow UI thread ${f.slowUiThread} over ${f.total} frames, mounted in ${mountMs ?? 'n/a'} ms`);
+  }
+}
+
+async function scenarioTimelinePan(): Promise<void> {
+  // Panning a settled day — the interaction the festival is spent in. No JS
+  // render should happen (DESIGN.md, progressive mount); what is left is the UI
+  // thread moving several hundred native views. Each run pans out and back, so
+  // every run starts from the same place.
+  const midY = Math.round(H * 0.45);
+  const pan = (fromX: number, toX: number): void => {
+    shell(d, `input swipe ${Math.round(W * fromX)} ${midY} ${Math.round(W * toX)} ${midY} 150`);
+  };
+  const tilt = (fromY: number, toY: number): void => {
+    shell(d, `input swipe ${Math.round(W / 2)} ${Math.round(H * fromY)} ${Math.round(W / 2)} ${Math.round(H * toY)} 150`);
+  };
+  await openSection('Program'); // a no-op after day-switch; needed when run alone
+  await sleep(2000); // whatever day-switch left mounting, finished
+  for (let i = 1; i <= RUNS; i++) {
+    const tempC = await coolDown(d, MAX_TEMP);
+    resetFrames(d);
+    pan(0.8, 0.2); await sleep(400);
+    pan(0.8, 0.2); await sleep(400);
+    tilt(0.7, 0.35); await sleep(400);
+    pan(0.2, 0.8); await sleep(400);
+    pan(0.2, 0.8); await sleep(400);
+    tilt(0.35, 0.7);
+    await sleep(1500);
+    const f = readFrames(d);
+    record('timeline-pan', framesSample(f, tempC));
     console.log(`    run ${i}: janky ${f.jankyPct}%, p90 ${f.p90} ms, slow UI thread ${f.slowUiThread} over ${f.total} frames`);
   }
 }
@@ -214,14 +277,22 @@ async function scenarioDaySwitch(): Promise<void> {
 const RUNNERS: Record<string, () => Promise<void>> = {
   'cold-start': scenarioColdStart,
   'list-fling': scenarioListFling,
+  'detail-open': scenarioDetailOpen,
   'search-typing': scenarioSearchTyping,
   'day-switch': scenarioDaySwitch,
+  'timeline-pan': scenarioTimelinePan,
 };
 
 // ── Run ───────────────────────────────────────────────────────────────────────
 
 let failed = false;
 try {
+  // Every other scenario starts inside the running app, which cold-start leaves
+  // behind; without it, launch the app once, unmeasured.
+  if (!SCENARIOS.includes('cold-start')) {
+    await coldStart(d, component);
+    await sleep(2000);
+  }
   for (const name of SCENARIOS) {
     if (RUNNERS[name] === undefined) {
       throw new Error(`unknown scenario "${name}" — one of ${ALL.join(', ')}`);
