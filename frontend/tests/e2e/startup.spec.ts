@@ -36,8 +36,11 @@ test('opens on cached data when the network is gone', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByText('LOADING ARTISTS…')).toHaveCount(0, { timeout: 20_000 });
 
-  // …then the network disappears and the app is restarted.
-  await page.unrouteAll();
+  // …then the network disappears and the app is restarted. 'wait' lets requests
+  // still being fetched from the fixture server finish first: removed mid-fetch,
+  // their handler fulfils a route the reload has already cancelled, and that
+  // error fails the test (about 1 run in 10).
+  await page.unrouteAll({ behavior: 'wait' });
   await cutNetwork(page);
   await page.reload();
 
