@@ -155,6 +155,9 @@ Three states, applied consistently across all views:
 - Artist blocks sized proportionally to set duration.
 - Each category is a horizontal swim lane.
 - Fixed scale — no zoom. Default scale tuned empirically for a typical festival day (12–16 hours).
+- **Festival time.** Days (06:00 → 06:00), set times and day labels are always Europe/Prague time,
+  whatever zone the device is in — someone planning from abroad sees the same timeline as someone on
+  site (`utils/festivalTime`).
 
 ### Top Bar Controls
 
