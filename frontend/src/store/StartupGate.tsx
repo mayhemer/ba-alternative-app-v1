@@ -5,6 +5,14 @@ import { SplashScreen } from '../screens/SplashScreen';
 import { startSync, stop as stopSync } from '../sync/backgroundSyncService';
 import { hydrateLocalState } from './uiStatePersistence';
 
+// Perf builds only (EXPO_PUBLIC_PERF_MARKS=1 in the `perf` EAS profile). The
+// device perf runner reads this line from logcat to time a cold start to the
+// moment the app is usable — `am start -W` only reports the first frame, which
+// is the splash. Inlined at build time, so other builds carry no marker.
+const PERF_MARKS = process.env.EXPO_PUBLIC_PERF_MARKS === '1';
+// Matched literally by scripts/test-perf-device.ts — change both together.
+const PERF_MARK_STARTUP_READY = '[perf] startup:ready';
+
 // ── Startup umbrella ──────────────────────────────────────────────────────────
 //
 // Single owner of the boot lifecycle. After the slug resolves it runs external
@@ -38,6 +46,18 @@ export function StartupGate({ children }: { children: React.ReactNode }) {
     });
     return () => cancelAnimationFrame(frame);
   }, []);
+
+  // The first frame painted with the app rather than the splash. Logged a frame
+  // after `ready` flips so the timestamp is paint, not the state change.
+  useEffect(() => {
+    if (!PERF_MARKS || !ready) {
+      return;
+    }
+    const frame = requestAnimationFrame(() => {
+      console.log(PERF_MARK_STARTUP_READY);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [ready]);
 
   const runStartup = useCallback((slug: string): void => {
     setReady(false);

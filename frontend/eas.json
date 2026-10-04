@@ -30,6 +30,26 @@
       "android": {
         "buildType": "app-bundle"
       }
+    },
+    "perf": {
+      "extends": "preview",
+      "env": {
+        "EXPO_PUBLIC_API_ORIGIN": "http://localhost:4010",
+        "EXPO_PUBLIC_DEFAULT_SLUG": "ba2025",
+        "EXPO_PUBLIC_PERF_MARKS": "1",
+        "BA_ALLOW_CLEARTEXT": "1"
+      }
+    },
+    "e2e-ios-sim": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": true,
+        "buildConfiguration": "Release"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_ORIGIN": "http://localhost:4010",
+        "EXPO_PUBLIC_DEFAULT_SLUG": "ba2025"
+      }
     }
   },
   "submit": {

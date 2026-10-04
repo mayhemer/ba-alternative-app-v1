@@ -37,7 +37,12 @@ type AppContextValue = {
 const STORAGE_KEY_SLUG = 'app:selectedSlug';
 // TODO: Change the default slug automatically for the first installation to be
 // the next year when we e.g. one month after BA ended.
-const DEFAULT_SLUG = 'ba2027';
+// Test builds override this through their EAS profile: the fixtures cover
+// ba2025, and the real default is the next festival, which has no captured data
+// — an E2E or perf run would otherwise boot into an empty, entirely healthy app.
+// Written as a static member expression on purpose: that is the only form
+// Expo's Babel plugin inlines at build time.
+const DEFAULT_SLUG = process.env.EXPO_PUBLIC_DEFAULT_SLUG ?? 'ba2027';
 
 // ── Reducer ───────────────────────────────────────────────────────────────────
 

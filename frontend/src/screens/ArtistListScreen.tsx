@@ -137,6 +137,9 @@ function ArtistListScreenInner() {
           <TextInput
             value={searchQuery}
             onChangeText={setSearchQuery}
+            // Stable handle for native E2E (Maestro): a placeholder is not reliably
+            // exposed as matchable text on iOS. Maps to accessibilityIdentifier.
+            testID="artist-search"
             placeholder="Search artists…"
             placeholderTextColor="#555555"
             className="h-9 px-3 bg-surface text-textPrimary text-sm"
