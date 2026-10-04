@@ -35,20 +35,27 @@ export function useBottomSheetMount(
   const [mountIndex, setMountIndex] = useState<number | null>(null);
   const { width, height } = useWindowDimensions();
 
-  // Both held in refs. The mount index is sampled once and must not follow later
-  // state changes — the library re-snaps the sheet whenever its `index` prop
-  // changes, and closing resets the presentation, which would yank the sheet
-  // back open mid-close. `isOpen` is read by an effect that must *not* re-run
-  // when it changes.
-  const openIndexRef = useRef(openIndex);
-  openIndexRef.current = openIndex;
+  // Read by an effect that must *not* re-run when it changes.
   const isOpenRef = useRef(isOpen);
   isOpenRef.current = isOpen;
 
+  // Mounting is decided while rendering, not in an effect: an effect would let
+  // React commit the open state with no sheet in it first, then mount the sheet
+  // in a second commit — one render of the whole tree that changes nothing on
+  // screen, on every open. Setting state during render instead makes React
+  // re-render before anything is committed. The mount index is sampled only
+  // here, once: it must not follow later state changes — the library re-snaps
+  // the sheet whenever its `index` prop changes, and closing resets the
+  // presentation, which would yank the sheet back open mid-close.
+  //
+  // Safe because every caller clears its open state in the same callback that
+  // calls `onClosed`, so a closed sheet is never seen as open and unmounted.
+  if (isOpen && mountIndex === null) {
+    setMountIndex(openIndex);
+  }
+
   useEffect(() => {
-    if (isOpen) {
-      setMountIndex((current) => (current === null ? openIndexRef.current : current));
-    } else {
+    if (!isOpen) {
       // The unmount itself waits for `onClosed`, so this animation can play out.
       sheetRef.current?.close();
     }
