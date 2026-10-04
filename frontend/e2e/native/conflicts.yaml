@@ -4,15 +4,22 @@ name: two clashing must-sees show up as a conflict
 - runFlow: common/launch-fresh.yaml
 # EXORCIZPHOBIA and CRYSTAL LAKE overlap on Wednesday in the ba2025 capture.
 # Two presses each = "must see"; only must-sees count as conflicts.
-- tapOn:
-    id: "artist-search"
+# The search narrows the list to one row, so its star is element 0.
+- tapOn: { id: "artist-search" }
+- waitForAnimationToEnd
 - inputText: "exorcizphobia"
-- tapOn: { label: "Toggle interest", index: 0 }
-- tapOn: { label: "Toggle interest", index: 0 }
+- tapOn: { text: "Toggle interest", index: 0 }
+- tapOn: { text: "Toggle interest", index: 0 }
+# Tapping the star moves focus off the field, and eraseText only clears the
+# focused one — so focus it again first.
+- tapOn: { id: "artist-search" }
+- waitForAnimationToEnd
 - eraseText: 20
 - inputText: "crystal lake"
-- tapOn: { label: "Toggle interest", index: 0 }
-- tapOn: { label: "Toggle interest", index: 0 }
+- tapOn: { text: "Toggle interest", index: 0 }
+- tapOn: { text: "Toggle interest", index: 0 }
+- tapOn: { id: "artist-search" }
+- waitForAnimationToEnd
 - eraseText: 20
 - runFlow:
     file: common/open-section.yaml

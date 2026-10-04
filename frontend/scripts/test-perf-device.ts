@@ -18,11 +18,11 @@
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { startFixtureServer } from '../tests/server/fixtureServer.ts';
 import { adb, type Device, installedVersion, PACKAGE, pickDevice, shell } from './lib/adb.ts';
 import { batteryTempC, coldStart, coolDown, type Frames, type Memory, readFrames, readMemory, resetFrames } from './lib/androidMetrics.ts';
 import { dumpUi, find, tap, tapWhenVisible, waitFor } from './lib/androidUi.ts';
 import { buildByVersion, staleness } from './lib/eas.ts';
+import { type FixtureProcess, startFixtureProcess } from './lib/fixtureProcess.ts';
 import { EXIT, parseArgs, run, skip, sleep } from './lib/proc.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -68,13 +68,15 @@ process.on('SIGINT', () => { console.log('\ninterrupted — restoring the device
 shell(d, 'svc power stayon usb');
 undo.push(() => shell(d, 'svc power stayon false'));
 
-let server: Awaited<ReturnType<typeof startFixtureServer>> | null = null;
+let server: FixtureProcess | null = null;
 if (!LIVE) {
   // The phone's localhost:4010 becomes the Mac's, over USB — no Wi-Fi involved.
   adb(d, ['reverse', 'tcp:4010', 'tcp:4010']);
   undo.push(() => run('adb', ['-s', d.serial, 'reverse', '--remove', 'tcp:4010']));
-  server = await startFixtureServer(4010);
-  undo.push(() => { void server?.close(); });
+  // A separate process, so the synchronous adb calls below — `am start -W`
+  // blocks for seconds — never stall the app's requests mid-measurement.
+  server = await startFixtureProcess(4010);
+  undo.push(() => server?.close());
 
   // Fixture traffic goes over USB, so Wi-Fi only adds other apps syncing in the
   // background. Turned back on afterwards, if it was on.
@@ -141,7 +143,7 @@ async function scenarioColdStart(): Promise<void> {
     record('cold-start', { firstFrameMs: c.firstFrameMs, readyMs: c.readyMs, ...memorySample(mem), tempC });
     console.log(`    run ${i}: first frame ${c.firstFrameMs} ms, ready ${c.readyMs ?? 'n/a'} ms`);
 
-    if (i === 1 && server !== null && !server.requests.some((r) => /^\/ba\d+\//.test(r))) {
+    if (i === 1 && server !== null && !(await server.requests()).some((r) => /^\/ba\d+\//.test(r))) {
       throw new Error('the app made no requests to the fixture API — is a perf build installed? '
         + '(`npm run install:perf:android`)');
     }

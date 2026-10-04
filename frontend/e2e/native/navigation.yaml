@@ -1,23 +1,34 @@
 appId: cz.janbambas.ba
 name: reaches every section from the drawer
 ---
+# The header shows the festival logo, not a screen title, so each section is
+# recognised by content only it has. On the first festival day (the warm-up
+# Tuesday) the Program has a single lane, "Obscure"; the support programme's
+# "Exhibition" lane exists nowhere else — so the two timelines cannot be
+# mistaken for each other.
 - runFlow: common/launch-fresh.yaml
 - runFlow:
     file: common/open-section.yaml
     env: { SECTION: "Program" }
-- assertVisible: "Timeline"
+- extendedWaitUntil:
+    visible: ".*Obscure.*"
+    timeout: 20000
 - runFlow:
     file: common/open-section.yaml
     env: { SECTION: "Support Program" }
-- assertVisible: "Support"
+- extendedWaitUntil:
+    visible: ".*Exhibition.*"
+    timeout: 20000
 - runFlow:
     file: common/open-section.yaml
     env: { SECTION: "Conflicts" }
-- assertVisible: "Conflicts"
+- assertVisible: "No conflicts in your schedule."
 - runFlow:
     file: common/open-section.yaml
     env: { SECTION: "Settings" }
-- assertVisible: "BA2025"
+# The active edition's row is labelled "BA2025, ACTIVE" — asserting that exact
+# label also proves the e2e build started on the edition its fixtures cover.
+- assertVisible: "BA2025, ACTIVE"
 - runFlow:
     file: common/open-section.yaml
     env: { SECTION: "Artists" }

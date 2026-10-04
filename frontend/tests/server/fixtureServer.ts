@@ -93,6 +93,11 @@ export async function startFixtureServer(port = 0): Promise<FixtureServer> {
     };
 
     // Control endpoints, kept out of the API namespace and never served offline.
+    if (url === '/__control/requests') {
+      send(200, JSON.stringify(requests.filter((r) => !r.startsWith('/__control/'))));
+      return;
+    }
+
     const control = /^\/__control\/(offline|online|bump\/([^/]+))$/.exec(url);
     if (control !== null) {
       if (control[1] === 'offline') { offline = true; }

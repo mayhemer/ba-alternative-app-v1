@@ -21,8 +21,8 @@
 import { existsSync, mkdirSync, rmSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { startFixtureServer } from '../tests/server/fixtureServer.ts';
 import { fetchArtifact, findAppBundle, latestBuild, staleness } from './lib/eas.ts';
+import { startFixtureProcess } from './lib/fixtureProcess.ts';
 import { EXIT, has, must, parseArgs, run, skip } from './lib/proc.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -71,6 +71,15 @@ if (sim.state !== 'Booted') {
 }
 // Blocks until the simulator has finished booting, not merely started.
 must('xcrun', ['simctl', 'bootstatus', sim.udid, '-b']);
+
+// Keyboard hygiene, standard for iOS UI tests: autocorrect and predictive text
+// rewrite what Maestro types, and a dropped character in the search flow
+// ("mstodon") was traced to typing on the simulator — the same keystrokes sent
+// to a real, slower Android phone arrived intact every time.
+for (const key of ['KeyboardAutocorrection', 'KeyboardPrediction', 'KeyboardAutocapitalization',
+  'KeyboardCheckSpelling', 'KeyboardShowPredictionBar']) {
+  run('xcrun', ['simctl', 'spawn', sim.udid, 'defaults', 'write', 'com.apple.Preferences', key, '-bool', 'NO']);
+}
 if (args.show === true) {
   run('open', ['-a', 'Simulator']);
 }
@@ -123,12 +132,13 @@ must('xcrun', ['simctl', 'install', sim.udid, app]);
 
 // ── Fixture API ───────────────────────────────────────────────────────────────
 
+// In its own process: Maestro runs synchronously below and would otherwise
+// block the very server its flows and the app are talking to.
 let server;
 try {
-  server = await startFixtureServer(4010);
+  server = await startFixtureProcess(4010);
 } catch (e) {
-  console.error(`could not start the fixture API on :4010 (${(e as Error).message}).`);
-  console.error('Is `npm run serve:fixtures` already running in another terminal?');
+  console.error(`could not start the fixture API: ${(e as Error).message}`);
   process.exit(EXIT.FAIL);
 }
 
@@ -137,6 +147,11 @@ try {
 rmSync(REPORTS, { recursive: true, force: true });
 mkdirSync(REPORTS, { recursive: true });
 
+// Everything here runs locally: `maestro test` drives this Mac's simulator
+// through an XCTest runner that xcodebuild starts here, and nothing is
+// uploaded — that is the separate `maestro cloud` command, which also needs an
+// account. The CLI does send anonymous usage analytics to PostHog by default,
+// though; switched off for every run of the suite.
 const maestro = run('maestro', [
   'test',
   '--device', sim.udid,
@@ -144,9 +159,9 @@ const maestro = run('maestro', [
   '--output', join(REPORTS, 'junit.xml'),
   '--test-output-dir', REPORTS,
   FLOWS,
-], { stdio: 'inherit' });
+], { stdio: 'inherit', env: { ...process.env, MAESTRO_CLI_NO_ANALYTICS: '1' } });
 
-await server.close();
+server.close();
 console.log(`\nreport: ${join(REPORTS, 'junit.xml')}  (screenshots and logs alongside)`);
 console.log(`checked ${BUNDLE_ID} on ${sim.name}`);
 process.exit(maestro.ok ? EXIT.PASS : EXIT.FAIL);
