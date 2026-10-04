@@ -27,6 +27,18 @@ jest.mock('expo-secure-store', () => {
   };
 });
 
+// Reanimated's Jest build cannot scroll, and warns on every scrollTo() call —
+// the timeline restores its scroll position that way on each mount, so the perf
+// suite, which mounts it a few hundred times, printed it a few hundred times.
+// Only this one message is dropped; every other warning still shows.
+const warn = console.warn;
+jest.spyOn(console, 'warn').mockImplementation((...args: unknown[]) => {
+  if (typeof args[0] === 'string' && args[0].includes('scrollTo() is not supported with Jest')) {
+    return;
+  }
+  warn(...args);
+});
+
 afterEach(() => {
   // Every case starts on the real clock. A case that cares pins it explicitly
   // with setCurrentTimeMs(Date.parse('…+02:00')) — an explicit offset, so the
