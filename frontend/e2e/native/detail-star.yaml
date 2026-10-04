@@ -1,0 +1,18 @@
+appId: cz.janbambas.ba
+name: an artist can be starred from the detail sheet
+---
+- runFlow: common/launch-fresh.yaml
+# Narrow the list to one row, and close the keyboard: while it is up, the
+# list's first tap only dismisses it.
+- tapOn: { id: "artist-search" }
+- waitForAnimationToEnd
+- inputText: "exorcizphobia"
+- pressKey: Enter
+- tapOn: ".*EXORCIZPHOBIA, THRASH METAL.*"
+- waitForAnimationToEnd
+# The row's label carries genre and country too, so an exact match on the bare
+# name is the sheet's title. It is only visible if the sheet exposes its content
+# rather than being one opaque "Bottom Sheet" element.
+- assertVisible: "EXORCIZPHOBIA"
+- tapOn: { text: "Toggle interest", rightOf: "EXORCIZPHOBIA" }
+- assertVisible: ".*Maybe want to see.*"

@@ -403,6 +403,9 @@ export function ConflictDetailSheet() {
       animationConfigs={{ reduceMotion: ReduceMotion.Never }}
       enablePanDownToClose
       onClose={handleSheetClosed}
+      // The library makes the whole sheet one accessibility element by default,
+      // which hides everything in it from VoiceOver: the star, the links, the text.
+      accessible={false}
       backdropComponent={Backdrop}
       handleIndicatorStyle={{
         backgroundColor: colors.borderMid,
