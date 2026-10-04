@@ -1,0 +1,19 @@
+appId: cz.janbambas.ba
+name: a star survives an app restart
+---
+- runFlow: common/launch-fresh.yaml
+# First row's star. One press = "maybe", which "My picks" includes.
+- tapOn:
+    label: "Toggle interest"
+    index: 0
+- stopApp
+# No clearState: this is the cold start a user gets.
+- launchApp
+- extendedWaitUntil:
+    visible: ".*3 INCHES OF BLOOD.*"
+    timeout: 30000
+- tapOn: "View and share schedules"
+- tapOn: "My picks"
+- assertVisible: ".*3 INCHES OF BLOOD.*"
+# Unstarred, so filtered out — proves the filter, not just the list.
+- assertNotVisible: ".*ABBIE FALLS.*"

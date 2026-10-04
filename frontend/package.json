@@ -10,7 +10,10 @@
     "test:perf": "TEST_RUNNER_ARGS=\"--config jest.perf.config.ts --runInBand\" reassure",
     "test:perf:baseline": "TEST_RUNNER_ARGS=\"--config jest.perf.config.ts --runInBand\" reassure --baseline",
     "test:e2e:web": "playwright test",
-    "fixtures:serve": "node --experimental-strip-types --no-warnings tests/server/fixtureServer.ts 4010",
+    "test:e2e:ios": "node --experimental-strip-types --no-warnings scripts/test-e2e-ios.ts",
+    "test:perf:device": "node --experimental-strip-types --no-warnings scripts/test-perf-device.ts",
+    "install:perf:android": "node --experimental-strip-types --no-warnings scripts/install-perf-android.ts",
+    "serve:fixtures": "node --experimental-strip-types --no-warnings tests/server/fixtureServer.ts 4010",
     "verify": "scripts/test-all",
     "doctor": "npx expo-doctor",
     "gen:icons": "node scripts/gen-icons.js",
@@ -22,6 +25,8 @@
     "prebuild:ios": "npx expo prebuild --platform ios --clean",
     "build:ios:preview": "eas build --platform ios --profile preview",
     "build:android:preview": "eas build --platform android --profile preview",
+    "build:android:perf": "eas build --platform android --profile perf",
+    "build:ios:e2e": "eas build --platform ios --profile e2e-ios-sim",
     "build:web": "npx expo export --platform web"
   },
   "dependencies": {

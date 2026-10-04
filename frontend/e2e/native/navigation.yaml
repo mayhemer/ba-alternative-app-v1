@@ -1,0 +1,24 @@
+appId: cz.janbambas.ba
+name: reaches every section from the drawer
+---
+- runFlow: common/launch-fresh.yaml
+- runFlow:
+    file: common/open-section.yaml
+    env: { SECTION: "Program" }
+- assertVisible: "Timeline"
+- runFlow:
+    file: common/open-section.yaml
+    env: { SECTION: "Support Program" }
+- assertVisible: "Support"
+- runFlow:
+    file: common/open-section.yaml
+    env: { SECTION: "Conflicts" }
+- assertVisible: "Conflicts"
+- runFlow:
+    file: common/open-section.yaml
+    env: { SECTION: "Settings" }
+- assertVisible: "BA2025"
+- runFlow:
+    file: common/open-section.yaml
+    env: { SECTION: "Artists" }
+- assertVisible: ".*3 INCHES OF BLOOD.*"

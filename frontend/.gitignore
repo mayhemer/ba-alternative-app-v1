@@ -50,3 +50,9 @@ yarn-error.*
 # Playwright
 test-results/
 playwright-report/
+
+# Native E2E reports
+e2e-results/
+
+# Device perf raw results (the per-device baseline in perf/devices/ is committed)
+perf-results/

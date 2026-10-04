@@ -1,0 +1,14 @@
+appId: cz.janbambas.ba
+name: a cold start with no network opens on cached data
+---
+# Prime the cache while the API is up…
+- runFlow: common/launch-fresh.yaml
+# …then take it down (the runner's fixture server, from the host) and restart.
+- runScript: common/api-offline.js
+- stopApp
+- launchApp
+# The point of the persisted cache: the last known lineup, not the error screen.
+- extendedWaitUntil:
+    visible: ".*3 INCHES OF BLOOD.*"
+    timeout: 30000
+- runScript: common/api-online.js

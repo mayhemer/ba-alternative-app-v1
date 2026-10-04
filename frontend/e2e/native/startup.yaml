@@ -1,0 +1,6 @@
+appId: cz.janbambas.ba
+name: boots into the edition's lineup
+---
+- runFlow: common/launch-fresh.yaml
+# A second name proves a list rendered, not just one cell.
+- assertVisible: ".*ABBIE FALLS.*"

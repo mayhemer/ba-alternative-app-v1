@@ -1,0 +1,21 @@
+appId: cz.janbambas.ba
+name: two clashing must-sees show up as a conflict
+---
+- runFlow: common/launch-fresh.yaml
+# EXORCIZPHOBIA and CRYSTAL LAKE overlap on Wednesday in the ba2025 capture.
+# Two presses each = "must see"; only must-sees count as conflicts.
+- tapOn:
+    id: "artist-search"
+- inputText: "exorcizphobia"
+- tapOn: { label: "Toggle interest", index: 0 }
+- tapOn: { label: "Toggle interest", index: 0 }
+- eraseText: 20
+- inputText: "crystal lake"
+- tapOn: { label: "Toggle interest", index: 0 }
+- tapOn: { label: "Toggle interest", index: 0 }
+- eraseText: 20
+- runFlow:
+    file: common/open-section.yaml
+    env: { SECTION: "Conflicts" }
+- assertVisible: ".*EXORCIZPHOBIA.*"
+- assertVisible: ".*CRYSTAL LAKE.*"

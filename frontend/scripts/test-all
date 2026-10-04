@@ -37,15 +37,31 @@ step "Web end-to-end"
 npm run --silent build:web
 npx playwright test
 
-printf '\n\033[32m✓ everything that runs without a device is green\033[0m\n'
+step "iOS simulator end-to-end"
+# Tests the latest EAS `e2e-ios-sim` build, not your working tree — it says how
+# far behind HEAD that build is. Exit 4 means a prerequisite is missing (no
+# Xcode, no Maestro, no build yet): reported loudly, but not a failure.
+ios_status=0
+npm run --silent test:e2e:ios || ios_status=$?
+if [ "$ios_status" -eq 4 ]; then
+  IOS_SKIPPED=1
+elif [ "$ios_status" -ne 0 ]; then
+  exit "$ios_status"
+fi
+
+if [ "${IOS_SKIPPED:-0}" -eq 1 ]; then
+  printf '\n\033[33m✓ green, but the iOS simulator end-to-end tests were SKIPPED (see above)\033[0m\n'
+else
+  printf '\n\033[32m✓ everything that runs without a physical device is green\033[0m\n'
+fi
 cat <<'NEXT'
 
-Not covered above — run against a real device or simulator:
+Not covered above — needs the physical Android phone connected over USB:
 
-  1. start the fixture API:   npm run fixtures:serve
-  2. build with the app pointed at it (the origin is inlined at build time):
-       EXPO_PUBLIC_API_ORIGIN=http://<your-lan-ip>:4010 npm run build:android:preview
-     (Android emulator uses http://10.0.2.2:4010; iOS simulator, localhost)
-  3. install that build, then:  maestro test e2e/native/
+  npm run install:perf:android     latest `perf` build onto the phone
+  npm run test:perf:device         frame, start-up and memory measurements
+
+Both run against a built binary. After app changes, rebuild first:
+  npm run build:android:perf       (and npm run build:ios:e2e for the simulator)
 
 NEXT

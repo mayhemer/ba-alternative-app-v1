@@ -1,0 +1,13 @@
+# Cleared app → fixture data loaded → artist list on screen.
+# The e2e build defaults to ba2025 (EXPO_PUBLIC_DEFAULT_SLUG), whose first
+# playable artist in the list's collated order is 3 INCHES OF BLOOD.
+appId: cz.janbambas.ba
+---
+# Restore the API first: if an earlier flow failed while it had taken the API
+# offline, every later flow would otherwise fail for a reason that isn't its own.
+- runScript: api-online.js
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: ".*3 INCHES OF BLOOD.*"
+    timeout: 30000

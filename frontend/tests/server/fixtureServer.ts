@@ -71,6 +71,13 @@ export async function startFixtureServer(port = 0): Promise<FixtureServer> {
 
   const requests: string[] = [];
 
+  // While true, every API path answers 503. Lets a native E2E flow simulate a
+  // device with no usable network from inside the flow (Maestro's runScript can
+  // make HTTP calls from the host), instead of the runner having to stop the
+  // server between flows. The app treats a failed request exactly as it treats
+  // being offline: keep the cache, report nothing.
+  let offline = false;
+
   const server: Server = createServer((req, res) => {
     const url = req.url ?? '/';
     requests.push(url);
@@ -84,6 +91,24 @@ export async function startFixtureServer(port = 0): Promise<FixtureServer> {
       });
       res.end(body);
     };
+
+    // Control endpoints, kept out of the API namespace and never served offline.
+    const control = /^\/__control\/(offline|online|bump\/([^/]+))$/.exec(url);
+    if (control !== null) {
+      if (control[1] === 'offline') { offline = true; }
+      if (control[1] === 'online') { offline = false; }
+      if (control[2] !== undefined) {
+        const current = validityFor(control[2]);
+        validity.set(control[2], { ...current, lastSyncedAt: current.lastSyncedAt + 60_000 });
+      }
+      send(200, JSON.stringify({ offline }));
+      return;
+    }
+
+    if (offline) {
+      send(503, JSON.stringify({ error: 'fixture server is in offline mode' }));
+      return;
+    }
 
     // /{slug}/validity — no caller watermark; the client does the comparison,
     // which is what makes one cached object serve every poller in production.

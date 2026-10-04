@@ -1,0 +1,9 @@
+# ── Native E2E (Maestro) ─────────────────────────────────────────────────────
+#
+# Run through `npm run test:e2e:ios`, which boots the simulator, installs the
+# e2e build, starts the fixture API on :4010 and then calls Maestro on this
+# directory. Every flow begins from a cleared app, so they are order-independent.
+#
+# Shared steps live in common/ and are not run on their own.
+flows:
+  - "*.yaml"

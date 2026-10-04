@@ -1,0 +1,6 @@
+# Opens a section from the drawer. On a phone in portrait the drawer is not
+# permanent, so it is reached through the menu button.
+appId: cz.janbambas.ba
+---
+- tapOn: "Open menu"
+- tapOn: ${SECTION}

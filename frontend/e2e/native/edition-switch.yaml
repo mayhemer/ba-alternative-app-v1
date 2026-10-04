@@ -1,0 +1,16 @@
+appId: cz.janbambas.ba
+name: switching edition reloads the lineup
+---
+- runFlow: common/launch-fresh.yaml
+- runFlow:
+    file: common/open-section.yaml
+    env: { SECTION: "Settings" }
+- tapOn: "BA2024"
+- runFlow:
+    file: common/open-section.yaml
+    env: { SECTION: "Artists" }
+# Each name exists in only one edition's lineup.
+- extendedWaitUntil:
+    visible: ".*1914.*"
+    timeout: 30000
+- assertNotVisible: ".*3 INCHES OF BLOOD.*"

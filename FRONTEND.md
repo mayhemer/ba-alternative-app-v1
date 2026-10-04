@@ -40,7 +40,7 @@ ESLint extension in VSCode
 One command runs everything that does not need a device:
 
 ```bash
-npm run verify      # types → lint → jest (×3 platforms) → performance → web E2E
+npm run verify      # types → lint → jest (×3 platforms) → performance → web E2E → iOS simulator E2E
 ```
 
 | Layer | Command | What it is for |
@@ -48,7 +48,8 @@ npm run verify      # types → lint → jest (×3 platforms) → performance �
 | Unit / integration | `npm test` | Logic, caching, sync, interests, auth storage. Runs three times, once per platform preset |
 | Performance | `npm run test:perf` | Render-count and JS-duration regressions, vs `.reassure/baseline.perf` |
 | Web end-to-end | `npm run test:e2e:web` | Real browser against the exported build |
-| Native end-to-end | `maestro test e2e/native/` | Real runtime on a device — **not** part of `verify` |
+| iOS end-to-end | `npm run test:e2e:ios` | Maestro flows on the iOS Simulator, against the `e2e-ios-sim` build. In `verify`; skipped (not failed) when a prerequisite is missing |
+| Device performance | `npm run test:perf:device` | Frames, start-up and memory on the physical Android phone. **Not** in `verify` — needs the phone, and takes 15-25 min |
 
 Conventions worth knowing before adding a test:
 
@@ -63,6 +64,60 @@ Conventions worth knowing before adding a test:
   depend on the runner's timezone. Use fake timers only for *scheduling*.
 - Mock at the module boundary (the adapter), not at `fetch`.
 
+### Native end-to-end (iOS Simulator)
+
+`npm run test:e2e:ios` boots a simulator (`--sim "<name>"`, default iPhone 17 Pro), installs the
+newest `e2e-ios-sim` build from EAS, serves the fixtures on `:4010` and runs every flow in
+`e2e/native/` with Maestro. The simulator shares the Mac's network, so the build's
+`http://localhost:4010` reaches the server with no further setup.
+
+It tests a **built binary**, not your working tree, and prints how far behind HEAD that build is.
+After app changes, `npm run build:ios:e2e` first. To use a locally built simulator app instead of
+EAS, pass `--app path/to/App.app`; nothing else in the runner changes.
+
+Two things to know when writing flows:
+
+- **A touchable is one accessibility element on iOS.** Its children's text is merged into a single
+  label, so an artist row reads "3 INCHES OF BLOOD, HEAVY METAL, …", not just the name. Match names as
+  `".*NAME.*"`; match drawer items exactly, so "Program" does not also hit "Support Program".
+- Elements with no stable text get a `testID` (the search field is `artist-search`). A placeholder is
+  not reliably matchable.
+
+Maestro cannot drive a physical iPhone (2.11: "Physical iOS devices are not yet supported").
+
+### Device performance (Android)
+
+Measured on a real low-end phone — currently a Nokia 3 (TA-1032, Android 9, MediaTek MT6737, 2 GB) —
+because neither Node nor a browser can see what makes the app slow there: Hermes instead of a JIT,
+native view creation, and a CPU that idles with three of its four cores switched off.
+
+```bash
+npm run build:android:perf      # once per app change; EAS cloud
+npm run install:perf:android    # newest perf build onto the phone (cached by build id)
+npm run test:perf:device        # --runs N, --scenarios a,b, --baseline
+```
+
+Scenarios: **cold start** (first frame, and the moment the app is usable via a logcat marker the perf
+build emits), **list fling**, **search typing** (the Intl collation path) and **timeline day switch**.
+Each reports `dumpsys gfxinfo` frame stats — janky %, p50/p90/p99 frame time, slow-UI-thread count —
+and memory from `dumpsys meminfo`.
+
+Everything is driven over adb, and nothing of ours runs on the phone during a measurement: elements
+are found with `uiautomator dump` beforehand and the measured input is plain `adb input`. Maestro
+would be easier to write, but its on-device driver polls the view tree while it waits, competing with
+the app for exactly the frames being measured.
+
+For repeatability the runner keeps the screen on, kills background processes, routes the fixture
+API over USB (`adb reverse`) and **switches Wi-Fi off for the run** — restored afterwards, including on
+Ctrl-C. It waits for the battery to cool before every repetition: Android 9 has no thermal service and
+the CPU sensors need root, so the battery is the only gauge available.
+
+Set the phone's screen lock to **None**; automation cannot type a PIN.
+
+It is **report-only** for now: medians against `perf/devices/<model>.json` with a 🔴 above +20%, but
+no failure. Thresholds need the noise floor first — record a baseline, then run it a few times on
+unchanged code and see how far it moves.
+
 ### Fixtures
 
 `tests/fixtures/generated/` is produced by `npm run gen:fixtures`, which runs the backend's real
@@ -71,7 +126,7 @@ correct by construction, and the volume is realistic (260 artists, 311 events fo
 output is committed, so a test run needs no backend and no build step — regenerate only when the
 captures are refreshed or a normalizer changes.
 
-`npm run fixtures:serve` serves them on the real endpoint paths, which is also how to run the app
+`npm run serve:fixtures` serves them on the real endpoint paths, which is also how to run the app
 against frozen data by hand (see the API origin note above).
 
 ### What each layer cannot tell you
@@ -134,10 +189,14 @@ eas config --profile preview --platform ios
 | `development` | dev client, needs Metro running | day-to-day native debugging |
 | `preview` | **Release**, self-contained, ad-hoc iOS / `.apk` Android | testing on real devices + inviting testers |
 | `production` | Release, App Store profile / `.aab` | store submission |
+| `perf` | `preview` + fixture API, ba2025, perf marker, plain HTTP allowed | `test:perf:device` on the Android phone |
+| `e2e-ios-sim` | Release **simulator** build + fixture API, ba2025 | `test:e2e:ios` |
 
 ```bash
 npm run build:ios:preview       # eas build -p ios --profile preview
 npm run build:android:preview   # eas build -p android --profile preview
+npm run build:android:perf      # eas build -p android --profile perf
+npm run build:ios:e2e           # eas build -p ios --profile e2e-ios-sim
 npm run doctor                  # expo-doctor; run before every build
 ```
 
@@ -268,18 +327,29 @@ ever goes to Google Play — a different one is rejected as a signature mismatch
 are compiled in (`src/auth/cognitoConfig.ts`). `eas config` confirms this — it reports no environment
 variables for the profile. That changes only if a staging backend is introduced.
 
-The API origin is the one exception, and it is not a secret. `src/adapters/apiConfig.ts` reads
-`EXPO_PUBLIC_API_ORIGIN` and falls back to production when it is unset, which is every normal build.
-It exists so a build can be pointed at the local fixture server for native end-to-end testing:
+The test profiles are the exception, and none of their values are secrets. `perf` and `e2e-ios-sim`
+set them in the profile's `env` in `eas.json`:
 
-```bash
-EXPO_PUBLIC_API_ORIGIN=http://10.0.2.2:4010 npm run build:android:preview   # Android emulator
-EXPO_PUBLIC_API_ORIGIN=http://192.168.x.x:4010 npm run build:android:preview # real device, LAN address
-```
+| Variable | Read by | Effect |
+|---|---|---|
+| `EXPO_PUBLIC_API_ORIGIN` | `src/adapters/apiConfig.ts` | API origin; unset means production |
+| `EXPO_PUBLIC_DEFAULT_SLUG` | `src/store/AppContext.tsx` | first-run edition; the fixtures cover ba2025 |
+| `EXPO_PUBLIC_PERF_MARKS` | `src/store/StartupGate.tsx` | logs the startup marker the device runner times |
+| `BA_ALLOW_CLEARTEXT` | `app.config.js` | allows plain HTTP — see below |
 
-`EXPO_PUBLIC_*` values are **inlined at build time**, so this is a property of the binary, not
-something that can be switched at launch — a build made without it always talks to production.
-It ships visible in the bundle either way, which is fine for an origin and would not be for a secret.
+**Put them in the profile, not your shell.** A variable set in your local shell is not uploaded with
+the project, so `EXPO_PUBLIC_API_ORIGIN=… eas build` builds an app that silently talks to production.
+`eas config --profile perf --platform android` shows what a profile actually resolves to.
+
+`EXPO_PUBLIC_*` values are **inlined at build time**: the origin is a property of the binary, not
+something switchable at launch.
+
+**Plain HTTP on Android.** Release builds targeting API 28+ refuse cleartext traffic, and the Expo
+template only lifts that in the *debug* manifest — so a perf build talking to `http://localhost:4010`
+would have every request refused. `plugins/withCleartextTraffic.js` sets `usesCleartextTraffic`, and
+`app.config.js` applies it **only** when `BA_ALLOW_CLEARTEXT=1`; production and preview builds never get
+it. Check with `npx expo config --type introspect`. iOS needs nothing: the template's App Transport
+Security already allows local networking.
 
 ### Deep links
 

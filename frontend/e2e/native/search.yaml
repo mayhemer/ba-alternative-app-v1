@@ -1,0 +1,12 @@
+appId: cz.janbambas.ba
+name: search narrows the list and clearing restores it
+---
+- runFlow: common/launch-fresh.yaml
+- tapOn:
+    id: "artist-search"
+- inputText: "mastodon"
+# Far down the collated order — only reachable because the filter worked.
+- assertVisible: ".*MASTODON.*"
+- assertNotVisible: ".*3 INCHES OF BLOOD.*"
+- eraseText: 20
+- assertVisible: ".*3 INCHES OF BLOOD.*"
