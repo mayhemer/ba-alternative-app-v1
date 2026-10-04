@@ -58,12 +58,14 @@ export async function cutNetwork(page: Page): Promise<void> {
 
 export const test = base.extend<{ appPage: Page }>({
   appPage: async ({ page }, use) => {
-    // setFixedTime, not install(): install() also *pauses* the clock, so the
+    // setSystemTime, not install(): install() also *pauses* the clock, so the
     // app's timers never fire — the startup gate's frame callback and the sync
-    // scheduler both stall and the list never leaves its loading state. This
-    // pins Date.now() (the timeline picks its day from it) while letting timers
-    // run normally.
-    await page.clock.setFixedTime(PINNED_NOW);
+    // scheduler both stall and the list never leaves its loading state. Nor
+    // setFixedTime(): it freezes Date.now() outright, and the timeline throttles
+    // its scroll persistence on Date.now() differences — frozen, every write after
+    // the first is dropped. This starts the clock at PINNED_NOW (the timeline
+    // picks its day from it) and lets both time and timers run normally.
+    await page.clock.setSystemTime(PINNED_NOW);
     await seedEdition(page);
     await useFixtureApi(page);
     await use(page);

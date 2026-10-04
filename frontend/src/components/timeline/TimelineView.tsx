@@ -380,6 +380,8 @@ export function TimelineView({
       <TimeRuler dayStart={selectedDayStart} scrollX={scrollX} nowX={nowX} />
       <ScrollView
         ref={verticalScrollRef}
+        // Stable handles for E2E position checks; an attribute, not a view.
+        testID="timeline-scroll-y"
         className="flex-1 bg-background"
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={100}
@@ -414,6 +416,7 @@ export function TimelineView({
           />
           <Animated.ScrollView
             ref={horizontalScrollRef}
+            testID="timeline-scroll-x"
             horizontal
             showsHorizontalScrollIndicator={false}
             scrollEventThrottle={16}

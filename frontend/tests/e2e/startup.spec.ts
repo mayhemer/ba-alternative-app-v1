@@ -6,7 +6,7 @@ import { cutNetwork, expect, seedEdition, test } from './fixtures';
 // virtualized window on the first paint.
 const FIRST_ARTIST = '3 INCHES OF BLOOD';
 
-test('opens on the artist list with the edition\'s lineup', async ({ appPage }) => {
+test('opens on the artist list with the edition\'s lineup @layout', async ({ appPage }) => {
   await appPage.goto('/');
 
   await expect(appPage.getByText('LOADING ARTISTS…')).toHaveCount(0, { timeout: 20_000 });
@@ -40,7 +40,7 @@ test('reaches every main section', async ({ appPage }) => {
 
 test('opens on cached data when the network is gone', async ({ page }) => {
   // First visit fills the cache…
-  await page.clock.setFixedTime(new Date('2025-08-06T14:00:00+02:00'));
+  await page.clock.setSystemTime(new Date('2025-08-06T14:00:00+02:00'));
   await seedEdition(page);
   const { useFixtureApi } = await import('./fixtures');
   await useFixtureApi(page);

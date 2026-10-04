@@ -34,7 +34,16 @@ export default defineConfig({
     timezoneId: 'Europe/Prague',
   },
 
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  // Desktop runs everything. The two phone projects run only the tests tagged
+  // @layout: the app has three layouts (useLayoutMode), and desktop is only the
+  // wide one. Portrait is the compact layout — drawer behind a menu button.
+  // Landscape is the short one — no top bar, a bottom bar floating over the
+  // content, lane titles drawn over their lanes — which no other layer covers.
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'phone', use: { ...devices['Pixel 7'] }, grep: /@layout/ },
+    { name: 'landscape', use: { ...devices['Pixel 7 landscape'] }, grep: /@layout/ },
+  ],
 
   webServer: {
     command: 'node --experimental-strip-types --no-warnings tests/server/e2eServers.ts',

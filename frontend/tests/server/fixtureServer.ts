@@ -22,6 +22,7 @@ import { createServer, type Server } from 'node:http';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { FIXTURE_SHARE_TOKEN, SHARED_SCHEDULE } from './shareFixture.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FIXTURES = join(HERE, '../fixtures/generated');
@@ -112,6 +113,17 @@ export async function startFixtureServer(port = 0): Promise<FixtureServer> {
 
     if (offline) {
       send(503, JSON.stringify({ error: 'fixture server is in offline mode' }));
+      return;
+    }
+
+    // GET /share/{token} — public, no auth, so it can be served like any dataset.
+    const shareMatch = /^\/share\/([^/?]+)\/?$/.exec(url);
+    if (shareMatch !== null) {
+      if (shareMatch[1] === FIXTURE_SHARE_TOKEN) {
+        send(200, JSON.stringify(SHARED_SCHEDULE));
+      } else {
+        send(404, JSON.stringify({ error: 'unknown share token' }));
+      }
       return;
     }
 
