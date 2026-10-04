@@ -4,10 +4,9 @@ name: an artist can be starred from the detail sheet
 - runFlow: common/launch-fresh.yaml
 # Narrow the list to one row, and close the keyboard: while it is up, the
 # list's first tap only dismisses it.
-- tapOn: { id: "artist-search" }
-- waitForAnimationToEnd
-- inputText: "exorcizphobia"
-- pressKey: Enter
+- runFlow:
+    file: common/search-artist.yaml
+    env: { QUERY: "exorcizphobia" }
 - tapOn: ".*EXORCIZPHOBIA, THRASH METAL.*"
 - waitForAnimationToEnd
 # The row's label carries genre and country too, so an exact match on the bare

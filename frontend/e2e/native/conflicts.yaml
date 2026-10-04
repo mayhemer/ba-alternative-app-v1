@@ -4,21 +4,18 @@ name: two clashing must-sees show up as a conflict
 - runFlow: common/launch-fresh.yaml
 # EXORCIZPHOBIA and CRYSTAL LAKE overlap on Wednesday in the ba2025 capture.
 # Two presses each = "must see"; only must-sees count as conflicts.
-# The search narrows the list to one row, so its star is element 0.
-# Return closes the keyboard first: while it is up, the list's first tap only
-# dismisses it (keyboardShouldPersistTaps defaults to "never").
-- tapOn: { id: "artist-search" }
-- waitForAnimationToEnd
-- inputText: "exorcizphobia"
-- pressKey: Enter
+# The search narrows the list to one row, so its star is element 0. The search
+# step closes the keyboard: while it is up, the list's first tap only dismisses
+# it (keyboardShouldPersistTaps defaults to "never").
+- runFlow:
+    file: common/search-artist.yaml
+    env: { QUERY: "exorcizphobia" }
 - tapOn: { text: "Toggle interest", index: 0 }
 - tapOn: { text: "Toggle interest", index: 0 }
-# eraseText only clears the focused field, so focus it again first.
-- tapOn: { id: "artist-search" }
-- waitForAnimationToEnd
-- eraseText: 20
-- inputText: "crystal lake"
-- pressKey: Enter
+# The step clears the field before typing, so the previous query goes.
+- runFlow:
+    file: common/search-artist.yaml
+    env: { QUERY: "crystal lake" }
 - tapOn: { text: "Toggle interest", index: 0 }
 - tapOn: { text: "Toggle interest", index: 0 }
 - tapOn: { id: "artist-search" }

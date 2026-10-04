@@ -3,9 +3,11 @@
 # On a freshly booted simulator the tap sometimes does not focus the field yet,
 # and the typed text goes nowhere (seen twice in a handful of runs: the list
 # stayed unfiltered, the keyboard never came up). So the step is retried, and
-# only counts once the filter visibly applied — the first name in the full list
-# is gone. Return closes the keyboard: while it is up, the list's first tap only
-# dismisses it.
+# only counts once the text landed (the query is on screen — in the field, and
+# in the matching row) and the filter applied (the first name in the full list
+# is gone; on its own, that would also hold for a list an earlier search left
+# narrowed). Return closes the keyboard: while it is up, the list's first tap
+# only dismisses it.
 appId: cz.janbambas.ba
 ---
 - retry:
@@ -16,4 +18,5 @@ appId: cz.janbambas.ba
       - eraseText: 30
       - inputText: ${QUERY}
       - pressKey: Enter
+      - assertVisible: ".*${QUERY}.*"
       - assertNotVisible: ".*3 INCHES OF BLOOD.*"
