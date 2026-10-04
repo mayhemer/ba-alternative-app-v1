@@ -61,11 +61,12 @@ Conventions worth knowing before adding a test:
   output cannot host, so web rendering is Playwright's job.
 - Caches and the UI-state snapshot are module state. Cases isolate by taking a **fresh slug** (or
   screenKey) rather than resetting shared state.
-- Pin time with `setCurrentTimeMs(Date.parse('…+02:00'))` — an explicit offset. Festival days start at
-  06:00 *local* time, so every jest process also runs in Europe/Prague (`tests/setup/globalTz.ts`),
-  and so does Playwright (`timezoneId`); in UTC the same instant lands on a different timeline. Use
-  fake timers only for *scheduling* — and for render counts, where they make the timeline's
-  per-frame mount deterministic.
+- Pin time with `setCurrentTimeMs(Date.parse('…+02:00'))` — an explicit offset. The app shows
+  **festival time** (Europe/Prague) on any device (`src/utils/festivalTime.ts`): never read a date's
+  local fields (`getHours`, `getDate`, `toLocale…`) for anything shown. Jest runs in New York
+  (`tests/setup/globalTz.ts`) so such a read fails the suite instead of passing in Prague; Playwright
+  runs in Prague, with one test from New York. Use fake timers only for *scheduling* — and for
+  render counts, where they make the timeline's per-frame mount deterministic.
 - `@testing-library/react-native` 14 is async: `await render(…)` and `await view.unmount()`. An
   unawaited unmount runs its cleanup after your assertion.
 - Mock at the module boundary (the adapter), not at `fetch`.

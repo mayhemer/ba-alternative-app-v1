@@ -1,5 +1,9 @@
 import {
   defaultScrollX,
+  formatDayLabel,
+  formatDayMonth,
+  formatTime,
+  formatWeekday,
   deriveFestivalDays,
   eventScrollTarget,
   getFestivalDayStart,
@@ -13,8 +17,10 @@ import type { DbEvent } from '../../types/backend';
 
 // ── Timeline geometry ─────────────────────────────────────────────────────────
 //
-// Everything here runs in Europe/Prague (tests/setup/globalTz.ts). Festival days
-// start at 06:00 *local* time, so the zone is part of what is being tested.
+// Festival days start at 06:00 festival time (Europe/Prague), whatever zone the
+// device is in. The suite runs in New York (tests/setup/globalTz.ts), where
+// reading the device's clock instead would put every boundary and label below
+// six hours off.
 
 const at = (iso: string): number => Date.parse(iso);
 const WED = at('2025-08-06T06:00:00+02:00');
@@ -24,10 +30,19 @@ const HOUR = 60 * 60 * 1000;
 const event = (dateFrom: number, dateTo = dateFrom + HOUR): DbEvent =>
   ({ dateFrom, dateTo } as unknown as DbEvent);
 
-it('runs in the festival\'s time zone', () => {
-  // If this fails, the global setup did not apply and every day boundary below
-  // is being computed in the runner's own zone.
-  expect(new Date(WED).getHours()).toBe(6);
+it('runs away from the festival\'s time zone', () => {
+  // If this fails, the global setup did not apply, and the cases below could
+  // not tell festival time from the device's.
+  expect(new Date(WED).getHours()).not.toBe(6);
+});
+
+describe('formatting', () => {
+  it('shows festival time, not the device\'s', () => {
+    expect(formatTime(at('2025-08-07T00:30:00+02:00'))).toBe('00:30');
+    expect(formatDayLabel(WED)).toBe('Wed 6');
+    expect(formatWeekday(WED)).toBe('Wed');
+    expect(formatDayMonth(WED)).toBe('6.8.');
+  });
 });
 
 describe('getFestivalDayStart', () => {
@@ -157,3 +172,4 @@ describe('eventScrollTarget', () => {
     expect(y).toBe(0);
   });
 });
+

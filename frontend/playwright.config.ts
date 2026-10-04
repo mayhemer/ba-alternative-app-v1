@@ -28,9 +28,8 @@ export default defineConfig({
   use: {
     baseURL: `http://127.0.0.1:${APP_PORT}`,
     trace: 'retain-on-failure',
-    // The festival's own zone. Festival days start at 06:00 *local* time, so in
-    // a runner's UTC the same pinned clock lands on a different timeline — CI and
-    // a laptop would be testing different screens.
+    // The festival's own zone, so CI and a laptop run the same browser. The app
+    // shows festival time in any zone; timeline.spec.ts proves that from New York.
     timezoneId: 'Europe/Prague',
   },
 

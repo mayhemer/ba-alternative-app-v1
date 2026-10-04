@@ -1,4 +1,5 @@
 import type { DbEvent } from '../../types/backend';
+import { fromFestivalClock, toFestivalClock } from '../../utils/festivalTime';
 
 // ── Scale & geometry ──────────────────────────────────────────────────────────
 
@@ -127,16 +128,17 @@ export function defaultScrollX(firstEventMs: number | undefined, dayStartMs: num
 }
 
 /**
- * Return the festival-day start (06:00 local) that contains the given timestamp.
- * Events before 06:00 belong to the previous calendar day.
+ * Return the festival-day start (06:00 festival time, Europe/Prague) that
+ * contains the given timestamp. Events before 06:00 belong to the previous
+ * calendar day. Independent of the device's time zone — see utils/festivalTime.
  */
 export function getFestivalDayStart(timestampMs: number): number {
-  const date = new Date(timestampMs);
-  if (date.getHours() < DAY_BOUNDARY_HOUR) {
-    date.setDate(date.getDate() - 1);
+  const wall = toFestivalClock(timestampMs);
+  if (wall.getUTCHours() < DAY_BOUNDARY_HOUR) {
+    wall.setUTCDate(wall.getUTCDate() - 1);
   }
-  date.setHours(DAY_BOUNDARY_HOUR, 0, 0, 0);
-  return date.getTime();
+  wall.setUTCHours(DAY_BOUNDARY_HOUR, 0, 0, 0);
+  return fromFestivalClock(wall.getTime());
 }
 
 /** Collect unique festival-day starts (sorted asc) from a set of events. */
@@ -198,15 +200,28 @@ export function eventScrollTarget(input: EventScrollInput): EventScrollTarget {
 
 // ── Display helpers ───────────────────────────────────────────────────────────
 
+// All in festival time (Europe/Prague), read through toFestivalClock's UTC
+// fields — never the device's zone.
+
 /** Format a Unix-ms timestamp as HH:MM for display inside event blocks. */
 export function formatTime(timestampMs: number): string {
-  const date = new Date(timestampMs);
-  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  const wall = toFestivalClock(timestampMs);
+  return `${String(wall.getUTCHours()).padStart(2, '0')}:${String(wall.getUTCMinutes()).padStart(2, '0')}`;
 }
 
 const WEEKDAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+/** Short weekday of a timestamp, e.g. "Wed". */
+export function formatWeekday(timestampMs: number): string {
+  return WEEKDAY_NAMES[toFestivalClock(timestampMs).getUTCDay()];
+}
+
+/** Day and month of a timestamp, e.g. "6.8.". */
+export function formatDayMonth(timestampMs: number): string {
+  const wall = toFestivalClock(timestampMs);
+  return `${wall.getUTCDate()}.${wall.getUTCMonth() + 1}.`;
+}
+
 export function formatDayLabel(dayStartMs: number): string {
-  const date = new Date(dayStartMs);
-  return `${WEEKDAY_NAMES[date.getDay()]} ${date.getDate()}`;
+  return `${formatWeekday(dayStartMs)} ${toFestivalClock(dayStartMs).getUTCDate()}`;
 }

@@ -18,7 +18,7 @@ import schedule2025 from '../../../tests/fixtures/generated/ba2025/schedule.json
 //
 // Both are checked against the captured editions, so a refreshed capture or a
 // changed normalizer that breaks either shows up here rather than on a phone.
-// Runs in Europe/Prague (tests/setup/globalTz.ts): the window is local time.
+// The window is festival time (Europe/Prague), whatever zone the suite runs in.
 
 const HOUR = 60 * 60 * 1000;
 

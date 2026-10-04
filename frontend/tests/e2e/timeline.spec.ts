@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, PINNED_NOW, test } from './fixtures';
-import { defaultScrollX, eventScrollTarget } from '../../src/components/timeline/timelineLayout';
+import { defaultScrollX, eventScrollTarget, formatTime } from '../../src/components/timeline/timelineLayout';
 import type { DbArtist, DbEvent } from '../../src/types/backend';
 
 import artistsFixture from '../fixtures/generated/ba2025/artists.json';
@@ -196,4 +196,23 @@ test('the browser back button undoes "go to timeline" in one press', async ({ ap
   await expect(appPage.getByPlaceholder('Search artists…')).toBeVisible();
   await expect(scrollerX(appPage)).toHaveCount(0);
   await expect(eventRow).toBeVisible();
+});
+
+test.describe('on a device in another time zone', () => {
+  // Planning from abroad: the timeline must still be the festival's own —
+  // Wednesday from 06:00 Prague time, sets at their Prague times. Read in the
+  // device's zone, the day boundary moved six hours and clipped sets out of the
+  // window.
+  test.use({ timezoneId: 'America/New_York' });
+
+  test('shows the festival\'s days and times @layout', async ({ appPage }) => {
+    await ready(appPage);
+    await openSection(appPage, 'Program');
+
+    const scroller = scrollerX(appPage);
+    await expectScrolledTo(scroller, await reachable(scroller, defaultScrollX(FIRST_WED_SET.dateFrom, WED)));
+    await expectInView(appPage, scroller.getByText(FIRST_WED_ARTIST, { exact: true }).first());
+    const setTime = `${formatTime(FIRST_WED_SET.dateFrom)}–${formatTime(FIRST_WED_SET.dateTo)}`;
+    await expect(scroller.getByText(setTime, { exact: true }).first()).toBeVisible();
+  });
 });

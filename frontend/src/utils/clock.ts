@@ -12,7 +12,8 @@
 
 // Flip to simulate a specific instant during development.
 const USE_TESTING_TIME: boolean = false;
-const TESTING_TIME_VALUE: number = (new Date(2024, 7, 8, 14, 8)).getTime();
+// Festival time, with an explicit offset, so it is the same instant on any device.
+const TESTING_TIME_VALUE: number = Date.parse('2024-08-08T14:08:00+02:00');
 
 let override: number | null = USE_TESTING_TIME ? TESTING_TIME_VALUE : null;
 

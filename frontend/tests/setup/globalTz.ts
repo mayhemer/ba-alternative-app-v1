@@ -1,15 +1,15 @@
-// ── Festival time zone for every test process ─────────────────────────────────
+// ── A device far from the festival, for every test process ────────────────────
 //
-// Festival days start at 06:00 *local* time (timelineLayout.getFestivalDayStart),
-// so the same pinned instant falls on a different festival day — and a different
-// timeline — in a runner's UTC than on a laptop in Prague. Measured over the
-// ba2025 schedule: 0 events outside the visible 08:30–04:00 window in
-// Europe/Prague, 48 in UTC. Pinning the zone makes CI and local runs test the
-// same screens.
+// The app shows festival time (Europe/Prague) whatever zone the device is in —
+// see src/utils/festivalTime. Running the suite in New York makes that a tested
+// property: anything that reads the device's clock instead (getHours, getDate,
+// toLocale…) puts day boundaries and labels six hours off, and fails. In Prague
+// the two would agree and such a regression would pass unnoticed.
 //
+// Pinned rather than left to the runner, so CI and a laptop run the same suite.
 // Set here rather than in each npm script so a bare `npx jest` gets it too.
 // Workers are spawned after global setup and inherit the environment.
 
 export default function globalTz(): void {
-  process.env.TZ = 'Europe/Prague';
+  process.env.TZ = 'America/New_York';
 }
