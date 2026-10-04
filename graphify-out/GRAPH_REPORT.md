@@ -216,7 +216,7 @@ Nodes (35): backgroundColor, foregroundImage, monochromeImage, adaptiveIcon, edg
 
 ### Community 9 - "scripts"
 Cohesion: 0.07
-Nodes (27): scripts, android, build:android:perf, build:android:preview, build:ios:e2e, build:ios:preview, build:web, clean:ios:e2e (+19 more)
+Nodes (27): scripts, android, build:perf:android, build:preview:android, build:e2e:ios, build:preview:ios, build:web, clean:e2e:ios (+19 more)
 
 ### Community 10 - "sync/handler.ts"
 Cohesion: 0.13

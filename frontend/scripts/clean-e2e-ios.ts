@@ -1,7 +1,7 @@
 // ── Free the disk space the iOS E2E suite leaves behind ───────────────────────
 //
-//   npm run clean:ios:e2e
-//   npm run clean:ios:e2e -- --sim "iPhone 17"   the simulator a --sim run used
+//   npm run clean:e2e:ios
+//   npm run clean:e2e:ios -- --sim "iPhone 17"   the simulator a --sim run used
 //
 // Deletes only what the next `npm run test:e2e:ios` rebuilds by itself:
 //

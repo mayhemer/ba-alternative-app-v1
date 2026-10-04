@@ -72,10 +72,10 @@ newest `e2e-ios-sim` build from EAS, serves the fixtures on `:4010` and runs eve
 `http://localhost:4010` reaches the server with no further setup.
 
 It tests a **built binary**, not your working tree, and prints how far behind HEAD that build is.
-After app changes, `npm run build:ios:e2e` first. To use a locally built simulator app instead of
+After app changes, `npm run build:e2e:ios` first. To use a locally built simulator app instead of
 EAS, pass `--app path/to/App.app`; nothing else in the runner changes.
 
-`npm run clean:ios:e2e` frees what the suite leaves on disk, about 3.5 GB. It erases the test
+`npm run clean:e2e:ios` frees what the suite leaves on disk, about 3.5 GB. It erases the test
 simulator to factory state (every app on it, not just this one), and deletes the downloaded simulator
 builds, Maestro's debug output and the last reports. The next run rebuilds all of it, at the cost of a
 slower first boot and a fresh download: about 6½ minutes for `verify` instead of 3.
@@ -97,7 +97,7 @@ because neither Node nor a browser can see what makes the app slow there: Hermes
 native view creation, and a CPU that idles with three of its four cores switched off.
 
 ```bash
-npm run build:android:perf      # once per app change; EAS cloud
+npm run build:perf:android      # once per app change; EAS cloud
 npm run install:perf:android    # newest perf build onto the phone (cached by build id)
 npm run test:perf:device        # --runs N, --scenarios a,b, --baseline
 ```
@@ -198,10 +198,10 @@ eas config --profile preview --platform ios
 | `e2e-ios-sim` | Release **simulator** build + fixture API, ba2025 | `test:e2e:ios` |
 
 ```bash
-npm run build:ios:preview       # eas build -p ios --profile preview
-npm run build:android:preview   # eas build -p android --profile preview
-npm run build:android:perf      # eas build -p android --profile perf
-npm run build:ios:e2e           # eas build -p ios --profile e2e-ios-sim
+npm run build:preview:ios       # eas build -p ios --profile preview
+npm run build:preview:android   # eas build -p android --profile preview
+npm run build:perf:android      # eas build -p android --profile perf
+npm run build:e2e:ios           # eas build -p ios --profile e2e-ios-sim
 npm run doctor                  # expo-doctor; run before every build
 ```
 
@@ -393,7 +393,7 @@ Still useful when iterating on native config. Requires Xcode with an Apple ID si
 
 ```bash
 npx expo prebuild --platform ios --clean    # npm run prebuild:ios
-npx expo run:ios --device                   # npm run ios:device
+npx expo run:ios --device                   # npm run start:device:ios
 ```
 
 Enable Developer Mode on the device (Settings → Privacy & Security → Developer Mode; needs a restart)

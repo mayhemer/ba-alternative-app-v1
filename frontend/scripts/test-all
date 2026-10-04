@@ -62,6 +62,6 @@ Not covered above — needs the physical Android phone connected over USB:
   npm run test:perf:device         frame, start-up and memory measurements
 
 Both run against a built binary. After app changes, rebuild first:
-  npm run build:android:perf       (and npm run build:ios:e2e for the simulator)
+  npm run build:perf:android       (and npm run build:e2e:ios for the simulator)
 
 NEXT

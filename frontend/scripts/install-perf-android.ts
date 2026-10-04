@@ -27,7 +27,7 @@ try {
   skip((e as Error).message, 'Run `eas login`.');
 }
 if (build === null) {
-  skip('no finished EAS build for the "perf" profile yet', 'Run `npm run build:android:perf`.');
+  skip('no finished EAS build for the "perf" profile yet', 'Run `npm run build:perf:android`.');
 }
 
 const { note, behind } = staleness(build.commit);

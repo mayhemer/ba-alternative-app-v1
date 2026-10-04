@@ -12,7 +12,7 @@
 //
 // It tests a BUILT BINARY. Anything changed since that build is not covered,
 // which is why it prints where the build came from — rebuild with
-// `npm run build:ios:e2e` after app changes. `--app` exists so a locally built
+// `npm run build:e2e:ios` after app changes. `--app` exists so a locally built
 // simulator app can be swapped in without touching the rest of this script.
 //
 // Exit codes: 0 pass, 1 fail, 4 skipped (a prerequisite is missing) — `verify`
@@ -92,7 +92,7 @@ async function resolveApp(): Promise<string> {
     skip((e as Error).message, 'Run `eas login`.');
   }
   if (build === null) {
-    skip(`no finished EAS build for the "${PROFILE}" profile yet`, 'Run `npm run build:ios:e2e`.');
+    skip(`no finished EAS build for the "${PROFILE}" profile yet`, 'Run `npm run build:e2e:ios`.');
   }
 
   const { note, behind } = staleness(build.commit);

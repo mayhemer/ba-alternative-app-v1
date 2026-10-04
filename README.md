@@ -258,7 +258,7 @@ repository.
 ```bash
 # frontend
 cd frontend && npm install
-npm run web            # or: npm start, npm run ios:device
+npm run web            # or: npm start, npm run start:device:ios
 npm run tscheck        # strict type check, no unused locals/params
 
 # backend

@@ -16858,7 +16858,7 @@
       "norm_label": "android"
     },
     {
-      "label": "build:android:perf",
+      "label": "build:perf:android",
       "file_type": "code",
       "source_file": "frontend/package.json",
       "source_location": "L29",
@@ -16866,10 +16866,10 @@
       "id": "frontend_package_scripts_build_android_perf",
       "community": 9,
       "community_name": "scripts",
-      "norm_label": "build:android:perf"
+      "norm_label": "build:perf:android"
     },
     {
-      "label": "build:android:preview",
+      "label": "build:preview:android",
       "file_type": "code",
       "source_file": "frontend/package.json",
       "source_location": "L28",
@@ -16877,10 +16877,10 @@
       "id": "frontend_package_scripts_build_android_preview",
       "community": 9,
       "community_name": "scripts",
-      "norm_label": "build:android:preview"
+      "norm_label": "build:preview:android"
     },
     {
-      "label": "build:ios:e2e",
+      "label": "build:e2e:ios",
       "file_type": "code",
       "source_file": "frontend/package.json",
       "source_location": "L30",
@@ -16888,10 +16888,10 @@
       "id": "frontend_package_scripts_build_ios_e2e",
       "community": 9,
       "community_name": "scripts",
-      "norm_label": "build:ios:e2e"
+      "norm_label": "build:e2e:ios"
     },
     {
-      "label": "build:ios:preview",
+      "label": "build:preview:ios",
       "file_type": "code",
       "source_file": "frontend/package.json",
       "source_location": "L27",
@@ -16899,7 +16899,7 @@
       "id": "frontend_package_scripts_build_ios_preview",
       "community": 9,
       "community_name": "scripts",
-      "norm_label": "build:ios:preview"
+      "norm_label": "build:preview:ios"
     },
     {
       "label": "build:web",
@@ -16913,7 +16913,7 @@
       "norm_label": "build:web"
     },
     {
-      "label": "clean:ios:e2e",
+      "label": "clean:e2e:ios",
       "file_type": "code",
       "source_file": "frontend/package.json",
       "source_location": "L14",
@@ -16921,7 +16921,7 @@
       "id": "frontend_package_scripts_clean_ios_e2e",
       "community": 9,
       "community_name": "scripts",
-      "norm_label": "clean:ios:e2e"
+      "norm_label": "clean:e2e:ios"
     },
     {
       "label": "doctor",
@@ -16979,7 +16979,7 @@
       "norm_label": "ios"
     },
     {
-      "label": "ios:device",
+      "label": "start:device:ios",
       "file_type": "code",
       "source_file": "frontend/package.json",
       "source_location": "L24",
@@ -16987,7 +16987,7 @@
       "id": "frontend_package_scripts_ios_device",
       "community": 9,
       "community_name": "scripts",
-      "norm_label": "ios:device"
+      "norm_label": "start:device:ios"
     },
     {
       "label": "prebuild:ios",
