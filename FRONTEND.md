@@ -47,8 +47,8 @@ npm run verify -- --fast   # the same without performance and iOS simulator E2E:
 | Layer | Command | What it is for |
 |---|---|---|
 | Unit / integration | `npm test` | Logic, caching, sync, interests, auth storage. Runs three times, once per platform preset |
-| Performance | `npm run test:perf` | Render-count and JS-duration regressions, vs `.reassure/baseline.perf` |
-| Web end-to-end | `npm run test:e2e:web` | Real browser against the exported build |
+| Performance | `npm run test:perf` | Render-count and JS-duration regressions, vs `.reassure/baseline.perf`. `npm run test:perf:gate` then fails on any render count that went up — Reassure itself only reports |
+| Web end-to-end | `npm run test:e2e:web` | Real browser against the exported build. Desktop runs every test; tests tagged `@layout` also run on a phone in portrait and in landscape (the compact and short layouts) |
 | iOS end-to-end | `npm run test:e2e:ios` | Maestro flows on the iOS Simulator, against the `e2e-ios-sim` build. In `verify`; skipped (not failed) when a prerequisite is missing |
 | Device performance | `npm run test:perf:device` | Frames, start-up and memory on the physical Android phone. **Not** in `verify` — needs the phone, and takes 15-25 min |
 
@@ -61,8 +61,13 @@ Conventions worth knowing before adding a test:
   output cannot host, so web rendering is Playwright's job.
 - Caches and the UI-state snapshot are module state. Cases isolate by taking a **fresh slug** (or
   screenKey) rather than resetting shared state.
-- Pin time with `setCurrentTimeMs(Date.parse('…+02:00'))` — an explicit offset, so the suite does not
-  depend on the runner's timezone. Use fake timers only for *scheduling*.
+- Pin time with `setCurrentTimeMs(Date.parse('…+02:00'))` — an explicit offset. Festival days start at
+  06:00 *local* time, so every jest process also runs in Europe/Prague (`tests/setup/globalTz.ts`),
+  and so does Playwright (`timezoneId`); in UTC the same instant lands on a different timeline. Use
+  fake timers only for *scheduling* — and for render counts, where they make the timeline's
+  per-frame mount deterministic.
+- `@testing-library/react-native` 14 is async: `await render(…)` and `await view.unmount()`. An
+  unawaited unmount runs its cleanup after your assertion.
 - Mock at the module boundary (the adapter), not at `fetch`.
 
 ### Native end-to-end (iOS Simulator)
@@ -86,8 +91,15 @@ Two things to know when writing flows:
 - **A touchable is one accessibility element on iOS.** Its children's text is merged into a single
   label, so an artist row reads "3 INCHES OF BLOOD, HEAVY METAL, …", not just the name. Match names as
   `".*NAME.*"`; match drawer items exactly, so "Program" does not also hit "Support Program".
-- Elements with no stable text get a `testID` (the search field is `artist-search`). A placeholder is
-  not reliably matchable.
+- Elements with no stable text get a `testID` (the search field is `artist-search`; the timeline's
+  scrollers are `timeline-scroll-x` and `timeline-scroll-y`). A placeholder is not reliably matchable.
+- Maestro lists only what intersects the screen, so `assertNotVisible` on an off-screen timeline
+  block is a real position check (`timeline-jump.yaml` relies on it).
+- Typing into the search field occasionally goes nowhere on a freshly booted simulator; use
+  `common/search-artist.yaml`, which retries until the filter visibly applied.
+- `openLink` with the `ba://` scheme raises iOS's "Open in …?" alert until it has been accepted once.
+  Tap it away (optionally) in the flow — left up, it sits over every later flow.
+- The fixture API serves one share token (`tests/server/shareFixture.ts`) for the add-friend flows.
 
 Maestro cannot drive a physical iPhone (2.11: "Physical iOS devices are not yet supported").
 
@@ -104,9 +116,13 @@ npm run test:perf:device        # --runs N, --scenarios a,b, --baseline
 ```
 
 Scenarios: **cold start** (first frame, and the moment the app is usable via a logcat marker the perf
-build emits), **list fling**, **search typing** (the Intl collation path) and **timeline day switch**.
-Each reports `dumpsys gfxinfo` frame stats — janky %, p50/p90/p99 frame time, slow-UI-thread count —
-and memory from `dumpsys meminfo`.
+build emits), **list fling**, **detail open** (the artist sheet over the list), **search typing** (the
+Intl collation path), **timeline day switch** and **timeline pan** (a settled day, panned out and
+back). Each reports `dumpsys gfxinfo` frame stats — janky %, p50/p90/p99 frame time, slow-UI-thread
+count — and memory from `dumpsys meminfo`. The day switch also reports **mountMs**: from the tap's
+handler to the frame after the day's last slice mounted, from two logcat marks
+(`src/utils/perfMarks.ts`) — the JS-side cost frame stats cannot see. It needs a perf build that has
+the marks, and reads `n/a` on an older one.
 
 Everything is driven over adb, and nothing of ours runs on the phone during a measurement: elements
 are found with `uiautomator dump` beforehand and the measured input is plain `adb input`. Maestro
@@ -147,7 +163,7 @@ Node; only a real phone measures the phone.
 
 `.github/workflows/frontend.yml` runs the first three layers on every push and pull request touching
 `frontend/`. The performance job is **advisory** (`continue-on-error`): render counts are comparable anywhere,
-durations are not. It measures the base revision and the current one in the same job, which cancels
+durations are not — so it runs the render-count gate, whose failure shows on the job without blocking. It measures the base revision and the current one in the same job, which cancels
 the machine variance that makes a committed baseline useless there — and skips with a notice while
 the base branch has no performance suite.
 
