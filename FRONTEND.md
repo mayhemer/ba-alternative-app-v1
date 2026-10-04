@@ -75,6 +75,11 @@ It tests a **built binary**, not your working tree, and prints how far behind HE
 After app changes, `npm run build:ios:e2e` first. To use a locally built simulator app instead of
 EAS, pass `--app path/to/App.app`; nothing else in the runner changes.
 
+`npm run clean:ios:e2e` frees what the suite leaves on disk, about 3.5 GB. It erases the test
+simulator to factory state (every app on it, not just this one), and deletes the downloaded simulator
+builds, Maestro's debug output and the last reports. The next run rebuilds all of it, at the cost of a
+slower first boot and a fresh download: about 6½ minutes for `verify` instead of 3.
+
 Two things to know when writing flows:
 
 - **A touchable is one accessibility element on iOS.** Its children's text is merged into a single

@@ -24,6 +24,7 @@ import { fileURLToPath } from 'node:url';
 import { fetchArtifact, findAppBundle, latestBuild, staleness } from './lib/eas.ts';
 import { startFixtureProcess } from './lib/fixtureProcess.ts';
 import { EXIT, has, must, parseArgs, run, skip } from './lib/proc.ts';
+import { findSimulator, simulatorName } from './lib/simulator.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const FLOWS = join(ROOT, 'e2e', 'native');
@@ -32,7 +33,7 @@ const BUNDLE_ID = 'cz.janbambas.ba';
 const PROFILE = 'e2e-ios-sim';
 
 const args = parseArgs(process.argv.slice(2));
-const simName = typeof args.sim === 'string' ? args.sim : (process.env.IOS_SIM ?? 'iPhone 17 Pro');
+const simName = simulatorName(args);
 
 // ── Prerequisites ─────────────────────────────────────────────────────────────
 
@@ -47,21 +48,6 @@ if (!has('maestro')) {
 }
 
 // ── Simulator ─────────────────────────────────────────────────────────────────
-
-type Sim = { udid: string; name: string; state: string };
-
-function findSimulator(wanted: string): Sim {
-  const json = JSON.parse(must('xcrun', ['simctl', 'list', 'devices', 'available', '--json'])) as {
-    devices: Record<string, Sim[]>;
-  };
-  const all = Object.values(json.devices).flat();
-  const match = all.find((d) => d.udid === wanted) ?? all.find((d) => d.name === wanted);
-  if (match === undefined) {
-    const names = [...new Set(all.map((d) => d.name))].filter((n) => n.startsWith('iPhone')).join(', ');
-    skip(`no available simulator named "${wanted}"`, `Available: ${names}. Pass --sim "<name>".`);
-  }
-  return match;
-}
 
 const sim = findSimulator(simName);
 console.log(`simulator: ${sim.name} (${sim.udid})`);

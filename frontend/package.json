@@ -11,6 +11,7 @@
     "test:perf:baseline": "TEST_RUNNER_ARGS=\"--config jest.perf.config.ts --runInBand\" reassure --baseline",
     "test:e2e:web": "playwright test",
     "test:e2e:ios": "node --experimental-strip-types --no-warnings scripts/test-e2e-ios.ts",
+    "clean:ios:e2e": "node --experimental-strip-types --no-warnings scripts/clean-ios-e2e.ts",
     "test:perf:device": "node --experimental-strip-types --no-warnings scripts/test-perf-device.ts",
     "install:perf:android": "node --experimental-strip-types --no-warnings scripts/install-perf-android.ts",
     "serve:fixtures": "node --experimental-strip-types --no-warnings tests/server/fixtureServer.ts 4010",
