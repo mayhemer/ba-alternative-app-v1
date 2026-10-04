@@ -36,57 +36,62 @@ export const ArtistRow = React.memo(function ArtistRow({ artist, status, onPress
     onPress(artist);
   }, [onPress, artist]);
 
+  // The star is a sibling of the touchable, not inside it. Nested, iOS merges it
+  // into the row's accessibility label, so VoiceOver (and Maestro) can only open
+  // the detail and never reach the star itself.
   return (
-    <TouchableOpacity
-      onPress={handlePress}
-      className="flex-row items-center px-4 py-3 border-b border-border bg-background"
-      activeOpacity={0.7}
-    >
-      {/* Thumbnail */}
-      <View className="w-18 h-14 mr-3 bg-surface overflow-hidden">
-        {artist.thumbUrl !== '' ? (
-          // Disk-backed on purpose: the list unmounts rows as they scroll off, so a
-          // memory-only policy re-downloads ~280 kB per row every time one comes back.
-          // The corpus is bounded (~44 MB for a full edition, and the detail hero reuses
-          // this exact URL) and both platforms evict it themselves — Glide by a 250 MB
-          // LRU, SDWebImage by a one-week age limit.
-          <ExpoImage
-            source={{ uri: artist.thumbUrl }}
-            style={{ width: 75, height: 56 }}
-            contentFit="cover"
-            cachePolicy="memory-disk"
-          />
-        ) : (
-          <View className="w-14 h-14 bg-surface" />
-        )}
-      </View>
-
-      {/* Artist info */}
-      <View className="flex-1 mr-3">
-        <Text className="text-textPrimary text-base font-semibold" numberOfLines={1}>
-          {artist.name}
-        </Text>
-        {genre !== '' && (
-          <Text className="text-textSecondary text-xs mt-0.5" numberOfLines={1}>
-            {genre}
-          </Text>
-        )}
-        {country !== '' && (
-          <Text className="text-textSecondary text-xs" numberOfLines={1}>
-            {country}
-          </Text>
-        )}
-      </View>
-
-      {/* Friends who picked this artist */}
-      {friends !== undefined && (
-        <View className="mr-3">
-          <FriendFacepile friends={friends} size={20} />
+    <View className="flex-row items-center pr-4 border-b border-border bg-background">
+      <TouchableOpacity
+        onPress={handlePress}
+        className="flex-1 flex-row items-center pl-4 py-3"
+        activeOpacity={0.7}
+      >
+        {/* Thumbnail */}
+        <View className="w-18 h-14 mr-3 bg-surface overflow-hidden">
+          {artist.thumbUrl !== '' ? (
+            // Disk-backed on purpose: the list unmounts rows as they scroll off, so a
+            // memory-only policy re-downloads ~280 kB per row every time one comes back.
+            // The corpus is bounded (~44 MB for a full edition, and the detail hero reuses
+            // this exact URL) and both platforms evict it themselves — Glide by a 250 MB
+            // LRU, SDWebImage by a one-week age limit.
+            <ExpoImage
+              source={{ uri: artist.thumbUrl }}
+              style={{ width: 75, height: 56 }}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+            />
+          ) : (
+            <View className="w-14 h-14 bg-surface" />
+          )}
         </View>
-      )}
+
+        {/* Artist info */}
+        <View className="flex-1 mr-3">
+          <Text className="text-textPrimary text-base font-semibold" numberOfLines={1}>
+            {artist.name}
+          </Text>
+          {genre !== '' && (
+            <Text className="text-textSecondary text-xs mt-0.5" numberOfLines={1}>
+              {genre}
+            </Text>
+          )}
+          {country !== '' && (
+            <Text className="text-textSecondary text-xs" numberOfLines={1}>
+              {country}
+            </Text>
+          )}
+        </View>
+
+        {/* Friends who picked this artist */}
+        {friends !== undefined && (
+          <View className="mr-3">
+            <FriendFacepile friends={friends} size={20} />
+          </View>
+        )}
+      </TouchableOpacity>
 
       {/* Star */}
       <StarButton status={status} onPress={handleStarPress} label="Toggle interest" />
-    </TouchableOpacity>
+    </View>
   );
 });

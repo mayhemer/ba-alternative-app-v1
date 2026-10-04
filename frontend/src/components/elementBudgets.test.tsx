@@ -62,7 +62,9 @@ const EVENT = (scheduleFixture as unknown as DbEvent[]).find((e) => e.artistId =
 // more) and no conflict on the block (the striped bar is SVG and costs more).
 // Those are the common cases and the ones that multiply.
 const BUDGET = {
-  artistRow: 9,   // 4 View, 4 Text, 1 image
+  // 5 View, 4 Text, 1 image. The fifth View wraps the touchable and the star as
+  // siblings, so iOS exposes the star to VoiceOver as its own button.
+  artistRow: 10,
   artistBlock: 6, // 4 View, 2 Text
 };
 
