@@ -41,6 +41,9 @@ else
   # duration change; render counts are comparable anywhere.
   if [ -f .reassure/baseline.perf ]; then
     npm run --silent test:perf
+    # Reassure itself never fails on a regression; this fails on the
+    # deterministic part of it — render counts. Durations stay advisory.
+    npm run --silent test:perf:gate
   else
     echo "no baseline yet — run 'npm run test:perf:baseline' first"
   fi

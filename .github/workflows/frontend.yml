@@ -148,6 +148,14 @@ jobs:
           npm ci
           npm run test:perf
 
+      # Render counts are the deterministic part of the comparison, so they are
+      # gated even here; the job as a whole stays advisory.
+      - name: Gate on render counts
+        run: |
+          if [ -f .reassure/output.json ]; then
+            npm run test:perf:gate
+          fi
+
       - name: Publish the comparison
         if: always()
         run: |

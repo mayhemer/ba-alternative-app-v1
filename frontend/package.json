@@ -9,6 +9,7 @@
     "gen:fixtures": "node --experimental-strip-types --no-warnings scripts/gen-fixtures.ts",
     "test:perf": "TEST_RUNNER_ARGS=\"--config jest.perf.config.ts --runInBand\" reassure",
     "test:perf:baseline": "TEST_RUNNER_ARGS=\"--config jest.perf.config.ts --runInBand\" reassure --baseline",
+    "test:perf:gate": "node --experimental-strip-types --no-warnings scripts/check-render-counts.ts",
     "test:e2e:web": "playwright test",
     "test:e2e:ios": "node --experimental-strip-types --no-warnings scripts/test-e2e-ios.ts",
     "clean:e2e:ios": "node --experimental-strip-types --no-warnings scripts/clean-e2e-ios.ts",
