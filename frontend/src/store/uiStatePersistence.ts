@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { hydrateInterests } from '../cache/cacheService';
+import { DEFAULT_SCOPE, type LensScope } from '../utils/interestUtils';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Single owner of all persisted timeline UI state. Holds an in-memory snapshot
@@ -18,6 +19,7 @@ import { hydrateInterests } from '../cache/cacheService';
 const KEY_HIDDEN_CATS    = 'timeline:hiddenCategories';   // existing — JSON string[]
 const KEY_SCROLL_POS     = 'timeline:scrollPositions:v2'; // existing — Record<screenKey, Record<dayStart, x>>
 const KEY_SELECTED_DAY   = 'timeline:selectedDayStart';   // new      — Record<screenKey, dayStart>
+const KEY_LENS_SCOPE     = 'lens:scope';                  // existing — LensScope, never a friend's
 
 const WRITE_DEBOUNCE_MS = 300;
 
@@ -30,6 +32,7 @@ type Snapshot = {
   hiddenCategories: string[];
   scrollPositions: ScrollPositions;
   selectedDayStart: SelectedDayMap;
+  lensScope: LensScope;
 };
 
 export type UiStateKey = keyof Snapshot;
@@ -60,6 +63,17 @@ const ENTRIES: { [K in UiStateKey]: Entry<K> } = {
     serialize: (value) => JSON.stringify(value),
     fallback: () => ({}),
   },
+  // The lens persists only "everything" and "my picks": the app never launches
+  // viewing a friend. A friend scope found in storage (older builds) is ignored.
+  lensScope: {
+    storageKey: KEY_LENS_SCOPE,
+    parse: (raw) => {
+      const stored = JSON.parse(raw) as LensScope;
+      return stored.kind === 'friend' ? DEFAULT_SCOPE : stored;
+    },
+    serialize: (value) => JSON.stringify(value),
+    fallback: () => DEFAULT_SCOPE,
+  },
 };
 
 const KEYS = Object.keys(ENTRIES) as UiStateKey[];
@@ -70,6 +84,7 @@ let snapshot: Snapshot = {
   hiddenCategories: ENTRIES.hiddenCategories.fallback(),
   scrollPositions: ENTRIES.scrollPositions.fallback(),
   selectedDayStart: ENTRIES.selectedDayStart.fallback(),
+  lensScope: ENTRIES.lensScope.fallback(),
 };
 
 // ── Hydration ────────────────────────────────────────────────────────────────
@@ -142,6 +157,20 @@ function setUiState<K extends UiStateKey>(key: K, value: Snapshot[K]): void {
 
 export function setHiddenCategories(list: string[]): void {
   setUiState('hiddenCategories', list);
+}
+
+/**
+ * Remembers the lens for the next launch. A friend's scope is not remembered —
+ * the app never opens viewing a friend — so it leaves the last own scope stored.
+ */
+export function setLensScope(scope: LensScope): void {
+  if (scope.kind === 'friend') {
+    return;
+  }
+  if (JSON.stringify(scope) === JSON.stringify(snapshot.lensScope)) {
+    return;
+  }
+  setUiState('lensScope', scope);
 }
 
 export function setSelectedDay(screenKey: string, dayStart: number): void {

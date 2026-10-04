@@ -5,6 +5,7 @@ import {
   getUiState,
   hydrateLocalState,
   setHiddenCategories,
+  setLensScope,
   setScroll,
   setSelectedDay,
 } from './uiStatePersistence';
@@ -22,6 +23,7 @@ import {
 const KEY_SCROLL = 'timeline:scrollPositions:v2';
 const KEY_DAY = 'timeline:selectedDayStart';
 const KEY_HIDDEN = 'timeline:hiddenCategories';
+const KEY_LENS = 'lens:scope';
 const DEBOUNCE_MS = 300;
 
 const DAY = Date.parse('2026-08-05T00:00:00+02:00');
@@ -176,5 +178,45 @@ describe('hydrating at startup', () => {
     getItem.mockRejectedValueOnce(new Error('storage unavailable'));
 
     await expect(hydrateLocalState('ba2025')).resolves.toBeUndefined();
+  });
+});
+
+// ── The lens ──────────────────────────────────────────────────────────────────
+
+describe('the lens scope', () => {
+  afterEach(() => {
+    setLensScope({ kind: 'all' });
+  });
+
+  it('is restored at startup, so the lens can start from it', async () => {
+    await AsyncStorage.setItem(KEY_LENS, JSON.stringify({ kind: 'me', level: 'must_see' }));
+
+    await hydrateLocalState('ba2025');
+
+    expect(getUiState('lensScope')).toEqual({ kind: 'me', level: 'must_see' });
+  });
+
+  it('never restores a friend\'s scope — the app does not open viewing a friend', async () => {
+    await AsyncStorage.setItem(KEY_LENS, JSON.stringify({ kind: 'friend', token: 't1', level: null }));
+
+    await hydrateLocalState('ba2025');
+
+    expect(getUiState('lensScope')).toEqual({ kind: 'all' });
+  });
+
+  it('does not remember a friend\'s scope, keeping the last own one', () => {
+    setLensScope({ kind: 'me', level: null });
+    setLensScope({ kind: 'friend', token: 't1', level: null });
+
+    expect(getUiState('lensScope')).toEqual({ kind: 'me', level: null });
+  });
+
+  it('is persisted, debounced like the rest', async () => {
+    setItem.mockClear();
+    setLensScope({ kind: 'me', level: 'maybe' });
+    jest.advanceTimersByTime(DEBOUNCE_MS);
+    await flush();
+
+    expect(setItem).toHaveBeenCalledWith(KEY_LENS, JSON.stringify({ kind: 'me', level: 'maybe' }));
   });
 });

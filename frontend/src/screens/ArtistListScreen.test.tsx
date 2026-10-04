@@ -4,6 +4,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ArtistListScreen } from './ArtistListScreen';
 import { PerfProviders } from '../../tests/setup/PerfProviders';
 import { useLens } from '../context/LensContext';
+import { setLensScope } from '../store/uiStatePersistence';
+import { DEFAULT_SCOPE } from '../utils/interestUtils';
 import { createDataCollector, populateCache } from '../cache/cacheService';
 import type { DbArtist, DbCategory, DbEvent, DbStage } from '../types/backend';
 
@@ -47,6 +49,9 @@ beforeAll(() => {
 
 beforeEach(async () => {
   await AsyncStorage.clear();
+  // The lens remembers its scope (module state, read when the provider is
+  // created); start every case from "everything".
+  setLensScope(DEFAULT_SCOPE);
 });
 
 function MyPicksLens() {

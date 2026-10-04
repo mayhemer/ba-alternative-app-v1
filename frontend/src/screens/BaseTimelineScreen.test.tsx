@@ -6,9 +6,9 @@ import { PerfProviders } from '../../tests/setup/PerfProviders';
 import { useLens } from '../context/LensContext';
 import { useTimelineFilter } from '../context/TimelineFilterContext';
 import { createDataCollector, getCategories, populateCache } from '../cache/cacheService';
-import { getScroll, setHiddenCategories, setSelectedDay } from '../store/uiStatePersistence';
+import { getScroll, setHiddenCategories, setLensScope, setSelectedDay } from '../store/uiStatePersistence';
 import { setCurrentTimeMs } from '../utils/clock';
-import type { LensScope } from '../utils/interestUtils';
+import { DEFAULT_SCOPE, type LensScope } from '../utils/interestUtils';
 import type { DbArtist, DbCategory, DbEvent, DbStage } from '../types/backend';
 
 import artistsFixture from '../../tests/fixtures/generated/ba2025/artists.json';
@@ -66,8 +66,10 @@ beforeAll(() => {
 
 beforeEach(async () => {
   jest.useFakeTimers({ doNotFake: ['nextTick', 'queueMicrotask', 'performance', 'hrtime', 'Date'] });
-  // The lens persists its scope; start every case from "everything".
+  // The lens remembers its scope (module state, read when the provider is
+  // created); start every case from "everything".
   await AsyncStorage.clear();
+  setLensScope(DEFAULT_SCOPE);
   setCurrentTimeMs(NOW);
 });
 

@@ -6,17 +6,15 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useExclusiveOverlay } from '../hooks/useExclusiveOverlay';
-import { type LensScope, DEFAULT_SCOPE } from '../utils/interestUtils';
+import type { LensScope } from '../utils/interestUtils';
+import { getUiState, setLensScope } from '../store/uiStatePersistence';
 
 // The "lens" is the global source+filter that the artist list and both timelines
 // read from. It supersedes the old per-screen `interestFilter`.
 //
 // Panel open-state lives in a SEPARATE context so toggling the panel does not
 // re-render the (expensive) timeline/list consumers that only read `scope`.
-
-const KEY_LENS_SCOPE = 'lens:scope';
 
 type LensContextValue = {
   scope: LensScope;
@@ -33,28 +31,16 @@ const LensContext = createContext<LensContextValue | null>(null);
 const LensPanelContext = createContext<LensPanelContextValue | null>(null);
 
 export function LensProvider({ children }: { children: React.ReactNode }) {
-  const [scope, setScopeState] = useState<LensScope>(DEFAULT_SCOPE);
+  // Starts from the scope StartupGate loaded with the rest of the UI state,
+  // rather than hydrating in an effect. Hydrating late re-rendered every list
+  // and timeline once more after their first paint — and, arriving after the
+  // back history's first observation, was recorded as a move the user made.
+  const [scope, setScopeState] = useState<LensScope>(() => getUiState('lensScope'));
   const [isOpen, setIsOpen] = useState(false);
 
-  // Hydrate once. A persisted friend scope is intentionally NOT restored — we
-  // never launch the app "viewing a friend"; only the all/me filter persists.
+  // Remembered for the next launch; a friend's scope is not (see setLensScope).
   useEffect(() => {
-    AsyncStorage.getItem(KEY_LENS_SCOPE).then((raw) => {
-      if (raw === null) { return; }
-      try {
-        const stored = JSON.parse(raw) as LensScope;
-        if (stored.kind === 'friend') { return; }
-        setScopeState(stored);
-      } catch {
-        // ignore malformed value
-      }
-    });
-  }, []);
-
-  // Persist all/me scopes; skip friend scopes so they don't survive a relaunch.
-  useEffect(() => {
-    if (scope.kind === 'friend') { return; }
-    void AsyncStorage.setItem(KEY_LENS_SCOPE, JSON.stringify(scope));
+    setLensScope(scope);
   }, [scope]);
 
   const toggle = useCallback((): void => { setIsOpen((prev) => !prev); }, []);
