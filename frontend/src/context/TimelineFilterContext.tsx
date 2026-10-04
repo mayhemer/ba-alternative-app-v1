@@ -43,7 +43,8 @@ type TimelineFilterContextValue = {
   toggleCategory: (categoryId: string) => void;
 
   // Signals a specific screen's TimelineView to scroll to an event: its centre is
-  // centred in the view, but the start is kept visible with 1 h of space to its left.
+  // centred in the view, but the start is kept visible with 15 min of space to its left
+  // (timelineLayout.eventScrollTarget).
   // categoryId, when given, also centres that category's lane vertically; the
   // "now" button omits it, since jumping to the current time should not move the
   // lane the user is looking at.

@@ -24,10 +24,10 @@ import {
   stripHeightFor,
   VIEW_OFFSET_X,
   VIEW_WIDTH,
-  PIXELS_PER_MS,
   labelRepeatPx,
   timeToX,
   defaultScrollX,
+  eventScrollTarget,
 } from './timelineLayout';
 import { colors } from '../../styling/tokens';
 import { currentTimeMs } from '../../utils/clock';
@@ -37,9 +37,6 @@ import type { ConflictOverlap } from '../../utils/conflictUtils';
 // Stable identity for a category that ended up with no events, so the lane's
 // memo is not defeated by a fresh literal on every render.
 const NO_LANE_EVENTS: LaneEvent[] = [];
-
-// Horizontal space kept to the left of an event's start when scrolling to it.
-const LEFT_PADDING_X = 15 * 60 * 1000 * PIXELS_PER_MS; // 15 minutes
 
 // ── Progressive mount ─────────────────────────────────────────────────────────
 //
@@ -323,27 +320,25 @@ export function TimelineView({
     if (scrollToTimeSignal.screenKey !== screenKey) { return; }
     const { fromMs, toMs, categoryId } = scrollToTimeSignal;
     const timer = setTimeout(() => {
-      const day = selectedDayStartRef.current;
-      // Content-space X (canvas is shifted left by VIEW_OFFSET_X).
-      const centreX = timeToX((fromMs + toMs) / 2, day) - VIEW_OFFSET_X;
-      const startX  = timeToX(fromMs, day) - VIEW_OFFSET_X;
-      // Centre the event's midpoint, but never scroll so far that the start loses
-      // its left padding (long events).
-      const centredOffset = centreX - scrollViewWidthRef.current / 2;
-      const targetX = Math.max(0, Math.min(centredOffset, startX - LEFT_PADDING_X));
-
-      // Vertical: centre the event's lane in the space that is actually visible.
-      // The ruler sits above this scroller, and on a short viewport the floating
-      // BottomBar covers the bottom of it — centring on the raw height would park
-      // the lane behind the bar. Left undefined when the lane is unknown (a "now"
-      // jump, or a category hidden by the filter), and the offset then stands.
+      // The lane is unknown for a "now" jump, or when the category is hidden by
+      // the filter; the vertical offset then stands.
       const geometry = laneGeometryRef.current;
-      const visibleHeight = Math.max(0, geometry.areaHeight - RULER_HEIGHT - geometry.bottomClearance);
-      const laneTop = categoryId === undefined ? undefined : geometry.laneOffsets[categoryId];
-      const laneSpan =
-        categoryId === undefined ? 0 : geometry.stripHeight + (geometry.laneHeights[categoryId] ?? LANE_HEIGHT);
-      const targetY =
-        laneTop === undefined ? undefined : Math.max(0, laneTop + laneSpan / 2 - visibleHeight / 2);
+      let lane: { top: number; span: number } | undefined;
+      if (categoryId !== undefined && geometry.laneOffsets[categoryId] !== undefined) {
+        lane = {
+          top: geometry.laneOffsets[categoryId],
+          span: geometry.stripHeight + (geometry.laneHeights[categoryId] ?? LANE_HEIGHT),
+        };
+      }
+      const { x: targetX, y: targetY, visibleHeight } = eventScrollTarget({
+        fromMs,
+        toMs,
+        dayStartMs: selectedDayStartRef.current,
+        viewportWidth: scrollViewWidthRef.current,
+        lane,
+        areaHeight: geometry.areaHeight,
+        bottomClearance: geometry.bottomClearance,
+      });
 
       // A jump can land far outside the slice this day was mounted at, so widen
       // the window to cover where we are about to be. It only ever grows, so a

@@ -148,6 +148,54 @@ export function deriveFestivalDays(events: DbEvent[]): number[] {
   return Array.from(daySet).sort((a, b) => a - b);
 }
 
+// ── Scroll to an event ────────────────────────────────────────────────────────
+
+// Horizontal space kept to the left of an event's start when scrolling to it.
+const EVENT_LEFT_PADDING_X = 15 * 60 * 1000 * PIXELS_PER_MS; // 15 minutes
+
+export type EventScrollInput = {
+  fromMs: number;
+  toMs: number;
+  dayStartMs: number;
+  /** Measured width of the horizontal scroller. */
+  viewportWidth: number;
+  /** The event's lane, from the top of the lane stack; undefined leaves the vertical offset alone. */
+  lane: { top: number; span: number } | undefined;
+  /** Measured height of the whole timeline area, ruler included. */
+  areaHeight: number;
+  /** Space at the bottom covered by the floating BottomBar. */
+  bottomClearance: number;
+};
+
+export type EventScrollTarget = {
+  /** Content-space X for the horizontal scroller. */
+  x: number;
+  /** Y for the vertical scroller; undefined when there is no lane to centre. */
+  y: number | undefined;
+  /** Height of the lane stack actually visible — between the ruler and the BottomBar. */
+  visibleHeight: number;
+};
+
+/**
+ * Where to scroll so an event is in view: its midpoint centred horizontally, but
+ * never so far that its start loses its left padding (a long event), and its lane
+ * centred in the height that is actually visible — the ruler sits above the
+ * vertical scroller, and on a short viewport the floating BottomBar covers the
+ * bottom of it, so centring on the raw height would park the lane behind the bar.
+ */
+export function eventScrollTarget(input: EventScrollInput): EventScrollTarget {
+  const { fromMs, toMs, dayStartMs, viewportWidth, lane, areaHeight, bottomClearance } = input;
+  // Content-space X: the canvas is shifted left by VIEW_OFFSET_X.
+  const centreX = timeToX((fromMs + toMs) / 2, dayStartMs) - VIEW_OFFSET_X;
+  const startX  = timeToX(fromMs, dayStartMs) - VIEW_OFFSET_X;
+  const centredOffset = centreX - viewportWidth / 2;
+  const x = Math.max(0, Math.min(centredOffset, startX - EVENT_LEFT_PADDING_X));
+
+  const visibleHeight = Math.max(0, areaHeight - RULER_HEIGHT - bottomClearance);
+  const y = lane === undefined ? undefined : Math.max(0, lane.top + lane.span / 2 - visibleHeight / 2);
+  return { x, y, visibleHeight };
+}
+
 // ── Display helpers ───────────────────────────────────────────────────────────
 
 /** Format a Unix-ms timestamp as HH:MM for display inside event blocks. */
