@@ -30,8 +30,12 @@ export const PINNED_NOW = new Date('2025-08-06T14:00:00+02:00');
 export const FIXTURE_SLUG = 'ba2025';
 
 export async function seedEdition(page: Page, slug = FIXTURE_SLUG): Promise<void> {
+  // Only when nothing is stored yet: an init script runs on every load, so an
+  // unconditional write would undo an edition the test itself chose, on reload.
   await page.addInitScript((value) => {
-    window.localStorage.setItem('app:selectedSlug', value);
+    if (window.localStorage.getItem('app:selectedSlug') === null) {
+      window.localStorage.setItem('app:selectedSlug', value);
+    }
   }, slug);
 }
 

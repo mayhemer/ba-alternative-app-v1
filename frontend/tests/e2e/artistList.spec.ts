@@ -41,6 +41,7 @@ test('a search matching nothing says so rather than looking broken', async ({ ap
   // its loading state.
   await expect(appPage.getByText('LOADING ARTISTS…')).toHaveCount(0);
   await expect(appPage.getByText(FIRST_ARTIST, { exact: false })).toHaveCount(0);
+  await expect(appPage.getByText('No artists found', { exact: true })).toBeVisible();
 });
 
 test('a star survives a reload', async ({ appPage }) => {

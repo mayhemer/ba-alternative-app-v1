@@ -1,4 +1,4 @@
-import { cutNetwork, expect, FIXTURE_SLUG, seedEdition, test } from './fixtures';
+import { cutNetwork, expect, seedEdition, test } from './fixtures';
 
 // ── Startup ───────────────────────────────────────────────────────────────────
 
@@ -21,9 +21,20 @@ test('reaches every main section', async ({ appPage }) => {
   await appPage.goto('/');
   await expect(appPage.getByText('LOADING ARTISTS…')).toHaveCount(0, { timeout: 20_000 });
 
-  for (const section of ['Program', 'Support Program', 'Conflicts', 'Settings']) {
-    await appPage.getByText(section, { exact: true }).first().click();
-    await expect(appPage.getByText(section, { exact: true }).first()).toBeVisible();
+  // Each section is recognised by content only it has — the drawer label stays
+  // visible whether or not the click navigated. The clock is pinned to
+  // Wednesday 6 Aug 2025, whose main programme has a "Marshall" lane and whose
+  // support programme has an "Exhibition" lane; neither exists in the other.
+  const sections: [label: string, proof: string][] = [
+    ['Program', 'Marshall'],
+    ['Support Program', 'Exhibition'],
+    ['Conflicts', 'No conflicts in your schedule.'],
+    ['Settings', 'Active'],
+  ];
+  for (const [label, proof] of sections) {
+    await appPage.getByText(label, { exact: true }).first().click();
+    await expect(appPage.getByText(proof, { exact: true }).filter({ visible: true }).first())
+      .toBeVisible({ timeout: 20_000 });
   }
 });
 
@@ -53,6 +64,16 @@ test('persists the chosen edition across a reload', async ({ appPage }) => {
   await appPage.goto('/');
   await expect(appPage.getByText('LOADING ARTISTS…')).toHaveCount(0, { timeout: 20_000 });
 
+  await appPage.getByText('Settings', { exact: true }).first().click();
+  await appPage.getByText('BA2024', { exact: true }).click();
+  await appPage.getByText('Artists', { exact: true }).first().click();
+  // A name only the 2024 lineup has.
+  await expect(appPage.getByText('1914', { exact: false }).first()).toBeVisible({ timeout: 20_000 });
+
+  await appPage.reload();
+
+  await expect(appPage.getByText('1914', { exact: false }).first()).toBeVisible({ timeout: 20_000 });
+  await expect(appPage.getByText(FIRST_ARTIST, { exact: false })).toHaveCount(0);
   const stored = await appPage.evaluate(() => window.localStorage.getItem('app:selectedSlug'));
-  expect(stored).toBe(FIXTURE_SLUG);
+  expect(stored).toBe('ba2024');
 });
