@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { useSelectedSlug } from '../store/AppContext';
 import { useFestivalDays } from '../store/cacheStore';
@@ -21,6 +21,26 @@ function TopBarRight() {
 }
 
 
+// ── Which day a screen opens on ──────────────────────────────────────────────
+
+/**
+ * The day to show when the shared selection is not one of this edition's days
+ * (nothing chosen yet, or a stale one): the screen's own remembered day if still
+ * valid, else today if it is a festival day, else the first day. 0 while the
+ * edition has no days at all.
+ */
+function openingDay(screenKey: string, days: number[]): number {
+  if (days.length === 0) {
+    return 0;
+  }
+  const persisted = getSelectedDay(screenKey);
+  if (persisted !== undefined && days.includes(persisted)) {
+    return persisted;
+  }
+  const today = getFestivalDayStart(currentTimeMs());
+  return days.find((d) => d === today) ?? days[0];
+}
+
 // ── Shared screen logic ───────────────────────────────────────────────────────
 
 type Props = {
@@ -40,45 +60,38 @@ export function BaseTimelineScreen({ title, screenKey, BottomBarComponent, filte
     setSelectedDayStart,
   } = useTimelineFilter();
 
+  // ── Festival-day initialisation ─────────────────────────────────────────────
+
+  // The days themselves, subscribed — so a sync that repopulates the cache
+  // re-derives everything below.
+  const days = useFestivalDays(selectedSlug);
+
+  // The day this screen shows, derived during render: the shared selection when
+  // it is one of this edition's days, else the screen's opening day. Rendering
+  // it straight away, instead of waiting for an effect to put it into the
+  // context, is what removes the "Loading schedule…" frame every mount used to
+  // paint first. Lanes, landing position and day are all computed from this one
+  // value, so they cannot disagree while the context catches up.
+  const dayToShow = useMemo(
+    () => (days.includes(selectedDayStart) ? selectedDayStart : openingDay(screenKey, days)),
+    [days, selectedDayStart, screenKey],
+  );
+
   const { eventsByCategory, visibleCategories, laneHeights, laneOffsets, categorySubRows, canvasHeight, conflictOverlaps } =
-    useTimelineData({ filterArtist, useSubRows });
+    useTimelineData({ dayStart: dayToShow, filterArtist, useSubRows });
 
   useTopBar({ title, RightComponent: TopBarRight });
   useBottomBar({ ContentComponent: BottomBarComponent });
 
-  // ── Festival-day initialisation ─────────────────────────────────────────────
-
-  // The days themselves, subscribed — so this effect re-runs when a sync
-  // repopulates the cache. It used to depend on `events` as a stand-in for
-  // "the cache changed", which needed an exhaustive-deps suppression to keep.
-  const days = useFestivalDays(selectedSlug);
-
-  // Latest selected day without making it a trigger: re-running this effect on
-  // every day switch would fight the user's own selection. A ref says exactly
-  // that, where omitting a real dependency only hid it from ESLint.
-  const selectedDayRef = useRef(selectedDayStart);
-  selectedDayRef.current = selectedDayStart;
-
+  // Share the days and the shown day with the day switcher (and the other
+  // timeline screen). Only ever copies the derived value over, so it can never
+  // fight a day the user picked: a valid selection is its own derivation.
   useEffect(() => {
     setFestivalDays(days);
-    if (days.length === 0) { return; }
-
-    // No default scroll positions are prebuilt here any more. TimelineView derives
-    // them from the day it is about to show (`defaultScrollX`), which is the only
-    // way the value cannot arrive after the view that reads it.
-
-    if (days.includes(selectedDayRef.current)) { return; }
-    // Restore the persisted day if it is still valid, else fall back to today,
-    // else the first festival day.
-    const persistedDay = getSelectedDay(screenKey);
-    if (persistedDay !== undefined && days.includes(persistedDay)) {
-      setSelectedDayStart(persistedDay);
-      return;
+    if (dayToShow !== 0 && dayToShow !== selectedDayStart) {
+      setSelectedDayStart(dayToShow);
     }
-    const today = getFestivalDayStart(currentTimeMs());
-    const todayDay = days.find((d) => d === today);
-    setSelectedDayStart(todayDay ?? days[0]);
-  }, [days, screenKey, setFestivalDays, setSelectedDayStart]);
+  }, [days, dayToShow, selectedDayStart, setFestivalDays, setSelectedDayStart]);
 
   // Persist the selected day per screen whenever it changes (day switch / restore).
   useEffect(() => {
@@ -100,7 +113,7 @@ export function BaseTimelineScreen({ title, screenKey, BottomBarComponent, filte
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
-  if (selectedDayStart === 0) {
+  if (dayToShow === 0) {
     return <LoadingScreen message="Loading schedule…" />;
   }
 
@@ -113,7 +126,7 @@ export function BaseTimelineScreen({ title, screenKey, BottomBarComponent, filte
       laneOffsets={laneOffsets}
       categorySubRows={categorySubRows}
       canvasHeight={canvasHeight}
-      selectedDayStart={selectedDayStart}
+      selectedDayStart={dayToShow}
       onBlockPress={handleBlockPress}
       conflictOverlaps={conflictOverlaps}
     />

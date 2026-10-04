@@ -45,6 +45,21 @@ jest.mock('../context/AuthContext', () => ({
   }),
 }));
 
+// Records every loading caption painted, so a case can prove the timeline never
+// showed one — a frame that commits and is replaced inside the same act() would
+// otherwise be invisible to a query.
+const mockLoadingShown: string[] = [];
+
+jest.mock('../components/ui/LoadingScreen', () => {
+  const { Text } = jest.requireActual('react-native');
+  return {
+    LoadingScreen: ({ message }: { message: string }) => {
+      mockLoadingShown.push(message);
+      return <Text>{message}</Text>;
+    },
+  };
+});
+
 const WED = Date.parse('2025-08-06T06:00:00+02:00');
 const NOW = Date.parse('2025-08-06T12:00:00+02:00');
 
@@ -114,6 +129,15 @@ async function mount(screenKey: string) {
   await settle();
   return view;
 }
+
+it('opens straight on the day, with no loading frame first', async () => {
+  mockLoadingShown.length = 0;
+
+  await mount('edge-no-loading');
+
+  expect(screen.getByText(LANE_TITLE)).toBeTruthy();
+  expect(mockLoadingShown).toEqual([]);
+});
 
 it('remembers where a day with events was left (control for the guard below)', async () => {
   const view = await mount('edge-control');

@@ -25,6 +25,13 @@ import { matchesScope } from '../utils/interestUtils';
 import { computeConflictOverlaps, type ConflictOverlap } from '../utils/conflictUtils';
 
 type Options = {
+  /**
+   * The festival day to lay out (its 06:00 start). Passed in rather than read
+   * from TimelineFilterContext: the screen derives the day it shows during
+   * render, before the context has caught up, and the lanes must be for that
+   * same day — the view takes its landing position from their first event.
+   */
+  dayStart: number;
   filterArtist?: (artist: DbArtist) => boolean;
   useSubRows?: boolean;
 };
@@ -41,10 +48,10 @@ export type TimelineData = {
   conflictOverlaps: Map<string, ConflictOverlap[]>;
 };
 
-export function useTimelineData({ filterArtist, useSubRows = false }: Options = {}): TimelineData {
+export function useTimelineData({ dayStart: selectedDayStart, filterArtist, useSubRows = false }: Options): TimelineData {
   const selectedSlug = useSelectedSlug();
   const { getStatus, interests } = useInterest();
-  const { selectedDayStart, hiddenCategories } = useTimelineFilter();
+  const { hiddenCategories } = useTimelineFilter();
   const { scope } = useLens();
   const { isShort } = useLayoutMode();
   const { getFriend } = useSocialData();
