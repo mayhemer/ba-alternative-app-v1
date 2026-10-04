@@ -1,0 +1,19 @@
+# Narrows the artist list to ${QUERY} and closes the keyboard.
+#
+# On a freshly booted simulator the tap sometimes does not focus the field yet,
+# and the typed text goes nowhere (seen twice in a handful of runs: the list
+# stayed unfiltered, the keyboard never came up). So the step is retried, and
+# only counts once the filter visibly applied — the first name in the full list
+# is gone. Return closes the keyboard: while it is up, the list's first tap only
+# dismisses it.
+appId: cz.janbambas.ba
+---
+- retry:
+    maxRetries: 2
+    commands:
+      - tapOn: { id: "artist-search" }
+      - waitForAnimationToEnd
+      - eraseText: 30
+      - inputText: ${QUERY}
+      - pressKey: Enter
+      - assertNotVisible: ".*3 INCHES OF BLOOD.*"

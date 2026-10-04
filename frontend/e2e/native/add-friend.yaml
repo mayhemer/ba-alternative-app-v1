@@ -1,0 +1,19 @@
+appId: cz.janbambas.ba
+name: a share link opens the friend's schedule
+---
+# The fixture API knows one share token (tests/server/shareFixture.ts): a friend
+# whose ba2025 picks are EXORCIZPHOBIA (must see) and CRYSTAL LAKE (maybe).
+- runFlow: common/launch-fresh.yaml
+- openLink: "ba://add-friend/0123456789abcdef0123456789abcdef0123456789abcdef"
+# iOS asks before handing a custom-scheme link to an app ("Open in …?"), in the
+# simulator's language — until it has been accepted once, so the tap is optional.
+# Left up, the alert would sit over every later flow too.
+- tapOn:
+    text: "Open|Otevřít"
+    optional: true
+# The lens switches to the friend: their two picks, and nobody else.
+- extendedWaitUntil:
+    visible: ".*EXORCIZPHOBIA.*"
+    timeout: 20000
+- assertVisible: ".*CRYSTAL LAKE.*"
+- assertNotVisible: ".*3 INCHES OF BLOOD.*"

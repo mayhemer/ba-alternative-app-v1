@@ -1,0 +1,29 @@
+appId: cz.janbambas.ba
+name: going to a set from the artist sheet scrolls the timeline to it
+---
+# The native half of the scroll-to-event path: the day switch, then a scrollTo on
+# the UI thread to centre the set and its lane. Web covers the geometry precisely
+# (tests/e2e/timeline.spec.ts); this proves the native scroller lands too.
+#
+# REPLICANT plays once, Friday 22:30, in the Octagon — the bottom lane — so the
+# jump needs a day switch, a long horizontal move and a vertical one.
+- runFlow: common/launch-fresh.yaml
+- runFlow:
+    file: common/search-artist.yaml
+    env: { QUERY: "replicant" }
+# The row's merged label, not the bare name: the search field holds "replicant"
+# too, and Maestro matches case-insensitively.
+- tapOn: "REPLICANT, TECHNICAL.*"
+- waitForAnimationToEnd
+# The sheet's event row: stage, day and time merged into one label.
+- tapOn: ".*22:30–23:30.*"
+- waitForAnimationToEnd
+# The block's label is the name followed by its time; the list row's is the
+# name followed by genre and country, so this cannot match the list behind.
+- extendedWaitUntil:
+    visible: "REPLICANT.*22:30.*"
+    timeout: 10000
+# Proof that visibility here means on screen, not merely mounted: an earlier
+# set in the same lane, ~3 h to the left, must be off it. Without this the
+# assertion above would pass on any day the block exists.
+- assertNotVisible: ".*FIVE THE HIEROPHANT.*"
