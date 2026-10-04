@@ -8,10 +8,10 @@ import type { Config } from 'jest';
 //
 // The whole suite runs three times, once per platform preset. That is the only
 // cheap cover for the Platform.OS divergence in this app — token storage
-// (localStorage vs SecureStore), the back-history web/native split, and the two
-// sheets' entirely separate web implementations — and it needs no device. Each
-// preset sets Platform.OS and supplies the matching environment: the web one
-// runs under jsdom, so `localStorage` is real there and absent elsewhere.
+// (localStorage vs SecureStore) and the two sheets' entirely separate web
+// implementations — and it needs no device. Each preset sets Platform.OS and
+// supplies the matching environment: the web one runs under jsdom, so
+// `localStorage` is real there and absent elsewhere.
 //
 // The performance suite has its own config (jest.perf.config.ts): Reassure runs
 // each scenario many times over, which does not belong in the fast feedback loop.
@@ -38,6 +38,7 @@ const shared = {
 const WEB_ONLY_IGNORES = ['\\.test\\.tsx$'];
 
 const config: Config = {
+  globalSetup: '<rootDir>/tests/setup/globalTz.ts',
   projects: (['ios', 'android', 'web'] as const).map((platform) => ({
     ...shared,
     displayName: platform,

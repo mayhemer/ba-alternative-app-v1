@@ -14,6 +14,7 @@ import type { Config } from 'jest';
 const config: Config = {
   preset: 'jest-expo/ios',
   rootDir: '.',
+  globalSetup: '<rootDir>/tests/setup/globalTz.ts',
   testMatch: ['<rootDir>/src/**/*.perf-test.[jt]s?(x)'],
   setupFilesAfterEnv: [
     '<rootDir>/tests/setup/jest.setup.ts',

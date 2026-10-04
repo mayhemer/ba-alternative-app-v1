@@ -28,6 +28,10 @@ export default defineConfig({
   use: {
     baseURL: `http://127.0.0.1:${APP_PORT}`,
     trace: 'retain-on-failure',
+    // The festival's own zone. Festival days start at 06:00 *local* time, so in
+    // a runner's UTC the same pinned clock lands on a different timeline — CI and
+    // a laptop would be testing different screens.
+    timezoneId: 'Europe/Prague',
   },
 
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
