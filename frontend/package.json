@@ -20,7 +20,7 @@
     "verify:fast": "scripts/test-all --fast",
     "doctor": "npx expo-doctor",
     "gen:icons": "node scripts/gen-icons.js",
-    "start:symul:ios": "npx expo run:ios",
+    "start:sim:ios": "npx expo run:ios",
     "start:device:ios": "npx expo run:ios --device",
     "start:web": "npx expo start --web",
     "prebuild:ios": "npx expo prebuild --platform ios --clean",
