@@ -12,7 +12,7 @@ import { useAuth } from './AuthContext';
 import {
   type InterestStatus,
   type LocalInterest,
-  hydrateInterests,
+  getLocalInterests,
   mergeServerInterests,
   setInterest,
 } from '../cache/cacheService';
@@ -33,11 +33,10 @@ type InterestMap = Record<string, InterestStatus>; // artistId → status
 
 type InterestState = {
   interests: InterestMap;
-  isHydrated: boolean;
 };
 
 type InterestAction =
-  | { type: 'HYDRATE'; interests: InterestMap }
+  | { type: 'REPLACE'; interests: InterestMap }
   | { type: 'SET'; artistId: string; status: InterestStatus };
 
 export type CycleStatusResult = {
@@ -87,10 +86,21 @@ function toStatusMap(localMap: Record<string, LocalInterest>): InterestMap {
 
 // ── Reducer ───────────────────────────────────────────────────────────────────
 
+/**
+ * Starts from the interests StartupGate already loaded into memory, rather than
+ * hydrating in an effect: an effect would commit the screen once with no stars
+ * and again with them, and let anything mounting meanwhile read the empty map.
+ * The gate unmounts this provider on an edition switch and loads the new
+ * edition before mounting it again, so reading once at creation is enough.
+ */
+function initialInterestState(slug: string): InterestState {
+  return { interests: toStatusMap(getLocalInterests(slug) ?? {}) };
+}
+
 function interestReducer(state: InterestState, action: InterestAction): InterestState {
   switch (action.type) {
-    case 'HYDRATE':
-      return { interests: action.interests, isHydrated: true };
+    case 'REPLACE':
+      return { interests: action.interests };
     case 'SET':
       return {
         ...state,
@@ -110,10 +120,7 @@ const InterestCycleContext = createContext<InterestCycleContextValue | null>(nul
 export function InterestProvider({ children }: { children: React.ReactNode }) {
   const selectedSlug = useSelectedSlug();
   const { isLoggedIn, getAccessToken } = useAuth();
-  const [state, dispatch] = useReducer(interestReducer, {
-    interests: {},
-    isHydrated: false,
-  });
+  const [state, dispatch] = useReducer(interestReducer, selectedSlug, initialInterestState);
 
   // Ref so cycleStatus can read current state without it being a dependency,
   // keeping cycleStatus stable across interest updates.
@@ -128,7 +135,7 @@ export function InterestProvider({ children }: { children: React.ReactNode }) {
 
     const serverInterests = await fetchUserInterests(slug, token);
     const merged = await mergeServerInterests(slug, serverInterests);
-    dispatch({ type: 'HYDRATE', interests: toStatusMap(merged) });
+    dispatch({ type: 'REPLACE', interests: toStatusMap(merged) });
 
     // Push back any local interests that won the merge (local.updatedAt was newer).
     // This syncs changes made offline or on another device that we just merged locally.
@@ -156,15 +163,12 @@ export function InterestProvider({ children }: { children: React.ReactNode }) {
     }
   }, [getAccessToken]);
 
-  // Hydrate from AsyncStorage whenever the slug changes, then merge from server
-  // if the user is logged in.
+  // Local picks are already in the initial state; merge the server's copy in if
+  // signed in. Logging in later is handled by the effect below.
   useEffect(() => {
-    hydrateInterests(selectedSlug).then((localMap) => {
-      dispatch({ type: 'HYDRATE', interests: toStatusMap(localMap) });
-      if (isLoggedIn) {
-        syncFromServer(selectedSlug).catch(() => undefined);
-      }
-    });
+    if (isLoggedIn) {
+      syncFromServer(selectedSlug).catch(() => undefined);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSlug]);
 

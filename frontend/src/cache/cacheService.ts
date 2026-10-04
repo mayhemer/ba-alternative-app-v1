@@ -561,6 +561,15 @@ export function createDataCollector(): DataCollector & { build(): CacheData } {
 // ── Interest data — write API ─────────────────────────────────────────────────
 
 /**
+ * The interests already loaded into memory for a slug — by StartupGate, before
+ * the providers mount — or undefined if nothing has loaded them. Synchronous, so
+ * a provider can start from them instead of hydrating in an effect.
+ */
+export function getLocalInterests(slug: string): Record<string, LocalInterest> | undefined {
+  return interestCache[slug];
+}
+
+/**
  * Load interests for a slug from AsyncStorage into the in-memory cache.
  * Returns the hydrated map. Call once per slug change before reading interests.
  */

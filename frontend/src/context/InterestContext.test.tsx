@@ -8,6 +8,7 @@ import {
   useInterestCycle,
 } from './InterestContext';
 import { deleteUserInterest, fetchUserInterests, putUserInterest } from '../adapters/baUserApiAdapter';
+import { setInterest } from '../cache/cacheService';
 import { setCurrentTimeMs } from '../utils/clock';
 import { useAuth } from './AuthContext';
 import type { DbUserInterest } from '../types/backend';
@@ -80,9 +81,7 @@ async function mount(artistId = 'a1') {
       <Probe artistId={artistId} />
     </InterestProvider>,
   );
-  // The provider hydrates from storage in an effect, and dispatches the result.
-  // Waiting for it matters: a press landing first is overwritten when HYDRATE
-  // arrives, which looks exactly like the press being ignored.
+  // Let the signed-in server merge on mount settle, so a case starts from rest.
   await act(async () => { await flush(); });
 }
 
@@ -95,6 +94,25 @@ beforeEach(() => {
   mockPut.mockResolvedValue(undefined as never);
   mockDelete.mockResolvedValue(undefined as never);
   setCurrentTimeMs(NOW);
+});
+
+// ── Starting state ────────────────────────────────────────────────────────────
+
+describe('on mount', () => {
+  it('shows the picks the startup gate loaded, on the very first render', async () => {
+    signedIn(null);
+    // What StartupGate's hydration leaves in memory before the providers mount.
+    await setInterest(mockCurrentSlug, 'a1', 'must_see');
+
+    // No flush: the pick must be there before any effect has run.
+    await render(
+      <InterestProvider>
+        <Probe artistId="a1" />
+      </InterestProvider>,
+    );
+
+    expect(screen.getByText('must_see')).toBeTruthy();
+  });
 });
 
 // ── The cycle ─────────────────────────────────────────────────────────────────
