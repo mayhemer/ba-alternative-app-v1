@@ -2,7 +2,6 @@ import React, {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useRef,
   useState,
@@ -17,6 +16,8 @@ import {
   type SharedInterestStatus,
 } from '../adapters/baShareApiAdapter';
 import {
+  getLoadedFriends,
+  getLoadedMyShare,
   loadFriends,
   saveFriends,
   loadMyShare,
@@ -81,27 +82,18 @@ export function SocialProvider({ children }: { children: React.ReactNode }) {
   const selectedSlug = useSelectedSlug();
   const { getAccessToken } = useAuth();
 
-  const [friends, setFriends] = useState<FriendSchedule[]>([]);
-  const [myShare, setMyShare] = useState<MyShare | null>(null);
+  // Start from what StartupGate loaded, rather than loading in an effect, which
+  // re-rendered every list and timeline once more after their first paint. The
+  // gate unmounts this provider on an edition switch and loads the new edition
+  // before mounting it again, so reading once at creation is enough.
+  const [friends, setFriends] = useState<FriendSchedule[]>(() => getLoadedFriends(selectedSlug));
+  const [myShare, setMyShare] = useState<MyShare | null>(() => getLoadedMyShare(selectedSlug));
 
   // Mirror current state into refs so actions stay stable across data changes.
   const friendsRef = useRef(friends);
   friendsRef.current = friends;
   const slugRef = useRef(selectedSlug);
   slugRef.current = selectedSlug;
-
-  // Persisted friends are scoped per edition; reload whenever the slug changes.
-  useEffect(() => {
-    let cancelled = false;
-    Promise.all([loadFriends(selectedSlug), loadMyShare(selectedSlug)]).then(
-      ([loadedFriends, loadedShare]) => {
-        if (cancelled) { return; }
-        setFriends(loadedFriends);
-        setMyShare(loadedShare);
-      },
-    );
-    return () => { cancelled = true; };
-  }, [selectedSlug]);
 
   // ── Friends ──────────────────────────────────────────────────────────────────
 

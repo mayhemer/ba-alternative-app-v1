@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { hydrateInterests } from '../cache/cacheService';
+import { hydrateSocial } from '../cache/socialCache';
 import { DEFAULT_SCOPE, type LensScope } from '../utils/interestUtils';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -105,14 +106,16 @@ async function hydrateUiState(): Promise<void> {
 }
 
 /**
- * Load all local persisted state (UI-state snapshot + local interests for the
- * slug) before the splash lifts. Never rejects — storage errors fall back to
- * defaults so startup is never blocked.
+ * Load all local persisted state (UI-state snapshot, and the slug's local
+ * interests, friends and own share) before the splash lifts, so the providers
+ * can start from it. Never rejects — storage errors fall back to defaults so
+ * startup is never blocked.
  */
 export async function hydrateLocalState(slug: string): Promise<void> {
   await Promise.all([
     hydrateUiState().catch(() => undefined),
     hydrateInterests(slug).catch(() => undefined),
+    hydrateSocial(slug).catch(() => undefined),
   ]);
 }
 
