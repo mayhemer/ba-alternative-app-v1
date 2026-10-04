@@ -2,16 +2,26 @@
 # ── One command to check everything that runs without a device ────────────────
 #
 # Fail-fast and in cheapest-first order, so a typo is reported in seconds rather
-# than after the browser suite. Native E2E is deliberately NOT run here: Maestro
-# needs a device or simulator attached and a build installed on it, so it is
-# printed as a follow-up instead of blocking this.
+# than after the browser suite. The iOS simulator E2E runs last; the physical
+# Android phone is printed as a follow-up, since it needs the phone attached.
 #
 #   npm run verify
+#   npm run verify -- --fast    skip the two slow steps: performance regressions
+#                               and iOS simulator E2E (together most of the time)
 
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+FAST=0
+for arg in "$@"; do
+  case "$arg" in
+    --fast) FAST=1 ;;
+    *) echo "unknown option: $arg (only --fast)" >&2; exit 2 ;;
+  esac
+done
+
 step() { printf '\n\033[1m── %s ───────────────────────────────────────\033[0m\n' "$1"; }
+skipped() { printf '\n\033[2m── %s: skipped (--fast)\033[0m\n' "$1"; }
 
 step "Types"
 npm run --silent tscheck
@@ -22,14 +32,18 @@ npx eslint src
 step "Unit + integration (ios, android, web)"
 npx jest
 
-step "Performance regressions"
-# Compares against .reassure/baseline.perf. The baseline is machine-specific, so
-# re-record it locally with `npm run test:perf:baseline` before trusting a
-# duration change; render counts are comparable anywhere.
-if [ -f .reassure/baseline.perf ]; then
-  npm run --silent test:perf
+if [ "$FAST" -eq 1 ]; then
+  skipped "Performance regressions"
 else
-  echo "no baseline yet — run 'npm run test:perf:baseline' first"
+  step "Performance regressions"
+  # Compares against .reassure/baseline.perf. The baseline is machine-specific,
+  # so re-record it locally with `npm run test:perf:baseline` before trusting a
+  # duration change; render counts are comparable anywhere.
+  if [ -f .reassure/baseline.perf ]; then
+    npm run --silent test:perf
+  else
+    echo "no baseline yet — run 'npm run test:perf:baseline' first"
+  fi
 fi
 
 step "Web end-to-end"
@@ -37,19 +51,25 @@ step "Web end-to-end"
 npm run --silent build:web
 npx playwright test
 
-step "iOS simulator end-to-end"
-# Tests the latest EAS `e2e-ios-sim` build, not your working tree — it says how
-# far behind HEAD that build is. Exit 4 means a prerequisite is missing (no
-# Xcode, no Maestro, no build yet): reported loudly, but not a failure.
-ios_status=0
-npm run --silent test:e2e:ios || ios_status=$?
-if [ "$ios_status" -eq 4 ]; then
-  IOS_SKIPPED=1
-elif [ "$ios_status" -ne 0 ]; then
-  exit "$ios_status"
+if [ "$FAST" -eq 1 ]; then
+  skipped "iOS simulator end-to-end"
+else
+  step "iOS simulator end-to-end"
+  # Tests the latest EAS `e2e-ios-sim` build, not your working tree — it says
+  # how far behind HEAD that build is. Exit 4 means a prerequisite is missing
+  # (no Xcode, no Maestro, no build yet): reported loudly, but not a failure.
+  ios_status=0
+  npm run --silent test:e2e:ios || ios_status=$?
+  if [ "$ios_status" -eq 4 ]; then
+    IOS_SKIPPED=1
+  elif [ "$ios_status" -ne 0 ]; then
+    exit "$ios_status"
+  fi
 fi
 
-if [ "${IOS_SKIPPED:-0}" -eq 1 ]; then
+if [ "$FAST" -eq 1 ]; then
+  printf '\n\033[32m✓ fast check green\033[0m — performance and iOS simulator end-to-end were not run\n'
+elif [ "${IOS_SKIPPED:-0}" -eq 1 ]; then
   printf '\n\033[33m✓ green, but the iOS simulator end-to-end tests were SKIPPED (see above)\033[0m\n'
 else
   printf '\n\033[32m✓ everything that runs without a physical device is green\033[0m\n'

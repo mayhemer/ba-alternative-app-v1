@@ -16,6 +16,7 @@
     "install:perf:android": "node --experimental-strip-types --no-warnings scripts/install-perf-android.ts",
     "serve:fixtures": "node --experimental-strip-types --no-warnings tests/server/fixtureServer.ts 4010",
     "verify": "scripts/test-all",
+    "verify:fast": "scripts/test-all --fast",
     "doctor": "npx expo-doctor",
     "gen:icons": "node scripts/gen-icons.js",
     "start:symul:ios": "npx expo run:ios",

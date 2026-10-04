@@ -41,6 +41,7 @@ One command runs everything that does not need a device:
 
 ```bash
 npm run verify      # types → lint → jest (×3 platforms) → performance → web E2E → iOS simulator E2E
+npm run verify -- --fast   # the same without performance and iOS simulator E2E: ~30 s instead of ~3 min
 ```
 
 | Layer | Command | What it is for |
