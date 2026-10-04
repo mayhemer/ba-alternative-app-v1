@@ -1,6 +1,7 @@
 // ── Shared test setup ─────────────────────────────────────────────────────────
 
 import { setCurrentTimeMs } from '../../src/utils/clock';
+import { loadFonts } from '../../src/styling/fonts';
 
 // AsyncStorage is a native module; its maintained mock keeps an in-memory map,
 // which is what the cache and UI-state persistence tests read back.
@@ -37,6 +38,14 @@ jest.spyOn(console, 'warn').mockImplementation((...args: unknown[]) => {
     return;
   }
   warn(...args);
+});
+
+// The app loads its fonts behind the splash (StartupGate), so every component
+// mounts with them in. Without this, the first icon of a test file finds its font
+// missing, loads it and re-renders — an extra commit that exists only here, and
+// that Reassure, which reads mount issues off its first run, would report.
+beforeAll(async () => {
+  await loadFonts();
 });
 
 afterEach(() => {

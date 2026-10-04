@@ -1,6 +1,5 @@
 import './global.css';
 import React, { useEffect } from 'react';
-import { useFonts } from 'expo-font';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
 import { AppProvider } from './src/store/AppContext';
@@ -54,13 +53,6 @@ function AppContent() {
 // ── Root ──────────────────────────────────────────────────────────────────────
 
 export default function App() {
-  useFonts({
-    'Regular-Default': require('./assets/WorkSans-Regular.ttf'),
-    'Bold-Default': require('./assets/WorkSans-Bold.ttf'),
-    //'Regular-Default': require('./assets/DarkerGrotesque-Regular.ttf'),
-    //'Bold-Default': require('./assets/DarkerGrotesque-Bold.ttf'),
-  });
-
   useEffect(() => {
     // On web: if this render is happening inside the OAuth popup window,
     // this reads the code from the URL, posts it to the parent window, and

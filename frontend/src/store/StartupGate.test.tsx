@@ -4,6 +4,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { StartupGate } from './StartupGate';
 import { startSync, stop } from '../sync/backgroundSyncService';
 import { hydrateLocalState } from './uiStatePersistence';
+import { loadFonts } from '../styling/fonts';
 
 // ── Jest mocks ────────────────────────────────────────────────────────────────
 // The gate's whole job is sequencing, so everything it sequences is replaced and
@@ -23,6 +24,10 @@ jest.mock('../sync/backgroundSyncService', () => ({
 
 jest.mock('./uiStatePersistence', () => ({
   hydrateLocalState: jest.fn(),
+}));
+
+jest.mock('../styling/fonts', () => ({
+  loadFonts: jest.fn(),
 }));
 
 jest.mock('expo-splash-screen', () => ({
@@ -46,6 +51,7 @@ jest.mock('../screens/SplashScreen', () => {
 const mockStartSync = startSync as jest.MockedFunction<typeof startSync>;
 const mockStop = stop as jest.MockedFunction<typeof stop>;
 const mockHydrate = hydrateLocalState as jest.MockedFunction<typeof hydrateLocalState>;
+const mockLoadFonts = loadFonts as jest.MockedFunction<typeof loadFonts>;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -73,13 +79,14 @@ async function mount() {
 beforeEach(() => {
   mockSelectedSlug = 'ba2025';
   mockHydrate.mockResolvedValue(undefined);
+  mockLoadFonts.mockResolvedValue(undefined);
   mockStartSync.mockImplementation(() => undefined);
 });
 
 // ── Gating ────────────────────────────────────────────────────────────────────
 
 describe('the startup gate', () => {
-  it('holds the splash until both halves finish', async () => {
+  it('holds the splash until both data halves finish', async () => {
     const local = deferred();
     mockHydrate.mockReturnValue(local.promise);
 
@@ -91,6 +98,21 @@ describe('the startup gate', () => {
     expect(screen.queryByText('app')).toBeNull();
 
     await act(async () => { local.resolve(); await flush(); });
+    expect(screen.getByText('app')).toBeTruthy();
+  });
+
+  it('holds the splash until the fonts are loaded', async () => {
+    const fonts = deferred();
+    mockLoadFonts.mockReturnValue(fonts.promise);
+
+    await mount();
+    await act(async () => { latestCallbacks().onFirstLoadSuccess(); await flush(); });
+
+    // Data and local state are in; drawing now would put the text in the
+    // fallback face and every icon in as an empty glyph.
+    expect(screen.queryByText('app')).toBeNull();
+
+    await act(async () => { fonts.resolve(); await flush(); });
     expect(screen.getByText('app')).toBeTruthy();
   });
 

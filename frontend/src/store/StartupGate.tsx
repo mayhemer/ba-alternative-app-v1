@@ -4,17 +4,23 @@ import { useAppContext } from './AppContext';
 import { SplashScreen } from '../screens/SplashScreen';
 import { startSync, stop as stopSync } from '../sync/backgroundSyncService';
 import { hydrateLocalState } from './uiStatePersistence';
+import { loadFonts } from '../styling/fonts';
 import { perfMark, perfMarksEnabled } from '../utils/perfMarks';
 
 
 // ── Startup umbrella ──────────────────────────────────────────────────────────
 //
 // Single owner of the boot lifecycle. After the slug resolves it runs external
-// data load and local-state hydration concurrently; one Promise.all resolution
-// flips the splash → full UI:
+// data load, local-state hydration and font loading concurrently; one
+// Promise.all resolution flips the splash → full UI:
 //
-//   resolve slug → (load external data ∥ hydrate local state) → both done
-//                → lift splash, render full UI → (logged in) server interest sync
+//   resolve slug → (load external data ∥ hydrate local state ∥ load fonts)
+//                → all done → lift splash, render full UI
+//                → (logged in) server interest sync
+//
+// Fonts are waited for so that nothing is drawn before its font is in — no text
+// in the fallback face, no icon that renders empty and then re-renders (see
+// styling/fonts).
 //
 // Replaces the previous RootGate, which blocked the splash only on the external
 // load and let providers hydrate local state late (causing the restore races).
@@ -68,7 +74,7 @@ export function StartupGate({ children }: { children: React.ReactNode }) {
       });
     });
 
-    Promise.all([externalLoad, hydrateLocalState(slug)])
+    Promise.all([externalLoad, hydrateLocalState(slug), loadFonts()])
       .then(() => { setReady(true); })
       .catch((err) => { setError(err instanceof Error ? err.message : String(err)); });
   }, []);
