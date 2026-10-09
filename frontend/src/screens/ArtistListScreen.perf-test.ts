@@ -7,9 +7,11 @@ import artistsFixture from '../../tests/fixtures/generated/ba2025/artists.json';
 
 // ── Artist list grouping ──────────────────────────────────────────────────────
 //
-// buildSections groups by first letter and sorts each group with
-// localeCompare(..., { sensitivity: 'base', ignorePunctuation: true }). The memo
-// that calls it depends on the search query, so this runs on every keystroke.
+// buildSections groups by first letter and sorts each group with a module-level
+// Intl.Collator({ sensitivity: 'base', ignorePunctuation: true }). The memo that
+// calls it depends on the search query, so this runs on every keystroke. Inlining
+// the options back into localeCompare would rebuild the collator per comparison
+// and cost ~10x — the kind of regression this is here to catch.
 //
 // Worth gating specifically because it is the app's one Intl-dependent hot path,
 // and Intl is where Hermes and V8 diverge most: a regression here would be

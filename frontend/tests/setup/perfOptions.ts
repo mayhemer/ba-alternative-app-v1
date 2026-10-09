@@ -33,10 +33,10 @@
 //     and machine load, not the code. This is why a report where everything
 //     moved the same way means nothing changed.
 //
-// The warmup count matters separately: the first call to buildSections costs
-// ~17x the median (about 7 ms against 0.4 ms) while the Intl collator is built
-// and the JIT tiers up. One warmup absorbed the worst of it; three keep it out
-// of the sample reliably.
+// The warmup count matters separately: the first runs of a subject are slower
+// while the JIT tiers up. (buildSections' Intl collators are module-level, so
+// building them happens at import, outside any sample.) Three warmups keep the
+// tier-up out of the sample reliably.
 //
 // None of this makes durations comparable *across machines* — they are not. Use
 // render counts for that, and re-record the baseline locally.
@@ -75,8 +75,8 @@ export function repeat(fn: () => unknown, times: number): () => void {
 // costs measured on this machine. They do not need to be exact — the point is a
 // window long enough to amortise, not a particular number.
 export const BATCH = {
-  buildSectionsFull: 50,       // ~0.42 ms per call
-  buildSectionsNarrowed: 75,   // ~0.27 ms
+  buildSectionsFull: 450,      // ~0.044 ms per call
+  buildSectionsNarrowed: 650,  // ~0.031 ms
   conflictEntries: 180,        // ~0.11 ms
   conflictOverlaps: 165,       // ~0.12 ms
   conflictEntriesEmpty: 870,   // ~0.023 ms

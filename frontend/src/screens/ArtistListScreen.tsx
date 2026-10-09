@@ -30,6 +30,11 @@ type Section = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+// Hoisted: localeCompare with options builds a fresh collator on every comparison
+// (~50x slower). The default locale is resolved once, at module load.
+const LETTER_COLLATOR = new Intl.Collator(undefined, { sensitivity: 'base' });
+const NAME_COLLATOR = new Intl.Collator(undefined, { sensitivity: 'base', ignorePunctuation: true });
+
 // Exported for the performance suite: the collated sort inside is the most
 // expensive thing the list does, and it re-runs on every keystroke.
 export function buildSections(artists: DbArtist[]): Section[] {
@@ -49,13 +54,11 @@ export function buildSections(artists: DbArtist[]): Section[] {
     .sort((a, b) => {
       if (a === '#') { return -1; }
       if (b === '#') { return 1; }
-      return a.localeCompare(b, undefined, { sensitivity: 'base' });
+      return LETTER_COLLATOR.compare(a, b);
     })
     .map((letter) => ({
       title: letter,
-      data: grouped[letter].sort((a, b) =>
-        a.name.localeCompare(b.name, undefined, { sensitivity: 'base', ignorePunctuation: true })
-      ),
+      data: grouped[letter].sort((a, b) => NAME_COLLATOR.compare(a.name, b.name)),
     }));
 }
 
