@@ -7,6 +7,15 @@
     // how Node's type stripper resolves them when the generator runs.
     "noEmit": true,
     "allowImportingTsExtensions": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    // TypeScript 6 and Expo 56 changed three defaults this project was written
+    // against; these keep the checker's behaviour as it was on SDK 55.
+    // - Expo's base moved to "react-jsx", which flags every `import React` that
+    //   only serves JSX as unused. Babel uses the automatic runtime either way.
+    "jsx": "react-native",
+    // - TS 6 no longer pulls in every @types package (jest's globals among them).
+    "types": ["*"],
+    // - TS 6 checks side-effect imports, and nothing types `./global.css`.
+    "noUncheckedSideEffectImports": false
   }
 }
