@@ -144,7 +144,12 @@ jobs:
           npm ci
           npm run test:perf:baseline
 
+          # baseline.perf is also committed (the local comparison point), so the
+          # file just measured would block the checkout. Carry it across instead.
+          mv .reassure/baseline.perf "$RUNNER_TEMP/baseline.perf"
+          git checkout --quiet -- .reassure/baseline.perf
           git checkout --quiet "$CURRENT"
+          mv "$RUNNER_TEMP/baseline.perf" .reassure/baseline.perf
           npm ci
           npm run test:perf
 
