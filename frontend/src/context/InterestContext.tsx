@@ -142,10 +142,9 @@ export function InterestProvider({ children }: { children: React.ReactNode }) {
     const pushToken = await getAccessToken(); // may have refreshed
     if (pushToken === null) { return; }
 
+    const serverByKey = new Map(serverInterests.map((s) => [s.slugArtistId, s]));
     for (const [artistId, record] of Object.entries(merged)) {
-      const serverEntry = serverInterests.find(
-        (s) => s.slugArtistId === `${slug}#${artistId}`,
-      );
+      const serverEntry = serverByKey.get(`${slug}#${artistId}`);
       const localIsNewer =
         serverEntry === undefined || record.updatedAt > serverEntry.updatedAt;
 
