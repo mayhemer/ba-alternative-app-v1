@@ -8,6 +8,11 @@ import { loadFonts } from '../../src/styling/fonts';
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'));
 
+// Worklets (Reanimated's runtime) throws at import when its native half is
+// missing, which under Jest it always is. Its own mock stands in for the native
+// part only; Reanimated itself still runs its real JS path.
+jest.mock('react-native-worklets', () => require('react-native-worklets/src/mock'));
+
 // SecureStore backs the native half of tokenStorage. jest-expo auto-mocks the
 // module so calls do not crash, but that stub stores nothing — a write followed
 // by a read comes back empty, which would make every token test vacuous. This
