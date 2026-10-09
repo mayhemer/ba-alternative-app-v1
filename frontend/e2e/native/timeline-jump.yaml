@@ -1,8 +1,8 @@
 appId: cz.janbambas.ba
 name: going to a set from the artist sheet scrolls the timeline to it
 ---
-# The native half of the scroll-to-event path: the day switch, then a scrollTo on
-# the UI thread to centre the set and its lane. Web covers the geometry precisely
+# The native half of the scroll-to-event path: the day switch, then a scrollTo
+# to centre the set and its lane. Web covers the geometry precisely
 # (tests/e2e/timeline.spec.ts); this proves the native scroller lands too.
 #
 # REPLICANT plays once, Friday 22:30, in the Octagon — the bottom lane — so the

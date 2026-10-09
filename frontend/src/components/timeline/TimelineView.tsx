@@ -4,10 +4,8 @@ import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedScrollHandler,
-  useAnimatedRef,
-  scrollTo,
 } from 'react-native-reanimated';
-import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
+import { scheduleOnRN } from 'react-native-worklets';
 import { useFocusEffect } from '@react-navigation/native';
 import { useInterest } from '../../context/InterestContext';
 import { useTimelineFilter } from '../../context/TimelineFilterContext';
@@ -138,7 +136,11 @@ export function TimelineView({
 
   // ── Horizontal scroll tracking ──────────────────────────────────────────────
 
-  const horizontalScrollRef = useAnimatedRef<Animated.ScrollView>();
+  // Every imperative scroll below is issued from JS, so a plain ref and the
+  // ScrollView's own scrollTo are all it takes. Reanimated's scrollTo() worklet
+  // is for scrolling from the UI thread, inside a gesture or animation — routing
+  // a JS call through it bought nothing.
+  const horizontalScrollRef = useRef<Animated.ScrollView>(null);
 
   // Captured once, for the very first day this view shows. It is handed to the
   // ScrollView as `contentOffset`, which iOS re-applies whenever the prop changes
@@ -202,8 +204,7 @@ export function TimelineView({
     scrollYRef.current = e.nativeEvent.contentOffset.y;
   }, []);
 
-  // Imperative handle for the scroll-to-event jump below. A plain ref is enough:
-  // unlike the horizontal offset, this one is never read on the UI thread.
+  // Imperative handle for the scroll-to-event jump below.
   const verticalScrollRef = useRef<ScrollView>(null);
 
   // ── Now-line position ────────────────────────────────────────────────────────
@@ -241,12 +242,12 @@ export function TimelineView({
       // ignores the prop), and on native a no-op — or a correction, should iOS have
       // clamped the mount offset against a content size it did not have yet.
       const timer = setTimeout(() => {
-        scheduleOnUI(() => { scrollTo(horizontalScrollRef, savedX, 0, false); });
+        horizontalScrollRef.current?.scrollTo({ x: savedX, animated: false });
       }, 50);
       return () => clearTimeout(timer);
     }
 
-    scheduleOnUI(() => { scrollTo(horizontalScrollRef, savedX, 0, false); });
+    horizontalScrollRef.current?.scrollTo({ x: savedX, animated: false });
     // Only re-run when the day changes; the saved offset is read imperatively.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDayStart]);
@@ -361,7 +362,7 @@ export function TimelineView({
         if (fromX === w.fromX && toX === w.toX && fromY === w.fromY && toY === w.toY) { return w; }
         return { ...w, fromX, toX, fromY, toY };
       });
-      scheduleOnUI(() => { scrollTo(horizontalScrollRef, targetX, 0, true); });
+      horizontalScrollRef.current?.scrollTo({ x: targetX, animated: true });
       if (targetY !== undefined) {
         verticalScrollRef.current?.scrollTo({ y: targetY, animated: true });
       }

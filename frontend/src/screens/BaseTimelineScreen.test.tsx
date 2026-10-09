@@ -1,5 +1,6 @@
 import React from 'react';
-import { act, render, screen } from '@testing-library/react-native';
+import { ScrollView } from 'react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BaseTimelineScreen } from './BaseTimelineScreen';
 import { PerfProviders } from '../../tests/setup/PerfProviders';
@@ -7,6 +8,7 @@ import { useLens } from '../context/LensContext';
 import { useTimelineFilter } from '../context/TimelineFilterContext';
 import { createDataCollector, getCategories, populateCache } from '../cache/cacheService';
 import { getScroll, setHiddenCategories, setLensScope, setSelectedDay } from '../store/uiStatePersistence';
+import { defaultScrollX, eventScrollTarget } from '../components/timeline/timelineLayout';
 import { setCurrentTimeMs } from '../utils/clock';
 import { DEFAULT_SCOPE, type LensScope } from '../utils/interestUtils';
 import type { DbArtist, DbCategory, DbEvent, DbStage } from '../types/backend';
@@ -104,10 +106,13 @@ async function settle(): Promise<void> {
 
 let setScope: (scope: LensScope) => void;
 let toggleCategory: (categoryId: string) => void;
+let setSelectedDayStart: (day: number) => void;
+let requestScrollToTime: (screenKey: string, fromMs: number, toMs: number, categoryId?: string) => void;
+let requestScrollToNow: (screenKey: string) => void;
 
 function Controls() {
   setScope = useLens().setScope;
-  toggleCategory = useTimelineFilter().toggleCategory;
+  ({ toggleCategory, setSelectedDayStart, requestScrollToTime, requestScrollToNow } = useTimelineFilter());
   return null;
 }
 
@@ -177,4 +182,143 @@ it('renders with every lane hidden', async () => {
   expect(screen.queryByText(LANE_TITLE)).toBeNull();
   // Still the timeline, not its loading state.
   expect(screen.queryByText('Loading schedule…')).toBeNull();
+});
+
+// ── Where the timeline is scrolled to ─────────────────────────────────────────
+//
+// Jest lays nothing out and moves no scroller, so these pin the commands: the
+// offset the horizontal scroller mounts at (`contentOffset`) and every scrollTo
+// issued to either scroller afterwards. Whether a scroller then really lands
+// there — clamping, real layout — is for tests/e2e/timeline.spec.ts (web) and
+// e2e/native (iOS) to show. User scrolls go through the view's real onScroll
+// handler, so what gets remembered is decided by the app's own persist path.
+// Expected offsets come from the same timelineLayout functions the app uses
+// (unit-tested in timelineLayout.test.ts), fed with the fixture schedule.
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const THU = WED + DAY_MS;
+
+const ARTISTS = artistsFixture as unknown as DbArtist[];
+const EVENTS = scheduleFixture as unknown as DbEvent[];
+const PLAYABLE = new Set(ARTISTS.filter(playable).map((a) => a.artistId));
+
+/** The day's sets on this screen, in start order. */
+function setsOn(day: number): DbEvent[] {
+  return EVENTS
+    .filter((e) => PLAYABLE.has(e.artistId) && e.dateFrom >= day && e.dateFrom < day + DAY_MS)
+    .sort((a, b) => a.dateFrom - b.dateFrom);
+}
+
+const SCROLL_X = 'timeline-scroll-x';
+const SCROLL_Y = 'timeline-scroll-y';
+
+type ScrollCommand = { x?: number; y?: number; animated?: boolean };
+
+/**
+ * Every scrollTo issued to the scroller with this testID, oldest first. React
+ * Native's Jest mock puts a single jest.fn on the ScrollView prototype, shared by
+ * every instance; the call's `this` tells them apart.
+ */
+function scrollCommands(testID: string): ScrollCommand[] {
+  const scrollTo = jest.mocked(ScrollView.prototype.scrollTo);
+  return scrollTo.mock.calls
+    .filter((_, i) => (scrollTo.mock.contexts[i] as ScrollView).props.testID === testID)
+    .map(([options]) => options as ScrollCommand);
+}
+
+function clearScrollCommands(): void {
+  jest.mocked(ScrollView.prototype.scrollTo).mockClear();
+}
+
+/** A scroll event from the horizontal scroller, as a drag or a landing reports it. */
+async function scrollTimelineTo(x: number): Promise<void> {
+  await fireEvent.scroll(screen.getByTestId(SCROLL_X), { nativeEvent: { contentOffset: { x, y: 0 } } });
+}
+
+/**
+ * Switches the day, then reports back the offset it was restored to — what the
+ * real scroller does once it lands — so the view's idea of where it is stays true
+ * for the next switch.
+ */
+async function switchDay(day: number): Promise<ScrollCommand> {
+  clearScrollCommands();
+  await act(async () => { setSelectedDayStart(day); });
+  await settle();
+  const commands = scrollCommands(SCROLL_X);
+  expect(commands).toHaveLength(1);
+  await scrollTimelineTo(commands[0].x!);
+  return commands[0];
+}
+
+it('opens a day a quarter of an hour before its first set', async () => {
+  await mount('scroll-default');
+
+  const x = defaultScrollX(setsOn(WED)[0].dateFrom, WED);
+  expect(x).toBeGreaterThan(0);
+  expect(screen.getByTestId(SCROLL_X).props.contentOffset).toEqual({ x, y: 0 });
+  // The deferred first-mount restore — web's path, since react-native-web ignores
+  // contentOffset — aims at the same place.
+  expect(scrollCommands(SCROLL_X)).toEqual([{ x, animated: false }]);
+});
+
+it('reopens a day where it was left', async () => {
+  const first = await mount('scroll-remount');
+  await scrollTimelineTo(2000);
+  await first.unmount();
+  clearScrollCommands();
+
+  await mount('scroll-remount');
+
+  expect(screen.getByTestId(SCROLL_X).props.contentOffset).toEqual({ x: 2000, y: 0 });
+  expect(scrollCommands(SCROLL_X)).toEqual([{ x: 2000, animated: false }]);
+});
+
+it('keeps each day\'s own position across day switches', async () => {
+  await mount('scroll-days');
+  await scrollTimelineTo(2000);
+
+  // Thursday was never scrolled: it opens at its own first set, not at
+  // Wednesday's offset.
+  expect(await switchDay(THU)).toEqual({ x: defaultScrollX(setsOn(THU)[0].dateFrom, THU), animated: false });
+  await scrollTimelineTo(3000);
+
+  expect(await switchDay(WED)).toEqual({ x: 2000, animated: false });
+  expect(await switchDay(THU)).toEqual({ x: 3000, animated: false });
+  expect(getScroll('scroll-days', WED)).toBe(2000);
+  expect(getScroll('scroll-days', THU)).toBe(3000);
+});
+
+it('the now button scrolls to the current time and leaves the lane alone', async () => {
+  await mount('scroll-now');
+  await fireEvent(screen.getByTestId(SCROLL_X), 'layout', { nativeEvent: { layout: { x: 0, y: 0, width: 400, height: 600 } } });
+  clearScrollCommands();
+
+  await act(async () => { requestScrollToNow('scroll-now'); });
+  await settle();
+
+  const { x } = eventScrollTarget({
+    fromMs: NOW, toMs: NOW, dayStartMs: WED, viewportWidth: 400, lane: undefined, areaHeight: 0, bottomClearance: 0,
+  });
+  expect(scrollCommands(SCROLL_X)).toEqual([{ x, animated: true }]);
+  expect(scrollCommands(SCROLL_Y)).toEqual([]);
+});
+
+it('going to a set scrolls to its time and its lane', async () => {
+  await mount('scroll-jump');
+  await fireEvent(screen.getByTestId(SCROLL_X), 'layout', { nativeEvent: { layout: { x: 0, y: 0, width: 400, height: 600 } } });
+  clearScrollCommands();
+
+  // The day's last set: far right of where the day opens, and not in the top lane.
+  const set = setsOn(WED).at(-1)!;
+  await act(async () => { requestScrollToTime('scroll-jump', set.dateFrom, set.dateTo, set.categoryId); });
+  await settle();
+
+  const { x } = eventScrollTarget({
+    fromMs: set.dateFrom, toMs: set.dateTo, dayStartMs: WED, viewportWidth: 400, lane: undefined, areaHeight: 0, bottomClearance: 0,
+  });
+  expect(x).toBeGreaterThan(defaultScrollX(setsOn(WED)[0].dateFrom, WED));
+  expect(scrollCommands(SCROLL_X)).toEqual([{ x, animated: true }]);
+  // The exact lane offset is layout (fixtureLayout.test.ts); here, that it moves.
+  expect(scrollCommands(SCROLL_Y)).toEqual([{ y: expect.any(Number), animated: true }]);
+  expect(scrollCommands(SCROLL_Y)[0].y).toBeGreaterThan(0);
 });
