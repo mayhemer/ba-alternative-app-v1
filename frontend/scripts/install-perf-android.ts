@@ -1,6 +1,8 @@
-// ── Install the latest perf build on the connected Android device ─────────────
+// ── Install a perf build on the connected Android device ──────────────────────
 //
 //   npm run install:perf:android                 newest finished `perf` build
+//   npm run install:perf:android -- --version 22 that build number (versionCode),
+//                                                e.g. an older one to re-measure
 //   npm run install:perf:android -- --serial X   when several devices are connected
 //   npm run install:perf:android -- --force      reinstall even if already there
 //
@@ -10,7 +12,7 @@
 // same build does not download it again.
 
 import { adb, installedVersion, pickDevice } from './lib/adb.ts';
-import { fetchArtifact, latestBuild, staleness } from './lib/eas.ts';
+import { buildByVersion, fetchArtifact, latestBuild, staleness } from './lib/eas.ts';
 import { EXIT, has, parseArgs, run, skip } from './lib/proc.ts';
 
 const args = parseArgs(process.argv.slice(2));
@@ -20,14 +22,35 @@ console.log(`device: ${device.model} — Android ${device.android} (API ${device
 if (!has('eas')) {
   skip('eas-cli is not installed', 'npm install -g eas-cli');
 }
-let build;
-try {
-  build = latestBuild('android', 'perf');
-} catch (e) {
-  skip((e as Error).message, 'Run `eas login`.');
+if (args.version === true) {
+  skip('--version needs a build number', 'e.g. `--version 22` (the versionCode EAS lists).');
 }
-if (build === null) {
-  skip('no finished EAS build for the "perf" profile yet', 'Run `npm run build:perf:android`.');
+const wanted = typeof args.version === 'string' ? args.version : null;
+
+let build;
+if (wanted !== null) {
+  build = buildByVersion('android', wanted);
+  if (build === null) {
+    skip(`no Android EAS build with versionCode ${wanted}`, 'Check `eas build:list --platform android`, or `eas login`.');
+  }
+  if (build.url === '') {
+    skip(`build ${build.id.slice(0, 8)} (versionCode ${wanted}) has no artifact — not finished, or failed`,
+      'Pick another versionCode.');
+  }
+  if (build.profile !== 'perf') {
+    // Installable, but it talks to the production API: test:perf:device refuses
+    // it unless run with --allow-live-api.
+    console.log(`\x1b[33m⚠ a "${build.profile}" build, not "perf"\x1b[0m`);
+  }
+} else {
+  try {
+    build = latestBuild('android', 'perf');
+  } catch (e) {
+    skip((e as Error).message, 'Run `eas login`.');
+  }
+  if (build === null) {
+    skip('no finished EAS build for the "perf" profile yet', 'Run `npm run build:perf:android`.');
+  }
 }
 
 const { note, behind } = staleness(build.commit);
