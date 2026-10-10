@@ -6,238 +6,238 @@
       "android": "9",
       "sdk": 28
     },
-    "versionCode": "22",
-    "build": "1527ddff-03c5-4b3c-9099-228091fced01",
-    "commit": "0ccb673b635d329fee8ef20eee1c5e1139805c21",
+    "versionCode": "24",
+    "build": "3047aa57-25aa-45f7-b90d-22a8a3a8306c",
+    "commit": "17113be861d4fcc9c93862c7fc966d32efcddb58",
     "runs": 7,
-    "at": "2026-10-04T19:52:57.259Z"
+    "at": "2026-10-10T10:30:48.199Z"
   },
   "summary": {
     "cold-start": {
       "firstFrameMs": {
-        "median": 4216,
-        "min": 4186,
-        "max": 4423
+        "median": 4206,
+        "min": 4141,
+        "max": 5311
       },
       "readyMs": {
-        "median": 4469,
-        "min": 4392,
-        "max": 4674
+        "median": 5648,
+        "min": 4771,
+        "max": 6741
       },
       "totalPssMb": {
-        "median": 146.7,
-        "min": 144.5,
-        "max": 150
+        "median": 144.6,
+        "min": 138.5,
+        "max": 161.9
       },
       "graphicsMb": {
-        "median": 6.1,
-        "min": 6.1,
-        "max": 7.6
+        "median": 6.4,
+        "min": 6.2,
+        "max": 6.5
       },
       "tempC": {
-        "median": 28,
-        "min": 28,
-        "max": 28
+        "median": 27,
+        "min": 27,
+        "max": 27
       }
     },
     "list-fling": {
       "jankyPct": {
-        "median": 100,
-        "min": 84.66,
+        "median": 99.47,
+        "min": 98.75,
         "max": 100
       },
       "p50Ms": {
-        "median": 32,
-        "min": 26,
-        "max": 34
+        "median": 30,
+        "min": 29,
+        "max": 36
       },
       "p90Ms": {
         "median": 48,
-        "min": 48,
-        "max": 57
+        "min": 42,
+        "max": 53
       },
       "p99Ms": {
         "median": 150,
-        "min": 105,
-        "max": 250
+        "min": 117,
+        "max": 150
       },
       "slowUiThread": {
-        "median": 40,
-        "min": 24,
-        "max": 55
+        "median": 25,
+        "min": 20,
+        "max": 54
       },
       "frames": {
-        "median": 225,
-        "min": 155,
-        "max": 255
+        "median": 187,
+        "min": 160,
+        "max": 238
       },
       "tempC": {
-        "median": 28,
-        "min": 28,
-        "max": 28
+        "median": 27,
+        "min": 27,
+        "max": 27
       },
       "totalPssMb": {
-        "median": 272.8,
-        "min": 231.2,
-        "max": 283.6
+        "median": 260.6,
+        "min": 240.6,
+        "max": 280.7
       },
       "graphicsMb": {
-        "median": 25,
-        "min": 14.4,
-        "max": 26.5
+        "median": 24,
+        "min": 18.6,
+        "max": 25.5
       }
     },
     "detail-open": {
       "jankyPct": {
         "median": 100,
-        "min": 75.81,
+        "min": 98.39,
         "max": 100
       },
       "p50Ms": {
         "median": 32,
-        "min": 32,
+        "min": 31,
         "max": 34
       },
       "p90Ms": {
         "median": 48,
-        "min": 42,
-        "max": 61
+        "min": 44,
+        "max": 48
       },
       "p99Ms": {
-        "median": 89,
-        "min": 65,
-        "max": 97
+        "median": 97,
+        "min": 85,
+        "max": 121
       },
       "slowUiThread": {
-        "median": 7,
-        "min": 7,
-        "max": 12
+        "median": 8,
+        "min": 6,
+        "max": 10
       },
       "frames": {
-        "median": 60,
-        "min": 47,
+        "median": 62,
+        "min": 59,
         "max": 63
       },
       "tempC": {
-        "median": 29,
+        "median": 28,
         "min": 28,
-        "max": 29
+        "max": 28
       }
     },
     "search-typing": {
       "jankyPct": {
         "median": 89.47,
-        "min": 72.73,
+        "min": 81.82,
         "max": 100
       },
       "p50Ms": {
-        "median": 44,
-        "min": 21,
-        "max": 53
+        "median": 40,
+        "min": 29,
+        "max": 57
       },
       "p90Ms": {
-        "median": 117,
-        "min": 97,
+        "median": 125,
+        "min": 77,
         "max": 150
       },
       "p99Ms": {
         "median": 150,
-        "min": 109,
+        "min": 93,
         "max": 200
       },
       "slowUiThread": {
-        "median": 8,
-        "min": 2,
-        "max": 9
+        "median": 9,
+        "min": 4,
+        "max": 10
       },
       "frames": {
         "median": 17,
         "min": 11,
-        "max": 20
+        "max": 19
       },
       "tempC": {
-        "median": 29,
-        "min": 29,
-        "max": 29
+        "median": 28,
+        "min": 28,
+        "max": 28
       }
     },
     "day-switch": {
       "jankyPct": {
-        "median": 33.33,
-        "min": 25,
-        "max": 75
+        "median": 87.5,
+        "min": 29.17,
+        "max": 87.5
       },
       "p50Ms": {
-        "median": 13,
-        "min": 12,
-        "max": 44
+        "median": 34,
+        "min": 13,
+        "max": 42
       },
       "p90Ms": {
         "median": 53,
-        "min": 53,
-        "max": 65
+        "min": 42,
+        "max": 105
       },
       "p99Ms": {
-        "median": 65,
-        "min": 53,
-        "max": 81
+        "median": 57,
+        "min": 48,
+        "max": 105
       },
       "slowUiThread": {
-        "median": 5,
-        "min": 4,
+        "median": 6,
+        "min": 6,
         "max": 7
       },
       "frames": {
-        "median": 24,
+        "median": 8,
         "min": 8,
-        "max": 25
+        "max": 24
       },
       "tempC": {
-        "median": 29,
-        "min": 29,
-        "max": 29
+        "median": 28,
+        "min": 28,
+        "max": 28
       },
       "mountMs": {
-        "median": 1294,
-        "min": 1230,
-        "max": 1340
+        "median": 1276,
+        "min": 1214,
+        "max": 1312
       }
     },
     "timeline-pan": {
       "jankyPct": {
-        "median": 50.48,
-        "min": 44.84,
-        "max": 57.14
+        "median": 47.42,
+        "min": 45.13,
+        "max": 58.31
       },
       "p50Ms": {
-        "median": 16,
+        "median": 15,
         "min": 15,
-        "max": 17
+        "max": 19
       },
       "p90Ms": {
         "median": 21,
         "min": 20,
-        "max": 24
+        "max": 23
       },
       "p99Ms": {
         "median": 26,
         "min": 24,
-        "max": 32
+        "max": 34
       },
       "slowUiThread": {
         "median": 1,
-        "min": 1,
-        "max": 3
+        "min": 0,
+        "max": 2
       },
       "frames": {
-        "median": 310,
-        "min": 308,
-        "max": 313
+        "median": 308,
+        "min": 307,
+        "max": 310
       },
       "tempC": {
-        "median": 29,
-        "min": 29,
-        "max": 29
+        "median": 28,
+        "min": 28,
+        "max": 28
       }
     }
   }
