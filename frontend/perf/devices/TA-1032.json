@@ -6,238 +6,356 @@
       "android": "9",
       "sdk": 28
     },
-    "versionCode": "24",
-    "build": "3047aa57-25aa-45f7-b90d-22a8a3a8306c",
-    "commit": "17113be861d4fcc9c93862c7fc966d32efcddb58",
+    "versionCode": "23",
+    "build": "d7a43211-7347-409c-85d9-382ffeb71e34",
+    "commit": "b19ca6487daeb6d0deedb8447634930cce726247",
+    "method": 2,
     "runs": 7,
-    "at": "2026-10-10T10:30:48.199Z"
+    "warmup": 1,
+    "compiled": "speed-profile",
+    "battery": {
+      "level": 85,
+      "status": 2,
+      "tempC": 25
+    },
+    "at": "2026-10-11T16:44:56.426Z"
   },
   "summary": {
     "cold-start": {
       "firstFrameMs": {
-        "median": 4206,
-        "min": 4141,
-        "max": 5311
+        "median": 3115,
+        "min": 3087,
+        "max": 3990
       },
       "readyMs": {
-        "median": 5648,
-        "min": 4771,
-        "max": 6741
+        "median": 3928,
+        "min": 3342,
+        "max": 4774
       },
       "totalPssMb": {
-        "median": 144.6,
-        "min": 138.5,
-        "max": 161.9
+        "median": 150.1,
+        "min": 148.2,
+        "max": 151.1
       },
       "graphicsMb": {
-        "median": 6.4,
-        "min": 6.2,
-        "max": 6.5
+        "median": 6.3,
+        "min": 6.1,
+        "max": 6.3
       },
       "tempC": {
-        "median": 27,
-        "min": 27,
-        "max": 27
+        "median": 25,
+        "min": 25,
+        "max": 25
       }
     },
     "list-fling": {
       "jankyPct": {
-        "median": 99.47,
-        "min": 98.75,
+        "median": 99.6,
+        "min": 92.83,
         "max": 100
       },
       "p50Ms": {
-        "median": 30,
-        "min": 29,
-        "max": 36
+        "median": 31,
+        "min": 30,
+        "max": 32
       },
       "p90Ms": {
         "median": 48,
-        "min": 42,
-        "max": 53
+        "min": 40,
+        "max": 48
       },
       "p99Ms": {
-        "median": 150,
-        "min": 117,
+        "median": 117,
+        "min": 105,
         "max": 150
       },
+      "over33": {
+        "median": 87,
+        "min": 71,
+        "max": 107
+      },
+      "meanMs": {
+        "median": 34.4,
+        "min": 33,
+        "max": 37.3
+      },
       "slowUiThread": {
-        "median": 25,
-        "min": 20,
-        "max": 54
+        "median": 41,
+        "min": 30,
+        "max": 44
+      },
+      "deadlineMissed": {
+        "median": 46,
+        "min": 37,
+        "max": 51
       },
       "frames": {
-        "median": 187,
-        "min": 160,
-        "max": 238
+        "median": 246,
+        "min": 225,
+        "max": 254
       },
       "tempC": {
-        "median": 27,
-        "min": 27,
-        "max": 27
+        "median": 25,
+        "min": 25,
+        "max": 25
+      },
+      "lateMaxMs": {
+        "median": 8,
+        "min": 5,
+        "max": 19
+      },
+      "driftPx": {
+        "median": 71,
+        "min": 10,
+        "max": 181
       },
       "totalPssMb": {
-        "median": 260.6,
-        "min": 240.6,
-        "max": 280.7
+        "median": 250.2,
+        "min": 239.9,
+        "max": 260.8
       },
       "graphicsMb": {
-        "median": 24,
-        "min": 18.6,
-        "max": 25.5
+        "median": 13.5,
+        "min": 13.5,
+        "max": 13.5
       }
     },
     "detail-open": {
       "jankyPct": {
-        "median": 100,
-        "min": 98.39,
+        "median": 96.88,
+        "min": 92.42,
         "max": 100
       },
       "p50Ms": {
-        "median": 32,
-        "min": 31,
-        "max": 34
+        "median": 31,
+        "min": 27,
+        "max": 32
       },
       "p90Ms": {
-        "median": 48,
-        "min": 44,
-        "max": 48
+        "median": 40,
+        "min": 38,
+        "max": 53
       },
       "p99Ms": {
-        "median": 97,
-        "min": 85,
-        "max": 121
+        "median": 73,
+        "min": 61,
+        "max": 113
+      },
+      "over33": {
+        "median": 24,
+        "min": 17,
+        "max": 28
+      },
+      "meanMs": {
+        "median": 31.1,
+        "min": 28.8,
+        "max": 34.6
       },
       "slowUiThread": {
-        "median": 8,
-        "min": 6,
-        "max": 10
+        "median": 6,
+        "min": 4,
+        "max": 9
+      },
+      "deadlineMissed": {
+        "median": 10,
+        "min": 7,
+        "max": 12
       },
       "frames": {
-        "median": 62,
-        "min": 59,
-        "max": 63
+        "median": 64,
+        "min": 63,
+        "max": 66
       },
       "tempC": {
-        "median": 28,
-        "min": 28,
-        "max": 28
+        "median": 25,
+        "min": 25,
+        "max": 25
+      },
+      "lateMaxMs": {
+        "median": 2,
+        "min": 1,
+        "max": 4
       }
     },
     "search-typing": {
       "jankyPct": {
-        "median": 89.47,
-        "min": 81.82,
+        "median": 90.91,
+        "min": 90,
         "max": 100
       },
       "p50Ms": {
-        "median": 40,
-        "min": 29,
-        "max": 57
+        "median": 32,
+        "min": 28,
+        "max": 44
       },
       "p90Ms": {
-        "median": 125,
-        "min": 77,
-        "max": 150
+        "median": 300,
+        "min": 300,
+        "max": 400
       },
       "p99Ms": {
-        "median": 150,
-        "min": 93,
-        "max": 200
+        "median": 350,
+        "min": 350,
+        "max": 400
+      },
+      "over33": {
+        "median": 5,
+        "min": 3,
+        "max": 7
+      },
+      "meanMs": {
+        "median": 86.9,
+        "min": 81.2,
+        "max": 102.1
       },
       "slowUiThread": {
+        "median": 7,
+        "min": 6,
+        "max": 7
+      },
+      "deadlineMissed": {
         "median": 9,
-        "min": 4,
+        "min": 8,
         "max": 10
       },
       "frames": {
-        "median": 17,
-        "min": 11,
-        "max": 19
+        "median": 11,
+        "min": 10,
+        "max": 11
       },
       "tempC": {
-        "median": 28,
-        "min": 28,
-        "max": 28
+        "median": 25,
+        "min": 25,
+        "max": 25
+      },
+      "lateMaxMs": {
+        "median": 49,
+        "min": 9,
+        "max": 100
       }
     },
     "day-switch": {
       "jankyPct": {
-        "median": 87.5,
-        "min": 29.17,
-        "max": 87.5
+        "median": 36,
+        "min": 33.33,
+        "max": 40
       },
       "p50Ms": {
-        "median": 34,
+        "median": 13,
         "min": 13,
-        "max": 42
+        "max": 14
       },
       "p90Ms": {
-        "median": 53,
-        "min": 42,
-        "max": 105
+        "median": 34,
+        "min": 28,
+        "max": 69
       },
       "p99Ms": {
-        "median": 57,
-        "min": 48,
-        "max": 105
+        "median": 53,
+        "min": 42,
+        "max": 93
+      },
+      "over33": {
+        "median": 4,
+        "min": 2,
+        "max": 5
+      },
+      "meanMs": {
+        "median": 18.5,
+        "min": 18,
+        "max": 24.1
       },
       "slowUiThread": {
-        "median": 6,
-        "min": 6,
-        "max": 7
+        "median": 7,
+        "min": 7,
+        "max": 8
+      },
+      "deadlineMissed": {
+        "median": 8,
+        "min": 7,
+        "max": 9
       },
       "frames": {
-        "median": 8,
-        "min": 8,
-        "max": 24
+        "median": 25,
+        "min": 24,
+        "max": 25
       },
       "tempC": {
-        "median": 28,
-        "min": 28,
-        "max": 28
+        "median": 25,
+        "min": 25,
+        "max": 25
+      },
+      "lateMaxMs": {
+        "median": 2,
+        "min": 1,
+        "max": 3
       },
       "mountMs": {
-        "median": 1276,
-        "min": 1214,
-        "max": 1312
+        "median": 1032,
+        "min": 999,
+        "max": 1067
       }
     },
     "timeline-pan": {
       "jankyPct": {
-        "median": 47.42,
-        "min": 45.13,
-        "max": 58.31
+        "median": 99.44,
+        "min": 97.21,
+        "max": 100
       },
       "p50Ms": {
-        "median": 15,
-        "min": 15,
-        "max": 19
+        "median": 22,
+        "min": 20,
+        "max": 22
       },
       "p90Ms": {
-        "median": 21,
-        "min": 20,
-        "max": 23
+        "median": 25,
+        "min": 23,
+        "max": 32
       },
       "p99Ms": {
-        "median": 26,
-        "min": 24,
-        "max": 34
+        "median": 30,
+        "min": 28,
+        "max": 38
+      },
+      "over33": {
+        "median": 0,
+        "min": 0,
+        "max": 16
+      },
+      "meanMs": {
+        "median": 21.8,
+        "min": 20.6,
+        "max": 23.6
       },
       "slowUiThread": {
-        "median": 1,
-        "min": 0,
-        "max": 2
+        "median": 3,
+        "min": 2,
+        "max": 3
+      },
+      "deadlineMissed": {
+        "median": 3,
+        "min": 2,
+        "max": 3
       },
       "frames": {
-        "median": 308,
-        "min": 307,
-        "max": 310
+        "median": 179,
+        "min": 178,
+        "max": 181
       },
       "tempC": {
-        "median": 28,
-        "min": 28,
-        "max": 28
+        "median": 25,
+        "min": 25,
+        "max": 25
+      },
+      "lateMaxMs": {
+        "median": 7,
+        "min": 5,
+        "max": 8
+      },
+      "driftPx": {
+        "median": 9,
+        "min": 1,
+        "max": 29
       }
     }
   }
