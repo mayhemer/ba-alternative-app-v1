@@ -53,6 +53,88 @@ export function parseFrames(out: string): Frames {
   };
 }
 
+// ── Frame phases (dumpsys gfxinfo framestats) ─────────────────────────────────
+// The summary above says how long frames took; this says where the time went.
+// `framestats` appends a timestamp per stage for each frame, which splits a
+// frame into what the UI thread did (input, Choreographer animation callbacks —
+// where React Native's mounting and Reanimated's frame updates run — layout,
+// recording the display list) and what the RenderThread and GPU did after it.
+//
+// Means rather than medians, so the phases add up to the total and a shift in
+// the total can be traced to the phase it came from. HWUI keeps only the last
+// 120 frames, so a longer window reports its end.
+
+export type FramePhases = {
+  frames: number;
+  // Vsync to the frame starting: the UI thread was still busy with something
+  // else — a previous frame, or work posted to its queue outside the frame.
+  startMs: number;
+  inputMs: number;
+  animMs: number;
+  layoutMs: number;
+  drawMs: number;
+  // The UI thread's part, input through draw.
+  uiMs: number;
+  // Waiting for the RenderThread to finish the previous frame.
+  rtWaitMs: number;
+  syncMs: number;
+  gpuMs: number;
+  swapMs: number;
+  totalMs: number;
+};
+
+export const FRAMES_READ = `dumpsys gfxinfo ${PACKAGE} framestats`;
+
+export function parseFramePhases(out: string): FramePhases {
+  const sums = { startMs: 0, inputMs: 0, animMs: 0, layoutMs: 0, drawMs: 0, uiMs: 0, rtWaitMs: 0, syncMs: 0, gpuMs: 0, swapMs: 0, totalMs: 0 };
+  let frames = 0;
+  // One block per window of the app; each starts with its own header row.
+  for (const block of out.split('---PROFILEDATA---').filter((_, i) => i % 2 === 1)) {
+    const [header, ...rows] = block.trim().split('\n').map((l) => l.trim().replace(/,$/, '').split(','));
+    if (header === undefined) {
+      continue;
+    }
+    const col = (name: string): number => header.indexOf(name);
+    const c = {
+      flags: col('Flags'), vsync: col('IntendedVsync'), input: col('HandleInputStart'), anim: col('AnimationStart'),
+      traversal: col('PerformTraversalsStart'), draw: col('DrawStart'), queued: col('SyncQueued'), sync: col('SyncStart'),
+      issue: col('IssueDrawCommandsStart'), swap: col('SwapBuffers'), done: col('FrameCompleted'),
+    };
+    if (Object.values(c).some((i) => i < 0)) {
+      continue;
+    }
+    for (const row of rows) {
+      const t = (i: number): number => Number(row[i]);
+      // Non-zero flags mark frames the platform says to leave out (a first draw
+      // after a layout change, say), whose stages are not comparable.
+      if (t(c.flags) !== 0 || !(t(c.done) > 0)) {
+        continue;
+      }
+      const ms = (from: number, to: number): number => (t(to) - t(from)) / 1e6;
+      sums.startMs += ms(c.vsync, c.input);
+      sums.inputMs += ms(c.input, c.anim);
+      sums.animMs += ms(c.anim, c.traversal);
+      sums.layoutMs += ms(c.traversal, c.draw);
+      sums.drawMs += ms(c.draw, c.queued);
+      sums.uiMs += ms(c.input, c.queued);
+      sums.rtWaitMs += ms(c.queued, c.sync);
+      sums.syncMs += ms(c.sync, c.issue);
+      sums.gpuMs += ms(c.issue, c.swap);
+      sums.swapMs += ms(c.swap, c.done);
+      sums.totalMs += ms(c.vsync, c.done);
+      frames++;
+    }
+  }
+  const mean = (s: number): number => (frames > 0 ? Math.round((s / frames) * 100) / 100 : NaN);
+  return {
+    frames,
+    startMs: mean(sums.startMs), inputMs: mean(sums.inputMs), animMs: mean(sums.animMs),
+    layoutMs: mean(sums.layoutMs), drawMs: mean(sums.drawMs), uiMs: mean(sums.uiMs),
+    rtWaitMs: mean(sums.rtWaitMs), syncMs: mean(sums.syncMs), gpuMs: mean(sums.gpuMs),
+    swapMs: mean(sums.swapMs), totalMs: mean(sums.totalMs),
+  };
+}
+
 // ── Memory (dumpsys meminfo, "App Summary") ───────────────────────────────────
 
 export type Memory = { totalPssKb: number; graphicsKb: number; nativeHeapKb: number; javaHeapKb: number };

@@ -28,7 +28,7 @@ import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { adb, type Device, installedVersion, PACKAGE, pickDevice, shell } from './lib/adb.ts';
-import { batteryTempC, coldStart, coolDown, FRAMES_RESET, type Frames, type Memory, markGapMs, parseFrames, readMemory } from './lib/androidMetrics.ts';
+import { batteryTempC, coldStart, coolDown, FRAMES_READ, FRAMES_RESET, type FramePhases, type Frames, type Memory, markGapMs, parseFramePhases, parseFrames, readMemory } from './lib/androidMetrics.ts';
 import { drift, inject, pushInjector, type Step } from './lib/androidInput.ts';
 import { dumpUi, find, tap, tapWhenVisible, type UiNode, waitFor } from './lib/androidUi.ts';
 import { buildByVersion, staleness } from './lib/eas.ts';
@@ -169,12 +169,12 @@ async function settle(): Promise<number> {
   return tempC;
 }
 
-type Window = { frames: Frames; lateMaxMs: number };
+type Window = { frames: Frames; phases: FramePhases; lateMaxMs: number };
 
 /** One measured window, entirely on the device: open, play, read. */
 function measure(steps: Step[], open = ''): Window {
-  const r = inject(d, [{ sh: `${open}${FRAMES_RESET}` }, { wait: LEAD_MS }, ...steps, { sh: `dumpsys gfxinfo ${PACKAGE}` }]);
-  return { frames: parseFrames(r.out), lateMaxMs: r.lateMaxMs };
+  const r = inject(d, [{ sh: `${open}${FRAMES_RESET}` }, { wait: LEAD_MS }, ...steps, { sh: FRAMES_READ }]);
+  return { frames: parseFrames(r.out), phases: parseFramePhases(r.out), lateMaxMs: r.lateMaxMs };
 }
 
 type Sample = Record<string, number | null>;
@@ -196,6 +196,10 @@ const framesSample = (w: Window, tempC: number): Sample => ({
   jankyPct: w.frames.jankyPct, p50Ms: w.frames.p50, p90Ms: w.frames.p90, p99Ms: w.frames.p99,
   over33: w.frames.over33, meanMs: w.frames.meanMs, slowUiThread: w.frames.slowUiThread,
   deadlineMissed: w.frames.deadlineMissed, frames: w.frames.total, tempC, lateMaxMs: w.lateMaxMs,
+  // Where the frames' time went (lib/androidMetrics.ts): means per phase, in ms.
+  fsFrames: w.phases.frames, fsStartMs: w.phases.startMs, fsInputMs: w.phases.inputMs, fsAnimMs: w.phases.animMs,
+  fsLayoutMs: w.phases.layoutMs, fsDrawMs: w.phases.drawMs, fsUiMs: w.phases.uiMs, fsRtWaitMs: w.phases.rtWaitMs,
+  fsSyncMs: w.phases.syncMs, fsGpuMs: w.phases.gpuMs, fsSwapMs: w.phases.swapMs, fsTotalMs: w.phases.totalMs,
 });
 const framesLine = (f: Frames): string =>
   `${f.total} frames, mean ${f.meanMs} ms, p90 ${f.p90} ms, ≥34 ms ${f.over33}, slow UI thread ${f.slowUiThread}`;
@@ -452,7 +456,7 @@ if (baselineJson !== null && baseline === null) {
   console.log(`   the baseline was measured with method ${baselineJson.meta.method ?? 1}, this is ${METHOD} — not compared`);
 }
 // Context for a run, not something to compare.
-const DIAGNOSTIC = new Set(['tempC', 'driftPx', 'lateMaxMs']);
+const DIAGNOSTIC = new Set(['tempC', 'driftPx', 'lateMaxMs', 'fsFrames']);
 for (const [scenario, metrics] of Object.entries(summary)) {
   const edges = edgeRuns[scenario] ?? 0;
   console.log(`\n${scenario}${edges > 0 ? `  ⚠ ${edges} run(s) did not come back — an edge?` : ''}`);
