@@ -2,12 +2,12 @@
 # ── One command to check everything that runs without a device ────────────────
 #
 # Fail-fast and in cheapest-first order, so a typo is reported in seconds rather
-# than after the browser suite. The iOS simulator E2E runs last; the physical
-# Android phone is printed as a follow-up, since it needs the phone attached.
+# than after the browser suite. The suites that test a built binary — the iOS
+# simulator E2E and the physical Android phone — are printed as a follow-up:
+# they run whatever build EAS last made, not this working tree.
 #
 #   npm run verify
-#   npm run verify -- --fast    skip the two slow steps: performance regressions
-#                               and iOS simulator E2E (together most of the time)
+#   npm run verify -- --fast    skip the slow step: performance regressions
 
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -55,36 +55,17 @@ npm run --silent build:web
 npx playwright test
 
 if [ "$FAST" -eq 1 ]; then
-  skipped "iOS simulator end-to-end"
+  printf '\n\033[32m✓ fast check green\033[0m — performance was not run\n'
 else
-  step "iOS simulator end-to-end"
-  # Tests the latest EAS `e2e-ios-sim` build, not your working tree — it says
-  # how far behind HEAD that build is. Exit 4 means a prerequisite is missing
-  # (no Xcode, no Maestro, no build yet): reported loudly, but not a failure.
-  ios_status=0
-  npm run --silent test:e2e:ios || ios_status=$?
-  if [ "$ios_status" -eq 4 ]; then
-    IOS_SKIPPED=1
-  elif [ "$ios_status" -ne 0 ]; then
-    exit "$ios_status"
-  fi
-fi
-
-if [ "$FAST" -eq 1 ]; then
-  printf '\n\033[32m✓ fast check green\033[0m — performance and iOS simulator end-to-end were not run\n'
-elif [ "${IOS_SKIPPED:-0}" -eq 1 ]; then
-  printf '\n\033[33m✓ green, but the iOS simulator end-to-end tests were SKIPPED (see above)\033[0m\n'
-else
-  printf '\n\033[32m✓ everything that runs without a physical device is green\033[0m\n'
+  printf '\n\033[32m✓ everything that tests this working tree is green\033[0m\n'
 fi
 cat <<'NEXT'
 
-Not covered above — needs the physical Android phone connected over USB:
+Not covered above — these test a built binary, so rebuild after app changes:
 
+  npm run build:e2e:ios            then npm run test:e2e:ios (iOS simulator E2E)
+  npm run build:perf:android       then, with the phone connected over USB:
   npm run install:perf:android     latest `perf` build onto the phone
   npm run test:perf:device         frame, start-up and memory measurements
-
-Both run against a built binary. After app changes, rebuild first:
-  npm run build:perf:android       (and npm run build:e2e:ios for the simulator)
 
 NEXT

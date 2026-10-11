@@ -40,8 +40,8 @@ ESLint extension in VSCode
 One command runs everything that does not need a device:
 
 ```bash
-npm run verify      # types → lint → jest (×3 platforms) → performance → web E2E → iOS simulator E2E
-npm run verify -- --fast   # the same without performance and iOS simulator E2E: ~30 s instead of ~3 min
+npm run verify      # types → lint → jest (×3 platforms) → performance → web E2E
+npm run verify -- --fast   # the same without performance
 ```
 
 | Layer | Command | What it is for |
@@ -49,7 +49,7 @@ npm run verify -- --fast   # the same without performance and iOS simulator E2E:
 | Unit / integration | `npm test` | Logic, caching, sync, interests, auth storage. Runs three times, once per platform preset |
 | Performance | `npm run test:perf` | Render-count and JS-duration regressions, vs `.reassure/baseline.perf`. `npm run test:perf:gate` then fails on any render count that went up — Reassure itself only reports |
 | Web end-to-end | `npm run test:e2e:web` | Real browser against the exported build. Desktop runs every test; tests tagged `@layout` also run on a phone in portrait and in landscape (the compact and short layouts) |
-| iOS end-to-end | `npm run test:e2e:ios` | Maestro flows on the iOS Simulator, against the `e2e-ios-sim` build. In `verify`; skipped (not failed) when a prerequisite is missing |
+| iOS end-to-end | `npm run test:e2e:ios` | Maestro flows on the iOS Simulator, against the `e2e-ios-sim` build. **Not** in `verify` — it tests the last EAS build, not the working tree |
 | Device performance | `npm run test:perf:device` | Frames, start-up and memory on the physical Android phone. **Not** in `verify` — needs the phone, and takes 15-25 min |
 
 Conventions worth knowing before adding a test:
@@ -85,7 +85,7 @@ EAS, pass `--app path/to/App.app`; nothing else in the runner changes.
 `npm run clean:e2e:ios` frees what the suite leaves on disk, about 3.5 GB. It erases the test
 simulator to factory state (every app on it, not just this one), and deletes the downloaded simulator
 builds, Maestro's debug output and the last reports. The next run rebuilds all of it, at the cost of a
-slower first boot and a fresh download: about 6½ minutes for `verify` instead of 3.
+slower first boot and a fresh download.
 
 Two things to know when writing flows:
 
