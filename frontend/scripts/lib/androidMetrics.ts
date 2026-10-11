@@ -20,24 +20,36 @@ export type Frames = {
   p99: number;
   slowUiThread: number;
   missedVsync: number;
+  deadlineMissed: number;
+  // From the histogram. On the Nokia 3 nearly every frame is over 16 ms, so
+  // jankyPct sits at 100 % and says nothing; frames of 34 ms or more (two
+  // vsyncs missed) and the mean still move.
+  over33: number;
+  meanMs: number;
 };
 
-export function resetFrames(d: Device): void {
-  shell(d, `dumpsys gfxinfo ${PACKAGE} reset >/dev/null`);
-}
+export const FRAMES_RESET = `dumpsys gfxinfo ${PACKAGE} reset >/dev/null`;
 
-export function readFrames(d: Device): Frames {
-  const out = shell(d, `dumpsys gfxinfo ${PACKAGE}`);
+export function parseFrames(out: string): Frames {
   const num = (re: RegExp): number => Number(re.exec(out)?.[1] ?? NaN);
+  const total = num(/Total frames rendered:\s*(\d+)/);
+  const buckets = [...(/HISTOGRAM:(.*)/.exec(out)?.[1] ?? '').matchAll(/(\d+)ms=(\d+)/g)]
+    .map((m) => ({ ms: Number(m[1]), n: Number(m[2]) }));
+  const counted = buckets.reduce((s, b) => s + b.n, 0);
+  // With no frames, the platform reports the window length as every percentile.
+  const pct = (re: RegExp): number => (total > 0 ? num(re) : NaN);
   return {
-    total: num(/Total frames rendered:\s*(\d+)/),
+    total,
     jankyPct: num(/Janky frames:\s*\d+\s*\(([\d.]+)%\)/),
-    p50: num(/50th percentile:\s*(\d+)ms/),
-    p90: num(/90th percentile:\s*(\d+)ms/),
-    p95: num(/95th percentile:\s*(\d+)ms/),
-    p99: num(/99th percentile:\s*(\d+)ms/),
+    p50: pct(/50th percentile:\s*(\d+)ms/),
+    p90: pct(/90th percentile:\s*(\d+)ms/),
+    p95: pct(/95th percentile:\s*(\d+)ms/),
+    p99: pct(/99th percentile:\s*(\d+)ms/),
     slowUiThread: num(/Number Slow UI thread:\s*(\d+)/),
     missedVsync: num(/Number Missed Vsync:\s*(\d+)/),
+    deadlineMissed: num(/Number Frame deadline missed:\s*(\d+)/),
+    over33: buckets.filter((b) => b.ms >= 34).reduce((s, b) => s + b.n, 0),
+    meanMs: counted > 0 ? Math.round((buckets.reduce((s, b) => s + b.ms * b.n, 0) / counted) * 10) / 10 : NaN,
   };
 }
 
@@ -94,31 +106,33 @@ export type ColdStart = { firstFrameMs: number; readyMs: number | null };
  * app itself first paints, from the marker the perf build logs. The second is
  * what a user waits for; it is null on a build without the marker.
  */
-export async function coldStart(d: Device, component: string, timeoutMs = 30_000): Promise<ColdStart> {
-  shell(d, `am force-stop ${PACKAGE}`);
-  run('adb', ['-s', d.serial, 'logcat', '-c']);
-  const out = shell(d, `am start -W -n ${component}`);
+export function coldStart(d: Device, component: string, timeoutS = 30): ColdStart {
+  // One adb call, and the wait for the marker is one blocked logcat on the
+  // device. Polling `logcat -d` from here instead dumped the whole log over USB
+  // four times a second, on the phone's CPU, during the startup being timed.
+  const ready = READY_MARK.replace(/[[\]]/g, '\\$&');
+  const start = `START u0 .*cmp=${PACKAGE.replace(/\./g, '\\.')}/`;
+  const out = shell(d, [
+    `am force-stop ${PACKAGE}`,
+    'logcat -c',
+    `am start -W -n ${component}`,
+    `timeout ${timeoutS} logcat -v epoch -m 1 -e '${ready}' >/dev/null`,
+    `logcat -d -v epoch -e '${start}|${ready}'`,
+  ].join('; '));
   const firstFrameMs = Number(/TotalTime:\s*(\d+)/.exec(out)?.[1] ?? NaN);
-
-  const until = Date.now() + timeoutMs;
-  while (Date.now() < until) {
-    const log = run('adb', ['-s', d.serial, 'logcat', '-d', '-v', 'epoch']).out;
-    const start = /^\s*([\d.]+)\s.*START u0 .*cmp=cz\.janbambas\.ba\//m.exec(log);
-    const ready = new RegExp(`^\\s*([\\d.]+)\\s.*${READY_MARK.replace(/[[\]]/g, '\\$&')}`, 'm').exec(log);
-    if (start !== null && ready !== null) {
-      return { firstFrameMs, readyMs: Math.round((Number(ready[1]) - Number(start[1])) * 1000) };
-    }
-    await sleep(250);
-  }
-  return { firstFrameMs, readyMs: null };
+  const at = (re: string): number | null => {
+    const m = new RegExp(`^\\s*([\\d.]+)\\s.*${re}`, 'm').exec(out);
+    return m === null ? null : Number(m[1]);
+  };
+  const startAt = at(start);
+  const readyAt = at(ready);
+  return {
+    firstFrameMs,
+    readyMs: startAt === null || readyAt === null ? null : Math.round((readyAt - startAt) * 1000),
+  };
 }
 
 // ── Gaps between perf marks ───────────────────────────────────────────────────
-
-/** Empties the device log, so the next read sees only what follows. */
-export function clearLog(d: Device): void {
-  run('adb', ['-s', d.serial, 'logcat', '-c']);
-}
 
 /**
  * Milliseconds from the last `[perf] <from>` mark to the first `[perf] <to>`

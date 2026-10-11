@@ -1,10 +1,11 @@
-// ── Driving the app over adb, with nothing of ours running on the device ──────
+// ── Driving the app over adb, quietly ─────────────────────────────────────────
 //
 // Elements are located from `uiautomator dump` BEFORE a measurement, and the
-// measured input is then sent with plain `adb input`. Maestro would be simpler
-// to write, but its on-device driver keeps reading the view hierarchy while it
-// waits for things — on a phone that idles with one of four cores online, that
-// competes with the app during exactly the frames being measured.
+// measured input is then played by the injector (lib/androidInput.ts), which
+// sleeps between events. Maestro would be simpler to write, but its on-device
+// driver keeps reading the view hierarchy while it waits for things — on a
+// phone that idles with one of four cores online, that competes with the app
+// during exactly the frames being measured.
 
 import { type Device, shell } from './adb.ts';
 import { run, sleep } from './proc.ts';
@@ -16,6 +17,9 @@ export type UiNode = {
   cls: string;
   x: number;
   y: number;
+  // Size as shown: a node cut off by the screen edge reports only its visible part.
+  w: number;
+  h: number;
 };
 
 const unescape = (s: string): string => s
@@ -41,6 +45,8 @@ export function dumpUi(d: Device): UiNode[] {
       cls: attr('class'),
       x: Math.round((Number(b[1]) + Number(b[3])) / 2),
       y: Math.round((Number(b[2]) + Number(b[4])) / 2),
+      w: Number(b[3]) - Number(b[1]),
+      h: Number(b[4]) - Number(b[2]),
     });
   }
   return nodes;
