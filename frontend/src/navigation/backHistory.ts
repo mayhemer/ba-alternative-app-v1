@@ -164,7 +164,7 @@ export function goBack(): boolean {
   }
   const target = stack.pop() as Position;
 
-  // Day before screen: BaseTimelineScreen's init effect leaves a valid day alone,
+  // Day before screen: a timeline screen shows a valid selected day as it is,
   // but only if the day has landed before the newly focused screen renders — and
   // freezeOnBlur defers that render until it is shown.
   if (target.day !== 0) {

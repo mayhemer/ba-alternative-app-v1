@@ -13,7 +13,7 @@ import {
   type ScreenName,
 } from './backHistory';
 import { useSelectedSlug } from '../store/AppContext';
-import { useTimelineFilter } from '../context/TimelineFilterContext';
+import { useSelectedDay, useTimelineFilter } from '../context/TimelineFilterContext';
 import { useLens, useLensPanel } from '../context/LensContext';
 import { useArtistDetail } from '../context/ArtistDetailContext';
 import { useConflictDetail } from '../context/ConflictDetailContext';
@@ -60,7 +60,8 @@ function isDrawerOpen(): boolean {
 
 export function BackHistoryTracker() {
   const selectedSlug = useSelectedSlug();
-  const { selectedDayStart, setSelectedDayStart } = useTimelineFilter();
+  const { setSelectedDayStart } = useTimelineFilter();
+  const selectedDayStart = useSelectedDay();
   const { scope, setScope } = useLens();
   const { isOpen: isLensPanelOpen, close: closeLensPanel } = useLensPanel();
   const { detailState, openDetail, closeDetail } = useArtistDetail();

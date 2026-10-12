@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, TouchableOpacity } from 'react-native';
 import { Text } from '../ui/Text';
-import { useTimelineFilter } from '../../context/TimelineFilterContext';
+import { useShownDay, useTimelineFilter } from '../../context/TimelineFilterContext';
 import { CONTENT_MAX_WIDTH, NOW_BUTTON_ARROW_SIZE, formatDayMonth, formatWeekday } from './timelineLayout';
 import { colors } from '../../styling/tokens';
 import { currentTimeMs } from '../../utils/clock';
@@ -27,7 +27,10 @@ type Props = {
 };
 
 export function DaySwitcher({ screenKey }: Props) {
-  const { festivalDays, selectedDayStart, setSelectedDayStart, requestScrollToNow } = useTimelineFilter();
+  const { festivalDays, setSelectedDayStart, requestScrollToNow } = useTimelineFilter();
+  // The day this switcher's screen shows, derived the same way the screen does,
+  // so the active day is right on the first frame.
+  const selectedDayStart = useShownDay(screenKey);
 
   if (festivalDays.length === 0) { return null; }
 
