@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { hydrateInterests } from '../cache/cacheService';
 import { hydrateSocial } from '../cache/socialCache';
+import { migrateLocalStorage } from './storageMigration';
 import { DEFAULT_SCOPE, type LensScope } from '../utils/interestUtils';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -20,7 +21,7 @@ import { DEFAULT_SCOPE, type LensScope } from '../utils/interestUtils';
 const KEY_HIDDEN_CATS    = 'timeline:hiddenCategories';   // existing — JSON string[]
 const KEY_SCROLL_POS     = 'timeline:scrollPositions:v2'; // existing — Record<screenKey, Record<dayStart, x>>
 const KEY_SELECTED_DAY   = 'timeline:selectedDayStart';   // new      — Record<screenKey, dayStart>
-const KEY_LENS_SCOPE     = 'lens:scope';                  // existing — LensScope, never a friend's
+const KEY_LENS_SCOPE     = 'lens:scope:v2';               // existing — LensScope, never a friend's (v2: level 'will_go', see storageMigration)
 
 const WRITE_DEBOUNCE_MS = 300;
 
@@ -109,9 +110,10 @@ async function hydrateUiState(): Promise<void> {
  * Load all local persisted state (UI-state snapshot, and the slug's local
  * interests, friends and own share) before the splash lifts, so the providers
  * can start from it. Never rejects — storage errors fall back to defaults so
- * startup is never blocked.
+ * startup is never blocked. Stored data from older builds is migrated first.
  */
 export async function hydrateLocalState(slug: string): Promise<void> {
+  await migrateLocalStorage();
   await Promise.all([
     hydrateUiState().catch(() => undefined),
     hydrateInterests(slug).catch(() => undefined),

@@ -32,7 +32,7 @@ const INPUTS: ConflictInputs = { artists: ARTISTS, stages: STAGES, artistEvents:
 const PLAYABLE = ARTISTS.filter((a) => ARTIST_EVENTS[a.artistId]?.length);
 
 function starred(count: number): Record<string, string> {
-  return Object.fromEntries(PLAYABLE.slice(0, count).map((a) => [a.artistId, 'must_see']));
+  return Object.fromEntries(PLAYABLE.slice(0, count).map((a) => [a.artistId, 'will_go']));
 }
 
 // A full festival plan: roughly what someone who has been through the whole

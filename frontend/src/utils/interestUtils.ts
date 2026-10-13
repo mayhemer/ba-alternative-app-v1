@@ -3,14 +3,14 @@ import type { SharedInterestStatus } from '../adapters/baShareApiAdapter';
 
 /**
  * Returns true if an artist with the given status passes the interest filter.
- * null filter = show all; 'maybe' = at least maybe (maybe or must_see); 'must_see' = must_see only.
+ * null filter = show all; 'maybe' = at least maybe (maybe or will_go); 'will_go' = will_go only.
  */
 export function matchesInterestFilter(
   artistStatus: InterestStatus,
   filter: InterestStatus | null,
 ): boolean {
   if (filter === null)        { return true; }
-  if (filter === 'maybe')     { return artistStatus === 'maybe' || artistStatus === 'must_see'; }
+  if (filter === 'maybe')     { return artistStatus === 'maybe' || artistStatus === 'will_go'; }
   return artistStatus === filter;
 }
 
@@ -19,7 +19,7 @@ export function matchesInterestFilter(
 // A single global "lens" decides whose schedule the artist list and timelines
 // reflect. `level` is the same 3-state filter applied within the chosen source.
 
-export type ScopeLevel = 'maybe' | 'must_see' | null;
+export type ScopeLevel = 'maybe' | 'will_go' | null;
 
 export type LensScope =
   | { kind: 'all' }                                       // everything (today's default)
@@ -27,11 +27,6 @@ export type LensScope =
   | { kind: 'friend'; token: string; level: ScopeLevel }; // a friend's picks (read-only inspect)
 
 export const DEFAULT_SCOPE: LensScope = { kind: 'all' };
-
-// Maps a friend's server status to the local 3-state value so it can reuse the filter.
-function friendStatusToLocal(status: SharedInterestStatus): InterestStatus {
-  return status === 'will_go' ? 'must_see' : 'maybe';
-}
 
 /**
  * Decides whether an artist passes the active lens.
@@ -51,5 +46,5 @@ export function matchesScope(
   // friend
   if (friendStatus === undefined) { return false; }
   if (scope.level === null) { return true; }
-  return matchesInterestFilter(friendStatusToLocal(friendStatus), scope.level);
+  return matchesInterestFilter(friendStatus, scope.level);
 }

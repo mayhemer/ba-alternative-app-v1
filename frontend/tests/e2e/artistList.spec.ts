@@ -56,7 +56,7 @@ test('a star survives a reload', async ({ appPage }) => {
   await expect(appPage.getByText('LOADING ARTISTS…')).toHaveCount(0, { timeout: 20_000 });
 
   const stored = await appPage.evaluate(
-    () => window.localStorage.getItem('user:interests:ba2025'));
+    () => window.localStorage.getItem('user:interests:v2:ba2025'));
   expect(stored).not.toBeNull();
   expect(Object.keys(JSON.parse(stored!)).length).toBeGreaterThan(0);
 });

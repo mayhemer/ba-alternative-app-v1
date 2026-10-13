@@ -89,7 +89,7 @@ describe('one artist row', () => {
     );
     const starred = await render(
       <FeatureProviders>
-        <ArtistRow artist={ARTIST} status="must_see" onPress={() => undefined} />
+        <ArtistRow artist={ARTIST} status="will_go" onPress={() => undefined} />
       </FeatureProviders>,
     );
 
@@ -127,7 +127,7 @@ describe('one timeline block', () => {
       event: EVENT,
       artist: ARTIST,
       dayStart: EVENT.dateFrom,
-      status: 'must_see' as const,
+      status: 'will_go' as const,
       categoryColor: '#888888',
       labelRepeat: 400,
       onPress: () => undefined,

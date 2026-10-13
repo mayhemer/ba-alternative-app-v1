@@ -26,8 +26,8 @@ async function authedFetch<T>(
 
 // ── Server status type ────────────────────────────────────────────────────────
 
-// Status values used by the backend (different from local InterestStatus)
-type ServerInterestStatus = 'will_go' | 'maybe';
+// Statuses a PUT may carry; 'none' is expressed as a DELETE.
+type ServerInterestStatus = Exclude<DbUserInterest['status'], 'none'>;
 
 // ── Adapter functions ─────────────────────────────────────────────────────────
 

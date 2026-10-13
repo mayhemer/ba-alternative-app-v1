@@ -30,7 +30,7 @@ export type ConflictEntry = {
 const EVENT_DURATION_MAX_FOR_CONFLICT_ELIGIBILITY_MS = 2 * 60 * 60 * 1000;
 
 /**
- * Computes all must_see conflict entries for an interest map and cache inputs.
+ * Computes all will_go conflict entries for an interest map and cache inputs.
  * Single source of truth — used by both ConflictContext and ConflictDetailSheet.
  */
 export function computeConflictEntries(
@@ -40,11 +40,11 @@ export function computeConflictEntries(
   const stageById  = Object.fromEntries(stages.map((s) => [s.stageId, s]));
   const artistById = Object.fromEntries(artists.map((a) => [a.artistId, a]));
 
-  // Collect all must_see events
+  // Collect all will_go events
   // TODO: may want a filter that will include "maybe" into the conflict list
   const markedEvents: DbEvent[] = [];
   for (const artist of artists) {
-    if ((interests[artist.artistId] ?? 'none') === 'must_see') {
+    if ((interests[artist.artistId] ?? 'none') === 'will_go') {
       markedEvents.push(...(artistEvents[artist.artistId] ?? []));
     }
   }
@@ -86,8 +86,8 @@ export function computeConflictEntries(
 export type ConflictOverlap = { from: number; to: number };
 
 /**
- * For every conflicting must_see event, the merged set of disjoint intervals where
- * it actually overlaps other must_see events. An event that clashes with two others
+ * For every conflicting will_go event, the merged set of disjoint intervals where
+ * it actually overlaps other will_go events. An event that clashes with two others
  * on either side (with a clear gap in the middle) yields two intervals, so the
  * timeline draws two bars and leaves the gap uncovered.
  *

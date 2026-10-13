@@ -102,7 +102,7 @@ describe('on mount', () => {
   it('shows the picks the startup gate loaded, on the very first render', async () => {
     signedIn(null);
     // What StartupGate's hydration leaves in memory before the providers mount.
-    await setInterest(mockCurrentSlug, 'a1', 'must_see');
+    await setInterest(mockCurrentSlug, 'a1', 'will_go');
 
     // No flush: the pick must be there before any effect has run.
     await render(
@@ -111,17 +111,17 @@ describe('on mount', () => {
       </InterestProvider>,
     );
 
-    expect(screen.getByText('must_see')).toBeTruthy();
+    expect(screen.getByText('will_go')).toBeTruthy();
   });
 });
 
 // ── The cycle ─────────────────────────────────────────────────────────────────
 
 describe('nextStatus', () => {
-  it('cycles none → maybe → must_see → none', () => {
+  it('cycles none → maybe → will_go → none', () => {
     expect(nextStatus('none')).toBe('maybe');
-    expect(nextStatus('maybe')).toBe('must_see');
-    expect(nextStatus('must_see')).toBe('none');
+    expect(nextStatus('maybe')).toBe('will_go');
+    expect(nextStatus('will_go')).toBe('none');
   });
 });
 
@@ -134,7 +134,7 @@ describe('pressing the star', () => {
     expect(screen.getByText('maybe')).toBeTruthy();
 
     await act(async () => { press('a1'); await flush(); });
-    expect(screen.getByText('must_see')).toBeTruthy();
+    expect(screen.getByText('will_go')).toBeTruthy();
 
     await act(async () => { press('a1'); await flush(); });
     expect(screen.getByText('none')).toBeTruthy();
@@ -152,7 +152,7 @@ describe('pressing the star', () => {
   it('deletes rather than putting when the star is cleared', async () => {
     await mount();
     await act(async () => { press('a1'); await flush(); });   // maybe
-    await act(async () => { press('a1'); await flush(); });   // must_see
+    await act(async () => { press('a1'); await flush(); });   // will_go
     await act(async () => { press('a1'); await flush(); });   // none
 
     // 'none' has no server representation — leaving a stale row would resurrect
@@ -196,7 +196,7 @@ describe('refreshing from the server', () => {
 
     await act(async () => { await refresh(); });
 
-    expect(screen.getByText('must_see')).toBeTruthy();
+    expect(screen.getByText('will_go')).toBeTruthy();
   });
 
   it('pushes back a local pick the server has not seen', async () => {
@@ -220,7 +220,7 @@ describe('refreshing from the server', () => {
     await act(async () => { await refresh(); await flush(); });
 
     expect(mockPut).not.toHaveBeenCalled();
-    expect(screen.getByText('must_see')).toBeTruthy();
+    expect(screen.getByText('will_go')).toBeTruthy();
   });
 
   it('does nothing at all when signed out', async () => {

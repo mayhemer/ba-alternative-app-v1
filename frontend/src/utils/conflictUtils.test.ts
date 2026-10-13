@@ -82,7 +82,7 @@ function findClashingPair(): [string, string] {
 const [CLASH_A, CLASH_B] = findClashingPair();
 
 function mustSee(...artistIds: string[]): Record<string, string> {
-  return Object.fromEntries(artistIds.map((id) => [id, 'must_see']));
+  return Object.fromEntries(artistIds.map((id) => [id, 'will_go']));
 }
 
 describe('computeConflictEntries', () => {
@@ -104,7 +104,7 @@ describe('computeConflictEntries', () => {
   });
 
   it('ignores artists marked only maybe', () => {
-    const interests = { [CLASH_A]: 'must_see', [CLASH_B]: 'maybe' };
+    const interests = { [CLASH_A]: 'will_go', [CLASH_B]: 'maybe' };
     expect(computeConflictEntries(interests, INPUTS)).toEqual([]);
   });
 

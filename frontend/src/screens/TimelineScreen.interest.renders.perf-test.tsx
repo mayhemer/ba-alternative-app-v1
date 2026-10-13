@@ -81,7 +81,7 @@ afterAll(() => {
  */
 function startingFrom(statuses: Record<string, InterestStatus>): () => Promise<void> {
   return async () => {
-    const all = { [CRYSTAL_LAKE]: 'none', [RIVERS_OF_NIHIL]: 'none', [EXORCIZPHOBIA]: 'must_see', ...statuses };
+    const all = { [CRYSTAL_LAKE]: 'none', [RIVERS_OF_NIHIL]: 'none', [EXORCIZPHOBIA]: 'will_go', ...statuses };
     for (const [artistId, status] of Object.entries(all)) {
       await setInterest(SLUG, artistId, status as InterestStatus);
     }
@@ -191,7 +191,7 @@ const CASES: (Case & { name: string })[] = [
   },
   {
     name: 'unstarring an artist out of a conflict',
-    from: { [CRYSTAL_LAKE]: 'must_see' },
+    from: { [CRYSTAL_LAKE]: 'will_go' },
     artist: CRYSTAL_LAKE,
     conflicts: [true, false],
   },

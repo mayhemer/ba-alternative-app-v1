@@ -32,7 +32,7 @@ function serverEntry(
 }
 
 async function storedFor(slug: string): Promise<Record<string, LocalInterest>> {
-  const raw = await AsyncStorage.getItem(`user:interests:${slug}`);
+  const raw = await AsyncStorage.getItem(`user:interests:v2:${slug}`);
   return raw === null ? {} : JSON.parse(raw);
 }
 
@@ -43,11 +43,11 @@ describe('setting an interest locally', () => {
     const slug = freshSlug();
     setCurrentTimeMs(LATER);
 
-    const record = await setInterest(slug, 'a1', 'must_see');
+    const record = await setInterest(slug, 'a1', 'will_go');
 
     // The timestamp is what the merge arbitrates on, so it must come from the
     // seam rather than a raw Date.now() the tests cannot control.
-    expect(record).toEqual({ status: 'must_see', updatedAt: LATER });
+    expect(record).toEqual({ status: 'will_go', updatedAt: LATER });
   });
 
   it('persists so a cold start keeps the pick', async () => {
@@ -64,7 +64,7 @@ describe('setting an interest locally', () => {
   it('keeps a "none" record rather than dropping the artist', async () => {
     const slug = freshSlug();
     setCurrentTimeMs(EARLIER);
-    await setInterest(slug, 'a1', 'must_see');
+    await setInterest(slug, 'a1', 'will_go');
     setCurrentTimeMs(LATER);
     await setInterest(slug, 'a1', 'none');
 
@@ -76,7 +76,7 @@ describe('setting an interest locally', () => {
   it('leaves other artists alone', async () => {
     const slug = freshSlug();
     setCurrentTimeMs(EARLIER);
-    await setInterest(slug, 'a1', 'must_see');
+    await setInterest(slug, 'a1', 'will_go');
     await setInterest(slug, 'a2', 'maybe');
 
     const stored = await storedFor(slug);
@@ -95,18 +95,18 @@ describe('merging the server\'s copy', () => {
       serverEntry(slug, 'a1', 'will_go', LATER),
     ]);
 
-    expect(merged.a1).toEqual({ status: 'must_see', updatedAt: LATER });
+    expect(merged.a1).toEqual({ status: 'will_go', updatedAt: LATER });
   });
 
   it('keeps a local pick the server has never seen', async () => {
     const slug = freshSlug();
     setCurrentTimeMs(LATER);
-    await setInterest(slug, 'local-only', 'must_see');
+    await setInterest(slug, 'local-only', 'will_go');
 
     const merged = await mergeServerInterests(slug, []);
 
     // The offline case: picks made with no account must survive signing in.
-    expect(merged['local-only']).toEqual({ status: 'must_see', updatedAt: LATER });
+    expect(merged['local-only']).toEqual({ status: 'will_go', updatedAt: LATER });
   });
 
   it('lets the newer server edit win', async () => {
@@ -118,25 +118,25 @@ describe('merging the server\'s copy', () => {
       serverEntry(slug, 'a1', 'will_go', LATER),
     ]);
 
-    expect(merged.a1).toEqual({ status: 'must_see', updatedAt: LATER });
+    expect(merged.a1).toEqual({ status: 'will_go', updatedAt: LATER });
   });
 
   it('lets the newer local edit win', async () => {
     const slug = freshSlug();
     setCurrentTimeMs(LATER);
-    await setInterest(slug, 'a1', 'must_see');
+    await setInterest(slug, 'a1', 'will_go');
 
     const merged = await mergeServerInterests(slug, [
       serverEntry(slug, 'a1', 'maybe', EARLIER),
     ]);
 
-    expect(merged.a1).toEqual({ status: 'must_see', updatedAt: LATER });
+    expect(merged.a1).toEqual({ status: 'will_go', updatedAt: LATER });
   });
 
   it('keeps the local record when the timestamps are identical', async () => {
     const slug = freshSlug();
     setCurrentTimeMs(LATER);
-    await setInterest(slug, 'a1', 'must_see');
+    await setInterest(slug, 'a1', 'will_go');
 
     const merged = await mergeServerInterests(slug, [
       serverEntry(slug, 'a1', 'maybe', LATER),
@@ -144,11 +144,11 @@ describe('merging the server\'s copy', () => {
 
     // The comparison is strictly greater-than, so a tie is not a change. Worth
     // pinning: flipping it to >= would make every sync overwrite local state.
-    expect(merged.a1.status).toBe('must_see');
+    expect(merged.a1.status).toBe('will_go');
   });
 
   it.each([
-    ['will_go', 'must_see'],
+    ['will_go', 'will_go'],
     ['maybe', 'maybe'],
     ['none', 'none'],
   ] as const)('maps server %s to local %s', async (server, local) => {
@@ -193,14 +193,14 @@ describe('merging the server\'s copy', () => {
 
     expect(await storedFor(slug)).toEqual({
       a1: { status: 'maybe', updatedAt: EARLIER },
-      a2: { status: 'must_see', updatedAt: LATER },
+      a2: { status: 'will_go', updatedAt: LATER },
     });
   });
 
   it('merges several artists in one pass without cross-contamination', async () => {
     const slug = freshSlug();
     setCurrentTimeMs(LATER);
-    await setInterest(slug, 'keep-local', 'must_see');
+    await setInterest(slug, 'keep-local', 'will_go');
     setCurrentTimeMs(EARLIER);
     await setInterest(slug, 'take-server', 'maybe');
 
@@ -210,8 +210,8 @@ describe('merging the server\'s copy', () => {
       serverEntry(slug, 'server-only', 'maybe', LATER),
     ]);
 
-    expect(merged['keep-local'].status).toBe('must_see');
-    expect(merged['take-server'].status).toBe('must_see');
+    expect(merged['keep-local'].status).toBe('will_go');
+    expect(merged['take-server'].status).toBe('will_go');
     expect(merged['server-only'].status).toBe('maybe');
   });
 });

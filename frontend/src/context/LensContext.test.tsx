@@ -36,9 +36,9 @@ it('starts from the remembered scope, on the very first render', async () => {
 it('remembers a scope the user picks', async () => {
   await render(<LensProvider><Probe /></LensProvider>);
 
-  await act(async () => { setScope({ kind: 'me', level: 'must_see' }); });
+  await act(async () => { setScope({ kind: 'me', level: 'will_go' }); });
 
-  expect(getUiState('lensScope')).toEqual({ kind: 'me', level: 'must_see' });
+  expect(getUiState('lensScope')).toEqual({ kind: 'me', level: 'will_go' });
 });
 
 it('does not remember a friend\'s scope', async () => {

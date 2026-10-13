@@ -17,7 +17,7 @@ type StarConfig = {
 const STAR_CONFIG: Record<InterestStatus, StarConfig> = {
   none:     { icon: 'star-outline', color: colors.notInterested, feedbackLabel: 'Removed from favorites' },
   maybe:    { icon: 'star-half',    color: colors.accent,        feedbackLabel: 'Maybe want to see'      },
-  must_see: { icon: 'star',         color: colors.accent,        feedbackLabel: 'Must see!'              },
+  will_go:  { icon: 'star',         color: colors.accent,        feedbackLabel: 'Must see!'              },
 };
 
 // ── StarIndicator ─────────────────────────────────────────────────────────────

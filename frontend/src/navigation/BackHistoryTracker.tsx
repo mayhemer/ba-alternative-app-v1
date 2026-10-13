@@ -145,7 +145,7 @@ export function BackHistoryTracker() {
     },
 
     // Overlapping events are re-derived rather than stored: ConflictContext
-    // applies the same must_see rule both openConflict callers use, so this
+    // applies the same will_go rule both openConflict callers use, so this
     // reproduces either of them — and yields nothing once the user un-stars.
     applyConflict: (eventId): string | null => {
       if (eventId === null) {

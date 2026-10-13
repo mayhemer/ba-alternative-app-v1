@@ -60,16 +60,13 @@ type InterestCycleContextValue = {
 
 export function nextStatus(current: InterestStatus): InterestStatus {
   if (current === 'none') { return 'maybe'; }
-  if (current === 'maybe') { return 'must_see'; }
+  if (current === 'maybe') { return 'will_go'; }
   return 'none';
 }
 
-// Maps local InterestStatus to the server's status field.
-// Returns null for 'none' (caller should DELETE instead of PUT).
-function toServerStatus(status: InterestStatus): 'will_go' | 'maybe' | null {
-  if (status === 'must_see') { return 'will_go'; }
-  if (status === 'maybe') { return 'maybe'; }
-  return null;
+// Status to PUT to the server, or null for 'none' (caller should DELETE instead).
+function toServerStatus(status: InterestStatus): Exclude<InterestStatus, 'none'> | null {
+  return status === 'none' ? null : status;
 }
 
 // Converts a LocalInterest map (from cacheService) to a plain status map

@@ -24,7 +24,7 @@ const SLOT_GAP = 8;
 function scopeStarStatus(scope: LensScope): InterestStatus {
   if (scope.kind === 'all') { return 'none'; }
   if (scope.level === 'maybe') { return 'maybe'; }
-  return 'must_see';
+  return 'will_go';
 }
 
 // TopBar entry point for the view/share lens. Reads as "state + menu": the left

@@ -65,14 +65,14 @@ export function useArtistDerived(artist: DbArtist) {
   const conflictMap = useMemo<Map<string, DbEvent[]>>(() => {
     const map = new Map<string, DbEvent[]>();
     const localInterest = interests[artist.artistId] ?? 'none';
-    if (localInterest !== 'must_see') { return map; }
+    if (localInterest !== 'will_go') { return map; }
 
     for (const event of artistEvents[artist.artistId] ?? []) {
       const overlapping: DbEvent[] = [];
       for (const other of allArtists) {
         if (other.artistId === artist.artistId) { continue; }
         const otherStatus = interests[other.artistId] ?? 'none';
-        if (otherStatus !== 'must_see') { continue; }
+        if (otherStatus !== 'will_go') { continue; }
         for (const otherEvent of artistEvents[other.artistId] ?? []) {
           if (eventsOverlap(event, otherEvent)) {
             overlapping.push(otherEvent);

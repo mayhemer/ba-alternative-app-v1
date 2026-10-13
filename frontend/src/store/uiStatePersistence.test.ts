@@ -23,7 +23,7 @@ import {
 const KEY_SCROLL = 'timeline:scrollPositions:v2';
 const KEY_DAY = 'timeline:selectedDayStart';
 const KEY_HIDDEN = 'timeline:hiddenCategories';
-const KEY_LENS = 'lens:scope';
+const KEY_LENS = 'lens:scope:v2';
 const DEBOUNCE_MS = 300;
 
 const DAY = Date.parse('2026-08-05T00:00:00+02:00');
@@ -189,11 +189,11 @@ describe('the lens scope', () => {
   });
 
   it('is restored at startup, so the lens can start from it', async () => {
-    await AsyncStorage.setItem(KEY_LENS, JSON.stringify({ kind: 'me', level: 'must_see' }));
+    await AsyncStorage.setItem(KEY_LENS, JSON.stringify({ kind: 'me', level: 'will_go' }));
 
     await hydrateLocalState('ba2025');
 
-    expect(getUiState('lensScope')).toEqual({ kind: 'me', level: 'must_see' });
+    expect(getUiState('lensScope')).toEqual({ kind: 'me', level: 'will_go' });
   });
 
   it('never restores a friend\'s scope — the app does not open viewing a friend', async () => {

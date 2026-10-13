@@ -8,11 +8,11 @@ import { StarButton } from './StarButton';
 export const INTEREST_FILTER_LABELS: Record<string, string> = {
   'null':     'Filter: show all',
   'maybe':    'Filter: maybe and must-see',
-  'must_see': 'Filter: must-see only',
+  'will_go':  'Filter: must-see only',
 };
 
 // ── StarFilterButton ──────────────────────────────────────────────────────────
-// Presentational cycling button (null → maybe → must_see → null). No context
+// Presentational cycling button (null → maybe → will_go → null). No context
 // dependency — wired by the caller (used inside the Lens panel level selector).
 
 type StarFilterButtonProps = {

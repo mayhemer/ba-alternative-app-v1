@@ -45,9 +45,9 @@ export type DataCollector = {
 
 // ── Interest types ────────────────────────────────────────────────────────────
 
-// Frontend-local status values. Mapping to server on sync:
-//   'must_see' → 'will_go'  |  'maybe' → 'maybe'  |  'none' → DELETE
-export type InterestStatus = 'none' | 'maybe' | 'must_see';
+// Same values as the server. On sync 'none' is sent as a DELETE (soft delete),
+// every other status as a PUT.
+export type InterestStatus = 'none' | 'maybe' | 'will_go';
 
 export type LocalInterest = {
   status: InterestStatus;
@@ -122,8 +122,10 @@ function notifyCacheChanged(): void {
 
 // ── AsyncStorage keys ─────────────────────────────────────────────────────────
 
+// v2: status values unified with the server ('must_see' became 'will_go').
+// v1 keys are converted once at startup by store/storageMigration.
 function interestStorageKey(slug: string): string {
-  return `user:interests:${slug}`;
+  return `user:interests:v2:${slug}`;
 }
 
 function festivalStorageKey(slug: string): string {
@@ -627,9 +629,7 @@ export async function setInterest(
  * Merge server interests into the local cache using latest-updatedAt-wins strategy.
  * Called after login when the server state is retrieved.
  *
- * Server status mapping:
- *   'will_go' → 'must_see'
- *   'maybe'   → 'maybe'
+ * Statuses this build does not know are taken as 'none'.
  */
 export async function mergeServerInterests(
   slug: string,
@@ -644,14 +644,8 @@ export async function mergeServerInterests(
     if (separatorIndex === -1) { continue; }
     const artistId = item.slugArtistId.slice(separatorIndex + 1);
 
-    let localStatus: InterestStatus;
-    if (item.status === 'will_go') {
-      localStatus = 'must_see';
-    } else if (item.status === 'maybe') {
-      localStatus = 'maybe';
-    } else {
-      localStatus = 'none';
-    }
+    const localStatus: InterestStatus =
+      item.status === 'will_go' || item.status === 'maybe' ? item.status : 'none';
 
     const existing = merged[artistId];
     if (existing === undefined || item.updatedAt > existing.updatedAt) {
