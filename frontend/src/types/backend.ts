@@ -71,7 +71,7 @@ export interface DbEvent {
 export interface DbUserInterest {
   userId: string;
   slugArtistId: string; // composite SK: "{slug}#{artistId}"
-  status: 'will_go' | 'maybe' | 'none';
+  status: 'will_go' | 'maybe' | 'dont_go' | 'none'; // dont_go: heard it, decided not to go
   updatedAt: number;
 }
 

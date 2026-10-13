@@ -58,10 +58,11 @@ type InterestCycleContextValue = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+// One tap = one step: none → maybe → will_go → dont_go → none.
+export const INTEREST_CYCLE: readonly InterestStatus[] = ['none', 'maybe', 'will_go', 'dont_go'];
+
 export function nextStatus(current: InterestStatus): InterestStatus {
-  if (current === 'none') { return 'maybe'; }
-  if (current === 'maybe') { return 'will_go'; }
-  return 'none';
+  return INTEREST_CYCLE[(INTEREST_CYCLE.indexOf(current) + 1) % INTEREST_CYCLE.length];
 }
 
 // Status to PUT to the server, or null for 'none' (caller should DELETE instead).

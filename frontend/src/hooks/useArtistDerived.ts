@@ -88,7 +88,7 @@ export function useArtistDerived(artist: DbArtist) {
 
   function handleStarPress(): void {
     const { next, promise } = cycleStatus(artist.artistId);
-    startProgress(getFeedbackLabel(next)).wrap(promise);
+    startProgress(getFeedbackLabel(next), next).wrap(promise);
   }
 
   return { closeDetail, expandDetail, status, innerWidth, heroHeight, hPad, isWeb, meta, artistNameForURL, artistWebDomain, handleStarPress, width, conflictMap, openConflict };

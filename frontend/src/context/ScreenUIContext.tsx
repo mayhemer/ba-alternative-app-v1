@@ -7,6 +7,7 @@ import React, {
   useRef,
 } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
+import type { InterestStatus } from './InterestContext';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -15,6 +16,7 @@ export type FeedbackVariant = 'progress' | 'confirmation' | 'warning';
 export type FeedbackMessage = {
   text: string;
   variant: FeedbackVariant;
+  interest?: InterestStatus; // set by a star tap: the toast shows the whole interest cycle
   error?: unknown; // stored on warn() — reserved for future tap-for-detail
 };
 
@@ -57,7 +59,7 @@ type ScreenUIActionsContextValue = {
   setTopBar: (config: TopBarConfig) => void;
   setBottomBar: (config: BottomBarConfig) => void;
   showFeedback: (text: string, variant?: FeedbackVariant, durationMs?: number) => void;
-  startProgress: (text: string) => FeedbackTracker;
+  startProgress: (text: string, interest?: InterestStatus) => FeedbackTracker;
   dismissFeedback: () => void;
 };
 
@@ -138,18 +140,18 @@ export function ScreenUIProvider({ children }: { children: React.ReactNode }) {
     }
   }, [clearDismissTimer]);
 
-  const startProgress = useCallback((text: string): FeedbackTracker => {
+  const startProgress = useCallback((text: string, interest?: InterestStatus): FeedbackTracker => {
     clearDismissTimer();
 
     trackerCounterRef.current += 1;
     const trackerId = trackerCounterRef.current;
     activeTrackerIdRef.current = trackerId;
 
-    dispatch({ type: 'SET_FEEDBACK', message: { text, variant: 'progress' } });
+    dispatch({ type: 'SET_FEEDBACK', message: { text, variant: 'progress', interest } });
 
     function confirm(): void {
       if (activeTrackerIdRef.current !== trackerId) { return; }
-      dispatch({ type: 'SET_FEEDBACK', message: { text, variant: 'confirmation' } });
+      dispatch({ type: 'SET_FEEDBACK', message: { text, variant: 'confirmation', interest } });
       dismissTimerRef.current = setTimeout(() => {
         if (activeTrackerIdRef.current === trackerId) {
           dispatch({ type: 'SET_FEEDBACK', message: null });
@@ -161,7 +163,7 @@ export function ScreenUIProvider({ children }: { children: React.ReactNode }) {
 
     function warn(error?: unknown): void {
       if (activeTrackerIdRef.current !== trackerId) { return; }
-      dispatch({ type: 'SET_FEEDBACK', message: { text, variant: 'warning', error } });
+      dispatch({ type: 'SET_FEEDBACK', message: { text, variant: 'warning', interest, error } });
     }
 
     async function wrap<T>(promise: Promise<T>): Promise<T | null> {
@@ -227,7 +229,7 @@ export function useFeedback(): (text: string, variant?: FeedbackVariant) => void
 
 // Subscribes only to the stable actions context — never re-renders due to
 // feedback/topBar/bottomBar state changes.
-export function useStartProgress(): (text: string) => FeedbackTracker {
+export function useStartProgress(): (text: string, interest?: InterestStatus) => FeedbackTracker {
   const { startProgress } = useScreenUIActions();
   return startProgress;
 }

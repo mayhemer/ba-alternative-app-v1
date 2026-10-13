@@ -150,7 +150,10 @@ describe('merging the server\'s copy', () => {
   it.each([
     ['will_go', 'will_go'],
     ['maybe', 'maybe'],
+    ['dont_go', 'dont_go'],
     ['none', 'none'],
+    // A status a newer server adds must not turn into a pick on an older build.
+    ['some_future_status' as DbUserInterest['status'], 'none'],
   ] as const)('maps server %s to local %s', async (server, local) => {
     const slug = freshSlug();
     await hydrateInterests(slug);

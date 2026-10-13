@@ -82,16 +82,30 @@ when the festival edition changes, since ids are scoped to an edition.
 
 ## Interest / Star System
 
-Three states, applied consistently across all views:
+Four states. Status values are the server's own (`InterestStatus` = `DbUserInterest['status']`),
+with no conversion layer:
 
-| State | Icon | Label (EN) | Label (CZ) |
-|---|---|---|---|
-| Default | ☆ empty star | Not interested | Nemám zájem |
-| Maybe | ☆ empty star, accent color | Maybe want to see | Možná chci vidět |
-| Must See | ★ full star | Must see! | Musím vidět! |
+| State | Value | Icon | Label (EN) | Label (CZ) |
+|---|---|---|---|---|
+| Default | `none` | ☆ empty star, neutral | Not marked | Nemám zájem |
+| Maybe | `maybe` | ⯪ half star, accent color | Maybe | Možná chci vidět |
+| Must See | `will_go` | ★ full star, accent color | Must see! | Musím vidět! |
+| Don't go | `dont_go` | ☆ empty star, red, struck through | Don't go | — |
 
-- Tap cycles state: none → maybe → must see → none.
-- Visual state change is immediate. TopBar confirms via FeedbackMessage.
+- Tap cycles state, one tap = one step: none → maybe → will_go → dont_go → none (`INTEREST_CYCLE`).
+- `dont_go` records "I listened and decided not to go", so a band once checked is never re-checked
+  by mistake (and it can be counted). After it, "status ≠ none" means "I have checked this band".
+- `dont_go` shows **only on the StarButton** (artist row, artist detail). Everywhere else it is the
+  same as `none`: `isInterested()` (utils/interestUtils) is the one definition of "is a pick", used by
+  the "my picks" lens, `StarIndicator` (timeline, conflicts, sheets), the timeline block's star width,
+  and friends' schedules.
+- It is stored on the server like any decision (PUT; only `none` is a DELETE) and returned in share
+  data, but a viewer never shows it: friends' statuses pass through `isSharedStatus()` (maybe/will_go
+  only — unknown statuses are dropped, never defaulted to maybe), both when fetched and when loaded
+  from the friends cache.
+- The struck star is an Ionicons outline with a drawn bar (`StarGlyph`), not a second icon font —
+  that would have to be preloaded behind the splash (styling/fonts).
+- Visual state change is immediate. A star tap shows the cycle-strip toast (see Feedback Zone).
 - Visual distinction must be strong — color weight, not fill level alone. Color progression: neutral → amber/dim → bright accent.
 - Half-star must render crisply at small sizes.
 
@@ -100,11 +114,18 @@ Three states, applied consistently across all views:
 ## Top Bar — Feedback Zone
 
 - FeedbackMessage variants: confirmation text, async progress indicator, tick on completion, warning.
-- Example messages:
-  - "Must see!"
-  - "Maybe want to see"
-  - "Removed"
-  - "Orbital and Four Tet overlap" (shown as reaction to starring — see Conflict Detection)
+- A star tap passes the new status (`startProgress(label, status)`), and the toast shows the
+  **interest cycle strip** (`InterestCycleStrip`): all four stars in tap order, the current one on a
+  light-grey disc at full colour, the others dimmed, its label beneath. It shows the state and where
+  the next tap goes. Repeated taps update it in place. No spinner or tick — they would only track the
+  instant local write, and the star already shows the change; a failed save appends "⚠ not saved".
+- **The toast never covers a star button.** It is shown right after a star tap while the user may
+  tap on, and the stars sit at the right end of the artist row and of the detail header (which an
+  expanded sheet lifts into the toast's height). So instead of centring on the screen, the toast is
+  centred in a band of the content column that stops `STAR_COLUMN_RESERVE` short of its right edge
+  (`toastBand()` in FeedbackToast; the reserve is derived from the star sizes and hit slop in
+  StarButton). Unit-tested across widths and insets, and E2E-checked with real bounding boxes.
+- Other messages are plain text in the same band.
 
 ---
 
@@ -252,7 +273,7 @@ one that is not on screen.
 - `NavMenu` — navigation list inside SideDrawer. Links: Artists, Program, Support Program, Conflicts, Settings.
 
 ### Interest Control
-- `StarButton` — three-state cycling button. Used in: ArtistRow, ArtistDetailScreen. Renders crisply at small sizes. Color-coded per state.
+- `StarButton` — four-state cycling button (see Interest / Star System). Used in: ArtistRow, ArtistDetailScreen. Renders crisply at small sizes. Color-coded per state.
 
 ### Artist List
 - `ArtistListScreen`

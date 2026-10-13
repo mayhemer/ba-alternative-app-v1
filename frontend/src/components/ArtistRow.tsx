@@ -29,7 +29,7 @@ export const ArtistRow = React.memo(function ArtistRow({ artist, status, onPress
 
   const handleStarPress = useCallback((): void => {
     const { next, promise } = cycleStatus(artist.artistId);
-    startProgress(getFeedbackLabel(next)).wrap(promise);
+    startProgress(getFeedbackLabel(next), next).wrap(promise);
   }, [artist.artistId, cycleStatus, startProgress]);
 
   const handlePress = useCallback((): void => {

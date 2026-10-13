@@ -1,6 +1,5 @@
 import React, { useCallback } from 'react';
-import type { InterestStatus } from '../context/InterestContext';
-import { nextStatus } from '../context/InterestContext';
+import type { ScopeLevel } from '../utils/interestUtils';
 import { StarButton } from './StarButton';
 
 // ── Shared labels ─────────────────────────────────────────────────────────────
@@ -16,14 +15,22 @@ export const INTEREST_FILTER_LABELS: Record<string, string> = {
 // dependency — wired by the caller (used inside the Lens panel level selector).
 
 type StarFilterButtonProps = {
-  value: InterestStatus | null;
-  onChange: (next: InterestStatus | null) => void;
+  value: ScopeLevel;
+  onChange: (next: ScopeLevel) => void;
 };
+
+// Its own cycle rather than the interest one: 'dont_go' is not a filter level.
+function nextLevel(level: ScopeLevel): ScopeLevel {
+  switch (level) {
+    case null: return 'maybe';
+    case 'maybe': return 'will_go';
+    case 'will_go': return null;
+  }
+}
 
 export function StarFilterButton({ value, onChange }: StarFilterButtonProps) {
   const handlePress = useCallback((): void => {
-    const next = nextStatus(value ?? 'none');
-    onChange(next === 'none' ? null : next);
+    onChange(nextLevel(value));
   }, [value, onChange]);
 
   return (

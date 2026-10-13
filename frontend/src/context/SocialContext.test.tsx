@@ -24,6 +24,12 @@ jest.mock('./AuthContext', () => ({
   useAuth: () => ({ getAccessToken: async () => null }),
 }));
 
+const mockFetchShared = jest.fn();
+jest.mock('../adapters/baShareApiAdapter', () => ({
+  ...jest.requireActual('../adapters/baShareApiAdapter'),
+  fetchSharedSchedule: (token: string) => mockFetchShared(token),
+}));
+
 let slugCounter = 0;
 
 beforeEach(() => {
@@ -35,10 +41,11 @@ function friend(token: string): FriendSchedule {
 }
 
 let removeFriend: (token: string) => Promise<void>;
+let addFriend: (token: string) => Promise<FriendSchedule>;
 
 function Probe() {
   const { friends, myShare, friendsByArtist } = useSocialData();
-  removeFriend = useSocialActions().removeFriend;
+  ({ removeFriend, addFriend } = useSocialActions());
   return (
     <Text>
       {friends.map((f) => f.label).join(',')}|{myShare?.label ?? 'no share'}|{friendsByArtist.a1?.length ?? 0}
@@ -76,4 +83,43 @@ it('keeps a change for the next mount, as after an edition switch and back', asy
   await render(<SocialProvider><Probe /></SocialProvider>);
 
   expect(screen.getByText('Friend t2|no share|1')).toBeTruthy();
+});
+
+// ── What a friend's schedule shows ────────────────────────────────────────────
+//
+// The share data carries every stored status. Only 'maybe' and 'will_go' are
+// shown; anything else ('dont_go', 'none', a status a newer server adds) must be
+// dropped — before dont_go existed, the views drew any non-'will_go' as a maybe.
+
+it('shows only maybe and will_go from a fetched share', async () => {
+  await hydrateSocial(mockCurrentSlug);
+  await render(<SocialProvider><Probe /></SocialProvider>);
+  mockFetchShared.mockResolvedValue({
+    slug: mockCurrentSlug,
+    label: 'Friend t1',
+    interests: [
+      { userId: 'u', slugArtistId: `${mockCurrentSlug}#a1`, status: 'dont_go', updatedAt: 1 },
+      { userId: 'u', slugArtistId: `${mockCurrentSlug}#a2`, status: 'none', updatedAt: 1 },
+      { userId: 'u', slugArtistId: `${mockCurrentSlug}#a3`, status: 'some_future_status', updatedAt: 1 },
+      { userId: 'u', slugArtistId: `${mockCurrentSlug}#a4`, status: 'maybe', updatedAt: 1 },
+      { userId: 'u', slugArtistId: `${mockCurrentSlug}#a5`, status: 'will_go', updatedAt: 1 },
+    ],
+  });
+
+  let added!: FriendSchedule;
+  await act(async () => { added = await addFriend('t1'); });
+
+  expect(added.interests).toEqual({ a4: 'maybe', a5: 'will_go' });
+  expect(screen.getByText('Friend t1|no share|0')).toBeTruthy();
+});
+
+it('drops a dont_go that an older build cached for a friend', async () => {
+  const cached = { ...friend('t1'), interests: { a1: 'dont_go', a2: 'maybe' } };
+  await AsyncStorage.setItem(`social:friends:${mockCurrentSlug}`, JSON.stringify([cached]));
+  await hydrateSocial(mockCurrentSlug);
+
+  await render(<SocialProvider><Probe /></SocialProvider>);
+
+  // a1 is the artist the probe counts: no friend pip for it.
+  expect(screen.getByText('Friend t1|no share|0')).toBeTruthy();
 });

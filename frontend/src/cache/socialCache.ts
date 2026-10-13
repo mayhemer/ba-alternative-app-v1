@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { SharedInterestStatus } from '../adapters/baShareApiAdapter';
+import { isSharedStatus, type SharedInterestStatus } from '../adapters/baShareApiAdapter';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -64,10 +64,22 @@ export async function loadFriends(slug: string): Promise<FriendSchedule[]> {
   const raw = await AsyncStorage.getItem(friendsKey(slug));
   if (raw === null) { return []; }
   try {
-    return JSON.parse(raw) as FriendSchedule[];
+    return (JSON.parse(raw) as FriendSchedule[]).map(withSharedStatusesOnly);
   } catch {
     return [];
   }
+}
+
+// Builds before 'dont_go' existed stored every non-'none' status, so a friend's
+// 'dont_go' may sit in the cache until that friend is next fetched.
+function withSharedStatusesOnly(friend: FriendSchedule): FriendSchedule {
+  const interests: Record<string, SharedInterestStatus> = {};
+  for (const [artistId, status] of Object.entries(friend.interests)) {
+    if (isSharedStatus(status)) {
+      interests[artistId] = status;
+    }
+  }
+  return { ...friend, interests };
 }
 
 export async function saveFriends(slug: string, friends: FriendSchedule[]): Promise<void> {

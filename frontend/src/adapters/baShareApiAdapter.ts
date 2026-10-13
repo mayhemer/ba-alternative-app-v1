@@ -46,6 +46,15 @@ export function extractShareToken(input: string): string | null {
 // Server-side interest status (subset of DbUserInterest['status']) as seen by a viewer.
 export type SharedInterestStatus = 'will_go' | 'maybe';
 
+/**
+ * True for the statuses a viewer shows. The share response carries every stored
+ * status — 'none', 'dont_go', and whatever a newer server adds — so anything
+ * else must be dropped rather than defaulted to one of the shown values.
+ */
+export function isSharedStatus(status: string): status is SharedInterestStatus {
+  return status === 'will_go' || status === 'maybe';
+}
+
 // GET /share/{token}
 export type SharedScheduleResponse = {
   slug: string;

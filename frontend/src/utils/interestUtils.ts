@@ -2,12 +2,20 @@ import type { InterestStatus } from '../context/InterestContext';
 import type { SharedInterestStatus } from '../adapters/baShareApiAdapter';
 
 /**
+ * True for the statuses that count as a pick. 'dont_go' is a decision against
+ * the artist, so everything but the star button treats it like 'none'.
+ */
+export function isInterested(status: InterestStatus): status is 'maybe' | 'will_go' {
+  return status === 'maybe' || status === 'will_go';
+}
+
+/**
  * Returns true if an artist with the given status passes the interest filter.
  * null filter = show all; 'maybe' = at least maybe (maybe or will_go); 'will_go' = will_go only.
  */
 export function matchesInterestFilter(
   artistStatus: InterestStatus,
-  filter: InterestStatus | null,
+  filter: ScopeLevel,
 ): boolean {
   if (filter === null)        { return true; }
   if (filter === 'maybe')     { return artistStatus === 'maybe' || artistStatus === 'will_go'; }
@@ -40,7 +48,7 @@ export function matchesScope(
 ): boolean {
   if (scope.kind === 'all') { return true; }
   if (scope.kind === 'me') {
-    if (scope.level === null) { return myStatus !== 'none'; }
+    if (scope.level === null) { return isInterested(myStatus); }
     return matchesInterestFilter(myStatus, scope.level);
   }
   // friend

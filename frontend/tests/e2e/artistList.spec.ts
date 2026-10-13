@@ -68,3 +68,56 @@ test('a share link opens the app rather than 404ing', async ({ appPage }) => {
   expect(response?.status()).toBe(200);
   await expect(appPage.getByText('Artists', { exact: true }).first()).toBeVisible({ timeout: 20_000 });
 });
+
+// ── The star toast ────────────────────────────────────────────────────────────
+//
+// A star tap shows the interest cycle in a toast while the user may tap on.
+// Whatever the viewport, the toast must not land on any star button — in the
+// list, or in the artist sheet's header, which sits right where the toast does.
+
+type Box = { x: number; y: number; width: number; height: number };
+
+function overlaps(a: Box, b: Box): boolean {
+  return a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+}
+
+async function expectToastClearOfStars(page: import('@playwright/test').Page): Promise<void> {
+  const toast = page.getByTestId('feedback-toast');
+  await expect(toast).toBeVisible();
+  const toastBox = (await toast.boundingBox())!;
+  const stars = page.getByLabel('Toggle interest').filter({ visible: true });
+  for (const star of await stars.all()) {
+    const starBox = await star.boundingBox();
+    if (starBox !== null) {
+      expect(overlaps(toastBox, starBox), `toast ${JSON.stringify(toastBox)} covers star ${JSON.stringify(starBox)}`).toBe(false);
+    }
+  }
+}
+
+test('the star toast stays clear of the list stars @layout', async ({ appPage }) => {
+  await ready(appPage);
+
+  await appPage.getByLabel('Toggle interest').filter({ visible: true }).first().click();
+
+  await expectToastClearOfStars(appPage);
+});
+
+test('the star toast is centred when there is room for it @layout', async ({ appPage }) => {
+  await ready(appPage);
+
+  await appPage.getByLabel('Toggle interest').filter({ visible: true }).first().click();
+
+  const toast = (await appPage.getByTestId('feedback-toast').boundingBox())!;
+  const viewportWidth = appPage.viewportSize()!.width;
+  expect(Math.abs(toast.x + toast.width / 2 - viewportWidth / 2)).toBeLessThanOrEqual(1);
+});
+
+test('the star toast stays clear of the artist sheet star @layout', async ({ appPage }) => {
+  await ready(appPage);
+  await appPage.getByText(FIRST_ARTIST, { exact: false }).filter({ visible: true }).first().click();
+
+  // The sheet's star is the last one in the tree, above the list.
+  await appPage.getByLabel('Toggle interest').filter({ visible: true }).last().click();
+
+  await expectToastClearOfStars(appPage);
+});

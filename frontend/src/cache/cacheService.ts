@@ -46,8 +46,9 @@ export type DataCollector = {
 // ── Interest types ────────────────────────────────────────────────────────────
 
 // Same values as the server. On sync 'none' is sent as a DELETE (soft delete),
-// every other status as a PUT.
-export type InterestStatus = 'none' | 'maybe' | 'will_go';
+// every other status as a PUT. 'dont_go' = heard it, decided not to go: it is
+// shown only on the star button and otherwise behaves like 'none'.
+export type InterestStatus = 'none' | 'maybe' | 'will_go' | 'dont_go';
 
 export type LocalInterest = {
   status: InterestStatus;
@@ -644,8 +645,14 @@ export async function mergeServerInterests(
     if (separatorIndex === -1) { continue; }
     const artistId = item.slugArtistId.slice(separatorIndex + 1);
 
-    const localStatus: InterestStatus =
-      item.status === 'will_go' || item.status === 'maybe' ? item.status : 'none';
+    let localStatus: InterestStatus = 'none';
+    switch (item.status) {
+      case 'will_go':
+      case 'maybe':
+      case 'dont_go':
+        localStatus = item.status;
+        break;
+    }
 
     const existing = merged[artistId];
     if (existing === undefined || item.updatedAt > existing.updatedAt) {

@@ -32,6 +32,7 @@ const colors = {
   dangerMuted:    '#111111',   // now-line, errors, warnings
   black:          '#000000',
   white:          '#ffffff',
+  toastHighlight: '#e4e4e4',   // current item marker on the white feedback toast
 };
 
 module.exports = { colors };

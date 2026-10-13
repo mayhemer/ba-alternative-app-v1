@@ -122,8 +122,8 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
 
       case 'PUT /user/{slug}/schedule/{artistId}': {
         const body = parseBody(event.body);
-        if (!body || !['will_go', 'maybe'].includes(body.status as string)) {
-          return badRequest('body.status must be "will_go" or "maybe"');
+        if (!body || !['will_go', 'maybe', 'dont_go'].includes(body.status as string)) {
+          return badRequest('body.status must be "will_go", "maybe" or "dont_go"');
         }
         const interest: DbUserInterest = {
           userId: userId(event),

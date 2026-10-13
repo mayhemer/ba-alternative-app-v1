@@ -343,7 +343,7 @@ stageId       string   → ref to stages (scoped to same slug)
 PK: userId          (string)   — Cognito sub or anonymous UUID
 SK: slug#artistId   (string)   — composite; scopes interest to a specific edition
 ---
-status       string    (will_go | maybe)
+status       string    (will_go | maybe | dont_go | none)   ← none = soft delete (DELETE route)
 updatedAt    number    (Unix ms UTC)  ← used for merge conflict resolution
 ```
 
@@ -550,6 +550,10 @@ every cycle. Fixing either one alone would have made it worse.
 ```
 1. First open → generate anonymous UUID, store locally
 2. All interests saved locally with { slug, artistId, status, updatedAt }
+   (AsyncStorage `user:interests:v2:<slug>`; status values are the server's. Older builds wrote
+   v1 keys with 'must_see' — store/storageMigration converts them once at startup and deletes them;
+   when a v2 key already exists the v1 key is dropped unread, so a downgrade starts empty and a
+   re-upgrade keeps the newer data. `lens:scope` → `lens:scope:v2` the same way.)
 3. User taps "Login" → Cognito OAuth flow
 4. On successful login:
    a. Fetch cloud interests for this userId (all slugs)

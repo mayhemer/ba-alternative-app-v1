@@ -17,6 +17,7 @@ import { fitFontSize } from '../../utils/textFit';
 import { colors } from '../../styling/tokens';
 import { dimColor } from '../../utils/color';
 import { StarIndicator } from '../StarButton';
+import { isInterested } from '../../utils/interestUtils';
 import type { ConflictOverlap } from '../../utils/conflictUtils';
 
 // Block chrome — shared between the rendered styles and the label width maths
@@ -104,11 +105,11 @@ function ArtistBlockBase({ event, artist, dayStart, status, categoryColor, label
 
   // Title size is picked here rather than by adjustsFontSizeToFit — see
   // utils/textFit for why that prop cannot hold a floor under Fabric.
-  // StarIndicator renders nothing for 'none', so its column only costs width
-  // when the artist is actually marked.
+  // StarIndicator renders nothing unless the artist is a pick, so its column
+  // only costs width when it is.
   const labelLines = oneWordArtist ? 1 : 2;
   const labelWidth =
-    width - BLOCK_BORDER_LEFT - BLOCK_PADDING * 2 - (status === 'none' ? 0 : STAR_SIZE);
+    width - BLOCK_BORDER_LEFT - BLOCK_PADDING * 2 - (isInterested(status) ? STAR_SIZE : 0);
 
   // Long blocks repeat their label so one is always near the viewport, offset
   // from the block's own start. Offsets are measured from the first label, so

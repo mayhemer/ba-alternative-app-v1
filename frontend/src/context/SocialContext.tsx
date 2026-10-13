@@ -13,6 +13,7 @@ import {
   fetchSharedSchedule,
   revokeShareLink,
   buildShareUrl,
+  isSharedStatus,
   type SharedInterestStatus,
 } from '../adapters/baShareApiAdapter';
 import {
@@ -56,15 +57,16 @@ type SocialActionsValue = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-// Flattens the server interest list to artistId → status, dropping 'none'.
+// Flattens the server interest list to artistId → status, keeping only the
+// statuses a viewer shows (see isSharedStatus).
 function toFriendInterests(
   slug: string,
-  interests: { slugArtistId: string; status: 'will_go' | 'maybe' | 'none' }[],
+  interests: { slugArtistId: string; status: string }[],
 ): Record<string, SharedInterestStatus> {
   const prefix = `${slug}#`;
   const result: Record<string, SharedInterestStatus> = {};
   for (const entry of interests) {
-    if (entry.status === 'none') { continue; }
+    if (!isSharedStatus(entry.status)) { continue; }
     const artistId = entry.slugArtistId.startsWith(prefix)
       ? entry.slugArtistId.slice(prefix.length)
       : entry.slugArtistId;

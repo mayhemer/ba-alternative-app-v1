@@ -118,10 +118,11 @@ describe('on mount', () => {
 // ── The cycle ─────────────────────────────────────────────────────────────────
 
 describe('nextStatus', () => {
-  it('cycles none → maybe → will_go → none', () => {
+  it('cycles none → maybe → will_go → dont_go → none', () => {
     expect(nextStatus('none')).toBe('maybe');
     expect(nextStatus('maybe')).toBe('will_go');
-    expect(nextStatus('will_go')).toBe('none');
+    expect(nextStatus('will_go')).toBe('dont_go');
+    expect(nextStatus('dont_go')).toBe('none');
   });
 });
 
@@ -135,6 +136,9 @@ describe('pressing the star', () => {
 
     await act(async () => { press('a1'); await flush(); });
     expect(screen.getByText('will_go')).toBeTruthy();
+
+    await act(async () => { press('a1'); await flush(); });
+    expect(screen.getByText('dont_go')).toBeTruthy();
 
     await act(async () => { press('a1'); await flush(); });
     expect(screen.getByText('none')).toBeTruthy();
@@ -153,11 +157,24 @@ describe('pressing the star', () => {
     await mount();
     await act(async () => { press('a1'); await flush(); });   // maybe
     await act(async () => { press('a1'); await flush(); });   // will_go
+    await act(async () => { press('a1'); await flush(); });   // dont_go
     await act(async () => { press('a1'); await flush(); });   // none
 
     // 'none' has no server representation — leaving a stale row would resurrect
     // the pick on the next merge.
     expect(mockDelete).toHaveBeenCalledWith(mockCurrentSlug, 'a1', FAKE_TOKEN);
+  });
+
+  it('puts dont_go like any other decision, deleting only on none', async () => {
+    await mount();
+    await act(async () => { press('a1'); await flush(); });   // maybe
+    await act(async () => { press('a1'); await flush(); });   // will_go
+    await act(async () => { press('a1'); await flush(); });   // dont_go
+
+    // It is a stored decision, not an absence: other devices and the share data
+    // must see it.
+    expect(mockPut).toHaveBeenLastCalledWith(mockCurrentSlug, 'a1', 'dont_go', FAKE_TOKEN);
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 
   it('still records the pick locally when signed out', async () => {
