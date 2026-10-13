@@ -173,6 +173,30 @@ export function getCategories(slug: string): DbCategory[] {
   return festivalCache[slug]?.categories ?? EMPTY_CATEGORIES;
 }
 
+/**
+ * True when this edition has categories to lay out a timeline of artists with
+ * the given `isPlayable` (main program: true, support program: false) — i.e. at
+ * least one such artist has an event in a known category. The single place that
+ * decides whether a timeline can be built at all, so a later fallback (e.g.
+ * deriving lanes from stages) changes only this.
+ *
+ * Returns a boolean, so it is safe as a useSyncExternalStore snapshot; the scan
+ * stops at the first match.
+ */
+export function hasTimelineCategories(slug: string, isPlayable: boolean): boolean {
+  const categories = getCategories(slug);
+  if (categories.length === 0) {
+    return false;
+  }
+  const categoryIds = new Set(categories.map((c) => c.categoryId));
+  const artistEvents = getArtistEventMap(slug);
+  return getArtists(slug).some(
+    (artist) =>
+      artist.isPlayable === isPlayable &&
+      (artistEvents[artist.artistId] ?? EMPTY_EVENTS).some((e) => categoryIds.has(e.categoryId)),
+  );
+}
+
 export function getStages(slug: string): DbStage[] {
   return festivalCache[slug]?.stages ?? EMPTY_STAGES;
 }

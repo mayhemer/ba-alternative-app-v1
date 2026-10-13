@@ -12,6 +12,7 @@ import {
   getLayoutMap,
   getStages,
   hasBios,
+  hasTimelineCategories,
   subscribeToCache,
 } from '../cache/cacheService';
 import type {
@@ -66,6 +67,11 @@ export function useArtists(slug: string): DbArtist[] {
 
 export function useCategories(slug: string): DbCategory[] {
   return useCacheSnapshot(() => getCategories(slug));
+}
+
+/** See cacheService.hasTimelineCategories. */
+export function useHasTimelineCategories(slug: string, isPlayable: boolean): boolean {
+  return useCacheSnapshot(() => hasTimelineCategories(slug, isPlayable));
 }
 
 export function useStages(slug: string): DbStage[] {

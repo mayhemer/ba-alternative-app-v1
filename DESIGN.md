@@ -30,6 +30,7 @@ full account.
 - Browse full festival schedule as a **horizontal timeline**
   - X axis: time
   - Y axis: categories (stages / event types) — one row per category
+  - The drawer lists "Program" only when some playable artist has an event in a known category, and "Support Program" only when some non-playable artist does; whether a timeline can be built is decided by `cacheService.hasTimelineCategories(slug, isPlayable)` alone (a later fallback could derive lanes from stages there)
   - Band slots rendered as blocks spanning dateFrom → dateTo
 - Browse full **lineup** (band list)
 - Tap a band → detail view (name, time slot, stage, user status)
