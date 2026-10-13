@@ -116,7 +116,8 @@ with no conversion layer:
 - FeedbackMessage variants: confirmation text, async progress indicator, tick on completion, warning.
 - A star tap passes the new status (`startProgress(label, status)`), and the toast shows the
   **interest cycle strip** (`InterestCycleStrip`): all four stars in tap order, the current one on a
-  light-grey disc at full colour, the others dimmed, its label beneath. It shows the state and where
+  light-grey disc, the others dimmed, its label beneath. All four are drawn in one neutral colour (black) —
+  the shapes tell the states apart. It shows the state and where
   the next tap goes. Repeated taps update it in place. No spinner or tick — they would only track the
   instant local write, and the star already shows the change; a failed save appends "⚠ not saved".
 - **The toast never covers a star button.** It is shown right after a star tap while the user may

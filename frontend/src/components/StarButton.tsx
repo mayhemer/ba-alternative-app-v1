@@ -32,17 +32,24 @@ const STAR_CONFIG: Record<InterestStatus, StarConfig> = {
 type GlyphProps = {
   status: InterestStatus;
   size: number;
+  color?: string; // overrides the status colour, shape only
 };
 
-export function StarGlyph({ status, size }: GlyphProps) {
+export function StarGlyph({ status, size, color }: GlyphProps) {
   const config = STAR_CONFIG[status];
-  const glyph = <Ionicons name={config.icon} size={size} color={config.color} />;
+  const tint = color ?? config.color;
+  const glyph = <Ionicons name={config.icon} size={size} color={tint} />;
   if (!config.struck) { return glyph; }
 
+  // The wrapper takes the glyph's own size: the glyph is text, and its line box
+  // is taller than `size`, so a fixed size would make this star shorter than the
+  // bare ones and shift whatever is laid out around the button. The bar is
+  // placed on the size × size square the glyph is drawn in, at the top of that
+  // box — not on the box's centre, which sits below the star's.
   const barLength = Math.round(size * 1.1);
   const barThickness = Math.max(2, Math.round(size * 0.08));
   return (
-    <View style={{ width: size, height: size }}>
+    <View>
       {glyph}
       <View
         testID="star-strike"
@@ -53,7 +60,7 @@ export function StarGlyph({ status, size }: GlyphProps) {
           width: barLength,
           height: barThickness,
           borderRadius: barThickness / 2,
-          backgroundColor: config.color,
+          backgroundColor: tint,
           transform: [{ rotate: '45deg' }],
         }}
       />
