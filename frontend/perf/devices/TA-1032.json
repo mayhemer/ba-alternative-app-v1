@@ -6,103 +6,103 @@
       "android": "9",
       "sdk": 28
     },
-    "versionCode": "23",
-    "build": "d7a43211-7347-409c-85d9-382ffeb71e34",
-    "commit": "b19ca6487daeb6d0deedb8447634930cce726247",
+    "versionCode": "26",
+    "build": "3c9d4d02-8e33-43fc-bf02-68de1a2d80e2",
+    "commit": "b750f6515b889db0903966b3e8cb4d805ffdcf16",
     "method": 2,
     "runs": 7,
     "warmup": 1,
     "compiled": "speed-profile",
     "battery": {
-      "level": 60,
-      "status": 2,
-      "tempC": 28
+      "level": 100,
+      "status": 5,
+      "tempC": 25
     },
-    "at": "2026-10-11T18:52:05.196Z"
+    "at": "2026-10-13T06:50:10.073Z"
   },
   "summary": {
     "cold-start": {
       "firstFrameMs": {
-        "median": 3138,
-        "min": 3078,
-        "max": 3947
+        "median": 2220,
+        "min": 2200,
+        "max": 2284
       },
       "readyMs": {
-        "median": 3962,
-        "min": 3877,
-        "max": 4780
+        "median": 2854,
+        "min": 2818,
+        "max": 2964
       },
       "totalPssMb": {
-        "median": 145.9,
-        "min": 145.3,
-        "max": 147.4
+        "median": 153.6,
+        "min": 150,
+        "max": 154.6
       },
       "graphicsMb": {
-        "median": 6.3,
-        "min": 6.3,
-        "max": 6.3
+        "median": 6.1,
+        "min": 6.1,
+        "max": 6.1
       },
       "tempC": {
-        "median": 28,
-        "min": 28,
-        "max": 28
+        "median": 25,
+        "min": 25,
+        "max": 25
       }
     },
     "list-fling": {
       "jankyPct": {
-        "median": 98.85,
-        "min": 93.1,
+        "median": 93,
+        "min": 92.37,
         "max": 100
       },
       "p50Ms": {
-        "median": 29,
-        "min": 28,
-        "max": 30
-      },
-      "p90Ms": {
-        "median": 40,
-        "min": 38,
-        "max": 46
-      },
-      "p99Ms": {
-        "median": 117,
-        "min": 101,
-        "max": 129
-      },
-      "over33": {
-        "median": 49,
-        "min": 37,
-        "max": 70
-      },
-      "meanMs": {
-        "median": 31.2,
-        "min": 29.3,
-        "max": 33.9
-      },
-      "slowUiThread": {
-        "median": 24,
-        "min": 22,
-        "max": 27
-      },
-      "deadlineMissed": {
-        "median": 29,
-        "min": 26,
+        "median": 31,
+        "min": 31,
         "max": 32
       },
+      "p90Ms": {
+        "median": 48,
+        "min": 42,
+        "max": 48
+      },
+      "p99Ms": {
+        "median": 121,
+        "min": 109,
+        "max": 150
+      },
+      "over33": {
+        "median": 97,
+        "min": 85,
+        "max": 108
+      },
+      "meanMs": {
+        "median": 35,
+        "min": 33.9,
+        "max": 36.5
+      },
+      "slowUiThread": {
+        "median": 41,
+        "min": 34,
+        "max": 42
+      },
+      "deadlineMissed": {
+        "median": 44,
+        "min": 40,
+        "max": 47
+      },
       "frames": {
-        "median": 261,
-        "min": 252,
-        "max": 274
+        "median": 245,
+        "min": 236,
+        "max": 256
       },
       "tempC": {
-        "median": 28,
-        "min": 28,
-        "max": 28
+        "median": 26,
+        "min": 25,
+        "max": 26
       },
       "lateMaxMs": {
-        "median": 10,
-        "min": 2,
-        "max": 21
+        "median": 11,
+        "min": 5,
+        "max": 15
       },
       "fsFrames": {
         "median": 120,
@@ -110,375 +110,375 @@
         "max": 120
       },
       "fsStartMs": {
-        "median": 6.26,
-        "min": 3.16,
-        "max": 7.63
+        "median": 6.85,
+        "min": 5.93,
+        "max": 8.55
       },
       "fsInputMs": {
-        "median": 0.31,
-        "min": 0.29,
-        "max": 0.36
+        "median": 0.32,
+        "min": 0.25,
+        "max": 0.35
       },
       "fsAnimMs": {
-        "median": 3.46,
-        "min": 1.98,
-        "max": 3.72
+        "median": 3.14,
+        "min": 1.69,
+        "max": 4.81
       },
       "fsLayoutMs": {
-        "median": 0.32,
-        "min": 0.31,
-        "max": 0.33
+        "median": 0.35,
+        "min": 0.34,
+        "max": 0.39
       },
       "fsDrawMs": {
-        "median": 4.85,
-        "min": 4.26,
-        "max": 4.99
+        "median": 5.09,
+        "min": 4.97,
+        "max": 5.84
       },
       "fsUiMs": {
-        "median": 8.79,
-        "min": 6.9,
-        "max": 9.34
+        "median": 9.06,
+        "min": 7.36,
+        "max": 11.35
       },
       "fsRtWaitMs": {
-        "median": 3.99,
-        "min": 3.1,
-        "max": 4.82
+        "median": 3.63,
+        "min": 3.47,
+        "max": 5.11
       },
       "fsSyncMs": {
-        "median": 4.1,
-        "min": 3.96,
-        "max": 4.3
+        "median": 4.68,
+        "min": 4.53,
+        "max": 4.8
       },
       "fsGpuMs": {
-        "median": 9.92,
-        "min": 9.55,
-        "max": 10.11
+        "median": 9.83,
+        "min": 9.6,
+        "max": 10.17
       },
       "fsSwapMs": {
-        "median": 2.22,
-        "min": 1.94,
-        "max": 2.62
+        "median": 1.99,
+        "min": 1.92,
+        "max": 2.22
       },
       "fsTotalMs": {
-        "median": 34.82,
-        "min": 29.22,
-        "max": 38.57
+        "median": 35.82,
+        "min": 34.17,
+        "max": 41.46
       },
       "driftPx": {
         "median": 26,
-        "min": 2,
-        "max": 82
+        "min": 18,
+        "max": 155
       },
       "totalPssMb": {
-        "median": 222.7,
-        "min": 214.1,
-        "max": 234.9
+        "median": 249.1,
+        "min": 239.8,
+        "max": 261.6
       },
       "graphicsMb": {
-        "median": 7.3,
-        "min": 6.3,
-        "max": 7.3
+        "median": 14.6,
+        "min": 13.5,
+        "max": 14.6
       }
     },
     "detail-open": {
       "jankyPct": {
-        "median": 93.94,
-        "min": 89.55,
-        "max": 97.06
+        "median": 96.92,
+        "min": 96.83,
+        "max": 98.41
       },
       "p50Ms": {
-        "median": 23,
-        "min": 22,
-        "max": 23
+        "median": 31,
+        "min": 30,
+        "max": 32
       },
       "p90Ms": {
-        "median": 32,
-        "min": 27,
-        "max": 42
+        "median": 42,
+        "min": 40,
+        "max": 48
       },
       "p99Ms": {
-        "median": 89,
-        "min": 65,
-        "max": 97
+        "median": 69,
+        "min": 57,
+        "max": 85
       },
       "over33": {
-        "median": 4,
-        "min": 2,
-        "max": 9
+        "median": 25,
+        "min": 20,
+        "max": 30
       },
       "meanMs": {
-        "median": 24.5,
-        "min": 23.2,
-        "max": 25.8
+        "median": 31.5,
+        "min": 29.9,
+        "max": 33.4
       },
       "slowUiThread": {
-        "median": 2,
-        "min": 1,
-        "max": 5
+        "median": 6,
+        "min": 4,
+        "max": 8
       },
       "deadlineMissed": {
-        "median": 5,
-        "min": 4,
-        "max": 7
+        "median": 9,
+        "min": 7,
+        "max": 13
       },
       "frames": {
-        "median": 67,
-        "min": 66,
-        "max": 70
+        "median": 64,
+        "min": 62,
+        "max": 66
       },
       "tempC": {
-        "median": 28,
-        "min": 28,
-        "max": 28
+        "median": 26,
+        "min": 26,
+        "max": 26
       },
       "lateMaxMs": {
-        "median": 1,
+        "median": 2,
         "min": 1,
-        "max": 4
+        "max": 2
       },
       "fsFrames": {
-        "median": 66,
-        "min": 65,
-        "max": 68
+        "median": 63,
+        "min": 62,
+        "max": 66
       },
       "fsStartMs": {
-        "median": 2.14,
-        "min": 1.57,
-        "max": 3.07
+        "median": 7.45,
+        "min": 6.95,
+        "max": 8.98
       },
       "fsInputMs": {
         "median": 0.03,
         "min": 0.03,
-        "max": 0.03
+        "max": 0.11
       },
       "fsAnimMs": {
-        "median": 6.48,
-        "min": 6.29,
-        "max": 6.62
+        "median": 6.3,
+        "min": 6.05,
+        "max": 6.77
       },
       "fsLayoutMs": {
-        "median": 0.26,
-        "min": 0.25,
-        "max": 0.31
+        "median": 0.3,
+        "min": 0.27,
+        "max": 0.36
       },
       "fsDrawMs": {
-        "median": 0.83,
-        "min": 0.77,
-        "max": 0.91
+        "median": 0.85,
+        "min": 0.81,
+        "max": 1.18
       },
       "fsUiMs": {
-        "median": 7.6,
-        "min": 7.36,
-        "max": 7.74
+        "median": 7.55,
+        "min": 7.18,
+        "max": 8.03
       },
       "fsRtWaitMs": {
-        "median": 1.09,
-        "min": 0.52,
-        "max": 1.52
+        "median": 4.24,
+        "min": 3.91,
+        "max": 4.51
       },
       "fsSyncMs": {
-        "median": 2.99,
-        "min": 2.93,
-        "max": 3.04
+        "median": 3.61,
+        "min": 3.56,
+        "max": 3.76
       },
       "fsGpuMs": {
-        "median": 8.77,
-        "min": 8.6,
-        "max": 9.31
+        "median": 9.23,
+        "min": 9,
+        "max": 10.22
       },
       "fsSwapMs": {
-        "median": 3.44,
-        "min": 2.8,
-        "max": 4.17
+        "median": 4.15,
+        "min": 3.26,
+        "max": 4.72
       },
       "fsTotalMs": {
-        "median": 26.14,
-        "min": 24.59,
-        "max": 27.62
+        "median": 36.57,
+        "min": 34.61,
+        "max": 38.67
       }
     },
     "search-typing": {
       "jankyPct": {
-        "median": 90.91,
+        "median": 100,
         "min": 90.91,
         "max": 100
       },
       "p50Ms": {
         "median": 32,
-        "min": 26,
-        "max": 44
+        "min": 28,
+        "max": 36
       },
       "p90Ms": {
-        "median": 350,
-        "min": 300,
-        "max": 350
+        "median": 450,
+        "min": 400,
+        "max": 450
       },
       "p99Ms": {
-        "median": 350,
-        "min": 300,
-        "max": 400
+        "median": 450,
+        "min": 450,
+        "max": 450
       },
       "over33": {
-        "median": 5,
-        "min": 4,
-        "max": 7
+        "median": 4,
+        "min": 3,
+        "max": 6
       },
       "meanMs": {
-        "median": 89.3,
-        "min": 81,
-        "max": 97.5
+        "median": 110.4,
+        "min": 99.1,
+        "max": 115
       },
       "slowUiThread": {
         "median": 7,
         "min": 6,
-        "max": 7
+        "max": 8
       },
       "deadlineMissed": {
         "median": 9,
         "min": 9,
-        "max": 10
+        "max": 9
       },
       "frames": {
-        "median": 11,
+        "median": 10,
         "min": 10,
         "max": 11
       },
       "tempC": {
-        "median": 28,
-        "min": 28,
-        "max": 28
+        "median": 26,
+        "min": 26,
+        "max": 26
       },
       "lateMaxMs": {
-        "median": 63,
-        "min": 14,
+        "median": 19,
+        "min": 5,
         "max": 92
       },
       "fsFrames": {
-        "median": 11,
+        "median": 10,
         "min": 10,
         "max": 11
       },
       "fsStartMs": {
-        "median": 37.45,
-        "min": 32.21,
-        "max": 41.05
+        "median": 45,
+        "min": 39.47,
+        "max": 46.65
       },
       "fsInputMs": {
-        "median": 0.04,
+        "median": 0.03,
         "min": 0.03,
-        "max": 0.07
+        "max": 0.08
       },
       "fsAnimMs": {
-        "median": 31.39,
-        "min": 28.49,
-        "max": 32.18
+        "median": 36.97,
+        "min": 34.57,
+        "max": 39.78
       },
       "fsLayoutMs": {
-        "median": 1.59,
-        "min": 1.15,
-        "max": 2.03
+        "median": 1.57,
+        "min": 1.35,
+        "max": 2.23
       },
       "fsDrawMs": {
-        "median": 7.22,
-        "min": 6.73,
-        "max": 9.4
+        "median": 11.12,
+        "min": 9.33,
+        "max": 11.27
       },
       "fsUiMs": {
-        "median": 40.89,
-        "min": 36.75,
-        "max": 42.66
+        "median": 49.95,
+        "min": 46.14,
+        "max": 52.42
       },
       "fsRtWaitMs": {
-        "median": 0.3,
-        "min": 0.27,
-        "max": 0.68
+        "median": 0.46,
+        "min": 0.41,
+        "max": 0.48
       },
       "fsSyncMs": {
-        "median": 3.11,
-        "min": 2.96,
-        "max": 3.84
+        "median": 3.9,
+        "min": 3.55,
+        "max": 4.19
       },
       "fsGpuMs": {
-        "median": 9.22,
+        "median": 10.48,
         "min": 7.88,
-        "max": 10.71
+        "max": 11.69
       },
       "fsSwapMs": {
-        "median": 4.7,
-        "min": 4.35,
-        "max": 5.72
+        "median": 3.58,
+        "min": 3.28,
+        "max": 4.88
       },
       "fsTotalMs": {
-        "median": 95.79,
-        "min": 85.36,
-        "max": 102.48
+        "median": 113.71,
+        "min": 101.99,
+        "max": 119.59
       }
     },
     "day-switch": {
       "jankyPct": {
-        "median": 40.91,
+        "median": 38.1,
         "min": 36.36,
-        "max": 50
+        "max": 52.38
       },
       "p50Ms": {
         "median": 14,
-        "min": 12,
-        "max": 16
+        "min": 14,
+        "max": 17
       },
       "p90Ms": {
-        "median": 32,
-        "min": 25,
-        "max": 34
+        "median": 34,
+        "min": 32,
+        "max": 42
       },
       "p99Ms": {
-        "median": 53,
-        "min": 46,
-        "max": 65
+        "median": 46,
+        "min": 40,
+        "max": 57
       },
       "over33": {
-        "median": 2,
+        "median": 3,
         "min": 2,
         "max": 4
       },
       "meanMs": {
-        "median": 18.9,
-        "min": 16.7,
-        "max": 19.5
+        "median": 19.3,
+        "min": 18.3,
+        "max": 21
       },
       "slowUiThread": {
-        "median": 8,
+        "median": 7,
         "min": 7,
         "max": 9
       },
       "deadlineMissed": {
-        "median": 8,
+        "median": 7,
         "min": 7,
-        "max": 9
+        "max": 10
       },
       "frames": {
-        "median": 22,
+        "median": 21,
         "min": 21,
-        "max": 23
+        "max": 24
       },
       "tempC": {
-        "median": 28,
-        "min": 28,
-        "max": 28
+        "median": 26,
+        "min": 26,
+        "max": 26
       },
       "lateMaxMs": {
         "median": 2,
         "min": 1,
-        "max": 3
+        "max": 2
       },
       "fsFrames": {
-        "median": 22,
+        "median": 21,
         "min": 21,
-        "max": 23
+        "max": 24
       },
       "fsStartMs": {
-        "median": 1.64,
-        "min": 1.52,
-        "max": 1.9
+        "median": 1.53,
+        "min": 1.33,
+        "max": 1.81
       },
       "fsInputMs": {
         "median": 0.03,
@@ -486,109 +486,109 @@
         "max": 0.03
       },
       "fsAnimMs": {
-        "median": 7.67,
-        "min": 7.03,
-        "max": 8.15
+        "median": 7.94,
+        "min": 7.07,
+        "max": 8.56
       },
       "fsLayoutMs": {
-        "median": 0.25,
-        "min": 0.22,
-        "max": 0.28
+        "median": 0.28,
+        "min": 0.25,
+        "max": 0.3
       },
       "fsDrawMs": {
-        "median": 2.19,
-        "min": 2.09,
-        "max": 2.38
+        "median": 2.46,
+        "min": 2.31,
+        "max": 2.8
       },
       "fsUiMs": {
-        "median": 10.29,
-        "min": 9.36,
-        "max": 10.79
+        "median": 10.68,
+        "min": 9.78,
+        "max": 11.66
       },
       "fsRtWaitMs": {
-        "median": 0.14,
-        "min": 0.12,
-        "max": 0.23
+        "median": 0.13,
+        "min": 0.11,
+        "max": 0.19
       },
       "fsSyncMs": {
         "median": 0.96,
-        "min": 0.75,
-        "max": 1.03
+        "min": 0.94,
+        "max": 1.01
       },
       "fsGpuMs": {
-        "median": 4.23,
-        "min": 3.53,
-        "max": 4.29
+        "median": 4.34,
+        "min": 4.26,
+        "max": 4.76
       },
       "fsSwapMs": {
-        "median": 2.45,
-        "min": 1.85,
-        "max": 2.95
+        "median": 2.16,
+        "min": 2.06,
+        "max": 3.01
       },
       "fsTotalMs": {
-        "median": 19.49,
-        "min": 17.37,
-        "max": 20.29
+        "median": 20.02,
+        "min": 19.17,
+        "max": 21.54
       },
       "mountMs": {
-        "median": 1001,
-        "min": 873,
-        "max": 1066
+        "median": 1018,
+        "min": 1002,
+        "max": 1118
       }
     },
     "timeline-pan": {
       "jankyPct": {
         "median": 98.89,
-        "min": 97.75,
+        "min": 98.31,
         "max": 100
       },
       "p50Ms": {
-        "median": 20,
+        "median": 22,
         "min": 19,
         "max": 23
       },
       "p90Ms": {
         "median": 24,
         "min": 23,
-        "max": 36
+        "max": 31
       },
       "p99Ms": {
-        "median": 29,
+        "median": 30,
         "min": 26,
         "max": 40
       },
       "over33": {
         "median": 0,
         "min": 0,
-        "max": 22
+        "max": 6
       },
       "meanMs": {
-        "median": 20.8,
-        "min": 20.3,
-        "max": 25.1
+        "median": 21.6,
+        "min": 19.8,
+        "max": 24.6
       },
       "slowUiThread": {
         "median": 2,
         "min": 2,
-        "max": 4
+        "max": 3
       },
       "deadlineMissed": {
         "median": 2,
         "min": 2,
-        "max": 4
+        "max": 3
       },
       "frames": {
         "median": 179,
-        "min": 177,
+        "min": 178,
         "max": 180
       },
       "tempC": {
-        "median": 28,
-        "min": 28,
-        "max": 28
+        "median": 26,
+        "min": 26,
+        "max": 26
       },
       "lateMaxMs": {
-        "median": 6,
+        "median": 10,
         "min": 5,
         "max": 11
       },
@@ -598,64 +598,64 @@
         "max": 120
       },
       "fsStartMs": {
-        "median": 0.55,
-        "min": 0.54,
-        "max": 2.61
+        "median": 0.6,
+        "min": 0.5,
+        "max": 1.62
       },
       "fsInputMs": {
-        "median": 1.18,
-        "min": 1.06,
-        "max": 1.39
+        "median": 1.28,
+        "min": 1.14,
+        "max": 1.41
       },
       "fsAnimMs": {
-        "median": 5.05,
-        "min": 4.96,
-        "max": 5.36
+        "median": 5.18,
+        "min": 5.06,
+        "max": 5.3
       },
       "fsLayoutMs": {
-        "median": 0.13,
+        "median": 0.14,
         "min": 0.13,
-        "max": 0.14
+        "max": 0.15
       },
       "fsDrawMs": {
-        "median": 3.4,
-        "min": 3.33,
-        "max": 3.72
+        "median": 3.59,
+        "min": 3.4,
+        "max": 3.81
       },
       "fsUiMs": {
-        "median": 9.75,
-        "min": 9.61,
-        "max": 10.29
+        "median": 10.33,
+        "min": 9.83,
+        "max": 10.48
       },
       "fsRtWaitMs": {
-        "median": 0.33,
-        "min": 0.16,
-        "max": 1.25
+        "median": 0.43,
+        "min": 0.15,
+        "max": 1.63
       },
       "fsSyncMs": {
         "median": 1,
-        "min": 0.98,
-        "max": 1.19
+        "min": 0.96,
+        "max": 1.04
       },
       "fsGpuMs": {
-        "median": 3.85,
-        "min": 3.51,
-        "max": 6.07
+        "median": 4.04,
+        "min": 3.43,
+        "max": 4.71
       },
       "fsSwapMs": {
-        "median": 5.69,
-        "min": 4.89,
-        "max": 6.22
+        "median": 6.11,
+        "min": 4.82,
+        "max": 7.27
       },
       "fsTotalMs": {
-        "median": 21.29,
-        "min": 20,
-        "max": 27.45
+        "median": 22.45,
+        "min": 19.81,
+        "max": 25.24
       },
       "driftPx": {
-        "median": 4,
-        "min": 0,
-        "max": 16
+        "median": 9,
+        "min": 1,
+        "max": 17
       }
     }
   }
