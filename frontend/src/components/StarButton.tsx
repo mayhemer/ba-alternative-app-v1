@@ -17,10 +17,10 @@ type StarConfig = {
 };
 
 const STAR_CONFIG: Record<InterestStatus, StarConfig> = {
-  none:     { icon: 'star-outline', color: colors.notInterested, struck: false, feedbackLabel: 'Not marked'           },
-  maybe:    { icon: 'star-half',    color: colors.accent,        struck: false, feedbackLabel: 'Maybe'                },
-  will_go:  { icon: 'star',         color: colors.accent,        struck: false, feedbackLabel: 'Must see!'            },
-  dont_go:  { icon: 'star-outline', color: colors.danger,        struck: true,  feedbackLabel: "Don't go"             },
+  none:     { icon: 'star-outline', color: colors.notInterested,   struck: false, feedbackLabel: 'Not marked'           },
+  maybe:    { icon: 'star-half',    color: colors.accent,          struck: false, feedbackLabel: 'Maybe'                },
+  will_go:  { icon: 'star',         color: colors.accent,          struck: false, feedbackLabel: 'Must see!'            },
+  dont_go:  { icon: 'star-outline', color: colors.dangerSecondary, struck: true,  feedbackLabel: "Don't go"             },
 };
 
 // ── StarGlyph ─────────────────────────────────────────────────────────────────
