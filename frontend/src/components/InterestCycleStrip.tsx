@@ -9,13 +9,13 @@ import { colors } from '../styling/tokens';
 // Shows every interest state in tap order, the current one on a highlight disc
 // and the rest dimmed: where the star is now and where the next tap takes it.
 // Its label names the current state; `failed` appends a save warning to it.
-// All stars share the neutral colour: the shapes tell the states apart, and the
-// disc alone marks the current one.
+// Colour does not tell the states apart, the shapes do: the other stars are
+// black, the current one white on a dark disc.
 
 const GLYPH_SIZE = 18;
 const SLOT_SIZE = 28;
 const SLOT_GAP = 8;
-const DIMMED_OPACITY = 0.6;
+const DIMMED_OPACITY = 0.5;
 
 type Props = {
   status: InterestStatus;
@@ -39,13 +39,13 @@ export function InterestCycleStrip({ status, failed = false }: Props) {
               width: SLOT_SIZE,
               height: SLOT_SIZE,
               borderRadius: SLOT_SIZE / 2,
-              backgroundColor: step === status ? colors.toastHighlight : 'transparent',
+              backgroundColor: step === status ? colors.surfaceRaised : 'transparent',
               alignItems: 'center',
               justifyContent: 'center',
               opacity: step === status ? 1 : DIMMED_OPACITY,
             }}
           >
-            <StarGlyph status={step} size={GLYPH_SIZE} color={colors.black} />
+            <StarGlyph status={step} size={GLYPH_SIZE} color={step === status ? colors.white : colors.black} />
           </View>
         ))}
       </View>
