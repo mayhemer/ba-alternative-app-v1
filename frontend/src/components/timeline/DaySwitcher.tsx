@@ -1,14 +1,12 @@
-import React from 'react';
-import { View, TouchableOpacity } from 'react-native';
-import { Text } from '../ui/Text';
+import React, { useCallback } from 'react';
 import { useShownDay, useTimelineFilter } from '../../context/TimelineFilterContext';
-import { CONTENT_MAX_WIDTH, NOW_BUTTON_ARROW_SIZE, formatDayMonth, formatWeekday } from './timelineLayout';
-import { colors } from '../../styling/tokens';
+import { DayButtons } from './DayButtons';
 import { currentTimeMs } from '../../utils/clock';
 import { perfMark } from '../../utils/perfMarks';
 
 // Module-level component — registered as BottomBar ContentComponent for TimelineScreen.
-// Reads its own context directly; no props needed.
+// Reads its own context directly; no props needed. The buttons themselves are
+// DayButtons, shared with My plan.
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -31,77 +29,27 @@ export function DaySwitcher({ screenKey }: Props) {
   // The day this switcher's screen shows, derived the same way the screen does,
   // so the active day is right on the first frame.
   const selectedDayStart = useShownDay(screenKey);
+  const currentDayStart = getCurrentDayStart(festivalDays);
+
+  const handlePick = useCallback((dayStart: number): void => {
+    if (dayStart === selectedDayStart && dayStart === currentDayStart) {
+      requestScrollToNow(screenKey);
+    } else {
+      // Start of the day-switch mount the device perf runner times;
+      // TimelineView marks the end.
+      perfMark('day:select');
+      setSelectedDayStart(dayStart);
+    }
+  }, [selectedDayStart, currentDayStart, requestScrollToNow, screenKey, setSelectedDayStart]);
 
   if (festivalDays.length === 0) { return null; }
 
-  const currentDayStart = getCurrentDayStart(festivalDays);
-
   return (
-    <View style={{ maxWidth: CONTENT_MAX_WIDTH, width: '100%', alignSelf: 'center', flexDirection: 'row', gap: 8 }}>
-      {festivalDays.map((dayStart) => {
-        const isActive = dayStart === selectedDayStart;
-        const isToday = dayStart === currentDayStart;
-        return (
-          <TouchableOpacity
-            key={dayStart}
-            onPress={() => {
-              if (dayStart === selectedDayStart && isToday) {
-                requestScrollToNow(screenKey);
-              } else {
-                // Start of the day-switch mount the device perf runner times;
-                // TimelineView marks the end.
-                perfMark('day:select');
-                setSelectedDayStart(dayStart);
-              }
-            }}
-            style={{
-              flex: 1,
-              paddingVertical: 6,
-              alignItems: 'center',
-              backgroundColor: isActive ? colors.accent : colors.surfaceRaised,
-              borderWidth: 1,
-              borderColor: isActive ? colors.accent : colors.borderMid,
-            }}
-          >
-            {isToday && (
-              <View style={{
-                position: 'absolute',
-                top: -1,
-                marginLeft: 'auto',
-                marginRight: 'auto',
-                width: 0,
-                height: 0,
-                borderTopWidth: NOW_BUTTON_ARROW_SIZE,
-                borderTopColor: colors.danger,
-                borderRightWidth: NOW_BUTTON_ARROW_SIZE,
-                borderLeftWidth: NOW_BUTTON_ARROW_SIZE,
-                borderRightColor: 'transparent',
-                borderLeftColor: 'transparent',
-              }} />
-            )}
-            <Text
-              style={{
-                fontSize: 11,
-                fontWeight: '700',
-                color: isActive ? colors.black : colors.textSecondary,
-                textTransform: 'uppercase',
-                letterSpacing: 1,
-              }}
-            >
-              {formatWeekday(dayStart)}
-            </Text>
-            <Text
-              style={{
-                fontSize: 11,
-                fontWeight: '400',
-                color: isActive ? colors.black : colors.textMuted,
-              }}
-            >
-              {formatDayMonth(dayStart)}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
+    <DayButtons
+      days={festivalDays}
+      selected={selectedDayStart}
+      today={currentDayStart}
+      onPick={handlePick}
+    />
   );
 }
