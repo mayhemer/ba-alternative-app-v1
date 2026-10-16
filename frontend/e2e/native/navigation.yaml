@@ -19,10 +19,11 @@ name: reaches every section from the drawer
 - extendedWaitUntil:
     visible: ".*Exhibition.*"
     timeout: 20000
+# My plan on a fresh install: nothing picked, so the shown day is empty.
 - runFlow:
     file: common/open-section.yaml
-    env: { SECTION: "Conflicts" }
-- assertVisible: "No conflicts in your schedule."
+    env: { SECTION: "My plan" }
+- assertVisible: "Nothing planned for this day"
 - runFlow:
     file: common/open-section.yaml
     env: { SECTION: "Settings" }

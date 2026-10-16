@@ -5,7 +5,7 @@ import type {
   DbStageLocalized,
 } from '../types/backend';
 
-const DEFAULT_LANG = 'en';
+export const DEFAULT_LANG = 'en';
 
 // The API serves language codes upper-case ('EN', 'CS'), so an exact comparison
 // against DEFAULT_LANG never matched and every lookup fell through to the first

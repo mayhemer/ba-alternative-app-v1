@@ -11,8 +11,10 @@ import { ArtistDetailSheet } from './ArtistDetailSheet';
 import { ConflictDetailSheet } from './ConflictDetailSheet';
 import { FeedbackToast } from './FeedbackToast';
 import { LensPanel } from '../social/LensPanel';
+import { PlanFilterPanel } from '../plan/PlanFilterPanel';
 import { useShareLinkHandler } from '../../navigation/useShareLinkHandler';
-import { AppNavigator } from '../../navigation/AppNavigator';
+import { AppNavigator, DRAWER_ROUTE_NAMES } from '../../navigation/AppNavigator';
+import { sanitizeNavState } from '../../navigation/navState';
 import { BackHistoryTracker } from '../../navigation/BackHistoryTracker';
 import { observe, type ScreenName } from '../../navigation/backHistory';
 import { navigationRef } from '../../navigation/navigationRef';
@@ -33,7 +35,9 @@ export function AppShell() {
     async function restoreState(): Promise<void> {
       const stored = await AsyncStorage.getItem(NAV_STATE_KEY);
       if (stored !== null) {
-        setInitialState(JSON.parse(stored) as NavigationState);
+        // A state saved by an older release may name a screen that is gone
+        // (Conflicts became My plan): start from the default then.
+        setInitialState(sanitizeNavState(JSON.parse(stored) as NavigationState, DRAWER_ROUTE_NAMES));
       }
       setIsReady(true);
     }
@@ -82,6 +86,8 @@ export function AppShell() {
           <BackHistoryTracker />
           {/* View/share lens panel — drops from under the TopBar over the content */}
           <LensPanel />
+          {/* My plan's filter panel — the same kind of drop-down, in the same place */}
+          <PlanFilterPanel />
           {/* Short viewports: the bar floats over the content, reclaiming its
               height for the timeline. Screens add BOTTOM_OVERLAY_CLEARANCE so
               their last row scrolls clear of it. */}

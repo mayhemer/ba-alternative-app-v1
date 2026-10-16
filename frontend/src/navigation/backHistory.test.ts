@@ -63,7 +63,7 @@ it('treats the first observation as the starting point, not a place to go back t
 
 it('goes back one move per press', () => {
   move({ screen: 'Timeline', day: WED });
-  move({ screen: 'Conflicts' });
+  move({ screen: 'MyPlan' });
   expect(depth).toBe(2);
 
   expect(history.goBack()).toBe(true);
@@ -167,7 +167,7 @@ it('starts over for another festival edition', () => {
   history.resetForSlug('ba2025');
   move({ screen: 'ArtistList' });
   move({ screen: 'Timeline' });
-  move({ screen: 'Conflicts' });
+  move({ screen: 'MyPlan' });
   expect(depth).toBe(2);
 
   // Ids are scoped to an edition, so nothing from the old one may be restored.

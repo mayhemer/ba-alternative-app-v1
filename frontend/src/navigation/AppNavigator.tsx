@@ -4,17 +4,26 @@ import { ArtistListScreen } from '../screens/ArtistListScreen';
 import { TimelineScreen } from '../screens/TimelineScreen';
 import { SupportTimelineScreen } from '../screens/SupportTimelineScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
-import { ConflictsScreen } from '../screens/ConflictsScreen';
+import { MyPlanScreen } from '../screens/MyPlanScreen';
 import { SideDrawerContent } from '../components/layout/SideDrawerContent';
 import { useLayoutMode } from '../hooks/useLayoutMode';
 
 export type DrawerParamList = {
+  MyPlan: undefined;
   ArtistList: undefined;
   Timeline: undefined;
   SupportTimeline: undefined;
-  Conflicts: undefined;
   Settings: undefined;
 };
+
+/** Every route the drawer has — what a restored navigation state may name. */
+export const DRAWER_ROUTE_NAMES: readonly (keyof DrawerParamList)[] = [
+  'MyPlan',
+  'ArtistList',
+  'Timeline',
+  'SupportTimeline',
+  'Settings',
+];
 
 const Drawer = createDrawerNavigator<DrawerParamList>();
 
@@ -43,10 +52,10 @@ export function AppNavigator() {
         },
       }}
     >
+      <Drawer.Screen name="MyPlan"          component={MyPlanScreen} />
       <Drawer.Screen name="ArtistList"      component={ArtistListScreen} />
       <Drawer.Screen name="Timeline"        component={TimelineScreen} />
       <Drawer.Screen name="SupportTimeline" component={SupportTimelineScreen} />
-      <Drawer.Screen name="Conflicts"       component={ConflictsScreen} />
       <Drawer.Screen name="Settings"        component={SettingsScreen} />
     </Drawer.Navigator>
   );

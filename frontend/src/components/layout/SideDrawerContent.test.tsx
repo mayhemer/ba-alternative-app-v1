@@ -24,8 +24,10 @@ jest.mock('../../store/AppContext', () => {
   return { ...actual, useSelectedSlug: () => mockSlug };
 });
 
+let mockConflictCount = 0;
+
 jest.mock('../../context/ConflictContext', () => ({
-  useConflicts: () => ({ count: 0 }),
+  useConflicts: () => ({ count: mockConflictCount }),
 }));
 
 const SYNCED_AT = Date.parse('2025-08-06T09:00:00+02:00');
@@ -152,8 +154,9 @@ describe('timeline items in the drawer', () => {
       expectItem('Support Program', supportProgram);
       // The rest of the drawer does not depend on the timeline data.
       expectItem('Artists', true);
-      expectItem('Conflicts', true);
+      expectItem('My plan', true);
       expectItem('Settings', true);
+      expectItem('Conflicts', false);
     },
   );
 
@@ -185,5 +188,41 @@ describe('timeline items in the drawer', () => {
 
     expectItem('Program', false);
     expectItem('Support Program', false);
+  });
+});
+
+// ── My plan entry ─────────────────────────────────────────────────────────────
+//
+// My plan replaced the Conflicts screen. It leads the drawer, and when picks
+// clash it carries a red warning sign with the count: a bare number next to
+// "My plan" would not say what it counts.
+
+describe('My plan in the drawer', () => {
+  afterEach(() => {
+    mockConflictCount = 0;
+  });
+
+  it('leads the drawer', async () => {
+    const slug = freshSlug();
+    seed(slug, true, 'event in known category', 'event in known category');
+    await renderDrawer(slug);
+    const labels = screen.getAllByTestId(/^drawer-item-/).map((node) => node.props.testID as string);
+    expect(labels[0]).toBe('drawer-item-MyPlan');
+  });
+
+  it('shows no conflict marker while nothing clashes', async () => {
+    const slug = freshSlug();
+    seed(slug, true, 'event in known category', 'event in known category');
+    await renderDrawer(slug);
+    expect(screen.queryByTestId('drawer-conflict-marker')).toBeNull();
+  });
+
+  it('shows the warning sign with the number of clashing sets', async () => {
+    mockConflictCount = 2;
+    const slug = freshSlug();
+    seed(slug, true, 'event in known category', 'event in known category');
+    await renderDrawer(slug);
+    expect(screen.getByTestId('drawer-conflict-marker')).toBeTruthy();
+    expect(screen.getByText('2')).toBeTruthy();
   });
 });

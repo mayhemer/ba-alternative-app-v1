@@ -28,7 +28,7 @@ test('reaches every main section', async ({ appPage }) => {
   const sections: [label: string, proof: string][] = [
     ['Program', 'Marshall'],
     ['Support Program', 'Exhibition'],
-    ['Conflicts', 'No conflicts in your schedule.'],
+    ['My plan', 'Nothing planned for this day'],
     ['Settings', 'Active'],
   ];
   for (const [label, proof] of sections) {

@@ -22,6 +22,7 @@ const KEY_HIDDEN_CATS    = 'timeline:hiddenCategories';   // existing — JSON s
 const KEY_SCROLL_POS     = 'timeline:scrollPositions:v2'; // existing — Record<screenKey, Record<dayStart, x>>
 const KEY_SELECTED_DAY   = 'timeline:selectedDayStart';   // new      — Record<screenKey, dayStart>
 const KEY_LENS_SCOPE     = 'lens:scope:v2';               // existing — LensScope, never a friend's (v2: level 'will_go', see storageMigration)
+const KEY_PLAN_FILTERS   = 'plan:filters';                // new      — PlanFilters (My plan's filter panel)
 
 const WRITE_DEBOUNCE_MS = 300;
 
@@ -30,11 +31,17 @@ const WRITE_DEBOUNCE_MS = 300;
 export type ScrollPositions = Record<string, Record<string, number>>; // screenKey → dayStart → x
 export type SelectedDayMap  = Record<string, number>;                  // screenKey → dayStart
 
+/** My plan's filter panel. Both off by default. */
+export type PlanFilters = { showMaybe: boolean; conflictsOnly: boolean };
+
+const DEFAULT_PLAN_FILTERS: PlanFilters = { showMaybe: false, conflictsOnly: false };
+
 type Snapshot = {
   hiddenCategories: string[];
   scrollPositions: ScrollPositions;
   selectedDayStart: SelectedDayMap;
   lensScope: LensScope;
+  planFilters: PlanFilters;
 };
 
 export type UiStateKey = keyof Snapshot;
@@ -76,6 +83,20 @@ const ENTRIES: { [K in UiStateKey]: Entry<K> } = {
     serialize: (value) => JSON.stringify(value),
     fallback: () => DEFAULT_SCOPE,
   },
+  // Read field by field over the defaults, so a value saved by an older build
+  // (fewer filters) still loads.
+  planFilters: {
+    storageKey: KEY_PLAN_FILTERS,
+    parse: (raw) => {
+      const stored = JSON.parse(raw) as Partial<PlanFilters>;
+      return {
+        showMaybe: stored.showMaybe === true,
+        conflictsOnly: stored.conflictsOnly === true,
+      };
+    },
+    serialize: (value) => JSON.stringify(value),
+    fallback: () => DEFAULT_PLAN_FILTERS,
+  },
 };
 
 const KEYS = Object.keys(ENTRIES) as UiStateKey[];
@@ -87,6 +108,7 @@ let snapshot: Snapshot = {
   scrollPositions: ENTRIES.scrollPositions.fallback(),
   selectedDayStart: ENTRIES.selectedDayStart.fallback(),
   lensScope: ENTRIES.lensScope.fallback(),
+  planFilters: ENTRIES.planFilters.fallback(),
 };
 
 // ── Hydration ────────────────────────────────────────────────────────────────
@@ -176,6 +198,10 @@ export function setLensScope(scope: LensScope): void {
     return;
   }
   setUiState('lensScope', scope);
+}
+
+export function setPlanFilters(filters: PlanFilters): void {
+  setUiState('planFilters', filters);
 }
 
 export function setSelectedDay(screenKey: string, dayStart: number): void {

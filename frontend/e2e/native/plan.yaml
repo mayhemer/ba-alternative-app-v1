@@ -1,5 +1,5 @@
 appId: cz.janbambas.ba
-name: two clashing must-sees show up as a conflict
+name: two clashing must-sees show up as a conflict in My plan
 ---
 - runFlow: common/launch-fresh.yaml
 # EXORCIZPHOBIA and CRYSTAL LAKE overlap on Wednesday in the ba2025 capture.
@@ -21,9 +21,19 @@ name: two clashing must-sees show up as a conflict
 - tapOn: { id: "artist-search" }
 - waitForAnimationToEnd
 - eraseText: 20
-# With conflicts the drawer entry carries a count badge: "Conflicts, 2".
+# With conflicts the drawer entry carries a warning sign and the count.
 - runFlow:
     file: common/open-section.yaml
-    env: { SECTION: "Conflicts, 2" }
+    env: { SECTION: "My plan, 2 conflicts" }
+# The simulator's clock is not inside the 2025 festival, so the plan opens on
+# another day: pick Wednesday from the day switcher.
+- tapOn: "Wed"
+- assertVisible: ".*EXORCIZPHOBIA.*"
+- assertVisible: ".*CRYSTAL LAKE.*"
+- assertVisible: "Conflict"
+# Only conflicts: the clashing pair stays.
+- tapOn: "Filters"
+- tapOn: "Show only conflicts"
+- tapOn: "Close"
 - assertVisible: ".*EXORCIZPHOBIA.*"
 - assertVisible: ".*CRYSTAL LAKE.*"

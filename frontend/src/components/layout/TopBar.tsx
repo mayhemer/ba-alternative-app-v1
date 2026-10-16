@@ -1,13 +1,9 @@
 import React from 'react';
 import { View } from 'react-native';
-import { Image as ExpoImage } from 'expo-image';
 import { useScreenUI } from '../../context/ScreenUIContext';
 import { DrawerButton } from './DrawerButton';
+import { NowPill } from '../plan/NowPill';
 import { TOPBAR_HEIGHT } from '../../styling/tokens';
-
-/** Logo is 601 × 231 px; keep its aspect ratio while fitting inside the 56 px (h-14) bar. */
-const LOGO_HEIGHT = 34;
-const LOGO_WIDTH = Math.round(LOGO_HEIGHT * (601 / 231));
 
 export function TopBar() {
   const { state } = useScreenUI();
@@ -26,14 +22,10 @@ export function TopBar() {
         {LeftComponent !== undefined ? <LeftComponent /> : null}
       </View>
 
-      {/* Center — logo */}
+      {/* Center — the now pill: what is on for you right now, or the logo when
+          there is nothing to say (see components/plan/NowPill) */}
       <View className="flex-1 items-center">
-        <ExpoImage
-          source={require('../../../assets/logo-ba.png')}
-          style={{ width: LOGO_WIDTH, height: LOGO_HEIGHT }}
-          contentFit="contain"
-          accessibilityLabel="Brutal Assault"
-        />
+        <NowPill />
       </View>
 
       {/* Right slot */}

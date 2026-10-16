@@ -14,6 +14,7 @@ import { SocialProvider } from './src/context/SocialContext';
 import { LensProvider } from './src/context/LensContext';
 import { ArtistListFilterProvider } from './src/context/ArtistListFilterContext';
 import { TimelineFilterProvider } from './src/context/TimelineFilterContext';
+import { PlanProvider } from './src/context/PlanContext';
 import { AppShell } from './src/components/layout/AppShell';
 import { Image as ExpoImage } from 'expo-image';
 import * as SplashScreen from 'expo-splash-screen';
@@ -37,7 +38,9 @@ function AppContent() {
                 <ConflictDetailProvider>
                   <ArtistListFilterProvider>
                     <TimelineFilterProvider>
-                      <AppShell />
+                      <PlanProvider>
+                        <AppShell />
+                      </PlanProvider>
                     </TimelineFilterProvider>
                   </ArtistListFilterProvider>
                 </ConflictDetailProvider>

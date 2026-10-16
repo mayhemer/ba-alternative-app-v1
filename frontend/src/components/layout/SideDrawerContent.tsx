@@ -1,11 +1,13 @@
 import React, { useMemo } from 'react';
 import { TouchableOpacity, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text } from '../ui/Text';
 import type { DrawerContentComponentProps } from '@react-navigation/drawer';
 import { DrawerActions } from '@react-navigation/native';
 import { useConflicts } from '../../context/ConflictContext';
 import { useSelectedSlug } from '../../store/AppContext';
 import { useHasTimelineCategories } from '../../store/cacheStore';
+import { planStrings } from '../plan/planStrings';
 import { colors } from '../../styling/tokens';
 
 type NavItem = {
@@ -14,12 +16,26 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Artists',         screen: 'ArtistList' },
-  { label: 'Program',         screen: 'Timeline' },
-  { label: 'Support Program', screen: 'SupportTimeline' },
-  { label: 'Conflicts',       screen: 'Conflicts' },
-  { label: 'Settings',        screen: 'Settings' },
+  { label: planStrings().title, screen: 'MyPlan' },
+  { label: 'Artists',           screen: 'ArtistList' },
+  { label: 'Program',           screen: 'Timeline' },
+  { label: 'Support Program',   screen: 'SupportTimeline' },
+  { label: 'Settings',          screen: 'Settings' },
 ];
+
+/**
+ * My plan's clash marker: a red warning sign and the number of clashing
+ * Must-see sets. The sign says what is counted — a bare number next to "My
+ * plan" would not — and is the same one the plan uses for its conflict titles.
+ */
+function ConflictMarker({ count }: { count: number }) {
+  return (
+    <View testID="drawer-conflict-marker" style={{ marginLeft: 10, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+      <Ionicons name="warning-outline" size={15} color={colors.danger} />
+      <Text style={{ color: colors.danger, fontSize: 13, fontFamily: 'Bold-Default', fontWeight: '700' }}>{count}</Text>
+    </View>
+  );
+}
 
 export function SideDrawerContent({ navigation, state }: DrawerContentComponentProps) {
   const activeRouteName = state.routes[state.index]?.name;
@@ -44,9 +60,14 @@ export function SideDrawerContent({ navigation, state }: DrawerContentComponentP
       {/* Nav items */}
       {navItems.map((item) => {
         const isActive = item.screen === activeRouteName;
+        const showMarker = item.screen === 'MyPlan' && conflictCount > 0;
+        const label = showMarker ? `${item.label}, ${planStrings().conflictsLabel(conflictCount)}` : item.label;
         return (
           <TouchableOpacity
             key={item.screen}
+            testID={`drawer-item-${item.screen}`}
+            accessibilityRole="button"
+            accessibilityLabel={label}
             onPress={() => {
               navigation.navigate(item.screen);
               navigation.dispatch(DrawerActions.closeDrawer());
@@ -63,22 +84,7 @@ export function SideDrawerContent({ navigation, state }: DrawerContentComponentP
               >
                 {item.label}
               </Text>
-              {item.screen === 'Conflicts' && conflictCount > 0 && (
-                <View style={{
-                  marginLeft: 8,
-                  backgroundColor: colors.danger,
-                  borderRadius: 10,
-                  minWidth: 20,
-                  height: 20,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  paddingHorizontal: 5,
-                }}>
-                  <Text style={{ color: colors.white, fontSize: 11, fontWeight: '700', lineHeight: 14 }}>
-                    {conflictCount}
-                  </Text>
-                </View>
-              )}
+              {showMarker && <ConflictMarker count={conflictCount} />}
             </View>
           </TouchableOpacity>
         );
