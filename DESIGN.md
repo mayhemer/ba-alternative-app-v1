@@ -60,7 +60,8 @@ Status added after the fact — this was the V1 brief, and most of the list has 
 
 | Feature | Status |
 |---|---|
-| Conflict detection — flag overlapping "Will Go" slots | **Shipped** — `conflictUtils` + `ConflictContext`, striped bars on timeline blocks, a Conflicts screen and a detail sheet |
+| Conflict detection — flag overlapping "Will Go" slots | **Shipped** — `conflictUtils` + `ConflictContext`, striped bars on timeline blocks and on My plan's rows, a detail sheet; the Conflicts screen was replaced by My plan's "Show only conflicts" filter |
+| My plan — today / now / next of your picks | **Shipped** — the `MyPlan` screen, the now pill in the TopBar centre, per-day view with the day switcher; see [MY-PLAN-VIEW-DESIGN.md](MY-PLAN-VIEW-DESIGN.md) |
 | Push notifications / reminders before a set starts | Not built |
 | Friends' schedules — follow another user's personal schedule | **Shipped** — share tokens, `SocialContext`, friend facepile in the artist list |
 | Overlay a friend's schedule on top of your own in the timeline | **Partial** — the lens scope switches the timeline to a friend's picks; there is no simultaneous two-schedule overlay, and no friend indicator on timeline blocks |
@@ -116,7 +117,11 @@ Its two controls move into the BottomBar instead, which becomes a three-slot row
 `topBar.RightComponent` right. `BottomBar` reads both off `ScreenUIContext`, so **no screen needs
 to know about this** — `useTopBar({ RightComponent })` keeps working unchanged. The bar, which
 normally renders `null` when a screen contributes no content, also renders when `isShort` so that
-Conflicts and Settings still get a hamburger.
+Settings still gets a hamburger.
+
+The TopBar's centre holds the **now pill** (`components/plan/NowPill`, spec in
+[MY-PLAN-VIEW-DESIGN.md](MY-PLAN-VIEW-DESIGN.md)), which falls back to the logo. It is not moved
+anywhere on short viewports: there is no pill in landscape.
 
 The centre slot is capped at `DAY_SWITCHER_MAX_FRACTION` (40 %) of the viewport width — stretched
 across an 844 pt landscape phone the day buttons look out of proportion. `DaySwitcher` needs no
@@ -138,7 +143,7 @@ inset: 0` within that view — nesting would newly draw the lens backdrop over t
 
 Screens whose content scrolls must clear the floating bar. `useLayoutMode().bottomClearance` gives
 `BOTTOM_OVERLAY_CLEARANCE` when short and `0` otherwise; it is added to the bottom padding of the
-four scrollers (`TimelineView`'s canvas, `ArtistListScreen`'s `SectionList`, `ConflictsScreen`,
+four scrollers (`TimelineView`'s canvas, `ArtistListScreen`'s `SectionList`, `MyPlanScreen`'s `FlatList`,
 `SettingsScreen`) and subtracted from `LensPanel`'s `maxHeight`. It is deliberately a generous
 constant rather than the bar's measured height — the clearance only has to be *at least* the bar
 height, and a few extra px at the end of a scroll are invisible, whereas coupling the two would

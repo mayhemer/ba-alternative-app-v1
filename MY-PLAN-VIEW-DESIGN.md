@@ -2,7 +2,7 @@
 
 The "My plan" screen is the festival-time view of your own picks. It answers three questions at a glance: **what is happening now, what is next, and how long until it starts**. It replaces the old Conflicts screen. Conflicts are shown inside the plan, and a filter keeps the old planning use.
 
-Status: **designed, not implemented** (2026-10-16). The interactive mockup is the visual reference: https://claude.ai/artifact/SV4HR7nh3sod4MrJxBKfw4 (private; open it with the owner's account). This document wins over the mockup wherever they differ.
+Status: **implemented** (2026-10-16, branch `my-plan-screen`). The interactive mockup is the visual reference: https://claude.ai/artifact/SV4HR7nh3sod4MrJxBKfw4 (private; open it with the owner's account). This document wins over the mockup wherever they differ.
 
 Related: [DESIGN.md](DESIGN.md) (app-wide design, layout modes, chrome).
 
@@ -166,9 +166,9 @@ Item spacing is 6 px, with 12 px side padding.
   - Each overlap interval is drawn at its place along the row's start → end, top to bottom.
   - Same stripes as the timeline's conflict bar: `danger` / `dangerMuted`, 2 pt each, at 45°.
   - In the app, reuse `stripePath` from `ArtistBlock.tsx` (SVG). `patternTransform` is ignored on iOS.
-- **Group title:** `⚠ Conflict` (13 regular, `danger`, right-aligned) floats 3 pt above the first row of each clash group.
+- **Group title:** `⚠ Conflict` (13 regular, `danger`, right-aligned) sits just above the first row of each clash group.
   - Groups follow `computeConflictEntries`' leader rule.
-  - It's absolutely positioned, so it doesn't change the layout.
+  - It's drawn at the bottom edge of the cell above the group (the gap or the reserved spacer), absolutely positioned, so it doesn't change the layout. Drawing it from the row itself would put it outside the row's list cell, and on Android a cell takes no touches outside its own bounds.
   - When the group has no gap above it (back to back), a 24 pt spacer is reserved so the title never overlaps the row above.
 - **Show only conflicts:**
   - Only clashing Must-sees are listed. No gaps, no day-start break, no Maybe rows.
@@ -189,6 +189,7 @@ Item spacing is 6 px, with 12 px side padding.
   - The selected day is kept while you move around the app.
   - After a cold start, or once a new festival day begins (06:00), My plan opens on today.
 - **Scroll position:** remembered **per day**, like the timeline (`uiStatePersistence`, a My plan screen key, y offsets).
+  - Only the user's own scrolling is remembered. The screen's own landing scroll is not saved: today's landing is "now", which moves, and a stored copy would pin a day you never scrolled to the "now" of an earlier visit.
   - First visit to a day: today lands with now about ⅓ from the top; other days land at the top.
   - Tapping today's button while today is shown scrolls to now (`requestScrollToNow`).
   - Tapping the now pill always goes to today at now.
