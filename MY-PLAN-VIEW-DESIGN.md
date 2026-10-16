@@ -1,0 +1,275 @@
+# My plan: design
+
+The "My plan" screen is the festival-time view of your own picks. It answers three questions at a glance: **what is happening now, what is next, and how long until it starts**. It replaces the old Conflicts screen. Conflicts are shown inside the plan, and a filter keeps the old planning use.
+
+Status: **designed, not implemented** (2026-10-16). The interactive mockup is the visual reference: https://claude.ai/artifact/SV4HR7nh3sod4MrJxBKfw4 (private; open it with the owner's account). This document wins over the mockup wherever they differ.
+
+Related: [DESIGN.md](DESIGN.md) (app-wide design, layout modes, chrome).
+
+---
+
+## Principles
+
+- **Today, now, next first.** Other days are reachable, but never compete with today.
+- **Glanceable in the field.** Dark, bright sunlight, one hand. High contrast, no reading required for the core answer.
+- **Minimum elements, tight together.** The list already carries a lot of signal; new elements must earn their place.
+- **Localization-ready.** Say it with icons, numbers and bars rather than phrases. The few words used are short labels. Layouts must survive Czech copy about 40% longer: names and stages truncate with an ellipsis, and statuses never wrap.
+
+---
+
+## Screen structure
+
+```
+┌──────────────────────────────────────────┐
+│ ☰   [ Gojira          ● LIVE −37 min ]  ½⋮│  top bar: drawer, now pill, filter chip
+├──────────────────────────────────────────┤
+│           THURSDAY 7 Aug                 │  day title (first list item, scrolls away)
+│ ┌──────────────────────────────────────┐ │
+│ │ 14:00–14:40  Hooded Menace           │ │  past → dimmed, "done"
+│ │ done                          Octagon│ │
+│ └──────────────────────────────────────┘ │
+│ ┊             2 h 25                     │  gap: height ∝ duration, label
+│ ┌──────────────────────────────────────┐ │
+│▶┃ 19:00–20:00  Gojira                 ▓│ │  live: yellow left progress, white arrow
+│ ┃ ● LIVE −37 min          Jägermeister▓│ │  clash: striped bar on the right edge
+│ └──────────────────────────────────────┘ │
+│                          ⚠ Conflict      │  floating group title
+│ ┌──────────────────────────────────────┐ │
+│ │ 19:40–20:30  Batushka               ▓│ │
+│ │ START −17 min             Metal Gate │ │  clashes with the live set
+│ └──────────────────────────────────────┘ │
+│ ┊             2 h                        │
+│   …                                      │
+│    ──────────  End of the day  ────────  │
+├──────────────────────────────────────────┤
+│  [THU 7▾] [FRI 8] [SAT 9] [SUN 10]       │  day switcher, always visible
+└──────────────────────────────────────────┘
+```
+
+- **One festival day per view.**
+- Festival days run **06:00 → 06:00** (`DAY_BOUNDARY_HOUR`), so a 00:30 set belongs to the previous day.
+- All times are in festival time (`festivalTime.ts`).
+
+---
+
+## Top bar
+
+### Now pill (centre)
+
+On every screen that has a top bar. On festival days it replaces the logo while it has something to say.
+
+| State | Content | Progress |
+|---|---|---|
+| **Live** | band name left (15 bold, ellipsis); right group `● LIVE −37 min` (red dot, `LIVE` 11 bold caps, time 15 bold accent) | 3 px bar along the bottom: track `#4a3f17`, fill accent, elapsed fraction |
+| **Live, clash** | the live Must-see that **ends soonest**, then a red outlined `+1` / `+2` badge | same |
+| **Break** | centred one phrase: `−1 h 20 till Emperor` (time bold blue `#5b9bff`, `till` 13 white, name bold white) | none |
+| **Otherwise** | the logo | — |
+
+- **Break window:** from the end of today's last finished Must-see (or **08:00** if none has finished yet) to the next Must-see today. Between 06:00 and 08:00, and after the day's last Must-see, the pill shows the logo.
+- **Grouping by proximity:** 6 px gaps inside the status group, 14 px between the name and the group. No divider, which avoids a "| ●" stutter.
+- **Size:** 80% of the space between ☰ and the right slot, 36 pt tall (tap area extended to 44 pt with `hitSlop`), radius 18, 1 px `#333` border, `surfaceRaised` background.
+- **Conflicts:** the pill never cycles or animates. Motion at the top of every screen is distracting, a mid-glance switch is unreadable, and it ignores the reduce-motion setting.
+- **Tap:** opens My plan on **today, scrolled to now**. Back returns to the previous screen through the existing back history.
+
+### Filter chip (right, My plan only)
+
+- **Shape:** the same "state + ⋮" shape as the lens chip on Artists and Program.
+- **State slot:**
+  - the ½ star, accent and half-filled when Maybe picks are shown, a grey outline when they're hidden;
+  - or a **red ⚠** while "Show only conflicts" is on.
+- **⋮** turns accent while the panel is open.
+- **Panel:** tapping drops a panel from under the top bar, like the lens panel, with a dimmed backdrop. It holds two switches:
+  - **Show Maybe picks** (½ star, accent switch). Default **off**.
+  - **Show only conflicts** (⚠, red switch). Default **off**. The Maybe switch dims to 40% while this is on.
+- **Persistence:** both filters are saved through `uiStatePersistence`.
+
+---
+
+## The list
+
+Item spacing is 6 px, with 12 px side padding.
+
+### Day title
+
+- First item of the list, one line, centred: weekday 18 bold caps plus date 15 regular (`THURSDAY 7 Aug`, `ČTVRTEK 7. 8.`).
+- **Never sticky.** It's there for the calendar feel.
+- **Colour by relation to today:**
+  - yellow (accent): today;
+  - blue `#5b9bff`: a future day;
+  - grey `#9a9a9a`: a past day;
+  - white: outside the festival.
+
+### Must-see row
+
+- **Box:** 58 pt tall, square corners, `surface` background, 1 px `#333` border. A live row's border is accent at 60%.
+- **Fixed inset for every row type and state:** content starts 18 pt from the left edge (1 + 17) and ends 23 pt from the right (1 + 22). The time, name and stage columns always line up, clear of the left progress bar and the right clash bar.
+- **Line 1:** `HH:MM–HH:MM` (13, `textMuted`, tabular figures), then the band name (15 bold, ellipsis).
+- **Line 2:** the status on the left, the stage right-aligned (13, `textSecondary`, ellipsis). Statuses:
+  - *live*: `● LIVE` (red dot, 11 bold caps), then `−37 min` (14 bold accent).
+  - *upcoming, clashing with a Must-see that is live now*: `START` (11 bold caps), then `−17 min` (14 bold **red**). It tells you how long you can stay at the live band.
+  - *past*: `done` (12, `textMuted`); the whole row at 45% opacity.
+  - *upcoming otherwise*: empty. The countdown lives in the gap and the pill.
+- **Live progress:** a 6.5 pt bar on the left edge. Track `#4a3f17`, accent fill growing top → bottom with the elapsed fraction.
+- **Tap behaviour:** see [Taps](#taps).
+
+### Maybe row
+
+- Hidden unless "Show Maybe picks" is on.
+- **Look:** 26 pt tall, one line: `time · name · stage` (13, `#8a8a8a`).
+- **Box:** a **1 px dashed** `#333` border and no background, with the same fixed insets as Must-see rows.
+- Never marked as a clash, and never part of conflict logic.
+- **Live:** a grey 6.5 pt left bar (track `#333`, fill `#8a8a8a`) and the now arrow.
+
+### Gaps
+
+- A gap is the time between the end of the previous group of sets and the next set's start. Overlapping sets have no gap between them.
+- **Height:** `min(160, 20 + 0.5 · minutes)` pt.
+  - Every non-zero gap is at least 20 pt, so its label always fits.
+  - Above that the height is linear, so 35 min (38 pt) and 2 h (80 pt) read clearly differently. Compressing curves (√, ln) were tried and rejected: they made 35 min look almost like 2 h.
+- **Label:** the duration, centred (12, `muted`): `45 min`, `2 h 25`.
+- **Rail:** a 2 pt **dotted** `#333` line, offset 6.5 pt from the left (the width of the row's left bar).
+- **The current gap** (now falls inside it):
+  - at least 44 pt tall;
+  - a blue 6.5 pt left bar (track `#1c2f52`, fill `#5b9bff`, elapsed fraction);
+  - the now arrow;
+  - a centred countdown `−1 h 20` (15 bold blue).
+
+### Day-start break
+
+- On today, from **08:00** until the day's first Must-see starts, the list opens with a break directly under the title.
+- It looks like a current gap: blue bar from 08:00, the arrow, `−3 h`.
+- None outside that window, on a day with no Must-see, or in conflicts-only mode.
+
+### Now arrow
+
+- A white triangle, 16 × 24 pt, with a 2 pt outline in the surface colour. Its tip reaches about 4 pt into the row, and it is drawn over the row.
+- Its centre sits at the **tip of the progress fill**: on a live row (Must-see or Maybe), in the current gap, or in the day-start break.
+- With two live sets there are two arrows. Rows aren't on a shared time scale, so each arrow means "this far into this set".
+- No arrow before the festival.
+- After the day's last Must-see ends, the arrow sits on the **End of the day** marker until 06:00.
+- A full-length "now line" was tried and dropped. It sat at the screen edge (rounded corners, cases, the back-swipe zone), was the brightest element with the weakest meaning, and duplicated the dimmed past rows.
+
+### End of the day
+
+- `────  End of the day  ────` / `Konec dne`: 12 `muted` text between 1 pt `#2a2a2a` lines.
+- Comes after the last set.
+- **Empty day:** instead of the marker, centred text:
+  - "Nothing planned for this day" / "Na tento den nic v plánu";
+  - in conflicts-only mode: "No conflicts on this day" / "V tento den žádné konflikty".
+
+---
+
+## Conflicts
+
+- **Which sets clash:** Must-see × Must-see only, using the same calculation as the timeline (`computeConflictOverlaps`). Sets over 2 h never clash (`eventsOverlap`).
+- **Clash bar:** on the row's **right edge**, 9.75 pt wide.
+  - Each overlap interval is drawn at its place along the row's start → end, top to bottom.
+  - Same stripes as the timeline's conflict bar: `danger` / `dangerMuted`, 2 pt each, at 45°.
+  - In the app, reuse `stripePath` from `ArtistBlock.tsx` (SVG). `patternTransform` is ignored on iOS.
+- **Group title:** `⚠ Conflict` (13 regular, `danger`, right-aligned) floats 3 pt above the first row of each clash group.
+  - Groups follow `computeConflictEntries`' leader rule.
+  - It's absolutely positioned, so it doesn't change the layout.
+  - When the group has no gap above it (back to back), a 24 pt spacer is reserved so the title never overlaps the row above.
+- **Show only conflicts:**
+  - Only clashing Must-sees are listed. No gaps, no day-start break, no Maybe rows.
+  - Every clash group gets the 24 pt spacer.
+  - The day title and End of the day stay.
+- **Day buttons:** while "Show only conflicts" is on, a day with at least one Must-see clash gets a 6 pt striped strip on the button's right edge, in the same pattern. It's a different shape from today's red ▼ notch, so the two red marks can't be confused.
+
+---
+
+## Day switcher and scrolling
+
+- **Bottom bar:** the timeline's `DaySwitcher`, always visible. The selected day is filled accent, and today has a red ▼ notch.
+- **Default day:**
+  - today;
+  - before the festival, day 1;
+  - after it, the last day.
+- **Which day is remembered:**
+  - The selected day is kept while you move around the app.
+  - After a cold start, or once a new festival day begins (06:00), My plan opens on today.
+- **Scroll position:** remembered **per day**, like the timeline (`uiStatePersistence`, a My plan screen key, y offsets).
+  - First visit to a day: today lands with now about ⅓ from the top; other days land at the top.
+  - Tapping today's button while today is shown scrolls to now (`requestScrollToNow`).
+  - Tapping the now pill always goes to today at now.
+
+---
+
+## Durations and wording
+
+| Use | Format |
+|---|---|
+| Duration | `45 min`, `1 h 20`, `3 h`. Always `min`, never `m` |
+| Time remaining (live, gap, pill, START) | prefixed with a real minus sign `−` (U+2212) |
+| Times | `19:00–20:00` (en dash), tabular figures |
+
+All My plan strings live in one module, so a later i18n pass is a drop-in. Current EN / CS pairs:
+
+| Key | EN | CS |
+|---|---|---|
+| live | LIVE | HRAJE |
+| done | done | odehráno |
+| start | START | ZAČÍNÁ |
+| till | till | do |
+| conflict | Conflict | Konflikt |
+| showMaybe | Show Maybe picks | Zobrazit výběry Možná |
+| conflictsOnly | Show only conflicts | Zobrazit jen konflikty |
+| endOfDay | End of the day | Konec dne |
+| empty | Nothing planned for this day | Na tento den nic v plánu |
+| emptyConflicts | No conflicts on this day | V tento den žádné konflikty |
+| filterMenu (a11y) | Filters | Filtry |
+
+---
+
+## Layout modes
+
+- **Landscape (short layout):** no dedicated design.
+  - **No now pill in landscape, on any screen**, because the top bar is hidden there, as today.
+  - The existing floating bottom bar carries ☰, the day switcher and the screen's right-hand chip, as on the timeline. On My plan that's the filter chip; on other screens the lens chip is unchanged.
+- **Wide (tablet, web):** same layout, with the content width capped at `MAX_CONTENT_WIDTH`.
+
+## Navigation
+
+- The drawer entry **"My plan"** replaces "Conflicts", at the top of the list.
+  - It shows a **clash marker**: `⚠ 2`, a red warning triangle followed by the number of clashing Must-see sets (`useConflicts().count`). Red text with no badge background, shown only when the count is above 0.
+    - The triangle says what's being counted, because a bare red number badge next to "My plan" would be ambiguous.
+    - It's the same symbol as the `⚠ Conflict` group titles and the conflicts-only chip state.
+    - A number *inside* a triangle was rejected as unreadable at badge size.
+  - Nothing else: no status line, since the now pill already shows it on every screen.
+- The Conflicts screen is removed. `ConflictContext` and `ConflictDetailSheet` stay.
+
+## Colours
+
+App tokens: `background #0a0a0a`, `surface #141414`, `surfaceRaised #1a1a1a`, `border #2a2a2a`, `borderMid #333`, `accent #e8c84a`, `danger #ff4444`, `dangerMuted #111111`, `textSecondary #ddd`, `textMuted #bbb`, `muted #7f7f7f`.
+
+New values this screen introduces, to add as tokens:
+
+| Use | Value |
+|---|---|
+| live progress track | `#4a3f17` |
+| break / future blue | `#5b9bff` |
+| break track | `#1c2f52` |
+| Maybe text and live fill | `#8a8a8a` |
+| past-day title | `#9a9a9a` |
+
+---
+
+## Taps
+
+| Element | Tap |
+|---|---|
+| Row (Must-see or Maybe), anywhere | The existing **artist detail sheet**. It already offers "stage/time → jump to the timeline slot" and the conflict warning line → conflict detail. |
+| `⚠ Conflict` group title | The **conflict detail sheet** (`ConflictDetailSheet`) for that group, with a 44 pt tap area. |
+| Clash bar (right edge) | Nothing separate: it's too thin, so a tap there counts as a row tap. |
+| Gap, day title, End of the day | Nothing. |
+| Long-press on a row | Nothing. Changing a pick inline would make the row vanish under your finger. |
+| Now pill | My plan, today, scrolled to now (see Top bar). |
+
+---
+
+## Later phases
+
+- **Local reminders** (`expo-notifications`): "X starts in 10 min on Octagon". Offline, iOS and Android.
+- **iOS home and lock-screen widget** (`expo-widgets`, SDK 56+): needs an App Group and a widget timeline precomputed from the static schedule, so it works fully offline.
+- **Live Activity:** only if APNs push infrastructure ever exists.
+- **Android widget:** optional.
