@@ -107,7 +107,7 @@ Item spacing is 6 px, with 12 px side padding.
 - **Line 2:** the status on the left, the stage right-aligned (13, `textSecondary`, ellipsis). Statuses:
   - *live*: `● LIVE` (red dot, 11 bold caps), then `−37 min` (14 bold accent).
   - *upcoming, clashing with a Must-see that is live now*: `START` (11 bold caps), then `−17 min` (14 bold **red**). It tells you how long you can stay at the live band.
-  - *past*: `done` (12, `textMuted`); the whole row at 45% opacity.
+  - *past*: `done` (12, `textMuted`); the whole row at 45% opacity. Only during the festival: outside it (before or after) every set reads as upcoming, with no live bars, current gaps or arrows.
   - *upcoming otherwise*: empty. The countdown lives in the gap and the pill.
 - **Live progress:** a 6.5 pt bar on the left edge. Track `#4a3f17`, accent fill growing top → bottom with the elapsed fraction.
 - **Tap behaviour:** see [Taps](#taps).

@@ -74,10 +74,11 @@ const DAY: Spec[] = [
 
 const { inputs, interests } = inputsOf(DAY);
 
-function build(now: number, opts: Partial<{ dayStart: number; showMaybe: boolean; conflictsOnly: boolean }> = {}): PlanItem[] {
+function build(now: number, opts: Partial<{ dayStart: number; showMaybe: boolean; conflictsOnly: boolean; duringFestival: boolean }> = {}): PlanItem[] {
   return buildPlanDay(interests, inputs, {
     dayStart: opts.dayStart ?? THU,
     now,
+    duringFestival: opts.duringFestival ?? true,
     showMaybe: opts.showMaybe ?? false,
     conflictsOnly: opts.conflictsOnly ?? false,
   });
@@ -297,7 +298,7 @@ describe('buildPlanDay', () => {
       const { inputs: maybeOnly, interests: maybeInterests } = inputsOf([
         ['1', 'Only maybe', 's1', at(7, '14:00'), at(7, '15:00'), 'maybe'],
       ]);
-      const items = buildPlanDay(maybeInterests, maybeOnly, { dayStart: THU, now: at(7, '11:00'), showMaybe: true, conflictsOnly: false });
+      const items = buildPlanDay(maybeInterests, maybeOnly, { dayStart: THU, now: at(7, '11:00'), duringFestival: true, showMaybe: true, conflictsOnly: false });
       expect(shape(items)).toEqual(['title', 'maybe:Only maybe']);
     });
   });
@@ -334,7 +335,7 @@ describe('buildPlanDay', () => {
       ['4', 'D', 's1', at(10, '12:00'), at(10, '13:00'), 'will_go'],
       ['5', 'E', 's2', at(10, '12:30'), at(10, '13:30'), 'will_go'],
     ]);
-    const opts = { now: at(9, '10:00'), showMaybe: false, conflictsOnly: false };
+    const opts = { now: at(9, '10:00'), duringFestival: true, showMaybe: false, conflictsOnly: false };
     // Back to back with the set above.
     expect(shape(buildPlanDay(b2bInterests, b2b, { ...opts, dayStart: SAT }).filter((i) => !(i.kind === 'gap' && i.opening))))
       .toEqual(['title', 'must:A', 'spacer', 'must:B', 'must:C']);
@@ -357,6 +358,26 @@ describe('buildPlanDay', () => {
       expect(nowScrollOffset(build(at(8, '02:00')), 600)).toBeNull();
     });
   });
+
+  describe('outside the festival', () => {
+    const before = at(1, '12:00');
+    const after = at(12, '12:00');
+
+    it('reads after the festival as it does before it: nothing past, live or current', () => {
+      const items = build(after, { duringFestival: false, showMaybe: true });
+      expect(items).toEqual(build(before, { duringFestival: false, showMaybe: true }));
+      const sets = items.filter((i): i is PlanSetItem => i.kind === 'set');
+      expect(sets.every((s) => s.state === 'upcoming' && s.startsInMs === null)).toBe(true);
+      expect(gaps(items).some((g) => g.current || g.opening)).toBe(false);
+      expect(nowScrollOffset(items, 600)).toBeNull();
+    });
+
+    it('keeps the gaps and clashes of the day', () => {
+      const items = build(after, { duringFestival: false });
+      expect(shape(items)).toEqual(shape(build(at(7, '19:23'))));
+      expect(set(items, 'Gojira').clashBars).toEqual(set(build(at(7, '19:23')), 'Gojira').clashBars);
+    });
+  });
 });
 
 // ── Sets over two hours ───────────────────────────────────────────────────────
@@ -372,7 +393,7 @@ describe('sets over two hours', () => {
     ['21', 'Long maybe', 's2', at(7, '18:00'), at(7, '21:00'), 'maybe'],
     ['22', 'Exactly two hours', 's2', at(8, '14:00'), at(8, '16:00'), 'will_go'],
   ]);
-  const opts = { dayStart: THU, showMaybe: true, conflictsOnly: false };
+  const opts = { dayStart: THU, duringFestival: true, showMaybe: true, conflictsOnly: false };
 
   it('are not listed, Must-see or Maybe', () => {
     const names = buildPlanDay(withLongInterests, withLong, { ...opts, now: at(7, '19:23') })

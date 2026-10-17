@@ -16,6 +16,8 @@ export type PlanOptions = {
   /** Unix ms of the shown festival day's 06:00. */
   dayStart: number;
   now: number;
+  /** Whether today is a festival day. Outside the festival nothing is past, live or current. */
+  duringFestival: boolean;
   showMaybe: boolean;
   conflictsOnly: boolean;
 };
@@ -157,8 +159,10 @@ function currentGap(key: string, from: number, to: number, now: number, opening:
 export function buildPlanDay(
   interests: Record<string, string>,
   inputs: PlanInputs,
-  { dayStart, now, showMaybe, conflictsOnly }: PlanOptions,
+  { dayStart, now: wallNow, duringFestival, showMaybe, conflictsOnly }: PlanOptions,
 ): PlanItem[] {
+  // Outside the festival the list reads as it does before it: every set is ahead.
+  const now = duringFestival ? wallNow : Number.NEGATIVE_INFINITY;
   const overlaps = computeConflictOverlaps(interests, inputs);
   const entries = computeConflictEntries(interests, inputs);
   const leaders = new Set(entries.filter((e) => e.leader).map((e) => e.event.eventId));

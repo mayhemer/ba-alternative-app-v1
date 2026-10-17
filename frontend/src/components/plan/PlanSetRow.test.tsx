@@ -38,7 +38,7 @@ function setup(): { inputs: PlanInputs; interests: Record<string, string> } {
 
 function item(name: string, now: string): PlanSetItem {
   const { inputs, interests } = setup();
-  const items = buildPlanDay(interests, inputs, { dayStart: THU, now: at(now), showMaybe: true, conflictsOnly: false });
+  const items = buildPlanDay(interests, inputs, { dayStart: THU, now: at(now), duringFestival: true, showMaybe: true, conflictsOnly: false });
   const found = items.find((i): i is PlanSetItem => i.kind === 'set' && i.artist.name === name);
   if (found === undefined) {
     throw new Error(`no ${name}`);

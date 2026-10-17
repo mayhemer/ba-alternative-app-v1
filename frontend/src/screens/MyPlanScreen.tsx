@@ -63,12 +63,13 @@ export function MyPlanScreen() {
   const { openConflict } = useConflictDetail();
   const { bottomClearance } = useLayoutMode();
 
+  const tone = dayTone(day, now, festivalDays);
+  const duringFestival = tone !== 'outside';
   const items = useMemo<PlanItem[]>(
-    () => (day === 0 ? [] : buildPlanDay(interests, { artists, stages, artistEvents }, { dayStart: day, now, showMaybe, conflictsOnly })),
-    [day, interests, artists, stages, artistEvents, now, showMaybe, conflictsOnly],
+    () => (day === 0 ? [] : buildPlanDay(interests, { artists, stages, artistEvents }, { dayStart: day, now, duringFestival, showMaybe, conflictsOnly })),
+    [day, interests, artists, stages, artistEvents, now, duringFestival, showMaybe, conflictsOnly],
   );
   const offsets = useMemo(() => itemOffsets(items), [items]);
-  const tone = dayTone(day, now, festivalDays);
 
   // The filter panel belongs to this screen: leaving it closes the panel.
   useFocusEffect(useCallback(() => () => { closePanel(); }, [closePanel]));
