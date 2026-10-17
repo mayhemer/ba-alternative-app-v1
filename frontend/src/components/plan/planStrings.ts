@@ -17,7 +17,6 @@ export type PlanStrings = {
   conflict: string;
   showMaybe: string;
   conflictsOnly: string;
-  endOfDay: string;
   empty: string;
   emptyConflicts: string;
   filters: string;
@@ -34,7 +33,6 @@ const EN: PlanStrings = {
   conflict: 'Conflict',
   showMaybe: 'Show Maybe picks',
   conflictsOnly: 'Show only conflicts',
-  endOfDay: 'End of the day',
   empty: 'Nothing planned for this day',
   emptyConflicts: 'No conflicts on this day',
   filters: 'Filters',
@@ -51,7 +49,6 @@ const CS: PlanStrings = {
   conflict: 'Konflikt',
   showMaybe: 'Zobrazit výběry Možná',
   conflictsOnly: 'Zobrazit jen konflikty',
-  endOfDay: 'Konec dne',
   empty: 'Na tento den nic v plánu',
   emptyConflicts: 'V tento den žádné konflikty',
   filters: 'Filtry',

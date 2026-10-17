@@ -63,10 +63,9 @@ export type PlanGapItem = {
 
 export type PlanTitleItem = { kind: 'title'; key: 'title'; dayStart: number; height: number };
 export type PlanSpacerItem = { kind: 'spacer'; key: string; height: number };
-export type PlanEndItem = { kind: 'end'; key: 'end'; /** Today's sets are all over: "now" sits here. */ nowHere: boolean; height: number };
 export type PlanEmptyItem = { kind: 'empty'; key: 'empty'; height: number };
 
-export type PlanItem = PlanTitleItem | PlanSetItem | PlanGapItem | PlanSpacerItem | PlanEndItem | PlanEmptyItem;
+export type PlanItem = PlanTitleItem | PlanSetItem | PlanGapItem | PlanSpacerItem | PlanEmptyItem;
 
 export const PLAN_LAYOUT = {
   paddingTop: 12,
@@ -76,7 +75,6 @@ export const PLAN_LAYOUT = {
   maybeRow: 26,
   /** Room above a clash group for its floating title when no gap gives it. */
   spacer: 24,
-  end: 48,
   empty: 90,
   /** A current gap is at least this tall, to fit its countdown. */
   currentGapMin: 44,
@@ -256,9 +254,6 @@ export function buildPlanDay(
 
   if (visible.length === 0) {
     items.push({ kind: 'empty', key: 'empty', height: PLAN_LAYOUT.empty });
-  } else {
-    const lastEnd = Math.max(...visible.map((p) => p.event.dateTo));
-    items.push({ kind: 'end', key: 'end', nowHere: isToday && now >= lastEnd, height: PLAN_LAYOUT.end });
   }
   return items;
 }
@@ -270,7 +265,6 @@ export function hostsNow(item: PlanItem): boolean {
   switch (item.kind) {
     case 'set': return item.state === 'live';
     case 'gap': return item.current;
-    case 'end': return item.nowHere;
     default: return false;
   }
 }

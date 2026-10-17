@@ -165,7 +165,6 @@ describe('buildPlanDay', () => {
       'must:Emperor',
       'gap:45',
       'must:Wolves in the Throne Room',
-      'end',
     ]);
   });
 
@@ -245,7 +244,6 @@ describe('buildPlanDay', () => {
       'must:Emperor',
       'gap:45',
       'must:Wolves in the Throne Room',
-      'end',
     ]);
     const paysage = set(build(at(7, '19:23'), { showMaybe: true }), "Paysage d'Hiver");
     expect(paysage.clashBars).toEqual([]);
@@ -292,7 +290,7 @@ describe('buildPlanDay', () => {
     });
 
     it('is only on today', () => {
-      expect(shape(build(at(7, '11:00'), { dayStart: FRI }))).toEqual(['title', 'must:Spectral Wound', 'end']);
+      expect(shape(build(at(7, '11:00'), { dayStart: FRI }))).toEqual(['title', 'must:Spectral Wound']);
     });
 
     it('is not there on a day without a Must-see', () => {
@@ -300,7 +298,7 @@ describe('buildPlanDay', () => {
         ['1', 'Only maybe', 's1', at(7, '14:00'), at(7, '15:00'), 'maybe'],
       ]);
       const items = buildPlanDay(maybeInterests, maybeOnly, { dayStart: THU, now: at(7, '11:00'), showMaybe: true, conflictsOnly: false });
-      expect(shape(items)).toEqual(['title', 'maybe:Only maybe', 'end']);
+      expect(shape(items)).toEqual(['title', 'maybe:Only maybe']);
     });
   });
 
@@ -311,7 +309,6 @@ describe('buildPlanDay', () => {
         'spacer',
         'must:Gojira',
         'must:Batushka',
-        'end',
       ]);
     });
 
@@ -321,7 +318,6 @@ describe('buildPlanDay', () => {
         'spacer',
         'must:Gojira',
         'must:Batushka',
-        'end',
       ]);
     });
 
@@ -341,10 +337,10 @@ describe('buildPlanDay', () => {
     const opts = { now: at(9, '10:00'), showMaybe: false, conflictsOnly: false };
     // Back to back with the set above.
     expect(shape(buildPlanDay(b2bInterests, b2b, { ...opts, dayStart: SAT }).filter((i) => !(i.kind === 'gap' && i.opening))))
-      .toEqual(['title', 'must:A', 'spacer', 'must:B', 'must:C', 'end']);
+      .toEqual(['title', 'must:A', 'spacer', 'must:B', 'must:C']);
     // Right under the day title.
     expect(shape(buildPlanDay(b2bInterests, b2b, { ...opts, dayStart: SUN })))
-      .toEqual(['title', 'spacer', 'must:D', 'must:E', 'end']);
+      .toEqual(['title', 'spacer', 'must:D', 'must:E']);
   });
 
   it('shows the empty state for a day with nothing planned', () => {
@@ -352,17 +348,13 @@ describe('buildPlanDay', () => {
   });
 
   describe('end of the day', () => {
-    it('carries "now" once today\'s last set has ended, until 06:00', () => {
-      const end = build(at(8, '02:00')).at(-1);
-      expect(end?.kind).toBe('end');
-      expect(end?.kind === 'end' && end.nowHere).toBe(true);
+    it('ends with the day\'s last set, no marker after it', () => {
+      const items = build(at(7, '19:23'));
+      expect(items.at(-1)?.kind).toBe('set');
     });
 
-    it('does not carry "now" earlier in the day, or on another day', () => {
-      const end = build(at(7, '19:23')).at(-1);
-      expect(end?.kind === 'end' && end.nowHere).toBe(false);
-      const friEnd = build(at(8, '02:00'), { dayStart: FRI }).at(-1);
-      expect(friEnd?.kind === 'end' && friEnd.nowHere).toBe(false);
+    it('carries no "now" once today\'s last set has ended', () => {
+      expect(nowScrollOffset(build(at(8, '02:00')), 600)).toBeNull();
     });
   });
 });

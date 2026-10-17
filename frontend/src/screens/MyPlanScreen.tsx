@@ -14,7 +14,7 @@ import { getScroll, setScroll } from '../store/uiStatePersistence';
 import { buildPlanDay, itemOffsets, nowScrollOffset, PLAN_LAYOUT, type PlanItem } from '../utils/planUtils';
 import { getFestivalDayStart } from '../components/timeline/timelineLayout';
 import { PlanSetRow } from '../components/plan/PlanSetRow';
-import { ConflictGroupTitle, NowArrow, PlanDayTitle, PlanEmpty, PlanEndOfDay, PlanGap, type DayTone } from '../components/plan/PlanListItems';
+import { ConflictGroupTitle, NowArrow, PlanDayTitle, PlanEmpty, PlanGap, type DayTone } from '../components/plan/PlanListItems';
 import { PlanFilterChip } from '../components/plan/PlanFilterChip';
 import { PlanDaySwitcher } from '../components/plan/PlanDaySwitcher';
 import { LIST_GUTTER } from '../components/plan/planStyles';
@@ -169,9 +169,6 @@ export function MyPlanScreen() {
         break;
       case 'spacer':
         content = <View style={{ height: item.height }}>{title}</View>;
-        break;
-      case 'end':
-        content = <PlanEndOfDay nowHere={item.nowHere} height={item.height} />;
         break;
       case 'empty':
         content = <PlanEmpty conflictsOnly={conflictsOnly} height={item.height} />;

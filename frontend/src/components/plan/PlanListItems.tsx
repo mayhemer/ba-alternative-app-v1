@@ -127,18 +127,7 @@ export function PlanGap({ item, children }: { item: PlanGapItem; children?: Reac
   );
 }
 
-// ── End of the day, empty day ─────────────────────────────────────────────────
-
-export function PlanEndOfDay({ nowHere, height }: { nowHere: boolean; height: number }) {
-  return (
-    <View style={{ height, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: LIST_GUTTER + 24 }}>
-      <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
-      <Text style={{ fontSize: 12, color: colors.muted }}>{strings.endOfDay}</Text>
-      <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
-      {nowHere && <NowArrow y={height / 2} />}
-    </View>
-  );
-}
+// ── Empty day ─────────────────────────────────────────────────────────────────
 
 export function PlanEmpty({ conflictsOnly, height }: { conflictsOnly: boolean; height: number }) {
   return (

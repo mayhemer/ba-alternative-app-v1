@@ -40,7 +40,6 @@ Related: [DESIGN.md](DESIGN.md) (app-wide design, layout modes, chrome).
 │ └──────────────────────────────────────┘ │
 │ ┊             2 h                        │
 │   …                                      │
-│    ──────────  End of the day  ────────  │
 ├──────────────────────────────────────────┤
 │  [THU 7▾] [FRI 8] [SAT 9] [SUN 10]       │  day switcher, always visible
 └──────────────────────────────────────────┘
@@ -147,14 +146,13 @@ Item spacing is 6 px, with 12 px side padding.
 - Its centre sits at the **tip of the progress fill**: on a live row (Must-see or Maybe), in the current gap, or in the day-start break.
 - With two live sets there are two arrows. Rows aren't on a shared time scale, so each arrow means "this far into this set".
 - No arrow before the festival.
-- After the day's last Must-see ends, the arrow sits on the **End of the day** marker until 06:00.
+- After the day's last Must-see ends there is no arrow until the 06:00 day change. An "End of the day" marker that carried it was tried and dropped: the list simply ends with the last set.
 - A full-length "now line" was tried and dropped. It sat at the screen edge (rounded corners, cases, the back-swipe zone), was the brightest element with the weakest meaning, and duplicated the dimmed past rows.
 
-### End of the day
+### End of the day and empty day
 
-- `────  End of the day  ────` / `Konec dne`: 12 `muted` text between 1 pt `#2a2a2a` lines.
-- Comes after the last set.
-- **Empty day:** instead of the marker, centred text:
+- The list ends with the day's last set; there is no end marker.
+- **Empty day:** centred text:
   - "Nothing planned for this day" / "Na tento den nic v plánu";
   - in conflicts-only mode: "No conflicts on this day" / "V tento den žádné konflikty".
 
@@ -174,7 +172,7 @@ Item spacing is 6 px, with 12 px side padding.
 - **Show only conflicts:**
   - Only clashing Must-sees are listed. No gaps, no day-start break, no Maybe rows.
   - Every clash group gets the 24 pt spacer.
-  - The day title and End of the day stay.
+  - The day title stays.
 - **Day buttons:** while "Show only conflicts" is on, a day with at least one Must-see clash gets a 6 pt striped strip on the button's right edge, in the same pattern. It's a different shape from today's red ▼ notch, so the two red marks can't be confused.
 
 ---
@@ -216,7 +214,6 @@ All My plan strings live in one module, so a later i18n pass is a drop-in. Curre
 | conflict | Conflict | Konflikt |
 | showMaybe | Show Maybe picks | Zobrazit výběry Možná |
 | conflictsOnly | Show only conflicts | Zobrazit jen konflikty |
-| endOfDay | End of the day | Konec dne |
 | empty | Nothing planned for this day | Na tento den nic v plánu |
 | emptyConflicts | No conflicts on this day | V tento den žádné konflikty |
 | filterMenu (a11y) | Filters | Filtry |
@@ -263,7 +260,7 @@ New values this screen introduces, to add as tokens:
 | Row (Must-see or Maybe), anywhere | The existing **artist detail sheet**. It already offers "stage/time → jump to the timeline slot" and the conflict warning line → conflict detail. |
 | `⚠ Conflict` group title | The **conflict detail sheet** (`ConflictDetailSheet`) for that group, with a 44 pt tap area. |
 | Clash bar (right edge) | Nothing separate: it's too thin, so a tap there counts as a row tap. |
-| Gap, day title, End of the day | Nothing. |
+| Gap, day title | Nothing. |
 | Long-press on a row | Nothing. Changing a pick inline would make the row vanish under your finger. |
 | Now pill | My plan, today, scrolled to now (see Top bar). |
 
