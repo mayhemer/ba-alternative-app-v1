@@ -1,4 +1,4 @@
-import { computeConflictEntries, computeConflictOverlaps, eventsOverlap, type ConflictInputs } from './conflictUtils';
+import { computeConflictEntries, computeConflictOverlaps, eventsOverlap, isConflictEligible, type ConflictInputs } from './conflictUtils';
 import { getStageLocalized } from './localization';
 import { getFestivalDayStart } from '../components/timeline/timelineLayout';
 import type { DbArtist, DbEvent } from '../types/backend';
@@ -125,7 +125,9 @@ function picksOf(interests: Record<string, string>, { artists, artistEvents }: P
     if (status !== 'will_go' && status !== 'maybe') {
       continue;
     }
-    for (const event of artistEvents[artist.artistId] ?? []) {
+    // Only the sets the conflict calculation considers: one shared rule, so the
+    // plan never lists a set that cannot clash (or hides one that can).
+    for (const event of (artistEvents[artist.artistId] ?? []).filter(isConflictEligible)) {
       picks.push({ event, artist, level: status });
     }
   }

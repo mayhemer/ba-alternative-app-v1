@@ -2,6 +2,7 @@ import {
   computeConflictEntries,
   computeConflictOverlaps,
   eventsOverlap,
+  isConflictEligible,
   type ConflictInputs,
 } from './conflictUtils';
 import type { DbArtist, DbEvent, DbStage } from '../types/backend';
@@ -45,6 +46,23 @@ describe('eventsOverlap', () => {
     // A set running over two hours is something like an all-day installation,
     // which should never be reported as clashing with a band.
     expect(eventsOverlap(event('1', 0, 3), event('2', 0.5, 1))).toBe(false);
+  });
+});
+
+
+// ── Eligibility ───────────────────────────────────────────────────────────────
+//
+// The one rule deciding which sets the conflict calculation considers — and,
+// through the same predicate, which sets My plan lists.
+
+describe('isConflictEligible', () => {
+  it('takes sets up to two hours long, the boundary included', () => {
+    expect(isConflictEligible(event('1', 0, 1))).toBe(true);
+    expect(isConflictEligible(event('1', 0, 2))).toBe(true);
+  });
+
+  it('leaves out anything longer', () => {
+    expect(isConflictEligible(event('1', 0, 2.5))).toBe(false);
   });
 });
 

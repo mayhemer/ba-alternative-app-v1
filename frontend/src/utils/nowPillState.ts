@@ -1,10 +1,12 @@
 import { getFestivalDayStart } from '../components/timeline/timelineLayout';
+import { isConflictEligible } from './conflictUtils';
 import type { PlanInputs } from './planUtils';
 import type { DbEvent } from '../types/backend';
 
 // ── What the now pill in the top bar says ─────────────────────────────────────
 //
-// Only today's Must-sees count; Maybe picks never reach the pill.
+// Only today's Must-sees count, of the sets My plan lists (the conflict
+// calculation's eligibility rule); Maybe picks never reach the pill.
 //   live  — the live Must-see that ends soonest (its time left is the deadline
 //           for deciding whether to switch), plus how many others play now;
 //   break — counting down to the next Must-see today, from the end of the last
@@ -31,7 +33,7 @@ function todaysMusts(interests: Record<string, string>, { artists, artistEvents 
       continue;
     }
     for (const event of artistEvents[artist.artistId] ?? []) {
-      if (getFestivalDayStart(event.dateFrom) === today) {
+      if (isConflictEligible(event) && getFestivalDayStart(event.dateFrom) === today) {
         musts.push({ event, artistName: artist.name });
       }
     }

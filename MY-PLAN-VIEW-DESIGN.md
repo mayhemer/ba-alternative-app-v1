@@ -46,6 +46,7 @@ Related: [DESIGN.md](DESIGN.md) (app-wide design, layout modes, chrome).
 └──────────────────────────────────────────┘
 ```
 
+- **Same sets as the conflict calculation.** My plan lists exactly the sets the conflict calculation considers, through one shared rule (`conflictUtils.isConflictEligible`). Sets longer than 2 hours (all-day exhibitions, say) are out of both: not listed, not in the now pill, never clashing. The plan and the conflict logic must stay on one source feed and one rule. A change to either goes through the shared logic, never a plan-only or conflict-only filter or count.
 - **One festival day per view.**
 - Festival days run **06:00 → 06:00** (`DAY_BOUNDARY_HOUR`), so a 00:30 set belongs to the previous day.
 - All times are in festival time (`festivalTime.ts`).

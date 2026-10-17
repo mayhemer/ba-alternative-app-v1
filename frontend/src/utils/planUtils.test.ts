@@ -367,6 +367,45 @@ describe('buildPlanDay', () => {
   });
 });
 
+// ── Sets over two hours ───────────────────────────────────────────────────────
+//
+// My plan lists exactly the sets the conflict calculation considers: one shared
+// rule (conflictUtils.isConflictEligible). Anything longer than two hours — an
+// all-day exhibition, say — is out of both.
+
+describe('sets over two hours', () => {
+  const { inputs: withLong, interests: withLongInterests } = inputsOf([
+    ...DAY,
+    ['20', 'All-day exhibition', 's2', at(7, '12:00'), at(7, '20:00'), 'will_go'],
+    ['21', 'Long maybe', 's2', at(7, '18:00'), at(7, '21:00'), 'maybe'],
+    ['22', 'Exactly two hours', 's2', at(8, '14:00'), at(8, '16:00'), 'will_go'],
+  ]);
+  const opts = { dayStart: THU, showMaybe: true, conflictsOnly: false };
+
+  it('are not listed, Must-see or Maybe', () => {
+    const names = buildPlanDay(withLongInterests, withLong, { ...opts, now: at(7, '19:23') })
+      .flatMap((i) => (i.kind === 'set' ? [i.artist.name] : []));
+    expect(names).not.toContain('All-day exhibition');
+    expect(names).not.toContain('Long maybe');
+  });
+
+  it('leave the gaps between the listed sets as they are', () => {
+    const items = buildPlanDay(withLongInterests, withLong, { ...opts, showMaybe: false, now: at(7, '19:23') });
+    expect(shape(items)).toEqual(shape(build(at(7, '19:23'))));
+  });
+
+  it('do not start the day: the day-start break counts down to the first listed set', () => {
+    const items = buildPlanDay(withLongInterests, withLong, { ...opts, showMaybe: false, now: at(7, '11:00') });
+    expect(shape(items).slice(0, 3)).toEqual(['title', 'gap:360*^', 'must:Hooded Menace']);
+  });
+
+  it('keep a set of exactly two hours', () => {
+    const names = buildPlanDay(withLongInterests, withLong, { ...opts, dayStart: FRI, now: at(7, '19:23') })
+      .flatMap((i) => (i.kind === 'set' ? [i.artist.name] : []));
+    expect(names).toContain('Exactly two hours');
+  });
+});
+
 // ── Positions ─────────────────────────────────────────────────────────────────
 
 describe('itemOffsets', () => {

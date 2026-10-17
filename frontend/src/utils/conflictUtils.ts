@@ -128,9 +128,20 @@ export function computeConflictOverlaps(
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+/**
+ * Whether a set takes part in conflicts at all: no longer than two hours. Longer
+ * ones are things like all-day exhibitions, which clash with everything.
+ *
+ * The one eligibility rule shared by the conflict calculation and My plan's list
+ * (planUtils, nowPillState): the plan lists exactly the sets considered here, so
+ * the two never disagree. Change it here, for both.
+ */
+export function isConflictEligible(event: DbEvent): boolean {
+  return event.dateTo - event.dateFrom <= EVENT_DURATION_MAX_FOR_CONFLICT_ELIGIBILITY_MS;
+}
+
 /** Returns true if two events' time ranges intersect (strict overlap). */
 export function eventsOverlap(a: DbEvent, b: DbEvent): boolean {
-  if (a.dateTo - a.dateFrom > EVENT_DURATION_MAX_FOR_CONFLICT_ELIGIBILITY_MS) { return false; }
-  if (b.dateTo - b.dateFrom > EVENT_DURATION_MAX_FOR_CONFLICT_ELIGIBILITY_MS) { return false; }
+  if (!isConflictEligible(a) || !isConflictEligible(b)) { return false; }
   return a.dateFrom < b.dateTo && b.dateFrom < a.dateTo;
 }

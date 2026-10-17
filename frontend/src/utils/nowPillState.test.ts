@@ -112,3 +112,22 @@ describe('falls back to the logo', () => {
     expect(nowPillState(none, noPicks, DAYS, at(7, '19:23'))).toEqual({ kind: 'logo' });
   });
 });
+
+// ── Sets over two hours ───────────────────────────────────────────────────────
+//
+// The pill shows what My plan lists: the same rule as the conflict calculation
+// leaves sets over two hours out.
+
+describe('sets over two hours', () => {
+  it('never reach the pill, live or next', () => {
+    const { inputs: withLong, interests: withLongInterests } = setup([
+      ...SPECS,
+      // Would end before Gojira, and so be the one shown, were it counted.
+      ['20', 'All-day exhibition', at(7, '12:00'), at(7, '19:30'), 'will_go'],
+      // Would start before Emperor, and so be next, were it counted.
+      ['21', 'Night installation', at(7, '21:00'), at(8, '03:00'), 'will_go'],
+    ]);
+    expect(nowPillState(withLongInterests, withLong, DAYS, at(7, '19:23'))).toEqual(pill(at(7, '19:23')));
+    expect(nowPillState(withLongInterests, withLong, DAYS, at(7, '20:40'))).toEqual(pill(at(7, '20:40')));
+  });
+});
