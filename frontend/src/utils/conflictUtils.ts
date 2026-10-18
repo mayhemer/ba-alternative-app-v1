@@ -40,22 +40,26 @@ export function computeConflictEntries(
   const stageById  = Object.fromEntries(stages.map((s) => [s.stageId, s]));
   const artistById = Object.fromEntries(artists.map((a) => [a.artistId, a]));
 
-  // Collect all will_go events
+  // Collect all will_go events that can clash at all. Eligibility is checked
+  // here, once per set, rather than by eventsOverlap twice per pair below: under
+  // an interpreter (Hermes; Reassure's --max-opt=1) every call in the pairing
+  // loop is paid in full.
   // TODO: may want a filter that will include "maybe" into the conflict list
   const markedEvents: DbEvent[] = [];
   for (const artist of artists) {
     if ((interests[artist.artistId] ?? 'none') === 'will_go') {
-      markedEvents.push(...(artistEvents[artist.artistId] ?? []));
+      markedEvents.push(...(artistEvents[artist.artistId] ?? []).filter(isConflictEligible));
     }
   }
 
-  // Build conflict map: eventId → overlapping events
+  // Build conflict map: eventId → overlapping events. The sets are all eligible,
+  // so this is eventsOverlap's time test alone, inlined.
   const conflictMap = new Map<string, DbEvent[]>();
   for (let i = 0; i < markedEvents.length; i++) {
     for (let j = i + 1; j < markedEvents.length; j++) {
       const a = markedEvents[i];
       const b = markedEvents[j];
-      if (eventsOverlap(a, b)) {
+      if (a.dateFrom < b.dateTo && b.dateFrom < a.dateTo) {
         if (!conflictMap.has(a.eventId)) { conflictMap.set(a.eventId, []); }
         if (!conflictMap.has(b.eventId)) { conflictMap.set(b.eventId, []); }
         conflictMap.get(a.eventId)!.push(b);

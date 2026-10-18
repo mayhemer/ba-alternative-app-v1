@@ -178,6 +178,53 @@ describe('conflictGroupOf', () => {
   });
 });
 
+// ── Sets over two hours in the full calculation ──────────────────────────────
+//
+// The eligibility rule applied by the pairing itself, not just by eventsOverlap:
+// a long set the user starred clashes with nothing, and the sets it covers clash
+// only with each other.
+
+describe('sets over two hours', () => {
+  // 1: all-day exhibition (8 h) over everything. 2 and 3 clash with each other.
+  // 4 sits under the exhibition alone. Artist 5 has a long set and a short one
+  // that clashes with 3.
+  const specs: [string, string, number, number][] = [
+    ['1', 'a1', 0, 8], ['2', 'a2', 1, 2], ['3', 'a3', 1.5, 2.5], ['4', 'a4', 5, 6],
+    ['5', 'a5', 0, 3], ['6', 'a5', 2.25, 3],
+  ];
+  const artists = ['a1', 'a2', 'a3', 'a4', 'a5'].map((artistId) => ({ artistId, name: artistId } as DbArtist));
+  const artistEvents: Record<string, DbEvent[]> = {};
+  for (const [id, artistId, from, to] of specs) {
+    (artistEvents[artistId] ??= []).push({ ...event(id, from, to), artistId });
+  }
+  const inputs: ConflictInputs = { artists, stages: [], artistEvents };
+  const interests = mustSee('a1', 'a2', 'a3', 'a4', 'a5');
+
+  it('never take part in a conflict, even when starred', () => {
+    const entries = computeConflictEntries(interests, inputs);
+    expect(entries.map((e) => e.event.eventId)).toEqual(['2', '3', '6']);
+    for (const entry of entries) {
+      expect(entry.overlappingEvents.map((e) => e.eventId)).not.toContain('1');
+      expect(entry.overlappingEvents.map((e) => e.eventId)).not.toContain('5');
+    }
+  });
+
+  it('leave the clashes between the sets they cover as they are', () => {
+    const byId = new Map(computeConflictEntries(interests, inputs).map((e) => [e.event.eventId, e]));
+    expect(byId.get('2')?.overlappingEvents.map((e) => e.eventId)).toEqual(['3']);
+    expect(byId.get('3')?.overlappingEvents.map((e) => e.eventId).sort()).toEqual(['2', '6']);
+    expect(byId.get('6')?.overlappingEvents.map((e) => e.eventId)).toEqual(['3']);
+    expect(byId.get('2')?.leader).toBe(true);
+    expect(byId.get('3')?.leader).toBe(false);
+  });
+
+  it('get no overlap bars, and add none to the sets they cover', () => {
+    const overlaps = computeConflictOverlaps(interests, inputs);
+    expect([...overlaps.keys()].sort()).toEqual(['2', '3', '6']);
+    expect(overlaps.get('2')).toEqual([{ from: T0 + 1.5 * HOUR, to: T0 + 2 * HOUR }]);
+  });
+});
+
 describe('computeConflictOverlaps', () => {
   it('is empty when there are no conflicts', () => {
     expect(computeConflictOverlaps({}, INPUTS).size).toBe(0);
