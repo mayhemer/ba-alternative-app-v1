@@ -94,9 +94,12 @@ function Status({ item }: { item: PlanSetItem }) {
 type Props = {
   item: PlanSetItem;
   onPressArtist: (artist: DbArtist) => void;
+  /** A Must-see row's background, and any row's border; the surface colour and a grey border when not given. */
+  background?: string;
+  border?: string;
 };
 
-function PlanSetRowBase({ item, onPressArtist }: Props) {
+function PlanSetRowBase({ item, onPressArtist, background = colors.surface, border = colors.borderMid }: Props) {
   const time = `${formatTime(item.event.dateFrom)}–${formatTime(item.event.dateTo)}`;
   const live = item.state === 'live';
   const label = `${item.artist.name}, ${time}, ${item.stageName}`;
@@ -116,7 +119,7 @@ function PlanSetRowBase({ item, onPressArtist }: Props) {
           paddingRight: INSET_RIGHT,
           borderWidth: 1,
           borderStyle: 'dashed',
-          borderColor: colors.borderMid,
+          borderColor: border,
           opacity: item.state === 'past' ? PAST_OPACITY : 1,
         }}
       >
@@ -140,8 +143,8 @@ function PlanSetRowBase({ item, onPressArtist }: Props) {
         paddingLeft: INSET_LEFT,
         paddingRight: INSET_RIGHT,
         borderWidth: 1,
-        borderColor: live ? LIVE_BORDER : colors.borderMid,
-        backgroundColor: colors.surface,
+        borderColor: live ? LIVE_BORDER : border,
+        backgroundColor: background,
         overflow: 'hidden',
         opacity: item.state === 'past' ? PAST_OPACITY : 1,
       }}

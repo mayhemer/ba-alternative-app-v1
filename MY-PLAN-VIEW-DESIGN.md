@@ -105,7 +105,7 @@ Item spacing is 6 px, with 12 px side padding.
 
 ### Must-see row
 
-- **Box:** 58 pt tall, square corners, `surface` background, 1 px `#333` border. A live row's border is accent at 60%.
+- **Box:** 58 pt tall, square corners, in its **category's colours, as on the timeline** (`categoryBlockColors`): the block's background, and a 1 px border in the brighter colour of the block's left edge. A live row's border is accent at 60%.
 - **Fixed inset for every row type and state:** content starts 18 pt from the left edge (1 + 17) and ends 23 pt from the right (1 + 22). The time, name and stage columns always line up, clear of the left progress bar and the right clash bar.
 - **Line 1:** `HH:MM–HH:MM` (13, `textMuted`, tabular figures), then the band name (15 bold, ellipsis).
 - **Line 2:** the status on the left, the stage right-aligned (13, `textSecondary`, ellipsis). Statuses:
@@ -120,7 +120,7 @@ Item spacing is 6 px, with 12 px side padding.
 
 - Hidden unless "Show Maybe picks" is on.
 - **Look:** 26 pt tall, one line: `time · name · stage` (13, `#8a8a8a`).
-- **Box:** a **1 px dashed** `#333` border and no background, with the same fixed insets as Must-see rows.
+- **Box:** a **1 px dashed** border in the category's border colour (as Must-see rows) and no background, with the same fixed insets as Must-see rows.
 - Never marked as a clash, and never part of conflict logic.
 - **Live:** a grey 6.5 pt left bar (track `#333`, fill `#8a8a8a`) and the now arrow.
 
@@ -265,6 +265,7 @@ New values this screen introduces, to add as tokens:
 | break track | `#1c2f52` |
 | Maybe text and live fill | `#8a8a8a` |
 | past-day title | `#9a9a9a` |
+| row background and border | the set's category, as timeline blocks (`categoryBlockColors`) |
 
 ---
 

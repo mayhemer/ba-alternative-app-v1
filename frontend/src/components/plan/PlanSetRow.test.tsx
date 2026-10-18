@@ -1,9 +1,12 @@
 import React from 'react';
+import { StyleSheet } from 'react-native';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { PlanSetRow } from './PlanSetRow';
 import { ConflictGroupTitle } from './PlanListItems';
 import { buildPlanDay, type PlanInputs, type PlanSetItem } from '../../utils/planUtils';
 import { getFestivalDayStart } from '../timeline/timelineLayout';
+import { LIVE_BORDER } from './planStyles';
+import { colors } from '../../styling/tokens';
 import type { DbArtist, DbEvent } from '../../types/backend';
 
 // ── A set in the plan ─────────────────────────────────────────────────────────
@@ -105,6 +108,44 @@ it('gives every clash bar its own clip id: on web, SVG ids are global to the pag
   walk(screen.toJSON());
   expect(ids).toHaveLength(2);
   expect(new Set(ids).size).toBe(2);
+});
+
+// ── Category colours ──────────────────────────────────────────────────────────
+//
+// A row takes its category's colours from the timeline (categoryBlockColors):
+// a Must-see its background and border, a Maybe its border only.
+
+const BG = 'rgb(10, 20, 30)';
+const BORDER = 'rgb(40, 50, 60)';
+
+async function rowStyle(row: PlanSetItem, colours: { background?: string; border?: string }) {
+  await render(<PlanSetRow item={row} onPressArtist={jest.fn()} {...colours} />);
+  return StyleSheet.flatten(screen.getByRole('button').props.style);
+}
+
+it('gives a Must-see row its category\'s background and border', async () => {
+  const style = await rowStyle(item('Batushka', '19:23'), { background: BG, border: BORDER });
+  expect(style.backgroundColor).toBe(BG);
+  expect(style.borderColor).toBe(BORDER);
+});
+
+it('keeps the live border on a live row', async () => {
+  const style = await rowStyle(item('Gojira', '19:23'), { background: BG, border: BORDER });
+  expect(style.backgroundColor).toBe(BG);
+  expect(style.borderColor).toBe(LIVE_BORDER);
+});
+
+it('gives a Maybe row its category\'s border and no background', async () => {
+  const style = await rowStyle(item('Paysage', '19:23'), { background: BG, border: BORDER });
+  expect(style.borderColor).toBe(BORDER);
+  expect(style.borderStyle).toBe('dashed');
+  expect(style.backgroundColor).toBeUndefined();
+});
+
+it('falls back to the surface and a grey border without category colours', async () => {
+  const style = await rowStyle(item('Batushka', '19:23'), {});
+  expect(style.backgroundColor).toBe(colors.surface);
+  expect(style.borderColor).toBe(colors.borderMid);
 });
 
 it('opens the artist detail when the row is tapped', async () => {

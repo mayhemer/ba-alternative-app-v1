@@ -3,7 +3,9 @@ import { FlatList, View, type LayoutChangeEvent, type ListRenderItem, type Nativ
 import { useFocusEffect } from '@react-navigation/native';
 import { useTopBar, useBottomBar } from '../context/ScreenUIContext';
 import { useSelectedSlug } from '../store/AppContext';
-import { useArtistEventMap, useArtists, useFestivalDays, useStages } from '../store/cacheStore';
+import { useArtistEventMap, useArtists, useCategories, useFestivalDays, useStages } from '../store/cacheStore';
+import { categoryBlockColors } from '../components/timeline/ArtistBlock';
+import { decodeCategoryColor } from '../utils/color';
 import { useInterest } from '../context/InterestContext';
 import { useArtistDetail } from '../context/ArtistDetailContext';
 import { useConflictDetail } from '../context/ConflictDetailContext';
@@ -53,6 +55,12 @@ export function MyPlanScreen() {
   const stages = useStages(slug);
   const artistEvents = useArtistEventMap(slug);
   const festivalDays = useFestivalDays(slug);
+  const categories = useCategories(slug);
+  // A row's background and border are its category's, as on the timeline.
+  const rowColors = useMemo(
+    () => new Map(categories.map((c) => [c.categoryId, categoryBlockColors(decodeCategoryColor(c.color))])),
+    [categories],
+  );
   const now = useMinuteNow();
   const { showMaybe, conflictsOnly } = usePlanFilters();
   const { close: closePanel } = usePlanPanel();
@@ -159,7 +167,12 @@ export function MyPlanScreen() {
         content = (
           <View>
             <View style={{ paddingHorizontal: LIST_GUTTER }}>
-              <PlanSetRow item={item} onPressArtist={handleArtist} />
+              <PlanSetRow
+                item={item}
+                onPressArtist={handleArtist}
+                background={rowColors.get(item.event.categoryId)?.bg}
+                border={rowColors.get(item.event.categoryId)?.border}
+              />
             </View>
             {item.state === 'live' && <NowArrow y={item.progress * item.height} />}
           </View>
@@ -179,7 +192,7 @@ export function MyPlanScreen() {
         break;
     }
     return <View style={{ height: item.height + PLAN_LAYOUT.itemSpacing }}>{content}</View>;
-  }, [items, tone, conflictsOnly, handleArtist, handleConflict]);
+  }, [items, tone, conflictsOnly, handleArtist, handleConflict, rowColors]);
 
   const getItemLayout = useCallback((_: ArrayLike<PlanItem> | null | undefined, index: number) => ({
     length: items[index].height + PLAN_LAYOUT.itemSpacing,

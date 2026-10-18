@@ -83,9 +83,13 @@ type Props = {
 
 type BlockStyle = { bg: string; border: string };
 
+/** A set's background and its brighter border from its category's colour; My plan's rows use them too. */
+export function categoryBlockColors(categoryColor: string): BlockStyle {
+  return { bg: dimColor(categoryColor, 48), border: dimColor(categoryColor, 128) };
+}
+
 function blockStyle(_status: InterestStatus, categoryColor: string): BlockStyle {
-  const bg     = dimColor(categoryColor, 48);
-  const border = dimColor(categoryColor, 128);
+  const { bg, border } = categoryBlockColors(categoryColor);
   return { bg, border };
 }
 
