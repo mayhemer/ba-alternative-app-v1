@@ -17,7 +17,23 @@ const TESTING_TIME_VALUE: number = Date.parse('2024-08-08T14:08:00+02:00');
 
 let override: number | null = USE_TESTING_TIME ? TESTING_TIME_VALUE : null;
 
+// LIVE SIMULATION (testing branch): maps the real time to a simulated one; see
+// utils/liveSimulation.ts. Only currentTimeMs() is shifted.
+let shift: ((realMs: number) => number) | null = null;
+
+export function setClockShift(fn: ((realMs: number) => number) | null): void {
+  shift = fn;
+}
+
 export function currentTimeMs(): number {
+  if (override !== null) {
+    return override;
+  }
+  return shift !== null ? shift(Date.now()) : Date.now();
+}
+
+/** Real time, never shifted: for timestamps that are stored or compared with the server's. */
+export function realTimeMs(): number {
   return override ?? Date.now();
 }
 

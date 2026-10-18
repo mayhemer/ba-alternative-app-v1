@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { simulateFestivalWeekOf } from '../utils/liveSimulation';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -69,6 +70,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     isLoading: true,
     lastError: null,
   });
+  // LIVE SIMULATION (testing branch): during render, so it holds before any child reads the clock.
+  simulateFestivalWeekOf(state.selectedSlug);
 
   // Resolve selectedSlug from AsyncStorage on mount. Always dispatches a real
   // slug — falling back to DEFAULT_SLUG on a missing value or a read error — so

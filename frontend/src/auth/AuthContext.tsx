@@ -15,7 +15,7 @@ import {
   SESSION_EXPIRY_BUFFER_MS,
 } from './authService';
 import { clearTokens, type StoredTokens } from './tokenStorage';
-import { currentTimeMs } from '../utils/clock';
+import { realTimeMs } from '../utils/clock';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -117,7 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const getAccessToken = useCallback(async (): Promise<string | null> => {
     const tokens = tokensRef.current;
     if (tokens === null) { return null; }
-    if (tokens.expiresAt - currentTimeMs() > SESSION_EXPIRY_BUFFER_MS) {
+    if (tokens.expiresAt - realTimeMs() > SESSION_EXPIRY_BUFFER_MS) {
       return tokens.accessToken;
     }
     const refreshed = await refreshTokens(tokens.refreshToken);
