@@ -4,7 +4,7 @@ import type {
   DbEvent, DbStage, DbUserInterest,
 } from '../types/backend';
 import { deriveFestivalDays } from '../utils/festivalTime';
-import { currentTimeMs } from '../utils/clock';
+import { realTimeMs } from '../utils/clock';
 
 // ── Public festival data types ────────────────────────────────────────────────
 
@@ -546,7 +546,7 @@ export async function setInterest(
   if (interestCache[slug] === undefined) {
     interestCache[slug] = {};
   }
-  const record: LocalInterest = { status, updatedAt: currentTimeMs() };
+  const record: LocalInterest = { status, updatedAt: realTimeMs() };
   interestCache[slug] = { ...interestCache[slug], [artistId]: record };
   await AsyncStorage.setItem(interestStorageKey(slug), JSON.stringify(interestCache[slug]));
   return record;
