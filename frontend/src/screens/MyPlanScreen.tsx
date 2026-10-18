@@ -14,7 +14,7 @@ import { getScroll, setScroll } from '../store/uiStatePersistence';
 import { buildPlanDay, itemOffsets, nowScrollOffset, PLAN_LAYOUT, type PlanItem } from '../utils/planUtils';
 import { getFestivalDayStart } from '../components/timeline/timelineLayout';
 import { PlanSetRow } from '../components/plan/PlanSetRow';
-import { ConflictGroupTitle, NowArrow, PlanDayTitle, PlanEmpty, PlanGap, type DayTone } from '../components/plan/PlanListItems';
+import { ConflictGroupTitle, NowArrow, PlanCap, PlanDayTitle, PlanEmpty, PlanGap, type DayTone } from '../components/plan/PlanListItems';
 import { PlanFilterChip } from '../components/plan/PlanFilterChip';
 import { PlanDaySwitcher } from '../components/plan/PlanDaySwitcher';
 import { LIST_GUTTER } from '../components/plan/planStyles';
@@ -143,7 +143,7 @@ export function MyPlanScreen() {
 
   const renderItem = useCallback<ListRenderItem<PlanItem>>(({ item, index }) => {
     const next = items[index + 1];
-    // The conflict title is drawn by the cell above its group (gap or spacer):
+    // The conflict title is drawn by the cell above its group (gap, cap or spacer):
     // a cell cannot take touches outside its own bounds on Android.
     let title: React.ReactNode = null;
     if (next !== undefined && next.kind === 'set' && next.conflictHead) {
@@ -167,6 +167,9 @@ export function MyPlanScreen() {
         break;
       case 'gap':
         content = <PlanGap item={item}>{title}</PlanGap>;
+        break;
+      case 'cap':
+        content = <PlanCap item={item}>{title}</PlanCap>;
         break;
       case 'spacer':
         content = <View style={{ height: item.height }}>{title}</View>;

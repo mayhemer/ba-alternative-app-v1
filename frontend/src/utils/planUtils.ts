@@ -63,11 +63,13 @@ export type PlanGapItem = {
   height: number;
 };
 
+/** Rail before the day's first set (ring) or after its last (square); no time behind it. */
+export type PlanCapItem = { kind: 'cap'; key: string; edge: 'start' | 'end'; height: number };
 export type PlanTitleItem = { kind: 'title'; key: 'title'; dayStart: number; height: number };
 export type PlanSpacerItem = { kind: 'spacer'; key: string; height: number };
 export type PlanEmptyItem = { kind: 'empty'; key: 'empty'; height: number };
 
-export type PlanItem = PlanTitleItem | PlanSetItem | PlanGapItem | PlanSpacerItem | PlanEmptyItem;
+export type PlanItem = PlanTitleItem | PlanSetItem | PlanGapItem | PlanCapItem | PlanSpacerItem | PlanEmptyItem;
 
 export const PLAN_LAYOUT = {
   paddingTop: 12,
@@ -91,6 +93,9 @@ const OPENING_BREAK_OFFSET_MS = 2 * HOUR_MS;
 const GAP_MIN_HEIGHT = 20;
 const GAP_MAX_HEIGHT = 160;
 const GAP_PX_PER_MINUTE = 0.5;
+
+/** The day caps are drawn as long as a gap of this many minutes. */
+const CAP_MINUTES = 20;
 
 /**
  * Height of a gap: a floor that always fits its label, then linear, so a 35 min
@@ -184,8 +189,12 @@ export function buildPlanDay(
   // The day-start break: 08:00 → the day's first Must-see, while now is in it.
   const firstMust = dayPicks.find((p) => p.level === 'will_go');
   const breakFrom = dayStart + OPENING_BREAK_OFFSET_MS;
+  // The day caps open and close the day; while it runs, the break opens it instead.
+  const caps = !conflictsOnly && visible.length > 0;
   if (!conflictsOnly && isToday && firstMust !== undefined && now >= breakFrom && now < firstMust.event.dateFrom) {
     items.push(currentGap('opening', breakFrom, firstMust.event.dateFrom, now, true));
+  } else if (caps) {
+    items.push({ kind: 'cap', key: 'cap-start', edge: 'start', height: gapHeight(CAP_MINUTES) });
   }
 
   let groupEnd: number | null = null;
@@ -214,7 +223,7 @@ export function buildPlanDay(
     // gives it room, reserve some so it never covers the item above.
     const conflictHead = level === 'will_go' && leaders.has(event.eventId);
     const previous = items[items.length - 1];
-    if (conflictHead && previous.kind !== 'gap') {
+    if (conflictHead && previous.kind !== 'gap' && previous.kind !== 'cap') {
       items.push({ kind: 'spacer', key: `spacer-${event.eventId}`, height: PLAN_LAYOUT.spacer });
     }
 
@@ -256,6 +265,9 @@ export function buildPlanDay(
     groupEnd = groupEnd === null ? event.dateTo : Math.max(groupEnd, event.dateTo);
   }
 
+  if (caps) {
+    items.push({ kind: 'cap', key: 'cap-end', edge: 'end', height: gapHeight(CAP_MINUTES) });
+  }
   if (visible.length === 0) {
     items.push({ kind: 'empty', key: 'empty', height: PLAN_LAYOUT.empty });
   }

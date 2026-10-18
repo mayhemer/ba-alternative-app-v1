@@ -1,11 +1,11 @@
 import React from 'react';
 import { Pressable, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import Svg, { Line, Path } from 'react-native-svg';
+import Svg, { Circle, Line, Path, Rect } from 'react-native-svg';
 import { Text } from '../ui/Text';
 import { formatDayTitle, formatDuration, formatRemaining, planStrings } from './planStrings';
 import { BOLD, LIST_GUTTER, PROGRESS_BAR_WIDTH, TABULAR } from './planStyles';
-import type { PlanGapItem } from '../../utils/planUtils';
+import type { PlanCapItem, PlanGapItem } from '../../utils/planUtils';
 import type { DbEvent } from '../../types/backend';
 import { colors } from '../../styling/tokens';
 
@@ -99,13 +99,31 @@ export function PlanDayTitle({ dayStart, tone, height }: { dayStart: number; ton
 // ── Gap ───────────────────────────────────────────────────────────────────────
 
 const RAIL_WIDTH = 2;
+const RAIL_X = LIST_GUTTER + PROGRESS_BAR_WIDTH;
+const CAP_GLYPH = 10;
+
+/** The day's start (a ring) or end (a filled square), centred on the rail at the cell's top or bottom. */
+function RailEnd({ edge, height }: { edge: 'start' | 'end'; height: number }) {
+  const c = CAP_GLYPH / 2;
+  return (
+    <Svg
+      pointerEvents="none"
+      width={CAP_GLYPH}
+      height={CAP_GLYPH}
+      style={{ position: 'absolute', left: RAIL_X + RAIL_WIDTH / 2 - c, top: edge === 'start' ? 0 : height - CAP_GLYPH, zIndex: 1 }}
+    >
+      {edge === 'start'
+        ? <Circle cx={c} cy={c} r={c - 1} fill={colors.background} stroke={colors.borderMid} strokeWidth={RAIL_WIDTH} />
+        : <Rect x={1} y={1} width={CAP_GLYPH - 2} height={CAP_GLYPH - 2} fill={colors.borderMid} />}
+    </Svg>
+  );
+}
 
 /** Time between sets: a dotted rail and its length; the current one shows progress and a countdown. */
 export function PlanGap({ item, children }: { item: PlanGapItem; children?: React.ReactNode }) {
-  const railX = LIST_GUTTER + PROGRESS_BAR_WIDTH;
   return (
     <View testID="plan-gap" style={{ height: item.height, alignItems: 'center', justifyContent: 'center' }}>
-      <Svg pointerEvents="none" width={RAIL_WIDTH} height={item.height} style={{ position: 'absolute', left: railX, top: 0 }}>
+      <Svg pointerEvents="none" width={RAIL_WIDTH} height={item.height} style={{ position: 'absolute', left: RAIL_X, top: 0 }}>
         <Line x1={RAIL_WIDTH / 2} y1={0} x2={RAIL_WIDTH / 2} y2={item.height} stroke={colors.borderMid} strokeWidth={RAIL_WIDTH} strokeDasharray="2,2" />
       </Svg>
       {item.current && (
@@ -121,7 +139,23 @@ export function PlanGap({ item, children }: { item: PlanGapItem; children?: Reac
       ) : (
         <Text style={[TABULAR, { fontSize: 12, color: colors.muted }]}>{formatDuration(item.minutes * 60 * 1000)}</Text>
       )}
+      {item.opening && <RailEnd edge="start" height={item.height} />}
       {item.current && <NowArrow y={item.progress * item.height} />}
+      {children}
+    </View>
+  );
+}
+
+/** A day cap: a bare rail of fixed length, ring on top or square at the bottom. */
+export function PlanCap({ item, children }: { item: PlanCapItem; children?: React.ReactNode }) {
+  const from = item.edge === 'start' ? CAP_GLYPH / 2 : 0;
+  const to = item.edge === 'start' ? item.height : item.height - CAP_GLYPH / 2;
+  return (
+    <View testID="plan-cap" style={{ height: item.height }}>
+      <Svg pointerEvents="none" width={RAIL_WIDTH} height={item.height} style={{ position: 'absolute', left: RAIL_X, top: 0 }}>
+        <Line x1={RAIL_WIDTH / 2} y1={from} x2={RAIL_WIDTH / 2} y2={to} stroke={colors.borderMid} strokeWidth={RAIL_WIDTH} strokeDasharray="2,2" />
+      </Svg>
+      <RailEnd edge={item.edge} height={item.height} />
       {children}
     </View>
   );

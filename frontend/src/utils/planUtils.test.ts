@@ -90,6 +90,7 @@ function shape(items: PlanItem[]): string[] {
     switch (item.kind) {
       case 'set': return `${item.level === 'will_go' ? 'must' : 'maybe'}:${item.artist.name}`;
       case 'gap': return `gap:${item.minutes}${item.current ? '*' : ''}${item.opening ? '^' : ''}`;
+      case 'cap': return `cap:${item.edge}`;
       default: return item.kind;
     }
   });
@@ -151,9 +152,10 @@ describe('defaultPlanDay', () => {
 // ── One day of the plan ───────────────────────────────────────────────────────
 
 describe('buildPlanDay', () => {
-  it('lists the day\'s Must-sees between the title and the end marker, with gaps between them', () => {
+  it('lists the day\'s Must-sees between the day caps, with gaps between them', () => {
     expect(shape(build(at(7, '19:23')))).toEqual([
       'title',
+      'cap:start',
       'must:Hooded Menace',
       'gap:145',
       'must:Dark Funeral',
@@ -166,6 +168,7 @@ describe('buildPlanDay', () => {
       'must:Emperor',
       'gap:45',
       'must:Wolves in the Throne Room',
+      'cap:end',
     ]);
   });
 
@@ -230,6 +233,7 @@ describe('buildPlanDay', () => {
   it('adds Maybe picks only when asked, never marked as clashing', () => {
     expect(shape(build(at(7, '19:23'), { showMaybe: true }))).toEqual([
       'title',
+      'cap:start',
       'must:Hooded Menace',
       'gap:50',
       'maybe:Blood Incantation',
@@ -245,6 +249,7 @@ describe('buildPlanDay', () => {
       'must:Emperor',
       'gap:45',
       'must:Wolves in the Throne Room',
+      'cap:end',
     ]);
     const paysage = set(build(at(7, '19:23'), { showMaybe: true }), "Paysage d'Hiver");
     expect(paysage.clashBars).toEqual([]);
@@ -283,7 +288,7 @@ describe('buildPlanDay', () => {
     });
 
     it('is not there before 08:00', () => {
-      expect(shape(build(at(7, '07:00'))).slice(0, 2)).toEqual(['title', 'must:Hooded Menace']);
+      expect(shape(build(at(7, '07:00'))).slice(0, 3)).toEqual(['title', 'cap:start', 'must:Hooded Menace']);
     });
 
     it('is not there once the first Must-see has started', () => {
@@ -291,7 +296,7 @@ describe('buildPlanDay', () => {
     });
 
     it('is only on today', () => {
-      expect(shape(build(at(7, '11:00'), { dayStart: FRI }))).toEqual(['title', 'must:Spectral Wound']);
+      expect(shape(build(at(7, '11:00'), { dayStart: FRI }))).toEqual(['title', 'cap:start', 'must:Spectral Wound', 'cap:end']);
     });
 
     it('is not there on a day without a Must-see', () => {
@@ -299,7 +304,7 @@ describe('buildPlanDay', () => {
         ['1', 'Only maybe', 's1', at(7, '14:00'), at(7, '15:00'), 'maybe'],
       ]);
       const items = buildPlanDay(maybeInterests, maybeOnly, { dayStart: THU, now: at(7, '11:00'), duringFestival: true, showMaybe: true, conflictsOnly: false });
-      expect(shape(items)).toEqual(['title', 'maybe:Only maybe']);
+      expect(shape(items)).toEqual(['title', 'cap:start', 'maybe:Only maybe', 'cap:end']);
     });
   });
 
@@ -338,20 +343,30 @@ describe('buildPlanDay', () => {
     const opts = { now: at(9, '10:00'), duringFestival: true, showMaybe: false, conflictsOnly: false };
     // Back to back with the set above.
     expect(shape(buildPlanDay(b2bInterests, b2b, { ...opts, dayStart: SAT }).filter((i) => !(i.kind === 'gap' && i.opening))))
-      .toEqual(['title', 'must:A', 'spacer', 'must:B', 'must:C']);
-    // Right under the day title.
+      .toEqual(['title', 'must:A', 'spacer', 'must:B', 'must:C', 'cap:end']);
+    // Right under the start cap, which gives it room as a gap does.
     expect(shape(buildPlanDay(b2bInterests, b2b, { ...opts, dayStart: SUN })))
-      .toEqual(['title', 'spacer', 'must:D', 'must:E']);
+      .toEqual(['title', 'cap:start', 'must:D', 'must:E', 'cap:end']);
   });
 
   it('shows the empty state for a day with nothing planned', () => {
     expect(shape(build(at(7, '12:00'), { dayStart: SAT }))).toEqual(['title', 'empty']);
   });
 
-  describe('end of the day', () => {
-    it('ends with the day\'s last set, no marker after it', () => {
+  describe('day caps', () => {
+    it('open and close the day, each as tall as a 20 min gap', () => {
       const items = build(at(7, '19:23'));
-      expect(items.at(-1)?.kind).toBe('set');
+      expect(items[1]).toMatchObject({ kind: 'cap', edge: 'start', height: gapHeight(20) });
+      expect(items.at(-1)).toMatchObject({ kind: 'cap', edge: 'end', height: gapHeight(20) });
+    });
+
+    it('leave the start to the day-start break while it runs', () => {
+      expect(shape(build(at(7, '11:00'))).filter((s) => s === 'cap:start')).toEqual([]);
+    });
+
+    it('are not there in conflicts-only mode or on an empty day', () => {
+      expect(shape(build(at(7, '19:23'), { conflictsOnly: true })).some((s) => s.startsWith('cap:'))).toBe(false);
+      expect(shape(build(at(7, '12:00'), { dayStart: SAT }))).toEqual(['title', 'empty']);
     });
 
     it('carries no "now" once today\'s last set has ended', () => {

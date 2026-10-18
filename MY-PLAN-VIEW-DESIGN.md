@@ -24,6 +24,8 @@ Related: [DESIGN.md](DESIGN.md) (app-wide design, layout modes, chrome).
 │ ☰   [ Gojira          ● LIVE −37 min ]  ½⋮│  top bar: drawer, now pill, filter chip
 ├──────────────────────────────────────────┤
 │           THURSDAY 7 Aug                 │  day title (first list item, scrolls away)
+│ ○                                        │  start cap: ring, then 20 min of bare rail
+│ ┊                                        │
 │ ┌──────────────────────────────────────┐ │
 │ │ 14:00–14:40  Hooded Menace           │ │  past → dimmed, "done"
 │ │ done                          Octagon│ │
@@ -40,6 +42,8 @@ Related: [DESIGN.md](DESIGN.md) (app-wide design, layout modes, chrome).
 │ └──────────────────────────────────────┘ │
 │ ┊             2 h                        │
 │   …                                      │
+│ ┊                                        │  end cap after the last set
+│ ■                                        │
 ├──────────────────────────────────────────┤
 │  [THU 7▾] [FRI 8] [SAT 9] [SUN 10]       │  day switcher, always visible
 └──────────────────────────────────────────┘
@@ -134,10 +138,21 @@ Item spacing is 6 px, with 12 px side padding.
   - the now arrow;
   - a centred countdown `−1 h 20` (15 bold blue).
 
+### Day caps
+
+- They close the day off at both ends, symmetrically: a **start cap** above the day's first set and an **end cap** below its last.
+- Each is a bare gap rail as long as a 20 min gap (`gapHeight(20)`, 30 pt), with no label and no time behind it.
+- **Start:** a hollow ring (10 pt, 2 pt stroke, rail colour) centred on the rail at the top.
+- **End:** a filled square (8 pt, rail colour) centred on the rail at the bottom.
+- While the day-start break runs, the break opens the list instead of the start cap, with the ring at its top.
+- The first set's `⚠ Conflict` title floats in the start cap like in any gap, so no spacer is needed.
+- They never carry the now arrow.
+- None in conflicts-only mode, or on an empty day.
+
 ### Day-start break
 
 - On today, from **08:00** until the day's first Must-see starts, the list opens with a break directly under the title.
-- It looks like a current gap: blue bar from 08:00, the arrow, `−3 h`.
+- It looks like a current gap: blue bar from 08:00, the arrow, `−3 h`. It takes the start cap's place, with the cap's ring at its top.
 - None outside that window, on a day with no Must-see, or in conflicts-only mode.
 
 ### Now arrow
@@ -146,12 +161,12 @@ Item spacing is 6 px, with 12 px side padding.
 - Its centre sits at the **tip of the progress fill**: on a live row (Must-see or Maybe), in the current gap, or in the day-start break.
 - With two live sets there are two arrows. Rows aren't on a shared time scale, so each arrow means "this far into this set".
 - No arrow before the festival.
-- After the day's last Must-see ends there is no arrow until the 06:00 day change. An "End of the day" marker that carried it was tried and dropped: the list simply ends with the last set.
+- After the day's last Must-see ends there is no arrow until the 06:00 day change. An "End of the day" marker that carried it was tried and dropped; the end cap closes the day instead, without the arrow.
 - A full-length "now line" was tried and dropped. It sat at the screen edge (rounded corners, cases, the back-swipe zone), was the brightest element with the weakest meaning, and duplicated the dimmed past rows.
 
 ### End of the day and empty day
 
-- The list ends with the day's last set; there is no end marker.
+- The list ends with the end cap below the day's last set; there is no text marker.
 - **Empty day:** centred text:
   - "Nothing planned for this day" / "Na tento den nic v plánu";
   - in conflicts-only mode: "No conflicts on this day" / "V tento den žádné konflikty".
