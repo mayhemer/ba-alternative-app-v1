@@ -4,13 +4,13 @@ import type { DbEvent } from '../types/backend';
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type ConflictDetailState = {
-  sourceEvent: DbEvent | null;
-  overlappingEvents: DbEvent[];
+  /** A set of the clash group shown; the sheet derives the whole group from it. */
+  event: DbEvent | null;
 };
 
 type ConflictDetailContextValue = {
   conflictState: ConflictDetailState;
-  openConflict: (sourceEvent: DbEvent, overlappingEvents: DbEvent[]) => void;
+  openConflict: (event: DbEvent) => void;
   closeConflict: () => void;
 };
 
@@ -19,17 +19,14 @@ type ConflictDetailContextValue = {
 const ConflictDetailContext = createContext<ConflictDetailContextValue | null>(null);
 
 export function ConflictDetailProvider({ children }: { children: React.ReactNode }) {
-  const [conflictState, setConflictState] = useState<ConflictDetailState>({
-    sourceEvent: null,
-    overlappingEvents: [],
-  });
+  const [conflictState, setConflictState] = useState<ConflictDetailState>({ event: null });
 
-  const openConflict = useCallback((sourceEvent: DbEvent, overlappingEvents: DbEvent[]): void => {
-    setConflictState({ sourceEvent, overlappingEvents });
+  const openConflict = useCallback((event: DbEvent): void => {
+    setConflictState({ event });
   }, []);
 
   const closeConflict = useCallback((): void => {
-    setConflictState({ sourceEvent: null, overlappingEvents: [] });
+    setConflictState({ event: null });
   }, []);
 
   const value = useMemo(

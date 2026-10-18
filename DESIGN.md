@@ -192,7 +192,7 @@ safe areas a 390 pt viewport shows ~2.5 category lanes rather than 4–5 — dro
 what keeps that from being ~2.
 
 `LANE_HEIGHT` stays fixed: it is read by `ArtistBlock`, `NowLine`, the cached sub-row layout behind
-`cacheService.getCategoryDayLayout` and the mini timeline in `ConflictDetailSheet`, so making it
+`cacheService.getCategoryDayLayout` and `ConflictTimeline` in the conflict sheet, so making it
 viewport-dependent is a far wider change than it appears.
 
 `STRIP_HEIGHT` is the cheap one, and landscape does drop it. It has four consumers, all inside the

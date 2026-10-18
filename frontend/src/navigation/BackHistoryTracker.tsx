@@ -77,7 +77,7 @@ export function BackHistoryTracker() {
     openDetail, closeDetail, openConflict, closeConflict, entries, getFriend,
     isLensPanelOpen, closeLensPanel,
     isArtistOpen: detailState.artist !== null,
-    isConflictOpen: conflictState.sourceEvent !== null,
+    isConflictOpen: conflictState.event !== null,
   };
   const live = useRef(snapshot);
   live.current = snapshot;
@@ -92,7 +92,7 @@ export function BackHistoryTracker() {
       scope,
       artistId: detailState.artist?.artistId ?? null,
       presentation: detailState.presentation,
-      conflictEventId: conflictState.sourceEvent?.eventId ?? null,
+      conflictEventId: conflictState.event?.eventId ?? null,
     };
     const screen = currentScreen();
     if (screen !== undefined) {
@@ -144,9 +144,8 @@ export function BackHistoryTracker() {
       return artistId;
     },
 
-    // Overlapping events are re-derived rather than stored: ConflictContext
-    // applies the same will_go rule both openConflict callers use, so this
-    // reproduces either of them — and yields nothing once the user un-stars.
+    // Re-resolved against the live conflicts rather than stored: the sheet
+    // derives the group from them too, and nothing reopens once the user un-stars.
     applyConflict: (eventId): string | null => {
       if (eventId === null) {
         live.current.closeConflict();
@@ -157,7 +156,7 @@ export function BackHistoryTracker() {
         live.current.closeConflict();
         return null;
       }
-      live.current.openConflict(entry.event, entry.overlappingEvents);
+      live.current.openConflict(entry.event);
       return eventId;
     },
   }), []);

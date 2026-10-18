@@ -27,7 +27,8 @@ This project is an experiment in what a BA-only client can do when it is allowed
 - **A real 2D timeline** — time on X, categories as swim lanes, blocks proportional to set length,
   a persistent NOW line, and a separate lane view for the supporting stages.
 - **Conflict awareness as a first-class feature** — overlapping "must see" picks are detected,
-  marked on the blocks themselves, and listed on their own screen with a mini-timeline detail.
+  marked on the blocks themselves, shown in My plan, and laid out per clash group in a detail sheet
+  that reuses the timeline's own lanes.
 - **Sharing without accounts for the recipient** — you mint a link, a friend opens it, and from
   then on their picks show up as ambient markers next to yours (facepile in the list, a pip on
   timeline blocks) without ever overwriting your own stars.
@@ -53,7 +54,7 @@ maps, news, shuttle buses, merch, cashless).
 | Support stages | A second timeline for non-playable/supporting entries, with sub-rows for stage-level overlaps |
 | Artist detail | Bottom-sheet (collapsed) or full-screen (expanded); bio, genre, country, set time and stage; jump to that slot on the timeline; search links to Spotify, TIDAL, Metal Archives, setlist.fm |
 | Personal picks | Three states — none / maybe / must see. Local-first; works fully signed out |
-| Conflicts | Automatic overlap detection over "must see" picks, a red bar on the affected block, a dedicated screen and a detail sheet showing the clash on a mini timeline |
+| Conflicts | Automatic overlap detection over "must see" picks, a red bar on the affected block, My plan's conflict titles and filter, and a detail sheet showing the whole clash group on the timeline's lanes |
 | Lens | One global scope — *everything* / *my picks* / *a friend's picks* — applied to both the list and the timelines |
 | Sharing | Mint a read-only share link for the current edition; friends are added by opening the link (universal/app link → deep link into the app); revocable |
 | Account | Sign in with Google or Apple via Cognito; picks then sync across devices |

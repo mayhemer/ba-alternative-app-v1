@@ -320,7 +320,7 @@ export function ArtistDetailBody({ artist }: Props) {
                   </TouchableOpacity>
                   {hasConflict && (
                     <TouchableOpacity
-                      onPress={() => openConflict(event, conflictMap.get(event.eventId) ?? [])}
+                      onPress={() => openConflict(event)}
                       activeOpacity={0.75}
                       style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}
                     >

@@ -4,33 +4,28 @@ import BottomSheet, { BottomSheetScrollView, BottomSheetBackdrop } from '@gorhom
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { ReduceMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text } from '../ui/Text';
 import { useConflictDetail } from '../../context/ConflictDetailContext';
+import { useConflicts } from '../../context/ConflictContext';
 import { useArtistDetail } from '../../context/ArtistDetailContext';
-import { useInterest } from '../../context/InterestContext';
-import { useSelectedSlug } from '../../store/AppContext';
-import { useArtists, useStages } from '../../store/cacheStore';
 import { useBottomSheetMount } from '../../hooks/useBottomSheetMount';
-import { getStageLocalized } from '../../utils/localization';
-import { StarIndicator } from '../StarButton';
-import {
-  PIXELS_PER_MS,
-  LANE_HEIGHT,
-  RULER_HEIGHT,
-  formatTime,
-  formatDayLabel,
-} from '../timeline/timelineLayout';
+import { conflictGroupOf } from '../../utils/conflictUtils';
+import { ConflictTimeline } from '../timeline/ConflictTimeline';
+import { formatDayLabel, formatTime } from '../timeline/timelineLayout';
+import { planStrings } from '../plan/planStrings';
 import { colors, MAX_CONTENT_WIDTH } from '../../styling/tokens';
-import type { DbArtist, DbEvent, DbStage } from '../../types/backend';
+import type { DbArtist, DbEvent } from '../../types/backend';
 
-// ── Constants ──────────────────────────────────────────────────────────────────
+// ── Conflict detail ───────────────────────────────────────────────────────────
+//
+// One clash group on a timeline of its own (ConflictTimeline): every set the
+// group chains together, from both timelines, and nothing else. Opened with any
+// set of the group; the group itself comes from the live conflicts, so it is the
+// one My plan titles.
 
 const SNAP_POINTS = ['100%'];
-const PADDING_MS = 30 * 60 * 1000; // 30 min padding on each side
-const MINI_BLOCK_HEIGHT = LANE_HEIGHT - 8;
-const HOUR_MS = 60 * 60 * 1000;
-const MIN_BLOCK_WIDTH = 40;
-const OVERLAPPING_BLOCK_BORDER_WIDTH = 2;
+const strings = planStrings();
 
 // ── Backdrop ──────────────────────────────────────────────────────────────────
 
@@ -45,183 +40,11 @@ function Backdrop(props: BottomSheetBackdropProps) {
   );
 }
 
-// ── Mini timeline ──────────────────────────────────────────────────────────────
-
-type MiniTimelineProps = {
-  sourceEvent: DbEvent;
-  overlappingEvents: DbEvent[];
-  artistById: Record<string, DbArtist>;
-  stageById: Record<string, DbStage>;
-  onEventPress: (event: DbEvent) => void;
-};
-
-function MiniTimeline({ sourceEvent, overlappingEvents, artistById, stageById, onEventPress }: MiniTimelineProps) {
-  const { getStatus } = useInterest();
-  const rangeStart = sourceEvent.dateFrom - PADDING_MS;
-  const rangeEnd   = sourceEvent.dateTo   + PADDING_MS;
-  const rangeMs    = rangeEnd - rangeStart;
-  const canvasWidth = Math.max(200, rangeMs * PIXELS_PER_MS);
-
-  // All events sorted by start time
-  const allEvents = useMemo(
-    () => [sourceEvent, ...overlappingEvents].sort((a, b) => a.dateFrom - b.dateFrom),
-    [sourceEvent, overlappingEvents],
-  );
-
-  // Greedy sub-row assignment to avoid visual overlap
-  const eventSubRows = useMemo(() => {
-    const subRowEndTimes: number[] = [];
-    const rows: Record<string, number> = {};
-    for (const event of allEvents) {
-      let placed = false;
-      if (!placed) {
-        rows[event.eventId] = subRowEndTimes.length;
-        subRowEndTimes.push(event.dateTo);
-      }
-    }
-    return rows;
-  }, [allEvents]);
-
-  const totalRows = useMemo(
-    () => Math.max(1, ...Object.values(eventSubRows).map((r) => r + 1)),
-    [eventSubRows],
-  );
-
-  const canvasHeight = RULER_HEIGHT + totalRows * LANE_HEIGHT;
-
-  // Hour tick marks within the range
-  const hourTicks = useMemo(() => {
-    const ticks: number[] = [];
-    const firstHour = Math.ceil(rangeStart / HOUR_MS) * HOUR_MS;
-    let t = firstHour;
-    while (t <= rangeEnd) {
-      ticks.push(t);
-      t += HOUR_MS;
-    }
-    return ticks;
-  }, [rangeStart, rangeEnd]);
-
-  return (
-    <ScrollView horizontal showsHorizontalScrollIndicator style={{ marginTop: 8 }} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
-      <View style={{ width: canvasWidth, height: canvasHeight }}>
-
-        {/* Time ruler */}
-        <View style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: RULER_HEIGHT,
-          borderBottomWidth: 1,
-          borderBottomColor: colors.timeline.rulerBorder,
-        }}>
-          {hourTicks.map((tick) => {
-            const x = (tick - rangeStart) * PIXELS_PER_MS;
-            return (
-              <View key={tick} style={{ position: 'absolute', left: x }}>
-                <View style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  left: 0,
-                  width: 1,
-                  height: 6,
-                  backgroundColor: colors.timeline.rulerBorder,
-                }} />
-                <Text style={{ fontSize: 10, color: colors.timeline.rulerText, paddingLeft: 4, lineHeight: RULER_HEIGHT }}>
-                  {formatTime(tick)}
-                </Text>
-              </View>
-            );
-          })}
-        </View>
-
-        {/* Lane background */}
-        <View style={{
-          position: 'absolute',
-          top: RULER_HEIGHT,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: colors.timeline.laneBg,
-        }} />
-
-        {/* Event blocks */}
-        {allEvents.map((event) => {
-          const isSource   = event.eventId === sourceEvent.eventId;
-          const blockLeft  = (event.dateFrom - rangeStart) * PIXELS_PER_MS;
-          const blockWidth = Math.max(MIN_BLOCK_WIDTH, (event.dateTo - event.dateFrom) * PIXELS_PER_MS);
-          const blockTop   = RULER_HEIGHT + (eventSubRows[event.eventId] ?? 0) * LANE_HEIGHT + 4;
-          const artist     = artistById[event.artistId];
-          const stage      = stageById[event.stageId];
-          const stageName  = stage !== undefined ? getStageLocalized(stage.localized, 'name') : '';
-          const status = artist !== undefined ? getStatus(artist.artistId) : 'none';
-
-          // Overlap stripe region (pixel coords relative to block left edge)
-          const overlapLeft  = isSource ? 0 : Math.max(0, (sourceEvent.dateFrom - event.dateFrom) * PIXELS_PER_MS) - OVERLAPPING_BLOCK_BORDER_WIDTH;
-          const overlapRight = isSource ? 0 : Math.min(blockWidth, (sourceEvent.dateTo - event.dateFrom) * PIXELS_PER_MS);
-          const overlapWidth = Math.max(0, overlapRight - overlapLeft) - OVERLAPPING_BLOCK_BORDER_WIDTH;
-          return (
-            <TouchableOpacity
-              key={event.eventId}
-              onPress={() => onEventPress(event)}
-              activeOpacity={0.75}
-              style={{
-                position: 'absolute',
-                left: blockLeft,
-                top: blockTop,
-                width: blockWidth,
-                height: MINI_BLOCK_HEIGHT,
-                backgroundColor: isSource ? 'rgba(255,255,255,0.12)' : colors.surfaceRaised,
-                borderWidth: isSource ? 2 : OVERLAPPING_BLOCK_BORDER_WIDTH,
-                borderColor: isSource ? colors.white : colors.danger,
-                padding: 4,
-                overflow: 'hidden',
-              }}
-            >
-              {!isSource && overlapWidth > 0 && (
-                <View style={{
-                  position: 'absolute',
-                  left: overlapLeft,
-                  top: 0,
-                  width: overlapWidth,
-                  height: MINI_BLOCK_HEIGHT,
-                  backgroundColor: colors.dangerSecondary,
-                }} pointerEvents="none" />
-              )}
-              <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-                <Text
-                  numberOfLines={1}
-                  style={{ flex: 1, fontSize: 11, fontWeight: '700', color: colors.textPrimary, fontFamily: 'Bold-Default' }}
-                >
-                  {artist?.name ?? ''}
-                </Text>
-                <StarIndicator status={status} size={10} />
-              </View>
-              <Text numberOfLines={1} style={{ fontSize: 10, color: colors.textSecondary }}>
-                {stageName}
-              </Text>
-              <Text numberOfLines={1} style={{ fontSize: 10, color: colors.textMuted }}>
-                {formatTime(event.dateFrom)}–{formatTime(event.dateTo)}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-
-      </View>
-    </ScrollView>
-  );
-}
-
 // ── Header ────────────────────────────────────────────────────────────────────
 
-type HeaderProps = {
-  sourceEvent: DbEvent;
-  artistName: string;
-  stageName: string;
-  onClose: () => void;
-};
-
-function ConflictDetailHeader({ sourceEvent, artistName, stageName, onClose }: HeaderProps) {
+function ConflictDetailHeader({ group, onClose }: { group: DbEvent[]; onClose: () => void }) {
+  const from = Math.min(...group.map((e) => e.dateFrom));
+  const to = Math.max(...group.map((e) => e.dateTo));
   return (
     <View style={{
       paddingHorizontal: 16,
@@ -233,19 +56,17 @@ function ConflictDetailHeader({ sourceEvent, artistName, stageName, onClose }: H
     }}>
       <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
         <View style={{ flex: 1, marginRight: 8 }}>
-          <Text style={{
-            fontSize: 20,
-            fontWeight: '700',
-            fontFamily: 'Bold-Default',
-            color: colors.textPrimary,
-          }}>
-            {artistName}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Ionicons name="warning-outline" size={20} color={colors.danger} />
+            <Text style={{ fontSize: 20, fontWeight: '700', fontFamily: 'Bold-Default', color: colors.textPrimary }}>
+              {strings.conflict}
+            </Text>
+          </View>
           <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 2 }}>
-            {stageName}  ·  {formatDayLabel(sourceEvent.dateFrom)}  ·  {formatTime(sourceEvent.dateFrom)}–{formatTime(sourceEvent.dateTo)}
+            {formatDayLabel(from)}  ·  {formatTime(from)}–{formatTime(to)}
           </Text>
         </View>
-        <TouchableOpacity onPress={onClose} hitSlop={8}>
+        <TouchableOpacity onPress={onClose} hitSlop={8} accessibilityRole="button" accessibilityLabel="Close conflict">
           <Text style={{ fontSize: 20, color: colors.textSecondary, lineHeight: 28 }}>✕</Text>
         </TouchableOpacity>
       </View>
@@ -258,16 +79,19 @@ function ConflictDetailHeader({ sourceEvent, artistName, stageName, onClose }: H
 export function ConflictDetailSheet() {
   const { conflictState, closeConflict } = useConflictDetail();
   const { openDetail } = useArtistDetail();
-  const selectedSlug = useSelectedSlug();
+  const { entries } = useConflicts();
   const { top } = useSafeAreaInsets();
   const sheetRef = useRef<BottomSheet>(null);
 
-  // Subscribed reads, so a sync landing while the sheet is open updates it.
-  const artists = useArtists(selectedSlug);
-  const stages  = useStages(selectedSlug);
+  // Live, so a sync or a pick changed elsewhere reshapes the group shown.
+  const sourceEvent = conflictState.event;
+  const group = useMemo(
+    () => (sourceEvent === null ? [] : conflictGroupOf(entries, sourceEvent.eventId)),
+    [entries, sourceEvent],
+  );
 
   const { mountIndex, onClosed } = useBottomSheetMount(
-    conflictState.sourceEvent !== null,
+    sourceEvent !== null,
     0,
     sheetRef,
   );
@@ -275,9 +99,9 @@ export function ConflictDetailSheet() {
   // Opening and closing belong to useBottomSheetMount; this only re-expands the
   // sheet when a different conflict is opened while it is already on screen.
   useEffect(() => {
-    if (mountIndex === null || conflictState.sourceEvent === null) { return; }
+    if (mountIndex === null || sourceEvent === null) { return; }
     sheetRef.current?.expand();
-  }, [conflictState.sourceEvent, mountIndex]);
+  }, [sourceEvent, mountIndex]);
 
   const handleClose = useCallback((): void => {
     closeConflict();
@@ -290,36 +114,12 @@ export function ConflictDetailSheet() {
     closeConflict();
   }, [onClosed, closeConflict]);
 
-  const artistById = useMemo(
-    () => Object.fromEntries(artists.map((a) => [a.artistId, a])),
-    [artists],
-  );
-
-  const stageById = useMemo(
-    () => Object.fromEntries(stages.map((s) => [s.stageId, s])),
-    [stages],
-  );
-
-  const handleEventPress = useCallback((event: DbEvent): void => {
-    const artist = artistById[event.artistId];
-    if (artist !== undefined) {
-      openDetail(artist, 'expanded');
-      // Defer conflict close to let the artist sheet start its open animation
-      // before the conflict sheet's backdrop begins fading out.
-      setTimeout(() => closeConflict(), 50);
-    }
-  }, [artistById, closeConflict, openDetail]);
-
-  const sourceArtistName = conflictState.sourceEvent !== null
-    ? (artistById[conflictState.sourceEvent.artistId]?.name ?? '')
-    : '';
-
-  const sourceStageName = conflictState.sourceEvent !== null
-    ? (() => {
-        const stage = stageById[conflictState.sourceEvent.stageId];
-        return stage !== undefined ? getStageLocalized(stage.localized, 'name') : '';
-      })()
-    : '';
+  const handleBlockPress = useCallback((_event: DbEvent, artist: DbArtist): void => {
+    openDetail(artist, 'expanded');
+    // Defer conflict close to let the artist sheet start its open animation
+    // before the conflict sheet's backdrop begins fading out.
+    setTimeout(() => closeConflict(), 50);
+  }, [closeConflict, openDetail]);
 
   const translateY      = useRef(new Animated.Value(600)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
@@ -331,7 +131,7 @@ export function ConflictDetailSheet() {
 
   useEffect(() => {
     if (Platform.OS !== 'web') { return; }
-    if (conflictState.sourceEvent !== null) {
+    if (sourceEvent !== null) {
       setWebVisible(true);
       Animated.parallel([
         Animated.spring(translateY,      { toValue: 0, useNativeDriver: true, bounciness: 0, speed: 14 }),
@@ -343,7 +143,7 @@ export function ConflictDetailSheet() {
         Animated.timing(backdropOpacity, { toValue: 0,   duration: 200, useNativeDriver: true }),
       ]).start(() => setWebVisible(false));
     }
-  }, [conflictState.sourceEvent, translateY, backdropOpacity]);
+  }, [sourceEvent, translateY, backdropOpacity]);
 
   if (Platform.OS === 'web') {
     if (!webVisible) { return null; }
@@ -363,23 +163,12 @@ export function ConflictDetailSheet() {
           overflow: 'hidden',
           transform: [{ translateY }],
         }}>
-          {conflictState.sourceEvent !== null && (
+          {group.length > 0 && (
             <>
-              <ConflictDetailHeader
-                sourceEvent={conflictState.sourceEvent}
-                artistName={sourceArtistName}
-                stageName={sourceStageName}
-                onClose={handleClose}
-              />
+              <ConflictDetailHeader group={group} onClose={handleClose} />
               <ScrollView>
-                <View style={{ padding: 16 }}>
-                  <MiniTimeline
-                    sourceEvent={conflictState.sourceEvent}
-                    overlappingEvents={conflictState.overlappingEvents}
-                    artistById={artistById}
-                    stageById={stageById}
-                    onEventPress={handleEventPress}
-                  />
+                <View style={{ paddingVertical: 16 }}>
+                  <ConflictTimeline events={group} onBlockPress={handleBlockPress} />
                 </View>
               </ScrollView>
             </>
@@ -421,24 +210,11 @@ export function ConflictDetailSheet() {
       backgroundStyle={{ backgroundColor: colors.surface }}
       style={{ maxWidth: MAX_CONTENT_WIDTH, width: '100%', alignSelf: 'center' }}
     >
-      {conflictState.sourceEvent !== null && (
-        <ConflictDetailHeader
-          sourceEvent={conflictState.sourceEvent}
-          artistName={sourceArtistName}
-          stageName={sourceStageName}
-          onClose={handleClose}
-        />
-      )}
+      {group.length > 0 && <ConflictDetailHeader group={group} onClose={handleClose} />}
       <BottomSheetScrollView>
-        {conflictState.sourceEvent !== null && (
-          <View style={{ padding: 16 }}>
-            <MiniTimeline
-              sourceEvent={conflictState.sourceEvent}
-              overlappingEvents={conflictState.overlappingEvents}
-              artistById={artistById}
-              stageById={stageById}
-              onEventPress={handleEventPress}
-            />
+        {group.length > 0 && (
+          <View style={{ paddingVertical: 16 }}>
+            <ConflictTimeline events={group} onBlockPress={handleBlockPress} />
           </View>
         )}
       </BottomSheetScrollView>

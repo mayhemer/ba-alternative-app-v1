@@ -13,9 +13,31 @@ type Props = {
   nowX: SharedValue<number>;
 };
 
+/** The hour labels and ticks across the whole day canvas, 06:00 to 06:00. */
+export function HourTicks() {
+  return (
+    <>
+      {Array.from({ length: 25 }, (_, h) => {
+        const hour = (DAY_BOUNDARY_HOUR + h) % 24;
+        const x    = h * PIXELS_PER_HOUR;
+        return (
+          <View
+            key={h}
+            style={{ position: 'absolute', left: x, top: 0, bottom: 0, alignItems: 'flex-start' }}
+          >
+            <View style={{ width: 1, height: 10, backgroundColor: colors.muted, marginTop: 0  }} />
+            <Text style={{ fontSize: 12, color: colors.timeline.rulerText, marginTop: 2, marginLeft: 2 }}>
+              {String(hour).padStart(2, '0') + ':00'}
+            </Text>
+          </View>
+        );
+      })}
+    </>
+  );
+}
+
 function TimeRulerBase(_props: Props) {
   const { scrollX, nowX } = _props;
-  const ticks = Array.from({ length: 25 }, (_, i) => i);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: -(scrollX.value + VIEW_OFFSET_X) }],
@@ -34,21 +56,7 @@ function TimeRulerBase(_props: Props) {
     >
       <Animated.View style={[{ width: CANVAS_WIDTH, height: RULER_HEIGHT, position: 'relative' }, animatedStyle]}>
         <NowLine nowX={nowX} canvasHeight={RULER_HEIGHT} showArrow />
-        {ticks.map((h) => {
-          const hour = (DAY_BOUNDARY_HOUR + h) % 24;
-          const x    = h * PIXELS_PER_HOUR;
-          return (
-            <View
-              key={h}
-              style={{ position: 'absolute', left: x, top: 0, bottom: 0, alignItems: 'flex-start' }}
-            >
-              <View style={{ width: 1, height: 10, backgroundColor: colors.muted, marginTop: 0  }} />
-              <Text style={{ fontSize: 12, color: colors.timeline.rulerText, marginTop: 2, marginLeft: 2 }}>
-                {String(hour).padStart(2, '0') + ':00'}
-              </Text>
-            </View>
-          );
-        })}
+        <HourTicks />
       </Animated.View>
     </View>
   );

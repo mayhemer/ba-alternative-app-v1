@@ -1,4 +1,6 @@
 import {
+  assignSubRows,
+  conflictWindow,
   defaultScrollX,
   formatDayLabel,
   formatDayMonth,
@@ -29,6 +31,45 @@ const HOUR = 60 * 60 * 1000;
 
 const event = (dateFrom: number, dateTo = dateFrom + HOUR): DbEvent =>
   ({ dateFrom, dateTo } as unknown as DbEvent);
+
+describe('conflictWindow', () => {
+  const t = (hm: string, day = '06'): number => at(`2025-08-${day}T${hm}:00+02:00`);
+
+  it('spans the sets with exactly half an hour either side', () => {
+    const range = conflictWindow([event(t('14:29'), t('15:00')), event(t('14:50'), t('15:31'))], WED, 0);
+    expect(range).toEqual({ from: t('13:59'), to: t('16:01') });
+  });
+
+  it('widens evenly to a minimum width, keeping the sets centred', () => {
+    // 340 px is two hours; the sets with their margins take 100 min.
+    expect(2 * PIXELS_PER_HOUR).toBe(340);
+    const range = conflictWindow([event(t('14:00'), t('14:40'))], WED, 340);
+    expect(range).toEqual({ from: t('13:20'), to: t('15:20') });
+  });
+
+  it('slides back inside the festival day rather than shrinking', () => {
+    const range = conflictWindow([event(t('06:10'), t('06:30'))], WED, 340);
+    expect(range).toEqual({ from: WED, to: t('08:00') });
+  });
+
+  it('never leaves the festival day', () => {
+    const range = conflictWindow([event(t('06:10')), event(t('05:00', '07'), t('05:50', '07'))], WED, 0);
+    expect(range).toEqual({ from: WED, to: THU });
+  });
+});
+
+describe('assignSubRows', () => {
+  it('puts each set in the first row free by its start', () => {
+    const a = { ...event(WED + HOUR, WED + 2 * HOUR), eventId: 'a' };
+    const b = { ...event(WED + 1.5 * HOUR, WED + 2.5 * HOUR), eventId: 'b' };
+    const c = { ...event(WED + 2 * HOUR, WED + 3 * HOUR), eventId: 'c' };
+    expect(assignSubRows([c, b, a])).toEqual({ subRowCount: 2, eventSubRows: { a: 0, b: 1, c: 0 } });
+  });
+
+  it('has one row when empty', () => {
+    expect(assignSubRows([])).toEqual({ subRowCount: 1, eventSubRows: {} });
+  });
+});
 
 it('runs away from the festival\'s time zone', () => {
   // If this fails, the global setup did not apply, and the cases below could

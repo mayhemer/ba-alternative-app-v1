@@ -120,7 +120,7 @@ it('opens the artist detail when the row is tapped', async () => {
 it('opens the conflict detail from the group title', async () => {
   const row = item('Gojira', '19:23');
   const onPress = jest.fn();
-  await render(<ConflictGroupTitle event={row.event} overlappingEvents={row.overlappingEvents} onPress={onPress} />);
+  await render(<ConflictGroupTitle event={row.event} onPress={onPress} />);
   await fireEvent.press(screen.getByText('Conflict'));
-  expect(onPress).toHaveBeenCalledWith(row.event, row.overlappingEvents);
+  expect(onPress).toHaveBeenCalledWith(row.event);
 });

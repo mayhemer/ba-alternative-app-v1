@@ -52,14 +52,13 @@ const CONFLICT_TITLE_HIT_SLOP = { top: 14, bottom: 14, left: 12, right: 12 };
  * gap or spacer cell just above that set, at its bottom edge; opens the
  * conflict detail sheet.
  */
-export function ConflictGroupTitle({ event, overlappingEvents, onPress }: {
+export function ConflictGroupTitle({ event, onPress }: {
   event: DbEvent;
-  overlappingEvents: DbEvent[];
-  onPress: (event: DbEvent, overlappingEvents: DbEvent[]) => void;
+  onPress: (event: DbEvent) => void;
 }) {
   return (
     <Pressable
-      onPress={() => { onPress(event, overlappingEvents); }}
+      onPress={() => { onPress(event); }}
       hitSlop={CONFLICT_TITLE_HIT_SLOP}
       accessibilityRole="button"
       accessibilityLabel={strings.conflict}

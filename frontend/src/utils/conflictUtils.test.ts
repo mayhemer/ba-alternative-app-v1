@@ -1,6 +1,7 @@
 import {
   computeConflictEntries,
   computeConflictOverlaps,
+  conflictGroupOf,
   eventsOverlap,
   isConflictEligible,
   type ConflictInputs,
@@ -145,6 +146,35 @@ describe('computeConflictEntries', () => {
     // counter — the omission that left the timeline's conflict bars stale.
     const empty: ConflictInputs = { artists: [], stages: [], artistEvents: {} };
     expect(computeConflictEntries(mustSee(CLASH_A, CLASH_B), empty)).toEqual([]);
+  });
+});
+
+// ── conflictGroupOf ───────────────────────────────────────────────────────────
+
+describe('conflictGroupOf', () => {
+  // 1 ─ 2 ─ 3 chain: 3 overlaps 2 but not 1. 4 ─ 5 is a separate clash later.
+  const specs: [string, number, number][] = [
+    ['1', 0, 1], ['2', 0.5, 1.5], ['3', 1.25, 2], ['4', 3, 4], ['5', 3.5, 4.5], ['6', 5, 6],
+  ];
+  const artists = specs.map(([id]) => ({ artistId: `a${id}`, name: `A${id}` } as DbArtist));
+  const artistEvents = Object.fromEntries(specs.map(([id, from, to]) => [`a${id}`, [event(id, from, to)]]));
+  const entries = computeConflictEntries(
+    Object.fromEntries(specs.map(([id]) => [`a${id}`, 'will_go'])),
+    { artists, stages: [], artistEvents },
+  );
+  const ids = (events: DbEvent[]): string[] => events.map((e) => e.eventId);
+
+  it('returns the whole chained group, even sets that miss the first one', () => {
+    expect(ids(conflictGroupOf(entries, '1'))).toEqual(['1', '2', '3']);
+    expect(ids(conflictGroupOf(entries, '3'))).toEqual(['1', '2', '3']);
+  });
+
+  it('keeps separate clashes apart', () => {
+    expect(ids(conflictGroupOf(entries, '5'))).toEqual(['4', '5']);
+  });
+
+  it('is empty for a set that clashes with nothing', () => {
+    expect(conflictGroupOf(entries, '6')).toEqual([]);
   });
 });
 

@@ -41,8 +41,6 @@ export type PlanSetItem = {
   clashBars: ClashBar[];
   /** First set of a clash group: carries the "Conflict" title. */
   conflictHead: boolean;
-  /** The sets it clashes with, for the conflict detail sheet. */
-  overlappingEvents: DbEvent[];
   /** Upcoming Must-see clashing with a Must-see live now: time until it starts. */
   startsInMs: number | null;
   height: number;
@@ -171,7 +169,6 @@ export function buildPlanDay(
   const overlaps = computeConflictOverlaps(interests, inputs);
   const entries = computeConflictEntries(interests, inputs);
   const leaders = new Set(entries.filter((e) => e.leader).map((e) => e.event.eventId));
-  const overlappingById = new Map(entries.map((e) => [e.event.eventId, e.overlappingEvents]));
 
   const allPicks = picksOf(interests, inputs);
   const dayPicks = allPicks.filter((p) => getFestivalDayStart(p.event.dateFrom) === dayStart);
@@ -257,7 +254,6 @@ export function buildPlanDay(
       remainingMs: live ? event.dateTo - now : 0,
       clashBars,
       conflictHead,
-      overlappingEvents: overlappingById.get(event.eventId) ?? [],
       startsInMs: clashesWithLive ? event.dateFrom - now : null,
       height: level === 'will_go' ? PLAN_LAYOUT.mustRow : PLAN_LAYOUT.maybeRow,
     });

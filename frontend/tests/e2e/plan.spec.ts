@@ -47,6 +47,29 @@ test('the now pill shows the live must-see and opens the plan', async ({ appPage
   await expect(appPage.getByText('START', { exact: true })).toBeVisible();
 });
 
+test('the conflict title opens the clash on a timeline of its own', async ({ appPage }) => {
+  await ready(appPage);
+  await pickClashingPair(appPage);
+  await appPage.getByTestId('now-pill').click();
+
+  await appPage.getByText('Conflict', { exact: true }).click();
+  const sheet = appPage.getByTestId('conflict-timeline');
+  await expect(sheet).toBeVisible();
+  await expect(sheet.getByText('CRYSTAL LAKE', { exact: false }).first()).toBeVisible();
+  await expect(sheet.getByText('EXORCIZPHOBIA', { exact: false }).first()).toBeVisible();
+  // The clash is shorter than the sheet is wide: its range widens to fill it.
+  // It is measured first, so allow the layout pass to land.
+  const range = appPage.getByTestId('conflict-timeline-range');
+  await expect.poll(async () => {
+    const sheetBox = await sheet.boundingBox();
+    const rangeBox = await range.boundingBox();
+    return Math.round((rangeBox?.width ?? 0) - (sheetBox?.width ?? -1));
+  }).toBe(0);
+
+  await appPage.getByLabel('Close conflict').click();
+  await expect(sheet).toHaveCount(0);
+});
+
 test('each clash bar clips its stripes to its own bar', async ({ appPage }) => {
   await ready(appPage);
   await pickClashingPair(appPage);

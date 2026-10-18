@@ -3,7 +3,7 @@ import type {
   DbArtist, DbArtistBioLocalized, DbArtistBios, DbArtistLocalized, DbCategory,
   DbEvent, DbStage, DbUserInterest,
 } from '../types/backend';
-import { deriveFestivalDays, DAY_DURATION_MS } from '../components/timeline/timelineLayout';
+import { assignSubRows, deriveFestivalDays, DAY_DURATION_MS } from '../components/timeline/timelineLayout';
 import { currentTimeMs } from '../utils/clock';
 
 // ── Public festival data types ────────────────────────────────────────────────
@@ -504,30 +504,7 @@ function buildLayoutMap(events: DbEvent[], festivalDays: DbFestivalDays): DbLayo
     }
 
     for (const [categoryId, catEvents] of Object.entries(byCategory)) {
-      const sorted = [...catEvents].sort((a, b) => a.dateFrom - b.dateFrom);
-      const subRowEndTimes: number[] = [];
-      const eventSubRows: Record<string, number> = {};
-
-      for (const event of sorted) {
-        let assigned = false;
-        for (let row = 0; row < subRowEndTimes.length; row++) {
-          if (subRowEndTimes[row] <= event.dateFrom) {
-            eventSubRows[event.eventId] = row;
-            subRowEndTimes[row] = event.dateTo;
-            assigned = true;
-            break;
-          }
-        }
-        if (!assigned) {
-          eventSubRows[event.eventId] = subRowEndTimes.length;
-          subRowEndTimes.push(event.dateTo);
-        }
-      }
-
-      layoutMap[`${categoryId}_${day}`] = {
-        subRowCount: Math.max(1, subRowEndTimes.length),
-        eventSubRows,
-      };
+      layoutMap[`${categoryId}_${day}`] = assignSubRows(catEvents);
     }
   }
 

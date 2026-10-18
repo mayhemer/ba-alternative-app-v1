@@ -273,7 +273,7 @@ New values this screen introduces, to add as tokens:
 | Element | Tap |
 |---|---|
 | Row (Must-see or Maybe), anywhere | The existing **artist detail sheet**. It already offers "stage/time → jump to the timeline slot" and the conflict warning line → conflict detail. |
-| `⚠ Conflict` group title | The **conflict detail sheet** (`ConflictDetailSheet`) for that group, with a 44 pt tap area. |
+| `⚠ Conflict` group title | The **conflict detail sheet** (`ConflictDetailSheet`) for that group, with a 44 pt tap area. It shows the whole group, and only it, on the timeline's own lanes, bands and support programme alike. |
 | Clash bar (right edge) | Nothing separate: it's too thin, so a tap there counts as a row tap. |
 | Gap, day title | Nothing. |
 | Long-press on a row | Nothing. Changing a pick inline would make the row vanish under your finger. |

@@ -206,10 +206,17 @@ press and said nothing the block itself could not show.
 
 - **Timeline blocks** carry 45° red / dark-red striped bars, one per overlap interval, each
   spanning only the overlapping portion of the block and laid over it
-  (`ArtistBlock`, geometry mirrors the conflict detail mini-timeline).
+  (`ArtistBlock`).
 - **Artist detail** shows an exclamation marker in the collapsed header (tapping it expands the
   sheet in place) and lists an "Overlaps with N other event(s)" row per conflicting event;
   tapping that opens `ConflictDetailSheet`.
+- **Conflict sheet** (`ConflictDetailSheet`) shows one whole clash group: every set the group
+  chains through its overlaps (`conflictGroupOf`, the groups My plan titles), from both the main
+  and the support timeline, and nothing else. Its body, `ConflictTimeline`, is built from the
+  timeline's own `CategoryLane`, `HourTicks` and `LaneLabelOverlay`, cut to the group's span plus
+  exactly half an hour either side (`conflictWindow`), widened evenly to fill the sheet when that
+  is narrower, so the clash stays centred. No lens, hidden lanes or scroll memory apply.
+  Tapping a block opens the artist sheet.
 - **ConflictsScreen** is a dedicated list of the current conflicts.
 - Overlap computation lives in `src/utils/conflictUtils.ts`; `ConflictContext` holds the result.
   Only `must_see` counts today — including `maybe` is an open option (TODO in `conflictUtils`).

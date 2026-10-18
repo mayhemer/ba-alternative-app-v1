@@ -103,6 +103,65 @@ export function timeToX(timestampMs: number, dayStartMs: number): number {
   return Math.max(0, (timestampMs - dayStartMs) * PIXELS_PER_MS);
 }
 
+// ── Conflict sheet ────────────────────────────────────────────────────────────
+
+const CONFLICT_MARGIN_MS = 30 * 60 * 1000;
+
+/**
+ * The time range the conflict sheet shows for a group of sets: their span with
+ * exactly half an hour either side, widened evenly to at least `minWidthPx` (the
+ * sheet's width) so the sets stay centred and the ruler runs edge to edge. It
+ * never leaves the festival day the group is on; at a day edge it slides back in
+ * rather than shrinking.
+ */
+export function conflictWindow(events: DbEvent[], dayStartMs: number, minWidthPx: number): { from: number; to: number } {
+  let from = Math.min(...events.map((e) => e.dateFrom)) - CONFLICT_MARGIN_MS;
+  let to = Math.max(...events.map((e) => e.dateTo)) + CONFLICT_MARGIN_MS;
+  const extra = minWidthPx / PIXELS_PER_MS - (to - from);
+  if (extra > 0) {
+    from -= extra / 2;
+    to += extra / 2;
+  }
+  const dayEndMs = dayStartMs + DAY_DURATION_MS;
+  if (from < dayStartMs) {
+    to = Math.min(dayEndMs, to + (dayStartMs - from));
+    from = dayStartMs;
+  }
+  if (to > dayEndMs) {
+    from = Math.max(dayStartMs, from - (to - dayEndMs));
+    to = dayEndMs;
+  }
+  return { from, to };
+}
+
+// ── Sub-rows ──────────────────────────────────────────────────────────────────
+
+export type SubRowLayout = {
+  subRowCount: number;
+  eventSubRows: Record<string, number>; // eventId → 0-based sub-row index
+};
+
+/**
+ * Stacks one lane's sets so none overlap: greedy interval scheduling, by start
+ * time, each set in the first sub-row whose last set has ended.
+ */
+export function assignSubRows(events: DbEvent[]): SubRowLayout {
+  const sorted = [...events].sort((a, b) => a.dateFrom - b.dateFrom);
+  const subRowEndTimes: number[] = [];
+  const eventSubRows: Record<string, number> = {};
+  for (const event of sorted) {
+    let row = subRowEndTimes.findIndex((end) => end <= event.dateFrom);
+    if (row === -1) {
+      row = subRowEndTimes.length;
+      subRowEndTimes.push(event.dateTo);
+    } else {
+      subRowEndTimes[row] = event.dateTo;
+    }
+    eventSubRows[event.eventId] = row;
+  }
+  return { subRowCount: Math.max(1, subRowEndTimes.length), eventSubRows };
+}
+
 // How much empty time to leave to the left of the day's first event when the
 // timeline opens on a day the user has never scrolled.
 export const TIMELINE_PRE_ROLL_MS = 15 * 60 * 1000;

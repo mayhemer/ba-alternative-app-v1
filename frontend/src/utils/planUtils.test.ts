@@ -204,7 +204,6 @@ describe('buildPlanDay', () => {
   it('puts the group title on the first set of a clash group only', () => {
     const items = build(at(7, '19:23'));
     expect(set(items, 'Gojira').conflictHead).toBe(true);
-    expect(set(items, 'Gojira').overlappingEvents.map((e) => e.artistId)).toEqual(['6']);
     expect(set(items, 'Batushka').conflictHead).toBe(false);
   });
 

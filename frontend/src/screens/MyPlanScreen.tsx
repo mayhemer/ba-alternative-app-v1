@@ -78,8 +78,8 @@ export function MyPlanScreen() {
     openDetail(artist, 'collapsed');
   }, [openDetail]);
 
-  const handleConflict = useCallback((event: DbEvent, overlappingEvents: DbEvent[]): void => {
-    openConflict(event, overlappingEvents);
+  const handleConflict = useCallback((event: DbEvent): void => {
+    openConflict(event);
   }, [openConflict]);
 
   // ── Scroll: landing, "now" requests, per-day memory ────────────────────────
@@ -147,7 +147,7 @@ export function MyPlanScreen() {
     // a cell cannot take touches outside its own bounds on Android.
     let title: React.ReactNode = null;
     if (next !== undefined && next.kind === 'set' && next.conflictHead) {
-      title = <ConflictGroupTitle event={next.event} overlappingEvents={next.overlappingEvents} onPress={handleConflict} />;
+      title = <ConflictGroupTitle event={next.event} onPress={handleConflict} />;
     }
 
     let content: React.ReactNode = null;

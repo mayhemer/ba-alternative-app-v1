@@ -80,6 +80,28 @@ export function computeConflictEntries(
     });
 }
 
+/**
+ * The clash group a set belongs to, in start order: from the group's leader up
+ * to the next one. A group chains sets through their overlaps, so it holds sets
+ * that miss its first one too. The same groups My plan titles. Empty for a set
+ * that clashes with nothing.
+ */
+export function conflictGroupOf(entries: ConflictEntry[], eventId: string): DbEvent[] {
+  let group: DbEvent[] = [];
+  let found = false;
+  for (const entry of entries) {
+    if (entry.leader) {
+      if (found) {
+        break;
+      }
+      group = [];
+    }
+    group.push(entry.event);
+    found = found || entry.event.eventId === eventId;
+  }
+  return found ? group : [];
+}
+
 // ── Overlap spans (for the timeline conflict marker) ────────────────────────────
 
 // A single [from, to] time interval (Unix ms) of an event that is covered by a conflict.
