@@ -47,6 +47,22 @@ test('the now pill shows the live must-see and opens the plan', async ({ appPage
   await expect(appPage.getByText('START', { exact: true })).toBeVisible();
 });
 
+test('each clash bar clips its stripes to its own bar', async ({ appPage }) => {
+  await ready(appPage);
+  await pickClashingPair(appPage);
+  await appPage.getByTestId('now-pill').click();
+  await expect(appPage.getByTestId('plan-clash-bar')).toHaveCount(2, { timeout: 20_000 });
+
+  // SVG ids are global to a web page: a clip id two bars share resolves to the
+  // first bar's clip, cutting every later bar's stripes to its size.
+  const ownClips = await appPage.getByTestId('plan-clash-bar').evaluateAll((bars) => bars.map((bar) => {
+    const url = bar.querySelector('path')?.getAttribute('clip-path') ?? '';
+    const id = /url\(#(.+)\)/.exec(url)?.[1] ?? '';
+    return id !== '' && bar.contains(document.getElementById(id));
+  }));
+  expect(ownClips).toEqual([true, true]);
+});
+
 test('switches days and filters to conflicts only', async ({ appPage }) => {
   await ready(appPage);
   await pickClashingPair(appPage);

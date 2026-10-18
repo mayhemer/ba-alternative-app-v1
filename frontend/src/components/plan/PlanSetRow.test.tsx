@@ -83,6 +83,30 @@ it('draws a clash bar for each overlap, and none on a Maybe', async () => {
   expect(screen.queryByTestId('plan-clash-bar')).toBeNull();
 });
 
+it('gives every clash bar its own clip id: on web, SVG ids are global to the page', async () => {
+  await render(
+    <>
+      <PlanSetRow item={item('Gojira', '19:23')} onPressArtist={jest.fn()} />
+      <PlanSetRow item={item('Batushka', '19:23')} onPressArtist={jest.fn()} />
+    </>,
+  );
+  const ids: string[] = [];
+  const walk = (node: unknown): void => {
+    if (Array.isArray(node)) {
+      node.forEach(walk);
+    } else if (node !== null && typeof node === 'object' && 'type' in node) {
+      const host = node as { type: string; props: { name?: string }; children: unknown };
+      if (host.type === 'RNSVGClipPath') {
+        ids.push(host.props.name ?? '');
+      }
+      walk(host.children);
+    }
+  };
+  walk(screen.toJSON());
+  expect(ids).toHaveLength(2);
+  expect(new Set(ids).size).toBe(2);
+});
+
 it('opens the artist detail when the row is tapped', async () => {
   const row = item('Gojira', '19:23');
   const { onPressArtist } = await renderRow(row);

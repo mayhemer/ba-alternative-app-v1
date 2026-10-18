@@ -26,9 +26,9 @@ const INSET_RIGHT = 22;
 
 const PAST_OPACITY = 0.45;
 
-function ClashStripes({ bar, rowHeight, index }: { bar: ClashBar; rowHeight: number; index: number }) {
+/** `clipId` must be unique in the whole list: on web, SVG ids are global to the page. */
+function ClashStripes({ bar, rowHeight, clipId }: { bar: ClashBar; rowHeight: number; clipId: string }) {
   const height = Math.max(1, (bar.to - bar.from) * rowHeight);
-  const clipId = `planClash-${index}`;
   return (
     <View
       testID="plan-clash-bar"
@@ -147,7 +147,7 @@ function PlanSetRowBase({ item, onPressArtist }: Props) {
       }}
     >
       {item.clashBars.map((bar, i) => (
-        <ClashStripes key={`${item.key}-${i}`} bar={bar} rowHeight={PLAN_LAYOUT.mustRow} index={i} />
+        <ClashStripes key={`${item.key}-${i}`} bar={bar} rowHeight={PLAN_LAYOUT.mustRow} clipId={`planClash-${item.key}-${i}`} />
       ))}
       {live && <LeftProgress progress={item.progress} track={colors.liveTrack} fill={colors.accent} />}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
