@@ -3,10 +3,10 @@ import { Pressable, View } from 'react-native';
 import Svg, { ClipPath, Defs, Path, Rect } from 'react-native-svg';
 import { Text } from '../ui/Text';
 import { stripePath, CONFLICT_STRIPE } from '../timeline/ArtistBlock';
-import { formatTime } from '../timeline/timelineLayout';
-import { formatRemaining, planStrings } from './planStrings';
-import { BOLD, CLASH_BAR_WIDTH, LIVE_BORDER, PROGRESS_BAR_WIDTH, STATUS_LABEL, TABULAR } from './planStyles';
-import { PLAN_LAYOUT, type ClashBar, type PlanSetItem } from '../../utils/planUtils';
+import { BOLD, CLASH_BAR_WIDTH, LIST_GUTTER, LIVE_BORDER, PROGRESS_BAR_WIDTH, STATUS_LABEL, TABULAR } from './planStyles';
+import { NowArrow } from './PlanListItems';
+import { sameProps } from './sameProps';
+import type { ClashBar, PlanSetModel, SetStatus } from './PlanSetRow.model';
 import type { DbArtist } from '../../types/backend';
 import { colors } from '../../styling/tokens';
 
@@ -15,9 +15,8 @@ import { colors } from '../../styling/tokens';
 // Must-see: a bordered two-line card. Maybe: one dimmed line in a dashed box.
 // Both share one fixed inset, so the time, name and stage columns line up in
 // every state, clear of the progress bar on the left edge and the clash bar on
-// the right. Tapping anywhere opens the artist's detail sheet.
-
-const strings = planStrings();
+// the right. Tapping anywhere opens the artist's detail sheet. Draws its model
+// (PlanSetRow.model.ts) and computes nothing itself.
 
 // Fixed inset inside the 1 pt border: clear of the left progress bar and the
 // right clash bar whether they are drawn or not.
@@ -67,51 +66,49 @@ function LeftProgress({ progress, track, fill }: { progress: number; track: stri
   );
 }
 
-function Status({ item }: { item: PlanSetItem }) {
-  if (item.state === 'live') {
-    return (
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-        <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: colors.danger }} />
-        <Text style={STATUS_LABEL}>{strings.live}</Text>
-        <Text style={[BOLD, TABULAR, { fontSize: 14, color: colors.accent }]}>{formatRemaining(item.remainingMs)}</Text>
-      </View>
-    );
+function Status({ status }: { status: SetStatus }) {
+  switch (status.kind) {
+    case 'live':
+      return (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: colors.danger }} />
+          <Text style={STATUS_LABEL}>{status.label}</Text>
+          <Text style={[BOLD, TABULAR, { fontSize: 14, color: colors.accent }]}>{status.time}</Text>
+        </View>
+      );
+    case 'start':
+      return (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Text style={STATUS_LABEL}>{status.label}</Text>
+          <Text style={[BOLD, TABULAR, { fontSize: 14, color: colors.danger }]}>{status.time}</Text>
+        </View>
+      );
+    case 'done':
+      return <Text style={{ fontSize: 12, color: colors.textMuted }}>{status.label}</Text>;
+    default:
+      return null;
   }
-  if (item.startsInMs !== null) {
-    return (
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-        <Text style={STATUS_LABEL}>{strings.start}</Text>
-        <Text style={[BOLD, TABULAR, { fontSize: 14, color: colors.danger }]}>{formatRemaining(item.startsInMs)}</Text>
-      </View>
-    );
-  }
-  if (item.state === 'past') {
-    return <Text style={{ fontSize: 12, color: colors.textMuted }}>{strings.done}</Text>;
-  }
-  return null;
 }
 
 type Props = {
-  item: PlanSetItem;
+  item: PlanSetModel;
   onPressArtist: (artist: DbArtist) => void;
   /** A Must-see row's background, and any row's border; the surface colour and a grey border when not given. */
   background?: string;
   border?: string;
 };
 
-function PlanSetRowBase({ item, onPressArtist, background = colors.surface, border = colors.borderMid }: Props) {
-  const time = `${formatTime(item.event.dateFrom)}–${formatTime(item.event.dateTo)}`;
+function SetCard({ item, onPressArtist, background = colors.surface, border = colors.borderMid }: Props) {
   const live = item.state === 'live';
-  const label = `${item.artist.name}, ${time}, ${item.stageName}`;
 
   if (item.level === 'maybe') {
     return (
       <Pressable
         onPress={() => { onPressArtist(item.artist); }}
         accessibilityRole="button"
-        accessibilityLabel={label}
+        accessibilityLabel={item.accessibilityLabel}
         style={{
-          height: PLAN_LAYOUT.maybeRow,
+          height: item.height,
           flexDirection: 'row',
           alignItems: 'center',
           gap: 10,
@@ -124,7 +121,7 @@ function PlanSetRowBase({ item, onPressArtist, background = colors.surface, bord
         }}
       >
         {live && <LeftProgress progress={item.progress} track={colors.borderMid} fill={colors.maybeText} />}
-        <Text style={[TABULAR, { fontSize: 13, color: colors.maybeText }]}>{time}</Text>
+        <Text style={[TABULAR, { fontSize: 13, color: colors.maybeText }]}>{item.timeText}</Text>
         <Text numberOfLines={1} style={{ flex: 1, fontSize: 13, color: colors.maybeText }}>{item.artist.name}</Text>
         <Text numberOfLines={1} style={{ maxWidth: '35%', fontSize: 13, color: colors.maybeText }}>{item.stageName}</Text>
       </Pressable>
@@ -135,9 +132,9 @@ function PlanSetRowBase({ item, onPressArtist, background = colors.surface, bord
     <Pressable
       onPress={() => { onPressArtist(item.artist); }}
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={item.accessibilityLabel}
       style={{
-        height: PLAN_LAYOUT.mustRow,
+        height: item.height,
         justifyContent: 'center',
         gap: 5,
         paddingLeft: INSET_LEFT,
@@ -150,15 +147,15 @@ function PlanSetRowBase({ item, onPressArtist, background = colors.surface, bord
       }}
     >
       {item.clashBars.map((bar, i) => (
-        <ClashStripes key={`${item.key}-${i}`} bar={bar} rowHeight={PLAN_LAYOUT.mustRow} clipId={`planClash-${item.key}-${i}`} />
+        <ClashStripes key={`${item.key}-${i}`} bar={bar} rowHeight={item.height} clipId={`planClash-${item.key}-${i}`} />
       ))}
       {live && <LeftProgress progress={item.progress} track={colors.liveTrack} fill={colors.accent} />}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-        <Text style={[TABULAR, { fontSize: 13, color: colors.textMuted }]}>{time}</Text>
+        <Text style={[TABULAR, { fontSize: 13, color: colors.textMuted }]}>{item.timeText}</Text>
         <Text numberOfLines={1} style={[BOLD, { flex: 1, fontSize: 15, color: colors.textPrimary }]}>{item.artist.name}</Text>
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-        <Status item={item} />
+        <Status status={item.status} />
         <Text numberOfLines={1} style={{ flex: 1, textAlign: 'right', fontSize: 13, color: colors.textSecondary }}>
           {item.stageName}
         </Text>
@@ -167,8 +164,22 @@ function PlanSetRowBase({ item, onPressArtist, background = colors.surface, bord
   );
 }
 
+/** The card inside the list's side gutters, and the now arrow in the left one while live. */
+function PlanSetRowBase(props: Props) {
+  const { nowY } = props.item;
+  return (
+    <View>
+      <View style={{ paddingHorizontal: LIST_GUTTER }}>
+        <SetCard {...props} />
+      </View>
+      {nowY !== null && <NowArrow y={nowY} />}
+    </View>
+  );
+}
+
 /**
- * Re-renders only when its item does. The screen rebuilds items once a minute,
- * so a row repaints at most then — and when its own pick changes.
+ * Renders again only when what it shows changes (sameProps): the plan rebuilds
+ * its models every minute, but a row whose texts and progress stay the same is
+ * left alone.
  */
-export const PlanSetRow = memo(PlanSetRowBase);
+export const PlanSetRow = memo(PlanSetRowBase, sameProps);

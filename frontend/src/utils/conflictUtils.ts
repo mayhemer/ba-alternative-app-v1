@@ -159,7 +159,7 @@ export function computeConflictOverlaps(
  * ones are things like all-day exhibitions, which clash with everything.
  *
  * The one eligibility rule shared by the conflict calculation and My plan's list
- * (planUtils, nowPillState): the plan lists exactly the sets considered here, so
+ * (planUtils, NowPill.model): the plan lists exactly the sets considered here, so
  * the two never disagree. Change it here, for both.
  */
 export function isConflictEligible(event: DbEvent): boolean {

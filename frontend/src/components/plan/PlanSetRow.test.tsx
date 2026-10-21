@@ -3,7 +3,8 @@ import { StyleSheet } from 'react-native';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { PlanSetRow } from './PlanSetRow';
 import { ConflictGroupTitle } from './PlanListItems';
-import { buildPlanDay, type PlanInputs, type PlanSetItem } from '../../utils/planUtils';
+import { buildPlanDay, type PlanInputs } from '../../utils/planUtils';
+import type { PlanSetModel } from './PlanSetRow.model';
 import { getFestivalDayStart } from '../timeline/timelineLayout';
 import { LIVE_BORDER } from './planStyles';
 import { colors } from '../../styling/tokens';
@@ -39,17 +40,17 @@ function setup(): { inputs: PlanInputs; interests: Record<string, string> } {
   return { inputs: { artists, stages, artistEvents }, interests };
 }
 
-function item(name: string, now: string): PlanSetItem {
+function item(name: string, now: string): PlanSetModel {
   const { inputs, interests } = setup();
   const items = buildPlanDay(interests, inputs, { dayStart: THU, now: at(now), duringFestival: true, showMaybe: true, conflictsOnly: false });
-  const found = items.find((i): i is PlanSetItem => i.kind === 'set' && i.artist.name === name);
+  const found = items.find((i): i is PlanSetModel => i.kind === 'set' && i.artist.name === name);
   if (found === undefined) {
     throw new Error(`no ${name}`);
   }
   return found;
 }
 
-async function renderRow(row: PlanSetItem, handlers = { onPressArtist: jest.fn() }) {
+async function renderRow(row: PlanSetModel, handlers = { onPressArtist: jest.fn() }) {
   await render(<PlanSetRow item={row} {...handlers} />);
   return handlers;
 }
@@ -72,6 +73,14 @@ it('counts down to a set that clashes with one live now', async () => {
   await renderRow(item('Batushka', '19:23'));
   expect(screen.getByText('START')).toBeTruthy();
   expect(screen.getByText('−17 min')).toBeTruthy();
+});
+
+it('draws the now arrow on a live set only, at the tip of its progress', async () => {
+  const live = item('Gojira', '19:23');
+  await renderRow(live);
+  expect(StyleSheet.flatten(screen.getByTestId('plan-now-arrow').props.style).top).toBe(live.nowY! - 15);
+  await renderRow(item('Batushka', '19:23'));
+  expect(screen.queryByTestId('plan-now-arrow')).toBeNull();
 });
 
 it('marks a past set as done', async () => {
@@ -118,7 +127,7 @@ it('gives every clash bar its own clip id: on web, SVG ids are global to the pag
 const BG = 'rgb(10, 20, 30)';
 const BORDER = 'rgb(40, 50, 60)';
 
-async function rowStyle(row: PlanSetItem, colours: { background?: string; border?: string }) {
+async function rowStyle(row: PlanSetModel, colours: { background?: string; border?: string }) {
   await render(<PlanSetRow item={row} onPressArtist={jest.fn()} {...colours} />);
   return StyleSheet.flatten(screen.getByRole('button').props.style);
 }
@@ -155,9 +164,9 @@ it('opens the artist detail when the row is tapped', async () => {
   expect(onPressArtist).toHaveBeenCalledWith(row.artist);
 });
 
-// The group title is drawn by the cell above the clash group (a FlatList cell
-// cannot receive touches outside its own bounds on Android); which set carries
-// it is planUtils' conflictHead.
+// The group title is drawn by the cell above the clash group (a list cell
+// cannot receive touches outside its own bounds on Android); which cell carries
+// it is planUtils' business.
 it('opens the conflict detail from the group title', async () => {
   const row = item('Gojira', '19:23');
   const onPress = jest.fn();

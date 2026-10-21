@@ -1,0 +1,50 @@
+import React, { memo } from 'react';
+import { View } from 'react-native';
+import Svg, { Line } from 'react-native-svg';
+import { Text } from '../ui/Text';
+import { ConflictGroupTitle, NowArrow, RAIL_WIDTH, RAIL_X, RailEnd } from './PlanListItems';
+import { sameProps } from './sameProps';
+import { BOLD, LIST_GUTTER, PROGRESS_BAR_WIDTH, TABULAR } from './planStyles';
+import type { PlanGapModel } from './PlanGap.model';
+import type { DbEvent } from '../../types/backend';
+import { colors } from '../../styling/tokens';
+
+// ── A gap between sets ────────────────────────────────────────────────────────
+//
+// A dotted rail and its label; the current one adds the blue fill and the now
+// arrow; the one above a clash group carries its "Conflict" title. Draws its
+// model (PlanGap.model.ts) and computes nothing itself.
+
+type Props = { item: PlanGapModel; onPressConflict?: (event: DbEvent) => void };
+
+const NO_OP = (): void => undefined;
+
+function PlanGapBase({ item, onPressConflict = NO_OP }: Props) {
+  return (
+    <View testID="plan-gap" style={{ height: item.height, alignItems: 'center', justifyContent: 'center' }}>
+      <Svg pointerEvents="none" width={RAIL_WIDTH} height={item.height} style={{ position: 'absolute', left: RAIL_X, top: 0 }}>
+        <Line x1={RAIL_WIDTH / 2} y1={0} x2={RAIL_WIDTH / 2} y2={item.height} stroke={colors.borderMid} strokeWidth={RAIL_WIDTH} strokeDasharray="2,2" />
+      </Svg>
+      {item.current && (
+        <View
+          testID="plan-gap-progress"
+          pointerEvents="none"
+          style={{ position: 'absolute', left: LIST_GUTTER, top: 0, bottom: 0, width: PROGRESS_BAR_WIDTH, borderRadius: 3, overflow: 'hidden', backgroundColor: colors.breakTrack }}
+        >
+          <View testID="plan-gap-fill" style={{ width: PROGRESS_BAR_WIDTH, height: `${item.progress * 100}%`, backgroundColor: colors.breakBlue }} />
+        </View>
+      )}
+      {item.current ? (
+        <Text style={[BOLD, TABULAR, { fontSize: 15, color: colors.breakBlue }]}>{item.label}</Text>
+      ) : (
+        <Text style={[TABULAR, { fontSize: 12, color: colors.muted }]}>{item.label}</Text>
+      )}
+      {item.opening && <RailEnd edge="start" height={item.height} />}
+      {item.nowY !== null && <NowArrow y={item.nowY} />}
+      {item.conflictTitle !== null && <ConflictGroupTitle event={item.conflictTitle} onPress={onPressConflict} />}
+    </View>
+  );
+}
+
+/** Renders again only when what it shows changes (sameProps). */
+export const PlanGap = memo(PlanGapBase, sameProps);

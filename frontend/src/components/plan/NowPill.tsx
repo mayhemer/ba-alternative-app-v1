@@ -8,8 +8,7 @@ import { useInterest } from '../../context/InterestContext';
 import { usePlanStore } from '../../context/PlanContext';
 import { useMinuteNow } from '../../hooks/useMinuteNow';
 import { navigationRef } from '../../navigation/navigationRef';
-import { nowPillState, type NowPillState } from '../../utils/nowPillState';
-import { formatRemaining, planStrings } from './planStrings';
+import { nowPillModel, type NowPillModel } from './NowPill.model';
 import { BOLD, STATUS_LABEL, TABULAR } from './planStyles';
 import { colors } from '../../styling/tokens';
 
@@ -27,8 +26,6 @@ const LOGO_WIDTH = Math.round(LOGO_HEIGHT * (601 / 231));
 const PILL_HEIGHT = 36;
 // The pill is drawn 36 pt tall; the tap area grows to 44 pt.
 const PILL_HIT_SLOP = { top: 4, bottom: 4, left: 0, right: 0 };
-
-const strings = planStrings();
 
 const PILL_STYLE = {
   width: '80%' as const,
@@ -54,7 +51,7 @@ function Logo() {
   );
 }
 
-type ViewProps = { state: NowPillState; onPress: () => void };
+type ViewProps = { state: NowPillModel; onPress: () => void };
 
 export function NowPillView({ state, onPress }: ViewProps) {
   if (state.kind === 'logo') {
@@ -62,14 +59,13 @@ export function NowPillView({ state, onPress }: ViewProps) {
   }
 
   if (state.kind === 'live') {
-    const time = formatRemaining(state.remainingMs);
     return (
       <Pressable
         testID="now-pill"
         onPress={onPress}
         hitSlop={PILL_HIT_SLOP}
         accessibilityRole="button"
-        accessibilityLabel={`${state.artistName} ${strings.live} ${time}`}
+        accessibilityLabel={state.accessibilityLabel}
         style={[PILL_STYLE, { justifyContent: 'space-between', gap: 14 }]}
       >
         <Text numberOfLines={1} style={[BOLD, { flexShrink: 1, fontSize: 15, color: colors.textPrimary }]}>
@@ -80,9 +76,9 @@ export function NowPillView({ state, onPress }: ViewProps) {
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
               <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: colors.danger }} />
-              <Text style={STATUS_LABEL}>{strings.live}</Text>
+              <Text style={STATUS_LABEL}>{state.label}</Text>
             </View>
-            <Text style={[BOLD, TABULAR, { fontSize: 15, color: colors.accent }]}>{time}</Text>
+            <Text style={[BOLD, TABULAR, { fontSize: 15, color: colors.accent }]}>{state.time}</Text>
           </View>
           {state.more > 0 && (
             <View style={{ borderWidth: 1, borderColor: colors.danger, borderRadius: 8, paddingHorizontal: 5 }}>
@@ -101,18 +97,17 @@ export function NowPillView({ state, onPress }: ViewProps) {
     );
   }
 
-  const time = formatRemaining(state.remainingMs);
   return (
     <Pressable
       testID="now-pill"
       onPress={onPress}
       hitSlop={PILL_HIT_SLOP}
       accessibilityRole="button"
-      accessibilityLabel={`${time} ${strings.till} ${state.artistName}`}
+      accessibilityLabel={state.accessibilityLabel}
       style={[PILL_STYLE, { justifyContent: 'center', gap: 6 }]}
     >
-      <Text style={[BOLD, TABULAR, { fontSize: 15, color: colors.breakBlue }]}>{time}</Text>
-      <Text style={{ fontSize: 13, color: colors.textPrimary }}>{strings.till}</Text>
+      <Text style={[BOLD, TABULAR, { fontSize: 15, color: colors.breakBlue }]}>{state.time}</Text>
+      <Text style={{ fontSize: 13, color: colors.textPrimary }}>{state.till}</Text>
       <Text numberOfLines={1} style={[BOLD, { flexShrink: 1, fontSize: 15, color: colors.textPrimary }]}>
         {state.artistName}
       </Text>
@@ -142,7 +137,7 @@ export function NowPill() {
   const openPlanAtNow = useOpenPlanAtNow();
 
   const state = useMemo(
-    () => nowPillState(interests, { artists, stages, artistEvents }, festivalDays, now),
+    () => nowPillModel(interests, { artists, stages, artistEvents }, festivalDays, now),
     [interests, artists, stages, artistEvents, festivalDays, now],
   );
 

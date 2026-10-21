@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FlatList, View, type LayoutChangeEvent, type ListRenderItem, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
+import { ScrollView, View, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTopBar, useBottomBar } from '../context/ScreenUIContext';
 import { useSelectedSlug } from '../store/AppContext';
@@ -13,13 +13,16 @@ import { usePlanFilters, usePlanPanel, usePlanShownDay, usePlanStore, usePlanSto
 import { useMinuteNow } from '../hooks/useMinuteNow';
 import { useLayoutMode } from '../hooks/useLayoutMode';
 import { getScroll, setScroll } from '../store/uiStatePersistence';
-import { buildPlanDay, itemOffsets, nowScrollOffset, PLAN_LAYOUT, type PlanItem } from '../utils/planUtils';
+import { buildPlanDay, nowScrollOffset, PLAN_LAYOUT, type PlanItem } from '../utils/planUtils';
 import { getFestivalDayStart } from '../components/timeline/timelineLayout';
 import { PlanSetRow } from '../components/plan/PlanSetRow';
-import { ConflictGroupTitle, NowArrow, PlanCap, PlanDayTitle, PlanEmpty, PlanGap, type DayTone } from '../components/plan/PlanListItems';
+import { PlanCap } from '../components/plan/PlanCap';
+import { PlanDayTitle } from '../components/plan/PlanDayTitle';
+import { PlanEmpty } from '../components/plan/PlanEmpty';
+import { PlanGap } from '../components/plan/PlanGap';
+import { PlanSpacer } from '../components/plan/PlanSpacer';
 import { PlanFilterChip } from '../components/plan/PlanFilterChip';
 import { PlanDaySwitcher } from '../components/plan/PlanDaySwitcher';
-import { LIST_GUTTER } from '../components/plan/planStyles';
 import { planStrings } from '../components/plan/planStrings';
 import type { DbArtist, DbEvent } from '../types/backend';
 import { colors } from '../styling/tokens';
@@ -27,8 +30,14 @@ import { colors } from '../styling/tokens';
 // ── My plan ───────────────────────────────────────────────────────────────────
 //
 // Today, now and next, one festival day at a time. The list's content comes from
-// buildPlanDay, with deterministic heights, so the FlatList needs no measuring
-// and scroll targets are computed. Spec: app/MY-PLAN-VIEW-DESIGN.md.
+// buildPlanDay, with deterministic heights, so scroll targets are computed, not
+// measured. Spec: app/MY-PLAN-VIEW-DESIGN.md.
+//
+// A plain ScrollView rendering every item, not a FlatList: a day is short (tens
+// of items), and each element renders again only when what it shows changes.
+// FlatList's virtualization buys nothing here and costs a second commit after
+// every change: its cell-window check fires 50 ms after each update and commits
+// the list again, unchanged.
 //
 // Scrolling works like the timeline's: the position is remembered per day
 // (uiStatePersistence, under PLAN_SCREEN_KEY, as y offsets); a day without one
@@ -37,13 +46,6 @@ import { colors } from '../styling/tokens';
 
 const PLAN_SCREEN_KEY = 'plan';
 const strings = planStrings();
-
-function dayTone(day: number, now: number, festivalDays: number[]): DayTone {
-  const today = getFestivalDayStart(now);
-  if (!festivalDays.includes(today)) { return 'outside'; }
-  if (day === today) { return 'today'; }
-  return day < today ? 'past' : 'future';
-}
 
 export function MyPlanScreen() {
   useTopBar({ title: strings.title, RightComponent: PlanFilterChip });
@@ -71,13 +73,11 @@ export function MyPlanScreen() {
   const { openConflict } = useConflictDetail();
   const { bottomClearance } = useLayoutMode();
 
-  const tone = dayTone(day, now, festivalDays);
-  const duringFestival = tone !== 'outside';
+  const duringFestival = festivalDays.includes(getFestivalDayStart(now));
   const items = useMemo<PlanItem[]>(
     () => (day === 0 ? [] : buildPlanDay(interests, { artists, stages, artistEvents }, { dayStart: day, now, duringFestival, showMaybe, conflictsOnly })),
     [day, interests, artists, stages, artistEvents, now, duringFestival, showMaybe, conflictsOnly],
   );
-  const offsets = useMemo(() => itemOffsets(items), [items]);
 
   // The filter panel belongs to this screen: leaving it closes the panel.
   useFocusEffect(useCallback(() => () => { closePanel(); }, [closePanel]));
@@ -92,7 +92,7 @@ export function MyPlanScreen() {
 
   // ── Scroll: landing, "now" requests, per-day memory ────────────────────────
 
-  const listRef = useRef<FlatList<PlanItem>>(null);
+  const listRef = useRef<ScrollView>(null);
   const [viewportHeight, setViewportHeight] = useState(0);
   // Read when landing, not a reason to land again: a new minute or a filter
   // change must not move a list the user has scrolled.
@@ -107,7 +107,7 @@ export function MyPlanScreen() {
   // The screen's own landing scroll must not be remembered as the user's: the
   // landing for today is "now", which moves, and a stored copy would pin a day
   // the user never scrolled to the "now" of an earlier visit. A non-animated
-  // scrollToOffset reports exactly one scroll event, which this skips.
+  // scrollTo reports exactly one scroll event, which this skips.
   const skipNextScrollRef = useRef(false);
 
   useEffect(() => {
@@ -124,7 +124,7 @@ export function MyPlanScreen() {
     landedDayRef.current = day;
     // An animated scroll to now is the user's own request; that position may be kept.
     skipNextScrollRef.current = !animated;
-    listRef.current?.scrollToOffset({ offset: target, animated });
+    listRef.current?.scrollTo({ y: target, animated });
   }, [day, viewportHeight, storeVersion, store]);
 
   const handleLayout = useCallback((e: LayoutChangeEvent): void => {
@@ -149,72 +149,51 @@ export function MyPlanScreen() {
 
   // ── Rows ────────────────────────────────────────────────────────────────────
 
-  const renderItem = useCallback<ListRenderItem<PlanItem>>(({ item, index }) => {
-    const next = items[index + 1];
-    // The conflict title is drawn by the cell above its group (gap, cap or spacer):
-    // a cell cannot take touches outside its own bounds on Android.
-    let title: React.ReactNode = null;
-    if (next !== undefined && next.kind === 'set' && next.conflictHead) {
-      title = <ConflictGroupTitle event={next.event} onPress={handleConflict} />;
-    }
-
+  const renderCell = useCallback((item: PlanItem): React.ReactNode => {
     let content: React.ReactNode = null;
     switch (item.kind) {
       case 'title':
-        content = <PlanDayTitle dayStart={item.dayStart} tone={tone} height={item.height} />;
+        content = <PlanDayTitle item={item} />;
         break;
       case 'set':
         content = (
-          <View>
-            <View style={{ paddingHorizontal: LIST_GUTTER }}>
-              <PlanSetRow
-                item={item}
-                onPressArtist={handleArtist}
-                background={rowColors.get(item.event.categoryId)?.bg}
-                border={rowColors.get(item.event.categoryId)?.border}
-              />
-            </View>
-            {item.state === 'live' && <NowArrow y={item.progress * item.height} />}
-          </View>
+          <PlanSetRow
+            item={item}
+            onPressArtist={handleArtist}
+            background={rowColors.get(item.event.categoryId)?.bg}
+            border={rowColors.get(item.event.categoryId)?.border}
+          />
         );
         break;
       case 'gap':
-        content = <PlanGap item={item}>{title}</PlanGap>;
+        content = <PlanGap item={item} onPressConflict={handleConflict} />;
         break;
       case 'cap':
-        content = <PlanCap item={item}>{title}</PlanCap>;
+        content = <PlanCap item={item} onPressConflict={handleConflict} />;
         break;
       case 'spacer':
-        content = <View style={{ height: item.height }}>{title}</View>;
+        content = <PlanSpacer item={item} onPressConflict={handleConflict} />;
         break;
       case 'empty':
-        content = <PlanEmpty conflictsOnly={conflictsOnly} height={item.height} />;
+        content = <PlanEmpty item={item} />;
         break;
     }
-    return <View style={{ height: item.height + PLAN_LAYOUT.itemSpacing }}>{content}</View>;
-  }, [items, tone, conflictsOnly, handleArtist, handleConflict, rowColors]);
-
-  const getItemLayout = useCallback((_: ArrayLike<PlanItem> | null | undefined, index: number) => ({
-    length: items[index].height + PLAN_LAYOUT.itemSpacing,
-    offset: offsets[index],
-    index,
-  }), [items, offsets]);
+    return <View key={item.key} style={{ height: item.height + PLAN_LAYOUT.itemSpacing }}>{content}</View>;
+  }, [handleArtist, handleConflict, rowColors]);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }} onLayout={handleLayout}>
-      <FlatList
+      <ScrollView
         testID="plan-list"
         ref={listRef}
-        data={items}
-        keyExtractor={(item) => item.key}
-        renderItem={renderItem}
-        getItemLayout={getItemLayout}
         onScroll={handleScroll}
         onScrollEndDrag={persistScroll}
         onMomentumScrollEnd={persistScroll}
         scrollEventThrottle={100}
         contentContainerStyle={{ paddingTop: PLAN_LAYOUT.paddingTop, paddingBottom: 24 + bottomClearance }}
-      />
+      >
+        {items.map(renderCell)}
+      </ScrollView>
     </View>
   );
 }

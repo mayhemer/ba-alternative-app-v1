@@ -50,6 +50,7 @@ Related: [DESIGN.md](DESIGN.md) (app-wide design, layout modes, chrome).
 ```
 
 - **Same sets as the conflict calculation.** My plan lists exactly the sets the conflict calculation considers, through one shared rule (`conflictUtils.isConflictEligible`). Sets longer than 2 hours (all-day exhibitions, say) are out of both: not listed, not in the now pill, never clashing. The plan and the conflict logic must stay on one source feed and one rule. A change to either goes through the shared logic, never a plan-only or conflict-only filter or count.
+- **One model per element.** Every element (day title, set row, gap, cap, spacer, empty day, now pill) has a pure model next to its component (`components/plan/<Element>.model.ts`). The model computes everything the element shows: height, texts, progress, where the now arrow sits. It works from the raw inputs that element depends on, and the component draws only the model. `buildPlanDay` decides only which elements a day lists, and in what order. Height and label can't disagree because they come from the same inputs: a gap drawn as 2 h says `2 h`.
 - **One festival day per view.**
 - Festival days run **06:00 → 06:00** (`DAY_BOUNDARY_HOUR`), so a 00:30 set belongs to the previous day.
 - All times are in festival time (`festivalTime.ts`).
@@ -70,6 +71,7 @@ On every screen that has a top bar. On festival days it replaces the logo while 
 | **Otherwise** | the logo | — |
 
 - **Break window:** from the end of today's last finished Must-see (or **08:00** if none has finished yet) to the next Must-see today. Between 06:00 and 08:00, and after the day's last Must-see, the pill shows the logo.
+- **Source:** today's Must-sees only. The pill ignores both plan filters. With Maybes shown, the list's break or gap can count down to a Maybe while the pill counts down to the next Must-see. That's intended.
 - **Grouping by proximity:** 6 px gaps inside the status group, 14 px between the name and the group. No divider, which avoids a "| ●" stutter.
 - **Size:** 80% of the space between ☰ and the right slot, 36 pt tall (tap area extended to 44 pt with `hitSlop`), radius 18, 1 px `#333` border, `surfaceRaised` background.
 - **Conflicts:** the pill never cycles or animates. Motion at the top of every screen is distracting, a mid-glance switch is unreadable, and it ignores the reduce-motion setting.
@@ -92,6 +94,17 @@ On every screen that has a top bar. On festival days it replaces the logo while 
 ## The list
 
 Item spacing is 6 px, with 12 px side padding.
+
+What each element shows comes from its own model (see Principles), built from these inputs:
+
+| Element | Built from | Shows |
+|---|---|---|
+| Day title | the shown day, now, whether today is a festival day | weekday, date, tone (today / past / future / outside) |
+| Set row | the set, its artist and stage, now, its overlaps with other Must-sees, the Must-sees live now, whether it heads a clash group | time range, stage, status (`LIVE −x`, `START −x`, `done`), progress, now arrow, clash bars |
+| Gap | where it starts (the end of everything listed above) and the set listed right under it, now | length or countdown, height, fill, now arrow, the conflict title of the group under it |
+| Day-start break | a gap from 08:00 to the first **listed** set | as a gap, with the start ring |
+| Cap / spacer | its edge, or the clash group under it | the rail end, the conflict title of the group under it |
+| Empty day | whether only conflicts are shown | its sentence |
 
 ### Day title
 
@@ -151,7 +164,7 @@ Item spacing is 6 px, with 12 px side padding.
 
 ### Day-start break
 
-- On today, from **08:00** until the day's first Must-see starts, the list opens with a break directly under the title.
+- On today, from **08:00** until the first listed set starts, the list opens with a break directly under the title. With Maybes shown, that set can be a Maybe; the now pill still counts down to the first Must-see.
 - It looks like a current gap: blue bar from 08:00, the arrow, `−3 h`. It takes the start cap's place, with the cap's ring at its top.
 - None outside that window, on a day with no Must-see, or in conflicts-only mode.
 

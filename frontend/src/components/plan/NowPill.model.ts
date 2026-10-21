@@ -1,12 +1,14 @@
-import { getFestivalDayStart } from '../components/timeline/timelineLayout';
-import { isConflictEligible } from './conflictUtils';
-import type { PlanInputs } from './planUtils';
-import type { DbEvent } from '../types/backend';
+import { getFestivalDayStart } from '../timeline/timelineLayout';
+import { isConflictEligible } from '../../utils/conflictUtils';
+import { BREAK_WINDOW_OFFSET_MS, type PlanInputs } from '../../utils/planUtils';
+import { formatRemaining, planStrings } from './planStrings';
+import type { DbEvent } from '../../types/backend';
 
 // ── What the now pill in the top bar says ─────────────────────────────────────
 //
 // Only today's Must-sees count, of the sets My plan lists (the conflict
-// calculation's eligibility rule); Maybe picks never reach the pill.
+// calculation's eligibility rule); Maybe picks never reach the pill, so unlike
+// the plan list it ignores the Maybe switch.
 //   live  — the live Must-see that ends soonest (its time left is the deadline
 //           for deciding whether to switch), plus how many others play now;
 //   break — counting down to the next Must-see today, from the end of the last
@@ -14,15 +16,14 @@ import type { DbEvent } from '../types/backend';
 //   logo  — nothing to say: outside the festival, before 08:00, after the day's
 //           last Must-see, or no Must-see today at all.
 
-export type NowPillState =
+const strings = planStrings();
+
+export type NowPillModel =
   | { kind: 'logo' }
-  | { kind: 'live'; artistName: string; remainingMs: number; progress: number; more: number }
-  | { kind: 'break'; artistName: string; remainingMs: number };
+  | { kind: 'live'; artistName: string; label: string; time: string; progress: number; more: number; accessibilityLabel: string }
+  | { kind: 'break'; artistName: string; time: string; till: string; accessibilityLabel: string };
 
-const LOGO: NowPillState = { kind: 'logo' };
-
-/** The day's break window opens two hours after the 06:00 boundary: 08:00. */
-const BREAK_DAY_OFFSET_MS = 2 * 60 * 60 * 1000;
+const LOGO: NowPillModel = { kind: 'logo' };
 
 type Must = { event: DbEvent; artistName: string };
 
@@ -41,12 +42,12 @@ function todaysMusts(interests: Record<string, string>, { artists, artistEvents 
   return musts;
 }
 
-export function nowPillState(
+export function nowPillModel(
   interests: Record<string, string>,
   inputs: PlanInputs,
   festivalDays: number[],
   now: number,
-): NowPillState {
+): NowPillModel {
   const today = getFestivalDayStart(now);
   if (!festivalDays.includes(today)) {
     return LOGO;
@@ -58,12 +59,15 @@ export function nowPillState(
     .sort((a, b) => a.event.dateTo - b.event.dateTo);
   if (live.length > 0) {
     const { event, artistName } = live[0];
+    const time = formatRemaining(event.dateTo - now);
     return {
       kind: 'live',
       artistName,
-      remainingMs: event.dateTo - now,
+      label: strings.live,
+      time,
       progress: (now - event.dateFrom) / (event.dateTo - event.dateFrom),
       more: live.length - 1,
+      accessibilityLabel: `${artistName} ${strings.live} ${time}`,
     };
   }
 
@@ -74,11 +78,12 @@ export function nowPillState(
     return LOGO;
   }
   const breakFrom = Math.max(
-    today + BREAK_DAY_OFFSET_MS,
+    today + BREAK_WINDOW_OFFSET_MS,
     ...musts.filter((m) => m.event.dateTo <= now).map((m) => m.event.dateTo),
   );
   if (now < breakFrom) {
     return LOGO;
   }
-  return { kind: 'break', artistName: next.artistName, remainingMs: next.event.dateFrom - now };
+  const time = formatRemaining(next.event.dateFrom - now);
+  return { kind: 'break', artistName: next.artistName, time, till: strings.till, accessibilityLabel: `${time} ${strings.till} ${next.artistName}` };
 }
