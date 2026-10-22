@@ -1,7 +1,7 @@
 import { getFestivalDayStart } from '../timeline/timelineLayout';
 import { isConflictEligible } from '../../utils/conflictUtils';
 import { BREAK_WINDOW_OFFSET_MS, type PlanInputs } from '../../utils/planUtils';
-import { formatRemaining, planStrings } from './planStrings';
+import { formatRemaining, NARROW_SPACE, planStrings } from './planStrings';
 import type { DbEvent } from '../../types/backend';
 
 // ── What the now pill in the top bar says ─────────────────────────────────────
@@ -20,8 +20,8 @@ const strings = planStrings();
 
 export type NowPillModel =
   | { kind: 'logo' }
-  | { kind: 'live'; artistName: string; label: string; time: string; progress: number; more: number; accessibilityLabel: string }
-  | { kind: 'break'; artistName: string; label: string; time: string; accessibilityLabel: string };
+  | { kind: 'live'; artistName: string; time: string; progress: number; more: number; accessibilityLabel: string }
+  | { kind: 'break'; artistName: string; time: string; accessibilityLabel: string };
 
 const LOGO: NowPillModel = { kind: 'logo' };
 
@@ -59,11 +59,10 @@ export function nowPillModel(
     .sort((a, b) => a.event.dateTo - b.event.dateTo);
   if (live.length > 0) {
     const { event, artistName } = live[0];
-    const time = formatRemaining(event.dateTo - now);
+    const time = formatRemaining(event.dateTo - now, NARROW_SPACE);
     return {
       kind: 'live',
       artistName,
-      label: strings.live,
       time,
       progress: (now - event.dateFrom) / (event.dateTo - event.dateFrom),
       more: live.length - 1,
@@ -84,11 +83,10 @@ export function nowPillModel(
   if (now < breakFrom) {
     return LOGO;
   }
-  const time = formatRemaining(next.event.dateFrom - now);
+  const time = formatRemaining(next.event.dateFrom - now, NARROW_SPACE);
   return {
     kind: 'break',
     artistName: next.artistName,
-    label: strings.start,
     time,
     accessibilityLabel: `${next.artistName} ${strings.start} ${time}`,
   };

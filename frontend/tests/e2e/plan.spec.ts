@@ -35,7 +35,8 @@ test('the now pill shows the live must-see and opens the plan', async ({ appPage
   const pill = appPage.getByTestId('now-pill');
   await expect(pill).toBeVisible();
   await expect(pill.getByText('CRYSTAL LAKE', { exact: false })).toBeVisible();
-  await expect(pill.getByText('LIVE')).toBeVisible();
+  // No status word on screen: the red dot shows it; the label still says it.
+  await expect(pill).toHaveAccessibleName(/LIVE/);
 
   await pill.click();
 

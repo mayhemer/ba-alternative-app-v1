@@ -5,25 +5,26 @@ import type { NowPillModel } from './NowPill.model';
 
 // ── The now pill in the top bar ───────────────────────────────────────────────
 //
-// Two lines saying what is happening for you right now: a live Must-see with its
+// One line saying what is happening for you right now: a live Must-see with its
 // time left, the countdown to the next one, or — when there is nothing to say —
-// the festival logo it stands in for.
+// the festival logo it stands in for. No words: a red dot marks a live set.
 
-const GOJIRA_LIVE: NowPillModel = { kind: 'live', artistName: 'Gojira', label: 'LIVE', time: '−37 min', progress: 0.38, more: 0, accessibilityLabel: 'Gojira LIVE −37 min' };
-const GOJIRA_ENDING: NowPillModel = { kind: 'live', artistName: 'Gojira', label: 'LIVE', time: '−8 min', progress: 0.87, more: 1, accessibilityLabel: 'Gojira LIVE −8 min' };
-const START_EMPEROR: NowPillModel = { kind: 'break', artistName: 'Emperor', label: 'START', time: '−1 h 20', accessibilityLabel: 'Emperor START −1 h 20' };
+const GOJIRA_LIVE: NowPillModel = { kind: 'live', artistName: 'Gojira', time: '−37\u202Fmin', progress: 0.38, more: 0, accessibilityLabel: 'Gojira LIVE −37\u202Fmin' };
+const GOJIRA_ENDING: NowPillModel = { kind: 'live', artistName: 'Gojira', time: '−8\u202Fmin', progress: 0.87, more: 1, accessibilityLabel: 'Gojira LIVE −8\u202Fmin' };
+const START_EMPEROR: NowPillModel = { kind: 'break', artistName: 'Emperor', time: '−1\u202Fh\u202F20', accessibilityLabel: 'Emperor START −1\u202Fh\u202F20' };
 
-it('shows a live set with its status and time left', async () => {
+it('shows a live set with its time left, and no status word', async () => {
   await render(<NowPillView state={GOJIRA_LIVE} onPress={jest.fn()} />);
   expect(screen.getByText('Gojira')).toBeTruthy();
-  expect(screen.getByText('LIVE')).toBeTruthy();
-  expect(screen.getByText('−37 min')).toBeTruthy();
-  expect(screen.queryByText(/^\+\d/)).toBeNull();
+  expect(screen.getByText('−37\u202Fmin')).toBeTruthy();
+  expect(screen.queryByText('LIVE')).toBeNull();
+  expect(screen.queryByTestId('now-pill-clash')).toBeNull();
 });
 
-it('counts the other Must-sees playing at the same time', async () => {
+it('marks other Must-sees playing at the same time with the warning glyph, not a count', async () => {
   await render(<NowPillView state={GOJIRA_ENDING} onPress={jest.fn()} />);
-  expect(screen.getByText('+1')).toBeTruthy();
+  expect(screen.getByTestId('now-pill-clash')).toBeTruthy();
+  expect(screen.queryByText(/^\+\d/)).toBeNull();
 });
 
 it('shows the progress bar only while a set is live', async () => {
@@ -39,8 +40,8 @@ it('shows the progress bar only while a set is live', async () => {
 it('counts down to the next Must-see during a break', async () => {
   await render(<NowPillView state={START_EMPEROR} onPress={jest.fn()} />);
   expect(screen.getByText('Emperor')).toBeTruthy();
-  expect(screen.getByText('START')).toBeTruthy();
-  expect(screen.getByText('−1 h 20')).toBeTruthy();
+  expect(screen.getByText('−1\u202Fh\u202F20')).toBeTruthy();
+  expect(screen.queryByText('START')).toBeNull();
 });
 
 it('opens the plan when tapped', async () => {

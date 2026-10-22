@@ -73,12 +73,17 @@ const LONG: Spec[] = [
 /** The day's sets, all picked as Maybe. */
 const MAYBES_ONLY: Spec[] = DAY.map(([id, name, from, to]) => [id, name, from, to, 'maybe']);
 
+/** The pill joins its times with narrow no-break spaces (U+202F); the cases write them as plain spaces. */
+function narrow(time: string): string {
+  return time.replace(/ /g, '\u202F');
+}
+
 function live(artistName: string, time: string, progress: number, more = 0): NowPillModel {
-  return { kind: 'live', artistName, label: 'LIVE', time, progress, more, accessibilityLabel: `${artistName} LIVE ${time}` };
+  return { kind: 'live', artistName, time: narrow(time), progress, more, accessibilityLabel: `${artistName} LIVE ${narrow(time)}` };
 }
 
 function countdown(artistName: string, time: string): NowPillModel {
-  return { kind: 'break', artistName, label: 'START', time, accessibilityLabel: `${artistName} START ${time}` };
+  return { kind: 'break', artistName, time: narrow(time), accessibilityLabel: `${artistName} START ${narrow(time)}` };
 }
 
 const LOGO: NowPillModel = { kind: 'logo' };

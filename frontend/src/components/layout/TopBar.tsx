@@ -24,9 +24,8 @@ export function TopBar() {
       </View>
 
       {/* Center — the now pill: what is on for you right now, or the logo when
-          there is nothing to say (see components/plan/NowPill). Full bar height,
-          so the whole centre is the pill's tap area. */}
-      <View className="flex-1 self-stretch items-center justify-center">
+          there is nothing to say (see components/plan/NowPill) */}
+      <View className="flex-1 items-center">
         <NowPill />
       </View>
 

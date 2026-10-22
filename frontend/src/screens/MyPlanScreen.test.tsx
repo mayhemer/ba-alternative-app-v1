@@ -217,7 +217,7 @@ it('shows today at mount: the live set, the clashing one about to start, Maybes 
   const texts = listTexts();
   expect(texts).toEqual(expect.arrayContaining(['Hooded Menace', 'Gojira', 'LIVE', '−37 min', 'Batushka', 'START', '−17 min']));
   expect(texts).not.toContain('Blood Incantation');
-  expect(pill()).toBe('Gojira LIVE −37 min');
+  expect(pill()).toBe('Gojira LIVE −37\u202Fmin');
 });
 
 it('lists the Maybes when they are switched on, and drops them when switched off', async () => {
@@ -255,7 +255,7 @@ it('follows a set moved by a sync, in the list and in the pill', async () => {
   expect(texts).toContain('21:00–22:00');
   expect(texts).not.toContain('LIVE');
   // The next Must-see is now Batushka, at 19:40.
-  expect(pill()).toBe('Batushka START −17 min');
+  expect(pill()).toBe('Batushka START −17\u202Fmin');
 });
 
 it('lists a set added by a sync, and drops one removed by it', async () => {
@@ -272,7 +272,7 @@ it('counts down with every new minute, in the list and in the pill', async () =>
   await mount();
   await minuteTo(at(7, '19:24'));
   expect(listTexts()).toEqual(expect.arrayContaining(['−36 min', '−16 min']));
-  expect(pill()).toBe('Gojira LIVE −36 min');
+  expect(pill()).toBe('Gojira LIVE −36\u202Fmin');
 });
 
 it('moves on when a new minute ends a set', async () => {

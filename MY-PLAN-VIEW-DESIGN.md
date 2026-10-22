@@ -21,9 +21,7 @@ Related: [DESIGN.md](DESIGN.md) (app-wide design, layout modes, chrome).
 
 ```
 ┌──────────────────────────────────────────┐
-│ ☰               Gojira ›              ½⋮ │  top bar: drawer, now pill, filter chip
-│              ● LIVE −37 min              │  the pill: two centred lines, no container
-│            ▀▀▀▀▀▀────────────            │  progress along the pill's bottom edge
+│ ☰  ( ● GOJIRA           −37 min )  ½⋮    │  top bar: drawer, now pill, filter chip
 ├──────────────────────────────────────────┤
 │           THURSDAY 7 Aug                 │  day title (first list item, scrolls away)
 │ ○                                        │  start cap: ring, then 20 min of bare rail
@@ -67,16 +65,16 @@ On every screen that has a top bar. On festival days it replaces the logo while 
 
 | State | Content | Progress |
 |---|---|---|
-| **Live** | line 1: band name (15 bold, ellipsis), then a `›` chevron (12, muted); line 2: `● LIVE −37 min` (red 6 pt dot, `LIVE` 11 bold caps in `textSecondary`, time 13 bold accent) | 3 px bar along the pill's bottom edge: track `liveTrack` `#4a3f17`, fill accent, elapsed fraction |
-| **Live, clash** | the live Must-see that **ends soonest**; line 2 ends with a red `warning-outline` glyph (14) and `+1` / `+2` (13 bold red), no border | same |
-| **Break** | line 1 as live; line 2: `START −1 h 20` (`START` styled as `LIVE`, time 13 bold blue `#5b9bff`) | none |
+| **Live** | left: red dot (7 pt), band name (bold, ellipsis); right: time left (bold accent): `● GOJIRA ……… −37 min` | 3 px bar along the bottom: track `liveTrack` `#4a3f17`, fill accent, elapsed fraction |
+| **Live, clash** | the live Must-see that **ends soonest**, then a red `warning-outline` glyph (13) at the far right; no count | same |
+| **Break** | centred: time to the start (bold blue `#5b9bff`), a chevron (`textMuted`), band name: `−1 h 30 › NAPALM DEATH` | none |
 | **Otherwise** | the logo | — |
 
 - **Break window:** from the end of today's last finished Must-see (or **08:00** if none has finished yet) to the next Must-see today. Between 06:00 and 08:00, and after the day's last Must-see, the pill shows the logo.
 - **Source:** today's Must-sees only. The pill ignores both plan filters. With Maybes shown, the list's break or gap can count down to a Maybe while the pill counts down to the next Must-see. That's intended.
-- **No container:** no border, background or rounding. The two centred lines read as the bar's title, in the logo's place. Line 2 uses the plan rows' state words, so each means one thing everywhere: `LIVE` counts to the end, `START` to the start.
-- **Size:** the whole centre between the side slots (56 pt each; the lens and filter chips are 54 pt), the full bar height, which is also the tap area. 2 pt between the lines. Only the band name and the chevron share line 1, so a clash count never squeezes the name.
-- **Pressed:** the text dims to 50 %; there is no surface to highlight.
+- **No words:** the dot, the colours and the arrow carry the state, so nothing needs translating. The accessibility label still says it: `GOJIRA LIVE −37 min`, `NAPALM DEATH START −1 h 30`.
+- **Text:** 12.6 pt bold (10 % under the plan rows' 14 pt), to fit more of the band name, which the festival feed sends in capitals. Times join their numbers and units with narrow no-break spaces (U+202F): about half a space each, without running `37min` together.
+- **Size:** the whole centre between the side slots (56 pt each; the lens and filter chips are 54 pt), 8 pt in from each, so about 10 pt clear of the right chip. 36 pt tall (tap area extended to 44 pt with `hitSlop`), radius 18, 1 px `borderMid` border, `surfaceRaised` background, 12 pt padding, 7 pt gaps.
 - **Conflicts:** the pill never cycles or animates. Motion at the top of every screen is distracting, a mid-glance switch is unreadable, and it ignores the reduce-motion setting.
 - **Tap:** opens My plan on **today, scrolled to now**. Back returns to the previous screen through the existing back history.
 
@@ -232,6 +230,7 @@ What each element shows comes from its own model (see Principles), built from th
 |---|---|
 | Duration | `45 min`, `1 h 20`, `3 h`. Always `min`, never `m` |
 | Time remaining (live, gap, pill, START) | prefixed with a real minus sign `−` (U+2212) |
+| Spaces in the pill's times | narrow no-break spaces (U+202F): `−37 min`, `−1 h 30` |
 | Times | `19:00–20:00` (en dash), tabular figures |
 
 All My plan strings live in one module, so a later i18n pass is a drop-in. Current EN / CS pairs:

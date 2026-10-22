@@ -1,4 +1,4 @@
-import { formatDayTitle, formatDuration, formatRemaining, planStrings } from './planStrings';
+import { formatDayTitle, formatDuration, formatRemaining, NARROW_SPACE, planStrings } from './planStrings';
 import { getFestivalDayStart } from '../timeline/timelineLayout';
 
 const MIN = 60 * 1000;
@@ -24,6 +24,12 @@ describe('formatRemaining', () => {
   it('prefixes the time left with a real minus sign', () => {
     expect(formatRemaining(37 * MIN)).toBe('−37 min');
     expect(formatRemaining(80 * MIN)).toBe('−1 h 20');
+  });
+
+  it('joins the numbers and units with a narrow no-break space when asked', () => {
+    expect(formatRemaining(37 * MIN, NARROW_SPACE)).toBe('−37\u202Fmin');
+    expect(formatRemaining(80 * MIN, NARROW_SPACE)).toBe('−1\u202Fh\u202F20');
+    expect(formatRemaining(180 * MIN, NARROW_SPACE)).toBe('−3\u202Fh');
   });
 });
 

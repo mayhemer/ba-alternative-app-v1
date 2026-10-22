@@ -10,15 +10,15 @@ import { usePlanStore } from '../../context/PlanContext';
 import { useMinuteNow } from '../../hooks/useMinuteNow';
 import { navigationRef } from '../../navigation/navigationRef';
 import { nowPillModel, type NowPillModel } from './NowPill.model';
-import { BOLD, STATUS_LABEL, TABULAR } from './planStyles';
+import { BOLD, TABULAR } from './planStyles';
 import { colors } from '../../styling/tokens';
 
 // ── Now pill: the TopBar centre ───────────────────────────────────────────────
 //
-// Two centred lines saying what is on for you right now, on every screen with a
-// TopBar (not in the short layout, where the TopBar is hidden): the band, then
-// its state and time left. No container: it reads as the bar's title, and it
-// stands in for the logo while it has something to say. Never cycles or
+// One line in a capsule saying what is on for you right now, on every screen
+// with a TopBar (not in the short layout, where the TopBar is hidden). It stands
+// in for the logo while it has something to say. No words, so nothing to
+// translate: a red dot marks a live set, an arrow the next one. Never cycles or
 // animates: motion at the top of every screen distracts, and a mid-glance
 // switch is unreadable.
 
@@ -26,14 +26,38 @@ import { colors } from '../../styling/tokens';
 const LOGO_HEIGHT = 34;
 const LOGO_WIDTH = Math.round(LOGO_HEIGHT * (601 / 231));
 
+const PILL_HEIGHT = 36;
+// The pill is drawn 36 pt tall; the tap area grows to 44 pt.
+const PILL_HIT_SLOP = { top: 4, bottom: 4, left: 0, right: 0 };
+/** In from each side slot: about 10 pt clear of the 54 pt chips in the 56 pt right slot. */
+const PILL_INSET = 8;
+/** 10 % under the plan rows' 14 pt, to fit more of the (all-caps) band name. */
+const PILL_FONT_SIZE = 12.6;
 const PROGRESS_HEIGHT = 3;
 
-/** Text dims while pressed: the pill has no surface to highlight. */
-const PRESSED_OPACITY = 0.5;
+const PILL_STYLE = {
+  alignSelf: 'stretch' as const,
+  marginHorizontal: PILL_INSET,
+  height: PILL_HEIGHT,
+  borderRadius: PILL_HEIGHT / 2,
+  borderWidth: 1,
+  borderColor: colors.borderMid,
+  backgroundColor: colors.surfaceRaised,
+  paddingHorizontal: 12,
+  flexDirection: 'row' as const,
+  alignItems: 'center' as const,
+  gap: 7,
+  overflow: 'hidden' as const,
+};
+const LIVE_PILL_STYLE = { ...PILL_STYLE, justifyContent: 'flex-start' as const };
+const BREAK_PILL_STYLE = { ...PILL_STYLE, justifyContent: 'center' as const };
 
-const TITLE_STYLE = { ...BOLD, flexShrink: 1, fontSize: 15, lineHeight: 18, color: colors.textPrimary };
-const LABEL_STYLE = { ...STATUS_LABEL, color: colors.textSecondary };
-const TIME_STYLE = { ...BOLD, ...TABULAR, fontSize: 13, lineHeight: 16 };
+const DOT_STYLE = { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.danger };
+const NAME_STYLE = { ...BOLD, flexShrink: 1, fontSize: PILL_FONT_SIZE, color: colors.textPrimary };
+// The live time sits at the right end; the clash glyph, if any, after it.
+const LIVE_TIME_STYLE = { ...BOLD, ...TABULAR, marginLeft: 'auto' as const, paddingLeft: 4, fontSize: PILL_FONT_SIZE, color: colors.accent };
+const BREAK_TIME_STYLE = { ...BOLD, ...TABULAR, fontSize: PILL_FONT_SIZE, color: colors.breakBlue };
+const PROGRESS_TRACK_STYLE = { position: 'absolute' as const, left: 0, right: 0, bottom: 0, height: PROGRESS_HEIGHT, backgroundColor: colors.liveTrack };
 
 function Logo() {
   return (
@@ -53,48 +77,43 @@ export function NowPillView({ state, onPress }: ViewProps) {
     return <Logo />;
   }
 
-  const live = state.kind === 'live';
+  if (state.kind === 'live') {
+    return (
+      <Pressable
+        testID="now-pill"
+        onPress={onPress}
+        hitSlop={PILL_HIT_SLOP}
+        accessibilityRole="button"
+        accessibilityLabel={state.accessibilityLabel}
+        style={LIVE_PILL_STYLE}
+      >
+        <View style={DOT_STYLE} />
+        <Text numberOfLines={1} style={NAME_STYLE}>{state.artistName}</Text>
+        <Text style={LIVE_TIME_STYLE}>{state.time}</Text>
+        {state.more > 0 && (
+          <View testID="now-pill-clash">
+            <Ionicons name="warning-outline" size={13} color={colors.danger} />
+          </View>
+        )}
+        <View testID="now-pill-progress" pointerEvents="none" style={PROGRESS_TRACK_STYLE}>
+          <View style={{ height: PROGRESS_HEIGHT, width: `${Math.round(state.progress * 100)}%`, backgroundColor: colors.accent }} />
+        </View>
+      </Pressable>
+    );
+  }
+
   return (
     <Pressable
       testID="now-pill"
       onPress={onPress}
+      hitSlop={PILL_HIT_SLOP}
       accessibilityRole="button"
       accessibilityLabel={state.accessibilityLabel}
-      style={({ pressed }) => ({
-        flex: 1,
-        alignSelf: 'stretch',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 2,
-        opacity: pressed ? PRESSED_OPACITY : 1,
-      })}
+      style={BREAK_PILL_STYLE}
     >
-      {/* Who: the band, and a chevron saying the bar opens something */}
-      <View style={{ maxWidth: '100%', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-        <Text numberOfLines={1} style={TITLE_STYLE}>{state.artistName}</Text>
-        <Ionicons name="chevron-forward" size={12} color={colors.muted} />
-      </View>
-      {/* Their state: live and time to the end, or the time to the start */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-        {live && <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: colors.danger }} />}
-        <Text style={LABEL_STYLE}>{state.label}</Text>
-        <Text style={[TIME_STYLE, { color: live ? colors.accent : colors.breakBlue }]}>{state.time}</Text>
-        {live && state.more > 0 && (
-          <View style={{ marginLeft: 2, flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-            <Ionicons name="warning-outline" size={14} color={colors.danger} />
-            <Text style={[BOLD, { fontSize: 13, lineHeight: 16, color: colors.danger }]}>{`+${state.more}`}</Text>
-          </View>
-        )}
-      </View>
-      {live && (
-        <View
-          testID="now-pill-progress"
-          pointerEvents="none"
-          style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: PROGRESS_HEIGHT, backgroundColor: colors.liveTrack }}
-        >
-          <View style={{ height: PROGRESS_HEIGHT, width: `${Math.round(state.progress * 100)}%`, backgroundColor: colors.accent }} />
-        </View>
-      )}
+      <Text style={BREAK_TIME_STYLE}>{state.time}</Text>
+      <Ionicons name="chevron-forward" size={11} color={colors.textMuted} />
+      <Text numberOfLines={1} style={NAME_STYLE}>{state.artistName}</Text>
     </Pressable>
   );
 }
