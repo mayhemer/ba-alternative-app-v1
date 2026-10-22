@@ -255,7 +255,7 @@ it('follows a set moved by a sync, in the list and in the pill', async () => {
   expect(texts).toContain('21:00–22:00');
   expect(texts).not.toContain('LIVE');
   // The next Must-see is now Batushka, at 19:40.
-  expect(pill()).toBe('−17 min till Batushka');
+  expect(pill()).toBe('Batushka START −17 min');
 });
 
 it('lists a set added by a sync, and drops one removed by it', async () => {

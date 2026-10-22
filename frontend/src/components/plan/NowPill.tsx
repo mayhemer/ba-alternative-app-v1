@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { Pressable, View } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text } from '../ui/Text';
 import { useSelectedSlug } from '../../store/AppContext';
 import { useArtistEventMap, useArtists, useFestivalDays, useStages } from '../../store/cacheStore';
@@ -14,31 +15,25 @@ import { colors } from '../../styling/tokens';
 
 // ── Now pill: the TopBar centre ───────────────────────────────────────────────
 //
-// One line saying what is on for you right now, on every screen with a TopBar
-// (not in the short layout, where the TopBar is hidden). It stands in for the
-// logo while it has something to say. Never cycles or animates: motion at the
-// top of every screen distracts, and a mid-glance switch is unreadable.
+// Two centred lines saying what is on for you right now, on every screen with a
+// TopBar (not in the short layout, where the TopBar is hidden): the band, then
+// its state and time left. No container: it reads as the bar's title, and it
+// stands in for the logo while it has something to say. Never cycles or
+// animates: motion at the top of every screen distracts, and a mid-glance
+// switch is unreadable.
 
 /** Logo is 601 × 231 px; keep its aspect ratio while fitting inside the 56 px bar. */
 const LOGO_HEIGHT = 34;
 const LOGO_WIDTH = Math.round(LOGO_HEIGHT * (601 / 231));
 
-const PILL_HEIGHT = 36;
-// The pill is drawn 36 pt tall; the tap area grows to 44 pt.
-const PILL_HIT_SLOP = { top: 4, bottom: 4, left: 0, right: 0 };
+const PROGRESS_HEIGHT = 3;
 
-const PILL_STYLE = {
-  width: '80%' as const,
-  height: PILL_HEIGHT,
-  borderRadius: PILL_HEIGHT / 2,
-  borderWidth: 1,
-  borderColor: colors.borderMid,
-  backgroundColor: colors.surfaceRaised,
-  paddingHorizontal: 14,
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  overflow: 'hidden' as const,
-};
+/** Text dims while pressed: the pill has no surface to highlight. */
+const PRESSED_OPACITY = 0.5;
+
+const TITLE_STYLE = { ...BOLD, flexShrink: 1, fontSize: 15, lineHeight: 18, color: colors.textPrimary };
+const LABEL_STYLE = { ...STATUS_LABEL, color: colors.textSecondary };
+const TIME_STYLE = { ...BOLD, ...TABULAR, fontSize: 13, lineHeight: 16 };
 
 function Logo() {
   return (
@@ -58,59 +53,48 @@ export function NowPillView({ state, onPress }: ViewProps) {
     return <Logo />;
   }
 
-  if (state.kind === 'live') {
-    return (
-      <Pressable
-        testID="now-pill"
-        onPress={onPress}
-        hitSlop={PILL_HIT_SLOP}
-        accessibilityRole="button"
-        accessibilityLabel={state.accessibilityLabel}
-        style={[PILL_STYLE, { justifyContent: 'space-between', gap: 14 }]}
-      >
-        <Text numberOfLines={1} style={[BOLD, { flexShrink: 1, fontSize: 15, color: colors.textPrimary }]}>
-          {state.artistName}
-        </Text>
-        {/* Tight inside the status group, wider from the name: two units, who and their state. */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-              <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: colors.danger }} />
-              <Text style={STATUS_LABEL}>{state.label}</Text>
-            </View>
-            <Text style={[BOLD, TABULAR, { fontSize: 15, color: colors.accent }]}>{state.time}</Text>
-          </View>
-          {state.more > 0 && (
-            <View style={{ borderWidth: 1, borderColor: colors.danger, borderRadius: 8, paddingHorizontal: 5 }}>
-              <Text style={[BOLD, { fontSize: 12, lineHeight: 16, color: colors.danger }]}>{`+${state.more}`}</Text>
-            </View>
-          )}
-        </View>
-        <View
-          testID="now-pill-progress"
-          pointerEvents="none"
-          style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, backgroundColor: colors.liveTrack }}
-        >
-          <View style={{ height: 3, width: `${Math.round(state.progress * 100)}%`, backgroundColor: colors.accent }} />
-        </View>
-      </Pressable>
-    );
-  }
-
+  const live = state.kind === 'live';
   return (
     <Pressable
       testID="now-pill"
       onPress={onPress}
-      hitSlop={PILL_HIT_SLOP}
       accessibilityRole="button"
       accessibilityLabel={state.accessibilityLabel}
-      style={[PILL_STYLE, { justifyContent: 'center', gap: 6 }]}
+      style={({ pressed }) => ({
+        flex: 1,
+        alignSelf: 'stretch',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 2,
+        opacity: pressed ? PRESSED_OPACITY : 1,
+      })}
     >
-      <Text style={[BOLD, TABULAR, { fontSize: 15, color: colors.breakBlue }]}>{state.time}</Text>
-      <Text style={{ fontSize: 13, color: colors.textPrimary }}>{state.till}</Text>
-      <Text numberOfLines={1} style={[BOLD, { flexShrink: 1, fontSize: 15, color: colors.textPrimary }]}>
-        {state.artistName}
-      </Text>
+      {/* Who: the band, and a chevron saying the bar opens something */}
+      <View style={{ maxWidth: '100%', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+        <Text numberOfLines={1} style={TITLE_STYLE}>{state.artistName}</Text>
+        <Ionicons name="chevron-forward" size={12} color={colors.muted} />
+      </View>
+      {/* Their state: live and time to the end, or the time to the start */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        {live && <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: colors.danger }} />}
+        <Text style={LABEL_STYLE}>{state.label}</Text>
+        <Text style={[TIME_STYLE, { color: live ? colors.accent : colors.breakBlue }]}>{state.time}</Text>
+        {live && state.more > 0 && (
+          <View style={{ marginLeft: 2, flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+            <Ionicons name="warning-outline" size={14} color={colors.danger} />
+            <Text style={[BOLD, { fontSize: 13, lineHeight: 16, color: colors.danger }]}>{`+${state.more}`}</Text>
+          </View>
+        )}
+      </View>
+      {live && (
+        <View
+          testID="now-pill-progress"
+          pointerEvents="none"
+          style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: PROGRESS_HEIGHT, backgroundColor: colors.liveTrack }}
+        >
+          <View style={{ height: PROGRESS_HEIGHT, width: `${Math.round(state.progress * 100)}%`, backgroundColor: colors.accent }} />
+        </View>
+      )}
     </Pressable>
   );
 }

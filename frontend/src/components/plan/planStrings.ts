@@ -13,7 +13,6 @@ export type PlanStrings = {
   live: string;
   done: string;
   start: string;
-  till: string;
   conflict: string;
   showMaybe: string;
   conflictsOnly: string;
@@ -29,7 +28,6 @@ const EN: PlanStrings = {
   live: 'LIVE',
   done: 'done',
   start: 'START',
-  till: 'till',
   conflict: 'Conflict',
   showMaybe: 'Show Maybe picks',
   conflictsOnly: 'Show only conflicts',
@@ -45,7 +43,6 @@ const CS: PlanStrings = {
   live: 'HRAJE',
   done: 'odehráno',
   start: 'ZAČÍNÁ',
-  till: 'do',
   conflict: 'Konflikt',
   showMaybe: 'Zobrazit výběry Možná',
   conflictsOnly: 'Zobrazit jen konflikty',

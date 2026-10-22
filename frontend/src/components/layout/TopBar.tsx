@@ -16,20 +16,22 @@ export function TopBar() {
       style={{ height: TOPBAR_HEIGHT }}
     >
 
-      {/* Left slot — DrawerButton renders nothing on wide screens (drawer is permanent); LeftComponent layered after if set */}
-      <View className="w-16 items-start">
+      {/* Left slot — DrawerButton renders nothing on wide screens (drawer is permanent); LeftComponent layered after if set.
+          The side slots are 56 pt: the widest controls in them, the lens and filter chips, are 54 pt. */}
+      <View className="w-14 items-start">
         <DrawerButton />
         {LeftComponent !== undefined ? <LeftComponent /> : null}
       </View>
 
       {/* Center — the now pill: what is on for you right now, or the logo when
-          there is nothing to say (see components/plan/NowPill) */}
-      <View className="flex-1 items-center">
+          there is nothing to say (see components/plan/NowPill). Full bar height,
+          so the whole centre is the pill's tap area. */}
+      <View className="flex-1 self-stretch items-center justify-center">
         <NowPill />
       </View>
 
       {/* Right slot */}
-      <View className="w-16 items-end">
+      <View className="w-14 items-end">
         {RightComponent !== undefined ? <RightComponent /> : null}
       </View>
 

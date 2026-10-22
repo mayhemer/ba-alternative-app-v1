@@ -5,13 +5,13 @@ import type { NowPillModel } from './NowPill.model';
 
 // ── The now pill in the top bar ───────────────────────────────────────────────
 //
-// One line saying what is happening for you right now: a live Must-see with its
+// Two lines saying what is happening for you right now: a live Must-see with its
 // time left, the countdown to the next one, or — when there is nothing to say —
 // the festival logo it stands in for.
 
 const GOJIRA_LIVE: NowPillModel = { kind: 'live', artistName: 'Gojira', label: 'LIVE', time: '−37 min', progress: 0.38, more: 0, accessibilityLabel: 'Gojira LIVE −37 min' };
 const GOJIRA_ENDING: NowPillModel = { kind: 'live', artistName: 'Gojira', label: 'LIVE', time: '−8 min', progress: 0.87, more: 1, accessibilityLabel: 'Gojira LIVE −8 min' };
-const TILL_EMPEROR: NowPillModel = { kind: 'break', artistName: 'Emperor', time: '−1 h 20', till: 'till', accessibilityLabel: '−1 h 20 till Emperor' };
+const START_EMPEROR: NowPillModel = { kind: 'break', artistName: 'Emperor', label: 'START', time: '−1 h 20', accessibilityLabel: 'Emperor START −1 h 20' };
 
 it('shows a live set with its status and time left', async () => {
   await render(<NowPillView state={GOJIRA_LIVE} onPress={jest.fn()} />);
@@ -32,20 +32,20 @@ it('shows the progress bar only while a set is live', async () => {
   );
   expect(screen.getByTestId('now-pill-progress')).toBeTruthy();
 
-  await rerender(<NowPillView state={TILL_EMPEROR} onPress={jest.fn()} />);
+  await rerender(<NowPillView state={START_EMPEROR} onPress={jest.fn()} />);
   expect(screen.queryByTestId('now-pill-progress')).toBeNull();
 });
 
 it('counts down to the next Must-see during a break', async () => {
-  await render(<NowPillView state={TILL_EMPEROR} onPress={jest.fn()} />);
-  expect(screen.getByText('−1 h 20')).toBeTruthy();
-  expect(screen.getByText('till')).toBeTruthy();
+  await render(<NowPillView state={START_EMPEROR} onPress={jest.fn()} />);
   expect(screen.getByText('Emperor')).toBeTruthy();
+  expect(screen.getByText('START')).toBeTruthy();
+  expect(screen.getByText('−1 h 20')).toBeTruthy();
 });
 
 it('opens the plan when tapped', async () => {
   const onPress = jest.fn();
-  await render(<NowPillView state={TILL_EMPEROR} onPress={onPress} />);
+  await render(<NowPillView state={START_EMPEROR} onPress={onPress} />);
   await fireEvent.press(screen.getByRole('button'));
   expect(onPress).toHaveBeenCalledTimes(1);
 });

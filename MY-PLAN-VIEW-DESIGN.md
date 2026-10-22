@@ -21,7 +21,9 @@ Related: [DESIGN.md](DESIGN.md) (app-wide design, layout modes, chrome).
 
 ```
 ┌──────────────────────────────────────────┐
-│ ☰   [ Gojira          ● LIVE −37 min ]  ½⋮│  top bar: drawer, now pill, filter chip
+│ ☰               Gojira ›              ½⋮ │  top bar: drawer, now pill, filter chip
+│              ● LIVE −37 min              │  the pill: two centred lines, no container
+│            ▀▀▀▀▀▀────────────            │  progress along the pill's bottom edge
 ├──────────────────────────────────────────┤
 │           THURSDAY 7 Aug                 │  day title (first list item, scrolls away)
 │ ○                                        │  start cap: ring, then 20 min of bare rail
@@ -65,15 +67,16 @@ On every screen that has a top bar. On festival days it replaces the logo while 
 
 | State | Content | Progress |
 |---|---|---|
-| **Live** | band name left (15 bold, ellipsis); right group `● LIVE −37 min` (red dot, `LIVE` 11 bold caps, time 15 bold accent) | 3 px bar along the bottom: track `#4a3f17`, fill accent, elapsed fraction |
-| **Live, clash** | the live Must-see that **ends soonest**, then a red outlined `+1` / `+2` badge | same |
-| **Break** | centred one phrase: `−1 h 20 till Emperor` (time bold blue `#5b9bff`, `till` 13 white, name bold white) | none |
+| **Live** | line 1: band name (15 bold, ellipsis), then a `›` chevron (12, muted); line 2: `● LIVE −37 min` (red 6 pt dot, `LIVE` 11 bold caps in `textSecondary`, time 13 bold accent) | 3 px bar along the pill's bottom edge: track `liveTrack` `#4a3f17`, fill accent, elapsed fraction |
+| **Live, clash** | the live Must-see that **ends soonest**; line 2 ends with a red `warning-outline` glyph (14) and `+1` / `+2` (13 bold red), no border | same |
+| **Break** | line 1 as live; line 2: `START −1 h 20` (`START` styled as `LIVE`, time 13 bold blue `#5b9bff`) | none |
 | **Otherwise** | the logo | — |
 
 - **Break window:** from the end of today's last finished Must-see (or **08:00** if none has finished yet) to the next Must-see today. Between 06:00 and 08:00, and after the day's last Must-see, the pill shows the logo.
 - **Source:** today's Must-sees only. The pill ignores both plan filters. With Maybes shown, the list's break or gap can count down to a Maybe while the pill counts down to the next Must-see. That's intended.
-- **Grouping by proximity:** 6 px gaps inside the status group, 14 px between the name and the group. No divider, which avoids a "| ●" stutter.
-- **Size:** 80% of the space between ☰ and the right slot, 36 pt tall (tap area extended to 44 pt with `hitSlop`), radius 18, 1 px `#333` border, `surfaceRaised` background.
+- **No container:** no border, background or rounding. The two centred lines read as the bar's title, in the logo's place. Line 2 uses the plan rows' state words, so each means one thing everywhere: `LIVE` counts to the end, `START` to the start.
+- **Size:** the whole centre between the side slots (56 pt each; the lens and filter chips are 54 pt), the full bar height, which is also the tap area. 2 pt between the lines. Only the band name and the chevron share line 1, so a clash count never squeezes the name.
+- **Pressed:** the text dims to 50 %; there is no surface to highlight.
 - **Conflicts:** the pill never cycles or animates. Motion at the top of every screen is distracting, a mid-glance switch is unreadable, and it ignores the reduce-motion setting.
 - **Tap:** opens My plan on **today, scrolled to now**. Back returns to the previous screen through the existing back history.
 
@@ -238,7 +241,6 @@ All My plan strings live in one module, so a later i18n pass is a drop-in. Curre
 | live | LIVE | HRAJE |
 | done | done | odehráno |
 | start | START | ZAČÍNÁ |
-| till | till | do |
 | conflict | Conflict | Konflikt |
 | showMaybe | Show Maybe picks | Zobrazit výběry Možná |
 | conflictsOnly | Show only conflicts | Zobrazit jen konflikty |

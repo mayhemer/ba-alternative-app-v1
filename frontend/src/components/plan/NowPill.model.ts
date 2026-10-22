@@ -21,7 +21,7 @@ const strings = planStrings();
 export type NowPillModel =
   | { kind: 'logo' }
   | { kind: 'live'; artistName: string; label: string; time: string; progress: number; more: number; accessibilityLabel: string }
-  | { kind: 'break'; artistName: string; time: string; till: string; accessibilityLabel: string };
+  | { kind: 'break'; artistName: string; label: string; time: string; accessibilityLabel: string };
 
 const LOGO: NowPillModel = { kind: 'logo' };
 
@@ -85,5 +85,11 @@ export function nowPillModel(
     return LOGO;
   }
   const time = formatRemaining(next.event.dateFrom - now);
-  return { kind: 'break', artistName: next.artistName, time, till: strings.till, accessibilityLabel: `${time} ${strings.till} ${next.artistName}` };
+  return {
+    kind: 'break',
+    artistName: next.artistName,
+    label: strings.start,
+    time,
+    accessibilityLabel: `${next.artistName} ${strings.start} ${time}`,
+  };
 }

@@ -78,7 +78,7 @@ function live(artistName: string, time: string, progress: number, more = 0): Now
 }
 
 function countdown(artistName: string, time: string): NowPillModel {
-  return { kind: 'break', artistName, time, till: 'till', accessibilityLabel: `${time} till ${artistName}` };
+  return { kind: 'break', artistName, label: 'START', time, accessibilityLabel: `${artistName} START ${time}` };
 }
 
 const LOGO: NowPillModel = { kind: 'logo' };
