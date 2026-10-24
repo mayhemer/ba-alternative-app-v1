@@ -1,6 +1,6 @@
 import React from 'react';
 import { measureRenders } from 'reassure';
-import { act } from '@testing-library/react-native';
+import { act, fireEvent, screen } from '@testing-library/react-native';
 import { MyPlanScreen } from './MyPlanScreen';
 import { NowPill } from '../components/plan/NowPill';
 import { PerfProviders } from '../../tests/setup/PerfProviders';
@@ -47,6 +47,23 @@ DAY_SETS.forEach((e, i) => {
     PICKS[e.artistId] ??= 'maybe';
   }
 });
+
+/** Thursday picked the same way, for the day switch: one full day to another. */
+const THURSDAY = WEDNESDAY + 24 * 60 * 60 * 1000;
+const THURSDAY_PICKS: Record<string, 'will_go' | 'maybe'> = {};
+EVENTS
+  .filter((e) => getFestivalDayStart(e.dateFrom) === THURSDAY && isConflictEligible(e))
+  .sort((a, b) => a.dateFrom - b.dateFrom || a.eventId.localeCompare(b.eventId))
+  .forEach((e, i) => {
+    if (PICKS[e.artistId] !== undefined) {
+      return;
+    }
+    if (i % 3 === 0) {
+      THURSDAY_PICKS[e.artistId] = 'will_go';
+    } else if (i % 3 === 1) {
+      THURSDAY_PICKS[e.artistId] ??= 'maybe';
+    }
+  });
 
 /** A Must-see whose pick the "one pick changed" scenario flips. */
 const CHANGED = DAY_SETS[3].artistId;
@@ -116,8 +133,24 @@ function Wrapper({ children }: { children: React.ReactElement }) {
   );
 }
 
-function measure(scenario: () => Promise<void>): Promise<void> {
-  return measureRenders(<Subject />, { ...MEASURE_OPTIONS, wrapper: Wrapper, beforeEach: startingState, scenario }).then(() => undefined);
+function measure(scenario: () => Promise<void>, beforeEach: () => Promise<void> = startingState): Promise<void> {
+  return measureRenders(<Subject />, { ...MEASURE_OPTIONS, wrapper: Wrapper, beforeEach, scenario }).then(() => undefined);
+}
+
+/** The starting state with Thursday picked too, so a day switch lands on a full day. */
+async function startingStateWithThursday(): Promise<void> {
+  await startingState();
+  for (const [artistId, status] of Object.entries(THURSDAY_PICKS)) {
+    await setInterest(SLUG, artistId, status);
+  }
+  await hydrateInterests(SLUG);
+}
+
+/** A phone's list height, reported as onLayout would: from then on a day lands where it is shown. */
+async function measureScreen(): Promise<void> {
+  await act(async () => {
+    fireEvent(screen.getByTestId('plan-screen'), 'layout', { nativeEvent: { layout: { x: 0, y: 0, width: 390, height: 700 } } });
+  });
 }
 
 test('My plan: mounting today', async () => {
@@ -149,12 +182,18 @@ test('My plan: one pick changed', async () => {
   });
 });
 
+// Last in the file: its Thursday picks persist, and no scenario after it should see them.
 test('My plan: switching to another day', async () => {
+  // Wednesday → Thursday, both picked: one full day to another, the expensive
+  // case, as the timeline's day switch measures it. (An empty day would flatter it.)
   const days = getFestivalDays(SLUG);
   const next = days[days.indexOf(WEDNESDAY) + 1];
+  expect(next).toBe(THURSDAY);
   await measure(async () => {
+    await settle();
+    await measureScreen();
     await settle();
     await act(async () => { pickDay(next); });
     await settle();
-  });
+  }, startingStateWithThursday);
 });
