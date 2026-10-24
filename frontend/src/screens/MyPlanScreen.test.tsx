@@ -332,9 +332,11 @@ describe('render counts', () => {
 
 // ── Commits ───────────────────────────────────────────────────────────────────
 //
-// One change, one commit. Timers run on for a second afterwards,
-// so a follow-up commit scheduled by anything in the list (as FlatList's 50 ms
-// cell-window check did) is counted too.
+// Two commits per change: the change itself, then FlatList's cell-window check,
+// which runs 50 ms after each update and commits the list again, unchanged
+// (no element renders in it: see the render counts above). The list is a
+// FlatList anyway: it scrolled faster on phones than a ScrollView rendering
+// every cell. Timers run on for a second after the change, so both are counted.
 
 describe('commits', () => {
   async function mountSettled(): Promise<void> {
@@ -347,31 +349,31 @@ describe('commits', () => {
     await act(async () => { jest.advanceTimersByTime(1000); });
   }
 
-  it('a new minute commits once', async () => {
+  it('a new minute commits twice: the change, then the cell-window check', async () => {
     await mountSettled();
     await minuteTo(at(7, '19:24'));
     await settle();
-    expect(commits).toBe(1);
+    expect(commits).toBe(2);
   });
 
-  it('a changed pick commits once', async () => {
+  it('a changed pick commits twice: the change, then the cell-window check', async () => {
     await mountSettled();
     await act(async () => { controls.cycle('batushka'); });
     await settle();
-    expect(commits).toBe(1);
+    expect(commits).toBe(2);
   });
 
-  it('showing the Maybes commits once', async () => {
+  it('showing the Maybes commits twice: the change, then the cell-window check', async () => {
     await mountSettled();
     await act(async () => { controls.toggleMaybe(); });
     await settle();
-    expect(commits).toBe(1);
+    expect(commits).toBe(2);
   });
 
-  it('another day commits once', async () => {
+  it('another day commits twice: the change, then the cell-window check', async () => {
     await mountSettled();
     await act(async () => { controls.pickDay(FRI); });
     await settle();
-    expect(commits).toBe(1);
+    expect(commits).toBe(2);
   });
 });

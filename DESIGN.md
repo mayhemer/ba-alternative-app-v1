@@ -143,7 +143,7 @@ inset: 0` within that view — nesting would newly draw the lens backdrop over t
 
 Screens whose content scrolls must clear the floating bar. `useLayoutMode().bottomClearance` gives
 `BOTTOM_OVERLAY_CLEARANCE` when short and `0` otherwise; it is added to the bottom padding of the
-four scrollers (`TimelineView`'s canvas, `ArtistListScreen`'s `SectionList`, `MyPlanScreen`'s `ScrollView`,
+four scrollers (`TimelineView`'s canvas, `ArtistListScreen`'s `SectionList`, `MyPlanScreen`'s `FlatList`,
 `SettingsScreen`) and subtracted from `LensPanel`'s `maxHeight`. It is deliberately a generous
 constant rather than the bar's measured height — the clearance only has to be *at least* the bar
 height, and a few extra px at the end of a scroll are invisible, whereas coupling the two would
