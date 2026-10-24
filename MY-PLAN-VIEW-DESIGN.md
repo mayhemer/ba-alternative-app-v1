@@ -23,7 +23,6 @@ Related: [DESIGN.md](DESIGN.md) (app-wide design, layout modes, chrome).
 ┌──────────────────────────────────────────┐
 │ ☰  ( ● GOJIRA           −37 min )  ½⋮    │  top bar: drawer, now pill, filter chip
 ├──────────────────────────────────────────┤
-│           THURSDAY 7 Aug                 │  day title (first list item, scrolls away)
 │ ○                                        │  start cap: ring, then 20 min of bare rail
 │ ┊                                        │
 │ ┌──────────────────────────────────────┐ │
@@ -50,7 +49,7 @@ Related: [DESIGN.md](DESIGN.md) (app-wide design, layout modes, chrome).
 ```
 
 - **Same sets as the conflict calculation.** My plan lists exactly the sets the conflict calculation considers, through one shared rule (`conflictUtils.isConflictEligible`). Sets longer than 2 hours (all-day exhibitions, say) are out of both: not listed, not in the now pill, never clashing. The plan and the conflict logic must stay on one source feed and one rule. A change to either goes through the shared logic, never a plan-only or conflict-only filter or count.
-- **One model per element.** Every element (day title, set row, gap, cap, spacer, empty day, now pill) has a pure model next to its component (`components/plan/<Element>.model.ts`). The model computes everything the element shows: height, texts, progress, where the now arrow sits. It works from the raw inputs that element depends on, and the component draws only the model. `buildPlanDay` decides only which elements a day lists, and in what order. Height and label can't disagree because they come from the same inputs: a gap drawn as 2 h says `2 h`.
+- **One model per element.** Every element (set row, gap, cap, spacer, empty day, now pill) has a pure model next to its component (`components/plan/<Element>.model.ts`). The model computes everything the element shows: height, texts, progress, where the now arrow sits. It works from the raw inputs that element depends on, and the component draws only the model. `buildPlanDay` decides only which elements a day lists, and in what order. Height and label can't disagree because they come from the same inputs: a gap drawn as 2 h says `2 h`.
 - **One festival day per view.**
 - Festival days run **06:00 → 06:00** (`DAY_BOUNDARY_HOUR`), so a 00:30 set belongs to the previous day.
 - All times are in festival time (`festivalTime.ts`).
@@ -100,22 +99,15 @@ What each element shows comes from its own model (see Principles), built from th
 
 | Element | Built from | Shows |
 |---|---|---|
-| Day title | the shown day, now, whether today is a festival day | weekday, date, tone (today / past / future / outside) |
 | Set row | the set, its artist and stage, now, its overlaps with other Must-sees, the Must-sees live now, whether it heads a clash group | time range, stage, status (`LIVE −x`, `START −x`, `done`), progress, now arrow, clash bars |
 | Gap | where it starts (the end of everything listed above) and the set listed right under it with its pick level, now | length or countdown (boxed when it counts to a Maybe), height, fill, now arrow, the conflict title of the group under it |
 | Day-start break | a gap from 08:00 to the first **listed** set | as a gap, with the start ring |
 | Cap / spacer | its edge, or the clash group under it | the rail end, the conflict title of the group under it |
 | Empty day | whether only conflicts are shown | its sentence |
 
-### Day title
+### No day title
 
-- First item of the list, one line, centred: weekday 18 bold caps plus date 15 regular (`THURSDAY 7 Aug`, `ČTVRTEK 7. 8.`).
-- **Never sticky.** It's there for the calendar feel.
-- **Colour by relation to today:**
-  - yellow (accent): today;
-  - blue `#5b9bff`: a future day;
-  - grey `#9a9a9a`: a past day;
-  - white: outside the festival.
+- The list has no day title: the day switcher already names the shown day, and a title at the top of the list only repeated it and made it harder to find your place. The list opens with the start cap, or with the day-start break while it runs.
 
 ### Must-see row
 
@@ -166,7 +158,7 @@ What each element shows comes from its own model (see Principles), built from th
 
 ### Day-start break
 
-- On today, from **08:00** until the first listed set starts, the list opens with a break directly under the title. With Maybes shown, that set can be a Maybe; the now pill still counts down to the first Must-see.
+- On today, from **08:00** until the first listed set starts, the list opens with a break. With Maybes shown, that set can be a Maybe; the now pill still counts down to the first Must-see.
 - It looks like a current gap: blue bar from 08:00, the arrow, `−3 h`. It takes the start cap's place, with the cap's ring at its top.
 - None outside that window, on a day with no Must-see, or in conflicts-only mode.
 
@@ -202,7 +194,6 @@ What each element shows comes from its own model (see Principles), built from th
 - **Show only conflicts:**
   - Only clashing Must-sees are listed. No gaps, no day-start break, no Maybe rows.
   - Every clash group gets the 24 pt spacer.
-  - The day title stays.
 - **Day buttons:** while "Show only conflicts" is on, a day with at least one Must-see clash gets a 6 pt striped strip on the button's right edge, in the same pattern. It's a different shape from today's red ▼ notch, so the two red marks can't be confused.
 
 ---
@@ -279,7 +270,6 @@ New values this screen introduces, to add as tokens:
 | break / future blue | `#5b9bff` |
 | break track | `#1c2f52` |
 | Maybe live fill (`maybeText`) | `#8a8a8a` |
-| past-day title | `#9a9a9a` |
 | row background and border | the set's category, as timeline blocks (`categoryBlockColors`) |
 
 ---
@@ -291,7 +281,7 @@ New values this screen introduces, to add as tokens:
 | Row (Must-see or Maybe), anywhere | The existing **artist detail sheet**. It already offers "stage/time → jump to the timeline slot" and the conflict warning line → conflict detail. |
 | `⚠ Conflict` group title | The **conflict detail sheet** (`ConflictDetailSheet`) for that group, with a 44 pt tap area. It shows the whole group, and only it, on the timeline's own lanes, bands and support programme alike. |
 | Clash bar (right edge) | Nothing separate: it's too thin, so a tap there counts as a row tap. |
-| Gap, day title | Nothing. |
+| Gap | Nothing. |
 | Long-press on a row | Nothing. Changing a pick inline would make the row vanish under your finger. |
 | Now pill | My plan, today, scrolled to now (see Top bar). |
 

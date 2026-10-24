@@ -1,4 +1,3 @@
-import { toFestivalClock } from '../../utils/festivalTime';
 import { DEFAULT_LANG } from '../../utils/localization';
 
 // ── My plan copy ──────────────────────────────────────────────────────────────
@@ -88,24 +87,4 @@ export function formatDuration(ms: number, space = ' '): string {
 /** Time left, with a real minus sign (U+2212): "−37 min". */
 export function formatRemaining(ms: number, space = ' '): string {
   return `−${formatDuration(ms, space)}`;
-}
-
-// ── Day title ─────────────────────────────────────────────────────────────────
-
-const WEEKDAYS: Record<'en' | 'cs', string[]> = {
-  en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-  cs: ['Neděle', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota'],
-};
-
-const MONTHS_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-/** "Thursday" + "7 Aug" (en) / "Čtvrtek" + "7. 8." (cs), in festival time. */
-export function formatDayTitle(dayStart: number, lang: string = DEFAULT_LANG): { weekday: string; date: string } {
-  const wall = toFestivalClock(dayStart);
-  const day = wall.getUTCDate();
-  const month = wall.getUTCMonth();
-  if (lang === 'cs') {
-    return { weekday: WEEKDAYS.cs[wall.getUTCDay()], date: `${day}. ${month + 1}.` };
-  }
-  return { weekday: WEEKDAYS.en[wall.getUTCDay()], date: `${day} ${MONTHS_EN[month]}` };
 }

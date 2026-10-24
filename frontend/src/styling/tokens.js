@@ -32,10 +32,9 @@ const colors = {
   dangerMuted:    '#111111',   // now-line, errors, warnings
   // ── My plan ─────────────────────────────────────────────────────────────────
   liveTrack:      '#4a3f17',   // track under a live set's accent progress
-  breakBlue:      '#5b9bff',   // current gap / break: progress, countdown; future-day title
+  breakBlue:      '#5b9bff',   // current gap / break: progress, countdown
   breakTrack:     '#1c2f52',   // track under the break's progress
   maybeText:      '#8a8a8a',   // Maybe rows, and a live Maybe's progress
-  pastDay:        '#9a9a9a',   // title of a day already past
   black:          '#000000',
   white:          '#ffffff',
 };

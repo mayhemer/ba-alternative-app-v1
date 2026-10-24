@@ -17,7 +17,6 @@ import { buildPlanDay, nowScrollOffset, PLAN_LAYOUT, type PlanItem } from '../ut
 import { getFestivalDayStart } from '../components/timeline/timelineLayout';
 import { PlanSetRow } from '../components/plan/PlanSetRow';
 import { PlanCap } from '../components/plan/PlanCap';
-import { PlanDayTitle } from '../components/plan/PlanDayTitle';
 import { PlanEmpty } from '../components/plan/PlanEmpty';
 import { PlanGap } from '../components/plan/PlanGap';
 import { PlanSpacer } from '../components/plan/PlanSpacer';
@@ -152,9 +151,6 @@ export function MyPlanScreen() {
   const renderCell = useCallback((item: PlanItem): React.ReactNode => {
     let content: React.ReactNode = null;
     switch (item.kind) {
-      case 'title':
-        content = <PlanDayTitle item={item} />;
-        break;
       case 'set':
         content = (
           <PlanSetRow

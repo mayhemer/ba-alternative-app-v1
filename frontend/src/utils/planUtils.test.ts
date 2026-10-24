@@ -150,15 +150,16 @@ function statusText(status: SetStatus): string {
 function shape(items: PlanItem[]): string[] {
   return items.map((item) => {
     switch (item.kind) {
-      case 'title': return `title ${item.tone}`;
       case 'cap': return `cap ${item.edge}`;
       case 'spacer': return 'spacer';
       case 'empty': return `empty "${item.text}"`;
       case 'gap': return `gap${item.current ? ' now' : ''} "${item.label}"${item.opening ? ' opening' : ''}${item.countdownToMaybe ? ' to Maybe' : ''}`;
-      default: {
+      case 'set': {
         const level = item.level === 'will_go' ? 'must' : 'maybe';
         return `${level} ${item.artist.name}${item.conflictHead ? ' ⚠' : ''} — ${item.state}${statusText(item.status)}`;
       }
+      // Anything else the list should not hold shows up by its kind.
+      default: return (item as { kind: string }).kind;
     }
   });
 }
@@ -241,19 +242,18 @@ const WITH_MAYBES_TO_MGLA_DONE = [
 const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: string[]][] = [
   // Time through today, Maybes hidden
   ['today before 08:00: the start cap, everything ahead', DAY, { now: at(7, '07:00') }, [
-    'title today', 'cap start', ...MUSTS_AHEAD, 'cap end',
+    'cap start', ...MUSTS_AHEAD, 'cap end',
   ]],
   ['in the day-start break: it opens the list instead of the start cap', DAY, { now: at(7, '11:00') }, [
-    'title today', 'gap now "−3 h" opening', ...MUSTS_AHEAD, 'cap end',
+    'gap now "−3 h" opening', ...MUSTS_AHEAD, 'cap end',
   ]],
   ['exactly at the first set\'s start: live, no break any more', DAY, { now: at(7, '14:00') }, [
-    'title today', 'cap start', 'must Hooded Menace — live "LIVE −40 min"', ...MUSTS_AHEAD.slice(1), 'cap end',
+    'cap start', 'must Hooded Menace — live "LIVE −40 min"', ...MUSTS_AHEAD.slice(1), 'cap end',
   ]],
   ['exactly at a set\'s end: done, the gap after it current and whole', DAY, { now: at(7, '14:40') }, [
-    'title today', 'cap start', 'must Hooded Menace — past "done"', 'gap now "−2 h 25"', ...MUSTS_AHEAD.slice(2), 'cap end',
+    'cap start', 'must Hooded Menace — past "done"', 'gap now "−2 h 25"', ...MUSTS_AHEAD.slice(2), 'cap end',
   ]],
   ['mid-set, with a clashing set about to start', DAY, { now: at(7, '19:23') }, [
-    'title today',
     'cap start',
     ...MUSTS_DONE.slice(0, 6),
     'must Gojira ⚠ — live "LIVE −37 min"',
@@ -262,7 +262,6 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
     'cap end',
   ]],
   ['two clashing sets both live', DAY, { now: at(7, '19:52') }, [
-    'title today',
     'cap start',
     ...MUSTS_DONE.slice(0, 6),
     'must Gojira ⚠ — live "LIVE −8 min"',
@@ -271,7 +270,6 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
     'cap end',
   ]],
   ['in a gap: it counts down to the set under it', DAY, { now: at(7, '21:10') }, [
-    'title today',
     'cap start',
     ...MUSTS_DONE.slice(0, 8),
     'gap now "−1 h 20"',
@@ -279,12 +277,11 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
     'cap end',
   ]],
   ['after the last set, before the 06:00 day change: nothing current', DAY, { now: at(8, '02:00') }, [
-    'title today', 'cap start', ...MUSTS_DONE, 'cap end',
+    'cap start', ...MUSTS_DONE, 'cap end',
   ]],
 
   // Maybes shown
   ['Maybes shown: they split the gaps, and never clash or count down', DAY, { now: at(7, '19:23'), maybe: true }, [
-    'title today',
     'cap start',
     ...WITH_MAYBES_TO_MGLA_DONE,
     'must Gojira ⚠ — live "LIVE −37 min"',
@@ -294,7 +291,6 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
     'cap end',
   ]],
   ['Maybes shown: a gap ending at a Maybe counts down to it, marked as a countdown to a Maybe', DAY, { now: at(7, '15:00'), maybe: true }, [
-    'title today',
     'cap start',
     'must Hooded Menace — past "done"',
     'gap now "−30 min" to Maybe',
@@ -303,7 +299,6 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
     'cap end',
   ]],
   ['Maybes shown: a Maybe overlapping a live Must-see is live too, with no status', DAY, { now: at(7, '20:20'), maybe: true }, [
-    'title today',
     'cap start',
     ...WITH_MAYBES_TO_MGLA_DONE,
     'must Gojira ⚠ — past "done"',
@@ -313,7 +308,6 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
     'cap end',
   ]],
   ['Maybes shown: a Maybe ending after a clash group starts the gap after it', DAY, { now: at(7, '21:10'), maybe: true }, [
-    'title today',
     'cap start',
     ...WITH_MAYBES_TO_MGLA_DONE,
     'must Gojira ⚠ — past "done"',
@@ -326,48 +320,47 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
 
   // A Maybe before the first Must-see
   ['Maybes shown: the day-start break ends at the Maybe', EARLY, { now: at(7, '11:00'), maybe: true }, [
-    'title today', 'gap now "−1 h" opening to Maybe', 'maybe Early maybe — upcoming', 'gap "1 h 20"', 'must First must — upcoming', 'cap end',
+    'gap now "−1 h" opening to Maybe', 'maybe Early maybe — upcoming', 'gap "1 h 20"', 'must First must — upcoming', 'cap end',
   ]],
   ['Maybes hidden: the day-start break ends at the first Must-see', EARLY, { now: at(7, '11:00') }, [
-    'title today', 'gap now "−3 h" opening', 'must First must — upcoming', 'cap end',
+    'gap now "−3 h" opening', 'must First must — upcoming', 'cap end',
   ]],
   ['Maybes shown, the early Maybe live: no break any more', EARLY, { now: at(7, '12:10'), maybe: true }, [
-    'title today', 'cap start', 'maybe Early maybe — live', 'gap "1 h 20"', 'must First must — upcoming', 'cap end',
+    'cap start', 'maybe Early maybe — live', 'gap "1 h 20"', 'must First must — upcoming', 'cap end',
   ]],
   ['Maybes shown, after the early Maybe: the gap to the Must-see is current', EARLY, { now: at(7, '13:00'), maybe: true }, [
-    'title today', 'cap start', 'maybe Early maybe — past', 'gap now "−1 h"', 'must First must — upcoming', 'cap end',
+    'cap start', 'maybe Early maybe — past', 'gap now "−1 h"', 'must First must — upcoming', 'cap end',
   ]],
 
   // A day of Maybes only
   ['only Maybes, shown: listed, but no day-start break without a Must-see', MAYBE_ONLY, { now: at(7, '11:00'), maybe: true }, [
-    'title today', 'cap start', 'maybe Only maybe — upcoming', 'cap end',
+    'cap start', 'maybe Only maybe — upcoming', 'cap end',
   ]],
   ['only Maybes, hidden: an empty day', MAYBE_ONLY, { now: at(7, '11:00') }, [
-    'title today', 'empty "Nothing planned for this day"',
+    'empty "Nothing planned for this day"',
   ]],
 
   // Only conflicts
   ['only conflicts: just the clashing Must-sees, with room for the group title', DAY, { now: at(7, '19:23'), conflictsOnly: true }, [
-    'title today', 'spacer', 'must Gojira ⚠ — live "LIVE −37 min"', 'must Batushka — upcoming "START −17 min"',
+    'spacer', 'must Gojira ⚠ — live "LIVE −37 min"', 'must Batushka — upcoming "START −17 min"',
   ]],
   ['only conflicts: no Maybes and no day-start break, whatever the Maybe switch', DAY, { now: at(7, '11:00'), conflictsOnly: true, maybe: true }, [
-    'title today', 'spacer', 'must Gojira ⚠ — upcoming', 'must Batushka — upcoming',
+    'spacer', 'must Gojira ⚠ — upcoming', 'must Batushka — upcoming',
   ]],
   ['only conflicts, on a day without a clash', DAY, { day: FRI, now: at(7, '11:00'), conflictsOnly: true }, [
-    'title future', 'empty "No conflicts on this day"',
+    'empty "No conflicts on this day"',
   ]],
 
   // Where a clash group sits
   ['a clash group back to back with the set above: a spacer gives its title room', B2B, { day: SAT, now: at(9, '10:00') }, [
-    'title today', 'gap now "−7 h" opening', 'must A — upcoming', 'spacer', 'must B ⚠ — upcoming', 'must C — upcoming', 'cap end',
+    'gap now "−7 h" opening', 'must A — upcoming', 'spacer', 'must B ⚠ — upcoming', 'must C — upcoming', 'cap end',
   ]],
   ['a clash group right under the start cap: the cap gives its title room', B2B, { day: SUN, now: at(9, '10:00') }, [
-    'title future', 'cap start', 'must D ⚠ — upcoming', 'must E — upcoming', 'cap end',
+    'cap start', 'must D ⚠ — upcoming', 'must E — upcoming', 'cap end',
   ]],
 
   // Sets over two hours
   ['sets over 2 h: not listed, and the gaps and clashes stay as they are', LONG, { now: at(7, '19:23'), maybe: true }, [
-    'title today',
     'cap start',
     'maybe Early maybe — past',
     'gap "20 min"',
@@ -379,29 +372,29 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
     'cap end',
   ]],
   ['sets over 2 h do not start the day: the break counts to the first listed set', LONG, { now: at(7, '11:00'), maybe: true }, [
-    'title today', 'gap now "−2 h" opening to Maybe', 'maybe Early maybe — upcoming', 'gap "20 min"', ...WITH_MAYBES_AHEAD, 'cap end',
+    'gap now "−2 h" opening to Maybe', 'maybe Early maybe — upcoming', 'gap "20 min"', ...WITH_MAYBES_AHEAD, 'cap end',
   ]],
   ['a set of exactly 2 h is listed', LONG, { day: FRI, now: at(7, '19:23') }, [
-    'title future', 'cap start', 'must Spectral Wound — upcoming', 'gap "50 min"', 'must Exactly two hours — upcoming', 'cap end',
+    'cap start', 'must Spectral Wound — upcoming', 'gap "50 min"', 'must Exactly two hours — upcoming', 'cap end',
   ]],
 
   // Other days
   ['a future day: its own sets, nothing current', DAY, { day: FRI, now: at(7, '11:00') }, [
-    'title future', 'cap start', 'must Spectral Wound — upcoming', 'cap end',
+    'cap start', 'must Spectral Wound — upcoming', 'cap end',
   ]],
   ['a past day: everything done', DAY, { now: at(8, '14:00') }, [
-    'title past', 'cap start', ...MUSTS_DONE, 'cap end',
+    'cap start', ...MUSTS_DONE, 'cap end',
   ]],
   ['a day with nothing planned', DAY, { day: SAT, now: at(7, '12:00') }, [
-    'title future', 'empty "Nothing planned for this day"',
+    'empty "Nothing planned for this day"',
   ]],
 
   // Outside the festival
   ['before the festival: everything ahead, nothing current', DAY, { now: at(1, '12:00'), festival: false, maybe: true }, [
-    'title outside', 'cap start', ...WITH_MAYBES_AHEAD, 'cap end',
+    'cap start', ...WITH_MAYBES_AHEAD, 'cap end',
   ]],
   ['after the festival: read as before it', DAY, { now: at(12, '12:00'), festival: false, maybe: true }, [
-    'title outside', 'cap start', ...WITH_MAYBES_AHEAD, 'cap end',
+    'cap start', ...WITH_MAYBES_AHEAD, 'cap end',
   ]],
 ];
 
@@ -411,7 +404,7 @@ describe('buildPlanDay', () => {
   });
 
   it('sizes the day-start break by the first listed set too: length, fill and countdown alike', () => {
-    const opening = build(EARLY, { now: at(7, '11:00'), maybe: true })[1] as PlanGapModel;
+    const opening = build(EARLY, { now: at(7, '11:00'), maybe: true })[0] as PlanGapModel;
     expect(opening.label).toBe('−1 h');
     expect(opening.height).toBe(gapHeight(240));
     expect(opening.progress).toBeCloseTo(3 / 4);

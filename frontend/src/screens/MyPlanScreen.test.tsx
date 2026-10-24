@@ -60,11 +60,6 @@ jest.mock('../components/plan/PlanCap', () => {
   const actual = jest.requireActual('../components/plan/PlanCap');
   return { ...actual, PlanCap: counted(actual.PlanCap) };
 });
-jest.mock('../components/plan/PlanDayTitle', () => {
-  const { counted } = require('../../tests/setup/countRenders');
-  const actual = jest.requireActual('../components/plan/PlanDayTitle');
-  return { ...actual, PlanDayTitle: counted(actual.PlanDayTitle) };
-});
 jest.mock('../components/plan/PlanEmpty', () => {
   const { counted } = require('../../tests/setup/countRenders');
   const actual = jest.requireActual('../components/plan/PlanEmpty');
@@ -288,7 +283,7 @@ it('shows another day when it is picked', async () => {
   await mount();
   await act(async () => { controls.pickDay(FRI); });
   const texts = listTexts();
-  expect(texts).toEqual(expect.arrayContaining(['Friday', 'Spectral Wound']));
+  expect(texts).toContain('Spectral Wound');
   expect(texts).not.toContain('Gojira');
 });
 
@@ -297,7 +292,7 @@ it('shows another day when it is picked', async () => {
 // Which elements render again after one change, by item key. An element renders
 // again only when what it shows changes (a new element renders once, to mount).
 // At Thursday 19:23 the list is:
-//   title · cap-start · ehooded (done) · gap-egojira (4 h 20, carries the
+//   cap-start · ehooded (done) · gap-egojira (4 h 20, carries the
 //   conflict title) · egojira (live) · ebatushka (START) · cap-end
 
 describe('render counts', () => {

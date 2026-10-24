@@ -1,7 +1,6 @@
 import { computeConflictEntries, computeConflictOverlaps, isConflictEligible, type ConflictInputs } from './conflictUtils';
 import { getFestivalDayStart } from '../components/timeline/timelineLayout';
 import { planCapModel, type PlanCapModel } from '../components/plan/PlanCap.model';
-import { planDayTitleModel, type PlanTitleModel } from '../components/plan/PlanDayTitle.model';
 import { planEmptyModel, type PlanEmptyModel } from '../components/plan/PlanEmpty.model';
 import { planGapModel, type PlanGapModel } from '../components/plan/PlanGap.model';
 import { planSetModel, type PlanSetModel } from '../components/plan/PlanSetRow.model';
@@ -30,7 +29,7 @@ export type PlanOptions = {
 /** Room above a clash group for its "Conflict" title, when no gap or cap gives it. */
 export type PlanSpacerItem = { kind: 'spacer'; key: string; height: number; conflictTitle: DbEvent };
 
-export type PlanItem = PlanTitleModel | PlanSetModel | PlanGapModel | PlanCapModel | PlanSpacerItem | PlanEmptyModel;
+export type PlanItem = PlanSetModel | PlanGapModel | PlanCapModel | PlanSpacerItem | PlanEmptyModel;
 
 export const PLAN_LAYOUT = {
   paddingTop: 12,
@@ -105,7 +104,8 @@ export function buildPlanDay(
     return p.level === 'will_go' || showMaybe;
   });
 
-  const items: PlanItem[] = [planDayTitleModel(dayStart, wallNow, duringFestival)];
+  // No day title: the day switcher names the shown day.
+  const items: PlanItem[] = [];
 
   // The day-start break: 08:00 → the first listed set (a Maybe when Maybes are
   // shown), drawn only while now is in it, in the start cap's place. Only on a
@@ -145,8 +145,9 @@ export function buildPlanDay(
     // first set (a cell cannot take touches outside its own bounds on Android):
     // the gap or cap there, or a spacer added to make room for it.
     if (set.conflictHead) {
-      const previous = items[items.length - 1];
-      if (previous.kind === 'gap' || previous.kind === 'cap') {
+      // Nothing above it (conflicts only, the day's first set): a spacer makes the room.
+      const previous = items.at(-1);
+      if (previous !== undefined && (previous.kind === 'gap' || previous.kind === 'cap')) {
         items[items.length - 1] = { ...previous, conflictTitle: event };
       } else {
         items.push({ kind: 'spacer', key: `spacer-${event.eventId}`, height: PLAN_LAYOUT.spacer, conflictTitle: event });

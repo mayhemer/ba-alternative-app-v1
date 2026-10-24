@@ -1,8 +1,6 @@
-import { formatDayTitle, formatDuration, formatRemaining, NARROW_SPACE, planStrings } from './planStrings';
-import { getFestivalDayStart } from '../timeline/timelineLayout';
+import { formatDuration, formatRemaining, NARROW_SPACE, planStrings } from './planStrings';
 
 const MIN = 60 * 1000;
-const THU = getFestivalDayStart(Date.parse('2025-08-07T12:00:00+02:00'));
 
 describe('formatDuration', () => {
   it('uses minutes under an hour', () => {
@@ -30,13 +28,6 @@ describe('formatRemaining', () => {
     expect(formatRemaining(37 * MIN, NARROW_SPACE)).toBe('−37\u202Fmin');
     expect(formatRemaining(80 * MIN, NARROW_SPACE)).toBe('−1\u202Fh\u202F20');
     expect(formatRemaining(180 * MIN, NARROW_SPACE)).toBe('−3\u202Fh');
-  });
-});
-
-describe('formatDayTitle', () => {
-  it('spells out the weekday, with the date in the language\'s style', () => {
-    expect(formatDayTitle(THU, 'en')).toEqual({ weekday: 'Thursday', date: '7 Aug' });
-    expect(formatDayTitle(THU, 'cs')).toEqual({ weekday: 'Čtvrtek', date: '7. 8.' });
   });
 });
 

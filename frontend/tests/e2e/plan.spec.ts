@@ -41,7 +41,7 @@ test('the now pill shows the live must-see and opens the plan', async ({ appPage
   await pill.click();
 
   // My plan, today, with both sets and the clash between them.
-  await expect(appPage.getByText('Wednesday', { exact: true })).toBeVisible({ timeout: 20_000 });
+  await expect(appPage.getByTestId('plan-clash-bar').first()).toBeVisible({ timeout: 20_000 });
   await expect(appPage.getByText('EXORCIZPHOBIA', { exact: false }).filter({ visible: true }).first()).toBeVisible();
   await expect(appPage.getByText('Conflict', { exact: true })).toBeVisible();
   // EXORCIZPHOBIA starts during the live set: it counts down to its start.
@@ -91,7 +91,8 @@ test('switches days and filters to conflicts only', async ({ appPage }) => {
   await ready(appPage);
   await pickClashingPair(appPage);
   await appPage.getByText('My plan', { exact: false }).first().click();
-  await expect(appPage.getByText('Wednesday', { exact: true })).toBeVisible({ timeout: 20_000 });
+  // My plan, today: the clash between the two picks.
+  await expect(appPage.getByTestId('plan-clash-bar').first()).toBeVisible({ timeout: 20_000 });
 
   // Another day: nothing picked there.
   await appPage.getByText('Thu', { exact: true }).click();
