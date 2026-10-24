@@ -7,7 +7,7 @@ import { DEFAULT_LANG } from '../../utils/localization';
 // are short labels. Czech copy runs longer, so layouts truncate names and never
 // wrap statuses. The app shows English today (DEFAULT_LANG).
 
-export type PlanStrings = {
+type PlanStrings = {
   title: string;
   live: string;
   done: string;

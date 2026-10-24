@@ -16,7 +16,7 @@ import type { DbArtist, DbEvent } from '../types/backend';
 
 export type PlanInputs = ConflictInputs;
 
-export type PlanOptions = {
+type PlanOptions = {
   /** Unix ms of the shown festival day's 06:00. */
   dayStart: number;
   now: number;
@@ -170,7 +170,7 @@ export function buildPlanDay(
 // ── Positions ─────────────────────────────────────────────────────────────────
 
 /** Whether the white "now" arrow sits on this item. */
-export function hostsNow(item: PlanItem): boolean {
+function hostsNow(item: PlanItem): boolean {
   return (item.kind === 'set' || item.kind === 'gap') && item.nowY !== null;
 }
 

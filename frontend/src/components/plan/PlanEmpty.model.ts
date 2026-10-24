@@ -4,7 +4,7 @@ import { planStrings } from './planStrings';
 
 const strings = planStrings();
 
-export const EMPTY_HEIGHT = 90;
+const EMPTY_HEIGHT = 90;
 
 export type PlanEmptyModel = { kind: 'empty'; key: 'empty'; height: number; text: string };
 
