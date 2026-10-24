@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import Svg, { Line } from 'react-native-svg';
 import { Text } from '../ui/Text';
 import { ConflictGroupTitle, NowArrow, RAIL_WIDTH, RAIL_X, RailEnd } from './PlanListItems';
-import { sameProps } from './sameProps';
+import { sameProps } from '../sameProps';
 import { BOLD, LIST_GUTTER, PROGRESS_BAR_WIDTH, TABULAR } from './planStyles';
 import type { PlanGapModel } from './PlanGap.model';
 import type { DbEvent } from '../../types/backend';

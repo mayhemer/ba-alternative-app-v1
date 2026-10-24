@@ -201,7 +201,10 @@ What each element shows comes from its own model (see Principles), built from th
 
 ## Day switcher and scrolling
 
-- **Bottom bar:** the timeline's `DaySwitcher`, always visible. The selected day is filled accent, and today has a red ▼ notch.
+- **Bottom bar:** the timeline's day buttons (`DayButtons`), always visible. The selected day is filled accent, and today has a red ▼ notch.
+- **Sources** (`PlanDaySwitcher.model.ts`, each button's own model in `DayButton.model.ts`):
+  - **today** is the festival day that holds now (`festivalToday`: 06:00 to 06:00). The list's "during the festival" follows the same rule.
+  - **the clash stripes** come from `daysWithClash`, the conflict calculation the conflicts-only list follows, so a striped day is exactly a day that list has sets on. A clash across 06:00 stripes both days its sets start on.
 - **Default day:**
   - today;
   - before the festival, day 1;

@@ -2,6 +2,9 @@ import React, { Profiler } from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { MyPlanScreen } from './MyPlanScreen';
 import { NowPill } from '../components/plan/NowPill';
+import { PlanDaySwitcher } from '../components/plan/PlanDaySwitcher';
+import { PlanFilterChip } from '../components/plan/PlanFilterChip';
+import { PlanFilterPanel } from '../components/plan/PlanFilterPanel';
 import { PerfProviders } from '../../tests/setup/PerfProviders';
 import { PlanProvider, usePlanFilters, usePlanStore } from '../context/PlanContext';
 import { useInterest } from '../context/InterestContext';
@@ -64,6 +67,22 @@ jest.mock('../components/plan/PlanEmpty', () => {
   const { counted } = require('../../tests/setup/countRenders');
   const actual = jest.requireActual('../components/plan/PlanEmpty');
   return { ...actual, PlanEmpty: counted(actual.PlanEmpty) };
+});
+// The chrome's elements: each day button, the filter chip, each filter switch.
+jest.mock('../components/timeline/DayButton', () => {
+  const { counted } = require('../../tests/setup/countRenders');
+  const actual = jest.requireActual('../components/timeline/DayButton');
+  return { ...actual, DayButton: counted(actual.DayButton) };
+});
+jest.mock('../components/plan/PlanFilterChipView', () => {
+  const { counted } = require('../../tests/setup/countRenders');
+  const actual = jest.requireActual('../components/plan/PlanFilterChipView');
+  return { ...actual, PlanFilterChipView: counted(actual.PlanFilterChipView) };
+});
+jest.mock('../components/plan/PlanFilterSwitch', () => {
+  const { counted } = require('../../tests/setup/countRenders');
+  const actual = jest.requireActual('../components/plan/PlanFilterSwitch');
+  return { ...actual, PlanFilterSwitch: counted(actual.PlanFilterSwitch) };
 });
 
 const SLUG = 'plantest';
@@ -421,5 +440,171 @@ describe('commits', () => {
     await act(async () => { controls.pickDay(FRI); });
     await settle();
     expect(commits).toBe(1);
+  });
+});
+
+// ── The chrome: day switcher, filter chip, filter panel ───────────────────────
+//
+// Mounted beside the screen as AppShell places them: the chip in the TopBar,
+// the day switcher in the BottomBar, the panel over the screen. The inputs that
+// reach them:
+//   filters   — Show only conflicts (stripes the days with a Must-see clash,
+//               turns the chip's state slot red, disables the Maybe switch);
+//               Show Maybe (the chip's star, the Maybe switch)
+//   interests — a pick that ends or makes a clash
+//   events    — a sync that moves a set out of a clash, or adds one into a clash
+//   time      — the minute tick; the minute a new festival day starts (06:00)
+//   day       — another day picked
+// At Thursday 19:23 Gojira (19:00–20:00) and Batushka (19:40–20:30) clash; no
+// other day has a clash.
+
+describe('the chrome', () => {
+  function Chrome() {
+    return (
+      <PlanProvider>
+        <Controls />
+        <PlanFilterChip />
+        <MyPlanScreen />
+        <PlanFilterPanel />
+        <PlanDaySwitcher />
+      </PlanProvider>
+    );
+  }
+
+  async function mountChrome(): Promise<void> {
+    await render(<PerfProviders><Chrome /></PerfProviders>);
+  }
+
+  const striped = (day: number): boolean => screen.queryByTestId(`day-clash-${day}`) !== null;
+  const isToday = (day: number): boolean => screen.queryByTestId(`day-today-${day}`) !== null;
+  const selected = (day: number): unknown => screen.getByTestId(`day-${day}`).props.accessibilityState?.selected;
+  const switchState = (name: string): unknown => screen.getByRole('switch', { name }).props.accessibilityState;
+
+  it('stripes the day with a Must-see clash only while only conflicts are shown', async () => {
+    await mountChrome();
+    expect(striped(THU)).toBe(false);
+    await act(async () => { controls.toggleConflictsOnly(); });
+    expect(striped(THU)).toBe(true);
+    expect(striped(FRI)).toBe(false);
+    await act(async () => { controls.toggleConflictsOnly(); });
+    expect(striped(THU)).toBe(false);
+  });
+
+  it('drops the stripe when a changed pick ends the clash', async () => {
+    await mountChrome();
+    await act(async () => { controls.toggleConflictsOnly(); });
+    // Must-see → don't go.
+    await act(async () => { controls.cycle('batushka'); });
+    expect(striped(THU)).toBe(false);
+  });
+
+  it('follows a sync: a set moved out of the clash, and one added into a new one', async () => {
+    await mountChrome();
+    await act(async () => { controls.toggleConflictsOnly(); });
+    await act(async () => {
+      sync([
+        ...EVENTS.map((e) => (e.artistId === 'batushka' ? { ...e, dateFrom: at(7, '21:00'), dateTo: at(7, '21:45') } : e)),
+        // Over Spectral Wound's 12:30–13:10 on Friday.
+        event('late', at(8, '12:40'), at(8, '13:20')),
+      ]);
+    });
+    expect(striped(THU)).toBe(false);
+    expect(striped(FRI)).toBe(true);
+  });
+
+  it('marks today and selects it, and moves both when 06:00 starts the next day', async () => {
+    setCurrentTimeMs(at(8, '05:59'));
+    await mountChrome();
+    expect(isToday(THU)).toBe(true);
+    expect(selected(THU)).toBe(true);
+    await minuteTo(at(8, '06:00'));
+    expect(isToday(THU)).toBe(false);
+    expect(isToday(FRI)).toBe(true);
+    expect(selected(FRI)).toBe(true);
+  });
+
+  it('selects another day when it is picked, keeping today marked', async () => {
+    await mountChrome();
+    await act(async () => { controls.pickDay(FRI); });
+    expect(selected(FRI)).toBe(true);
+    expect(selected(THU)).toBe(false);
+    expect(isToday(THU)).toBe(true);
+  });
+
+  it('shows each filter in the chip and the panel', async () => {
+    await mountChrome();
+    await fireEvent.press(screen.getByLabelText('Filters'));
+    expect(screen.getByTestId('plan-filter-state-maybe-off')).toBeTruthy();
+    await act(async () => { controls.toggleMaybe(); });
+    expect(screen.getByTestId('plan-filter-state-maybe-on')).toBeTruthy();
+    expect(switchState('Show Maybe picks')).toMatchObject({ checked: true, disabled: false });
+    await act(async () => { controls.toggleConflictsOnly(); });
+    expect(screen.getByTestId('plan-filter-state-conflicts')).toBeTruthy();
+    expect(switchState('Show Maybe picks')).toMatchObject({ checked: true, disabled: true });
+    expect(switchState('Show only conflicts')).toMatchObject({ checked: true });
+  });
+
+  // Which chrome elements render again after one change, by key: `day-<day>`
+  // per day button, `plan-filter-chip`, `switch-maybe` and `switch-conflicts`.
+  // The list's own elements are counted too, so each case lists only the keys
+  // it expects; everything else must be absent.
+  describe('render counts', () => {
+    const CHROME = /^(day-|plan-filter-chip|switch-)/;
+    const chromeRenders = (): Record<string, number> =>
+      Object.fromEntries(Object.entries(rendersSinceReset()).filter(([key]) => CHROME.test(key)));
+
+    async function mountSettled(openPanel = false): Promise<void> {
+      await mountChrome();
+      if (openPanel) {
+        await fireEvent.press(screen.getByLabelText('Filters'));
+      }
+      await act(async () => { jest.advanceTimersByTime(1000); });
+      resetRenders();
+    }
+
+    it('a new minute renders none of them', async () => {
+      await mountSettled(true);
+      await minuteTo(at(7, '19:24'));
+      expect(chromeRenders()).toEqual({});
+    });
+
+    it('the minute a new day starts renders only the two day buttons that changed', async () => {
+      setCurrentTimeMs(at(8, '05:59'));
+      await mountSettled();
+      await minuteTo(at(8, '06:00'));
+      expect(chromeRenders()).toEqual({ [`day-${THU}`]: 1, [`day-${FRI}`]: 1 });
+    });
+
+    it('another day renders only the two day buttons whose selection changed', async () => {
+      await mountSettled();
+      await act(async () => { controls.pickDay(FRI); });
+      expect(chromeRenders()).toEqual({ [`day-${THU}`]: 1, [`day-${FRI}`]: 1 });
+    });
+
+    it('opening the panel renders the chip, and mounts the two switches', async () => {
+      await mountSettled();
+      await fireEvent.press(screen.getByLabelText('Filters'));
+      expect(chromeRenders()).toEqual({ 'plan-filter-chip': 1, 'switch-maybe': 1, 'switch-conflicts': 1 });
+    });
+
+    it('showing the Maybes renders the chip and the Maybe switch, and no day button', async () => {
+      await mountSettled(true);
+      await act(async () => { controls.toggleMaybe(); });
+      expect(chromeRenders()).toEqual({ 'plan-filter-chip': 1, 'switch-maybe': 1 });
+    });
+
+    it('showing only conflicts renders the striped day, the chip and both switches', async () => {
+      await mountSettled(true);
+      await act(async () => { controls.toggleConflictsOnly(); });
+      expect(chromeRenders()).toEqual({ [`day-${THU}`]: 1, 'plan-filter-chip': 1, 'switch-maybe': 1, 'switch-conflicts': 1 });
+    });
+
+    it('a changed pick with only conflicts shown renders only the day whose stripe went', async () => {
+      await mountSettled();
+      await act(async () => { controls.toggleConflictsOnly(); });
+      resetRenders();
+      await act(async () => { controls.cycle('batushka'); });
+      expect(chromeRenders()).toEqual({ [`day-${THU}`]: 1 });
+    });
   });
 });

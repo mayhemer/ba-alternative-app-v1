@@ -1,6 +1,7 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useShownDay, useTimelineFilter } from '../../context/TimelineFilterContext';
 import { DayButtons } from './DayButtons';
+import { dayButtonModels } from './DayButton.model';
 import { currentTimeMs } from '../../utils/clock';
 import { perfMark } from '../../utils/perfMarks';
 
@@ -42,14 +43,12 @@ export function DaySwitcher({ screenKey }: Props) {
     }
   }, [selectedDayStart, currentDayStart, requestScrollToNow, screenKey, setSelectedDayStart]);
 
+  const buttons = useMemo(
+    () => dayButtonModels(festivalDays, { selected: selectedDayStart, today: currentDayStart }),
+    [festivalDays, selectedDayStart, currentDayStart],
+  );
+
   if (festivalDays.length === 0) { return null; }
 
-  return (
-    <DayButtons
-      days={festivalDays}
-      selected={selectedDayStart}
-      today={currentDayStart}
-      onPick={handlePick}
-    />
-  );
+  return <DayButtons buttons={buttons} onPick={handlePick} />;
 }

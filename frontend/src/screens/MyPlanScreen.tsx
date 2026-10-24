@@ -14,7 +14,7 @@ import { useMinuteNow } from '../hooks/useMinuteNow';
 import { useLayoutMode } from '../hooks/useLayoutMode';
 import { getScroll, setScroll } from '../store/uiStatePersistence';
 import { buildPlanDay, itemAtOffset, itemOffsets, itemsToFill, nowScrollOffset, PLAN_LAYOUT, type PlanItem } from '../utils/planUtils';
-import { getFestivalDayStart } from '../components/timeline/timelineLayout';
+import { festivalToday } from '../components/timeline/DayButton.model';
 import { PlanSetRow } from '../components/plan/PlanSetRow';
 import { PlanCap } from '../components/plan/PlanCap';
 import { PlanEmpty } from '../components/plan/PlanEmpty';
@@ -84,7 +84,7 @@ export function MyPlanScreen() {
   const { openConflict } = useConflictDetail();
   const { bottomClearance } = useLayoutMode();
 
-  const duringFestival = festivalDays.includes(getFestivalDayStart(now));
+  const duringFestival = festivalToday(festivalDays, now) !== null;
   const items = useMemo<PlanItem[]>(
     () => (day === 0 ? [] : buildPlanDay(interests, { artists, stages, artistEvents }, { dayStart: day, now, duringFestival, showMaybe, conflictsOnly })),
     [day, interests, artists, stages, artistEvents, now, duringFestival, showMaybe, conflictsOnly],
