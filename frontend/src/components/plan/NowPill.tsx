@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { memo, useCallback, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -25,6 +25,7 @@ import { colors } from '../../styling/tokens';
 /** Logo is 601 × 231 px; keep its aspect ratio while fitting inside the 56 px bar. */
 const LOGO_HEIGHT = 34;
 const LOGO_WIDTH = Math.round(LOGO_HEIGHT * (601 / 231));
+const LOGO_STYLE = { width: LOGO_WIDTH, height: LOGO_HEIGHT };
 
 const PILL_HEIGHT = 36;
 // The pill is drawn 36 pt tall; the tap area grows to 44 pt.
@@ -65,7 +66,7 @@ function Logo() {
   return (
     <ExpoImage
       source={require('../../../assets/logo-ba.png')}
-      style={{ width: LOGO_WIDTH, height: LOGO_HEIGHT }}
+      style={LOGO_STYLE}
       contentFit="contain"
       accessibilityLabel="Brutal Assault"
     />
@@ -74,7 +75,7 @@ function Logo() {
 
 type ViewProps = { state: NowPillModel; onPress: () => void };
 
-export function NowPillView({ state, onPress }: ViewProps) {
+function NowPillViewBase({ state, onPress }: ViewProps) {
   const [pressed, setPressed] = useState(false);
   const pressIn = useCallback((): void => { setPressed(true); }, []);
   const pressOut = useCallback((): void => { setPressed(false); }, []);
@@ -127,6 +128,12 @@ export function NowPillView({ state, onPress }: ViewProps) {
     </Pressable>
   );
 }
+
+/**
+ * Draws again only when its model or handler changes. Outside the festival and
+ * between days the model is the same logo every minute, so the tick stops here.
+ */
+export const NowPillView = memo(NowPillViewBase);
 
 /** Opens My plan on today, scrolled to now. */
 function useOpenPlanAtNow(): () => void {

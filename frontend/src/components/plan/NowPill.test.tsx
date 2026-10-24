@@ -5,6 +5,18 @@ import { NowPillView } from './NowPill';
 import type { NowPillModel } from './NowPill.model';
 import { colors } from '../../styling/tokens';
 
+// The logo image, swapped for a stand-in that counts how often it is drawn.
+const mockLogoRenders = jest.fn();
+jest.mock('expo-image', () => {
+  const { View } = require('react-native');
+  return {
+    Image: ({ accessibilityLabel }: { accessibilityLabel?: string }) => {
+      mockLogoRenders();
+      return <View accessibilityLabel={accessibilityLabel} />;
+    },
+  };
+});
+
 // ── The now pill in the top bar ───────────────────────────────────────────────
 //
 // One line saying what is happening for you right now: a live Must-see with its
@@ -63,6 +75,15 @@ it('opens the plan when tapped', async () => {
   await render(<NowPillView state={START_EMPEROR} onPress={onPress} />);
   await fireEvent.press(screen.getByRole('button'));
   expect(onPress).toHaveBeenCalledTimes(1);
+});
+
+it('is not drawn again for the same model and handler, as the logo is minute after minute', async () => {
+  const onPress = jest.fn();
+  const logo: NowPillModel = { kind: 'logo' };
+  const { rerender } = await render(<NowPillView state={logo} onPress={onPress} />);
+  mockLogoRenders.mockClear();
+  await rerender(<NowPillView state={logo} onPress={onPress} />);
+  expect(mockLogoRenders).not.toHaveBeenCalled();
 });
 
 it('falls back to the logo, which does nothing on tap', async () => {
