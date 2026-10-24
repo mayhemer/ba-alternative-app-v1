@@ -24,10 +24,29 @@ function lastSundayChangeUtc(year: number, monthIndex: number): number {
   return Date.UTC(year, monthIndex, lastSunday, 1);
 }
 
+/** One UTC year and its summer-time span, both as [from, to) instants. */
+type YearRule = { from: number; to: number; summerFrom: number; summerTo: number };
+
+function yearRule(year: number): YearRule {
+  return {
+    from: Date.UTC(year, 0, 1),
+    to: Date.UTC(year + 1, 0, 1),
+    summerFrom: lastSundayChangeUtc(year, 2),
+    summerTo: lastSundayChangeUtc(year, 9),
+  };
+}
+
+// The year last asked about. Conversions run per event and per render, nearly
+// all within one festival year, so most calls answer from it without building a
+// single Date; recomputing the two clock changes every time was a hot spot.
+let cachedYear: YearRule = yearRule(2025);
+
 /** Europe/Prague's offset from UTC at the given instant. */
 export function festivalUtcOffsetMs(utcMs: number): number {
-  const year = new Date(utcMs).getUTCFullYear();
-  const summer = utcMs >= lastSundayChangeUtc(year, 2) && utcMs < lastSundayChangeUtc(year, 9);
+  if (utcMs < cachedYear.from || utcMs >= cachedYear.to) {
+    cachedYear = yearRule(new Date(utcMs).getUTCFullYear());
+  }
+  const summer = utcMs >= cachedYear.summerFrom && utcMs < cachedYear.summerTo;
   if (summer) {
     return 2 * HOUR_MS;
   }

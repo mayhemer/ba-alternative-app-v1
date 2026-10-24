@@ -26,6 +26,18 @@ it('agrees with the time-zone database every three hours, 2019 to 2030', () => {
   expect(mismatches).toEqual([]);
 });
 
+it('agrees with the time-zone database when instants jump between years', () => {
+  // The clock-change instants are cached per year: hopping back and forth must
+  // never answer from the wrong year.
+  const instants = ['2025-08-06T12:00:00Z', '2019-12-31T23:30:00Z', '2025-03-30T00:59:00Z', '2030-10-27T01:00:00Z', '2025-03-30T01:00:00Z', '2026-01-01T00:00:00Z', '2025-10-26T00:59:00Z']
+    .map((iso) => Date.parse(iso));
+  for (let round = 0; round < 2; round++) {
+    for (const t of instants) {
+      expect([new Date(t).toISOString(), festivalUtcOffsetMs(t)]).toEqual([new Date(t).toISOString(), icuOffsetMs(t)]);
+    }
+  }
+});
+
 it('changes exactly at 01:00 UTC on the last Sundays of March and October', () => {
   for (const change of [Date.parse('2027-03-28T01:00:00Z'), Date.parse('2027-10-31T01:00:00Z')]) {
     expect(festivalUtcOffsetMs(change - 1)).toBe(icuOffsetMs(change - 1));
