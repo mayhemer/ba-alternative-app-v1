@@ -5,7 +5,7 @@ import { Text } from '../ui/Text';
 import { stripePath, CONFLICT_STRIPE } from '../timeline/ArtistBlock';
 import { BOLD, CLASH_BAR_WIDTH, LIST_GUTTER, LIVE_BORDER, PROGRESS_BAR_WIDTH, STATUS_LABEL, TABULAR } from './planStyles';
 import { NowArrow } from './PlanListItems';
-import { sameProps } from './sameProps';
+import { sameProps } from '../sameProps';
 import type { ClashBar, PlanSetModel, SetStatus } from './PlanSetRow.model';
 import type { DbArtist } from '../../types/backend';
 import { colors } from '../../styling/tokens';

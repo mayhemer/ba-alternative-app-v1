@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import { View } from 'react-native';
 import { Text } from '../ui/Text';
 import { LIST_GUTTER } from './planStyles';
-import { sameProps } from './sameProps';
+import { sameProps } from '../sameProps';
 import type { PlanEmptyModel } from './PlanEmpty.model';
 import { colors } from '../../styling/tokens';
 

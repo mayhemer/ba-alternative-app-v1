@@ -1,6 +1,6 @@
-// ── Memo compare for My plan's elements ───────────────────────────────────────
+// ── Memo compare for UI elements ──────────────────────────────────────────────
 //
-// The plan rebuilds its models whenever any input changes (a new minute, a sync,
+// A screen rebuilds its models whenever any input changes (a new minute, a sync,
 // a pick), so an element's model is a new object even when nothing it shows
 // changed. An element draws only its props, so equal props by value mean equal
 // output: comparing them that way lets each element skip exactly the renders

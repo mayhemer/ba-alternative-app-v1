@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Pressable, View } from 'react-native';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { Text } from '../ui/Text';
 import { usePlanFilters, usePlanPanel } from '../../context/PlanContext';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
 import { planStrings } from './planStrings';
+import { PlanFilterSwitch } from './PlanFilterSwitch';
+import { planFilterSwitchModels, type PlanFilterSwitchModel } from './PlanFilterSwitch.model';
+import type { PlanFilters } from '../../store/uiStatePersistence';
 import {
   colors,
   OVERLAY_PANEL_MARGIN,
@@ -15,62 +16,18 @@ import {
 // ── My plan's filter panel ────────────────────────────────────────────────────
 //
 // Drops from under the TopBar like the lens panel, with the same backdrop and
-// card, and the same place in AppShell. Two switches; "Show only conflicts"
-// makes the Maybe switch moot, so it is dimmed and disabled meanwhile.
+// card, and the same place in AppShell. Two switches, each drawn from its model
+// (PlanFilterSwitch.model.ts).
 
 const strings = planStrings();
 
-const TRACK_WIDTH = 40;
-const TRACK_HEIGHT = 22;
-const KNOB = 18;
-
-type SwitchRowProps = {
-  label: string;
-  icon: React.ReactNode;
-  on: boolean;
-  onColor: string;
-  disabled?: boolean;
-  onPress: () => void;
-};
-
-function SwitchRow({ label, icon, on, onColor, disabled = false, onPress }: SwitchRowProps) {
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      accessibilityRole="switch"
-      accessibilityLabel={label}
-      accessibilityState={{ checked: on, disabled }}
-      style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 44, opacity: disabled ? 0.4 : 1 }}
-    >
-      {icon}
-      <Text style={{ flex: 1, fontSize: 15, color: colors.textPrimary }}>{label}</Text>
-      <View style={{ width: TRACK_WIDTH, height: TRACK_HEIGHT, borderRadius: TRACK_HEIGHT / 2, backgroundColor: on ? onColor : colors.borderMid }}>
-        <View
-          style={{
-            position: 'absolute',
-            top: (TRACK_HEIGHT - KNOB) / 2,
-            left: on ? TRACK_WIDTH - KNOB - 2 : 2,
-            width: KNOB,
-            height: KNOB,
-            borderRadius: KNOB / 2,
-            backgroundColor: colors.white,
-          }}
-        />
-      </View>
-    </Pressable>
-  );
-}
-
 type ViewProps = {
-  showMaybe: boolean;
-  conflictsOnly: boolean;
-  onToggleMaybe: () => void;
-  onToggleConflicts: () => void;
+  switches: PlanFilterSwitchModel[];
+  onToggle: (filter: keyof PlanFilters) => void;
   onClose: () => void;
 };
 
-export function PlanFilterPanelView({ showMaybe, conflictsOnly, onToggleMaybe, onToggleConflicts, onClose }: ViewProps) {
+export function PlanFilterPanelView({ switches, onToggle, onClose }: ViewProps) {
   const { isWide } = useLayoutMode();
   return (
     <>
@@ -101,21 +58,7 @@ export function PlanFilterPanelView({ showMaybe, conflictsOnly, onToggleMaybe, o
           elevation: 12,
         }}
       >
-        <SwitchRow
-          label={strings.showMaybe}
-          icon={<Ionicons name="star-half" size={20} color={colors.accent} />}
-          on={showMaybe}
-          onColor={colors.accent}
-          disabled={conflictsOnly}
-          onPress={onToggleMaybe}
-        />
-        <SwitchRow
-          label={strings.conflictsOnly}
-          icon={<Ionicons name="warning-outline" size={20} color={colors.danger} />}
-          on={conflictsOnly}
-          onColor={colors.danger}
-          onPress={onToggleConflicts}
-        />
+        {switches.map((item) => <PlanFilterSwitch key={item.key} item={item} onToggle={onToggle} />)}
       </View>
     </>
   );
@@ -124,16 +67,16 @@ export function PlanFilterPanelView({ showMaybe, conflictsOnly, onToggleMaybe, o
 export function PlanFilterPanel() {
   const { showMaybe, conflictsOnly, toggleMaybe, toggleConflictsOnly } = usePlanFilters();
   const { isOpen, close } = usePlanPanel();
+  const switches = useMemo(() => planFilterSwitchModels({ showMaybe, conflictsOnly }), [showMaybe, conflictsOnly]);
+  const handleToggle = useCallback((filter: keyof PlanFilters): void => {
+    if (filter === 'showMaybe') {
+      toggleMaybe();
+    } else {
+      toggleConflictsOnly();
+    }
+  }, [toggleMaybe, toggleConflictsOnly]);
   if (!isOpen) {
     return null;
   }
-  return (
-    <PlanFilterPanelView
-      showMaybe={showMaybe}
-      conflictsOnly={conflictsOnly}
-      onToggleMaybe={toggleMaybe}
-      onToggleConflicts={toggleConflictsOnly}
-      onClose={close}
-    />
-  );
+  return <PlanFilterPanelView switches={switches} onToggle={handleToggle} onClose={close} />;
 }

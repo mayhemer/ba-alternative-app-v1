@@ -3,6 +3,9 @@ import { measureRenders } from 'reassure';
 import { act, fireEvent, screen } from '@testing-library/react-native';
 import { MyPlanScreen } from './MyPlanScreen';
 import { NowPill } from '../components/plan/NowPill';
+import { PlanDaySwitcher } from '../components/plan/PlanDaySwitcher';
+import { PlanFilterChip } from '../components/plan/PlanFilterChip';
+import { PlanFilterPanel } from '../components/plan/PlanFilterPanel';
 import { PerfProviders } from '../../tests/setup/PerfProviders';
 import { MEASURE_OPTIONS } from '../../tests/setup/perfOptions';
 import { PlanProvider, usePlanFilters, usePlanStore } from '../context/PlanContext';
@@ -102,6 +105,7 @@ async function settle(): Promise<void> {
 // Reaches the filters, the picks and the shown day the way the UI does, without
 // mounting the chrome that is not under measurement.
 let toggleMaybe: () => void;
+let toggleConflictsOnly: () => void;
 let cycle: (artistId: string) => void;
 let pickDay: (day: number) => void;
 
@@ -110,6 +114,7 @@ function Controls() {
   const { cycleStatus } = useInterestCycle();
   const store = usePlanStore();
   toggleMaybe = filters.toggleMaybe;
+  toggleConflictsOnly = filters.toggleConflictsOnly;
   cycle = (artistId) => { cycleStatus(artistId); };
   pickDay = (day) => { store.pickDay(day, NOW); };
   return null;
@@ -178,6 +183,50 @@ test('My plan: one pick changed', async () => {
     await settle();
     // Must-see → don't go.
     await act(async () => { cycle(CHANGED); });
+    await settle();
+  });
+});
+
+// ── The chrome alone: day switcher, filter chip, filter panel ─────────────────
+//
+// Without the screen, so the count is the chrome's own. Which of its elements
+// render inside a commit is checked in MyPlanScreen.test.tsx ("the chrome").
+
+function Chrome() {
+  return (
+    <>
+      <Controls />
+      <PlanFilterChip />
+      <PlanFilterPanel />
+      <PlanDaySwitcher />
+    </>
+  );
+}
+
+function measureChrome(scenario: () => Promise<void>): Promise<void> {
+  return measureRenders(<Chrome />, { ...MEASURE_OPTIONS, wrapper: Wrapper, beforeEach: startingState, scenario }).then(() => undefined);
+}
+
+test('My plan chrome: a new minute', async () => {
+  await measureChrome(async () => {
+    await settle();
+    setCurrentTimeMs(NOW + 60 * 1000);
+    await act(async () => { await jest.advanceTimersByTimeAsync(60 * 1000); });
+  });
+});
+
+test('My plan chrome: opening the filter panel', async () => {
+  await measureChrome(async () => {
+    await settle();
+    await act(async () => { fireEvent.press(screen.getByLabelText('Filters')); });
+    await settle();
+  });
+});
+
+test('My plan chrome: showing only conflicts', async () => {
+  await measureChrome(async () => {
+    await settle();
+    await act(async () => { toggleConflictsOnly(); });
     await settle();
   });
 });

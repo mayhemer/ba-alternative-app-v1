@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { View } from 'react-native';
 import { ConflictGroupTitle } from './PlanListItems';
-import { sameProps } from './sameProps';
+import { sameProps } from '../sameProps';
 import type { PlanSpacerItem } from '../../utils/planUtils';
 import type { DbEvent } from '../../types/backend';
 
