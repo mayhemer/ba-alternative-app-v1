@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -51,6 +51,8 @@ const PILL_STYLE = {
 };
 const LIVE_PILL_STYLE = { ...PILL_STYLE, justifyContent: 'flex-start' as const };
 const BREAK_PILL_STYLE = { ...PILL_STYLE, justifyContent: 'center' as const };
+/** While a finger is down: the surface steps up, as a button's does. */
+const PRESSED_STYLE = { backgroundColor: colors.surfacePressed };
 
 const DOT_STYLE = { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.danger };
 const NAME_STYLE = { ...BOLD, flexShrink: 1, fontSize: PILL_FONT_SIZE, color: colors.textPrimary };
@@ -73,6 +75,10 @@ function Logo() {
 type ViewProps = { state: NowPillModel; onPress: () => void };
 
 export function NowPillView({ state, onPress }: ViewProps) {
+  const [pressed, setPressed] = useState(false);
+  const pressIn = useCallback((): void => { setPressed(true); }, []);
+  const pressOut = useCallback((): void => { setPressed(false); }, []);
+
   if (state.kind === 'logo') {
     return <Logo />;
   }
@@ -84,8 +90,10 @@ export function NowPillView({ state, onPress }: ViewProps) {
         onPress={onPress}
         hitSlop={PILL_HIT_SLOP}
         accessibilityRole="button"
+        onPressIn={pressIn}
+        onPressOut={pressOut}
         accessibilityLabel={state.accessibilityLabel}
-        style={LIVE_PILL_STYLE}
+        style={[LIVE_PILL_STYLE, pressed && PRESSED_STYLE]}
       >
         <View style={DOT_STYLE} />
         <Text numberOfLines={1} style={NAME_STYLE}>{state.artistName}</Text>
@@ -108,8 +116,10 @@ export function NowPillView({ state, onPress }: ViewProps) {
       onPress={onPress}
       hitSlop={PILL_HIT_SLOP}
       accessibilityRole="button"
+      onPressIn={pressIn}
+      onPressOut={pressOut}
       accessibilityLabel={state.accessibilityLabel}
-      style={BREAK_PILL_STYLE}
+      style={[BREAK_PILL_STYLE, pressed && PRESSED_STYLE]}
     >
       <Text style={BREAK_TIME_STYLE}>{state.time}</Text>
       <Ionicons name="chevron-forward" size={11} color={colors.textMuted} />

@@ -1,7 +1,9 @@
 import React from 'react';
+import { StyleSheet } from 'react-native';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { NowPillView } from './NowPill';
 import type { NowPillModel } from './NowPill.model';
+import { colors } from '../../styling/tokens';
 
 // ── The now pill in the top bar ───────────────────────────────────────────────
 //
@@ -42,6 +44,18 @@ it('counts down to the next Must-see during a break', async () => {
   expect(screen.getByText('Emperor')).toBeTruthy();
   expect(screen.getByText('−1\u202Fh\u202F20')).toBeTruthy();
   expect(screen.queryByText('START')).toBeNull();
+});
+
+it('steps its background up while pressed, as a button does, live or in a break', async () => {
+  for (const state of [GOJIRA_LIVE, START_EMPEROR]) {
+    await render(<NowPillView state={state} onPress={jest.fn()} />);
+    const background = (): unknown => StyleSheet.flatten(screen.getByTestId('now-pill').props.style).backgroundColor;
+    expect(background()).toBe(colors.surfaceRaised);
+    await fireEvent(screen.getByTestId('now-pill'), 'pressIn');
+    expect(background()).toBe('#262626');
+    await fireEvent(screen.getByTestId('now-pill'), 'pressOut');
+    expect(background()).toBe(colors.surfaceRaised);
+  }
 });
 
 it('opens the plan when tapped', async () => {

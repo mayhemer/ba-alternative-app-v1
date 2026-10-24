@@ -7,6 +7,7 @@ const colors = {
   background:     '#0a0a0a',
   surface:        '#141414',
   surfaceRaised:  '#1a1a1a',   // subtle elevation above surface
+  surfacePressed: '#262626',   // a raised surface while pressed
   border:         '#2a2a2a',
   borderMid:      '#333333',   // slightly lighter border
   borderConflict: '#666666', 

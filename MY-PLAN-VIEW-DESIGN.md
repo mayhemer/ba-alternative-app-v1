@@ -74,6 +74,7 @@ On every screen that has a top bar. On festival days it replaces the logo while 
 - **No words:** the dot, the colours and the arrow carry the state, so nothing needs translating. The accessibility label still says it: `GOJIRA LIVE −37 min`, `NAPALM DEATH START −1 h 30`.
 - **Text:** 12.6 pt bold (10 % under the plan rows' 14 pt), to fit more of the band name, which the festival feed sends in capitals. Times join their numbers and units with narrow no-break spaces (U+202F): about half a space each, without running `37min` together.
 - **Size:** the whole centre between the side slots (56 pt each; the lens and filter chips are 54 pt), 8 pt in from each, so about 10 pt clear of the right chip. 36 pt tall (tap area extended to 44 pt with `hitSlop`), radius 18, 1 px `borderMid` border, `surfaceRaised` background, 12 pt padding, 7 pt gaps.
+- **Pressed:** while a finger is down, the background steps up from `surfaceRaised` to `surfacePressed` (`#262626`), as a button's does.
 - **Conflicts:** the pill never cycles or animates. Motion at the top of every screen is distracting, a mid-glance switch is unreadable, and it ignores the reduce-motion setting.
 - **Tap:** opens My plan on **today, scrolled to now**. Back returns to the previous screen through the existing back history.
 
