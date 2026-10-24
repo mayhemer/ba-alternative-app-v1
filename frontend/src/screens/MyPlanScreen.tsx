@@ -13,7 +13,7 @@ import { usePlanFilters, usePlanPanel, usePlanShownDay, usePlanStore, usePlanSto
 import { useMinuteNow } from '../hooks/useMinuteNow';
 import { useLayoutMode } from '../hooks/useLayoutMode';
 import { getScroll, setScroll } from '../store/uiStatePersistence';
-import { buildPlanDay, itemOffsets, nowScrollOffset, PLAN_LAYOUT, type PlanItem } from '../utils/planUtils';
+import { buildPlanDay, itemAtOffset, itemOffsets, itemsToFill, nowScrollOffset, PLAN_LAYOUT, type PlanItem } from '../utils/planUtils';
 import { getFestivalDayStart } from '../components/timeline/timelineLayout';
 import { PlanSetRow } from '../components/plan/PlanSetRow';
 import { PlanCap } from '../components/plan/PlanCap';
@@ -38,6 +38,13 @@ import { colors } from '../styling/tokens';
 // list again, unchanged. Each element still renders again only when what it
 // shows changes, so that commit re-renders none of them.
 //
+// A day is mounted the way the timeline mounts one: once the screen's height is
+// known, each day gets a list of its own (keyed by the day) that starts at its
+// landing spot and draws about one screen of cells from there, the rest
+// following one screenful per batch. A day switch then creates only the views
+// about to be seen, where they will be seen; mounting the whole day, or its top
+// first, is what made switching visibly slow on phones.
+//
 // Scrolling works like the timeline's: the position is remembered per day
 // (uiStatePersistence, under PLAN_SCREEN_KEY, as y offsets); a day without one
 // lands with "now" a third from the top if it is today, else at the top; and a
@@ -46,6 +53,9 @@ import { colors } from '../styling/tokens';
 const PLAN_SCREEN_KEY = 'plan';
 
 const keyOf = (item: PlanItem): string => item.key;
+
+/** Cells per batch before the screen is measured: FlatList's own default. */
+const DEFAULT_CELL_BATCH = 10;
 const strings = planStrings();
 
 export function MyPlanScreen() {
@@ -129,6 +139,26 @@ export function MyPlanScreen() {
     listRef.current?.scrollToOffset({ offset: target, animated });
   }, [day, viewportHeight, storeVersion, store]);
 
+  // ── Landing: where a day's list starts, fixed for the life of that list ─────
+  //
+  // Read once per day, when its list is about to mount: a later minute or filter
+  // change must not move the list (a changed contentOffset scrolls on iOS).
+  // Before the first measurement there is no screen to aim at, so that list
+  // starts from the top and the landing scroll above positions it, as it does on
+  // web, which ignores contentOffset.
+  const listDayRef = useRef<number | null>(null);
+  const landingRef = useRef<{ offset: number; index: number; count: number } | null>(null);
+  if (listDayRef.current !== day) {
+    listDayRef.current = day;
+    if (viewportHeight > 0) {
+      const offset = getScroll(PLAN_SCREEN_KEY, day) ?? nowScrollOffset(items, viewportHeight) ?? 0;
+      landingRef.current = { offset, index: itemAtOffset(items, offset), count: itemsToFill(items, offset, viewportHeight) };
+    } else {
+      landingRef.current = null;
+    }
+  }
+  const landing = landingRef.current;
+
   const handleLayout = useCallback((e: LayoutChangeEvent): void => {
     setViewportHeight(e.nativeEvent.layout.height);
   }, []);
@@ -187,11 +217,16 @@ export function MyPlanScreen() {
   }), [items, offsets]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }} onLayout={handleLayout}>
+    <View testID="plan-screen" style={{ flex: 1, backgroundColor: colors.background }} onLayout={handleLayout}>
       <FlatList
+        key={day}
         testID="plan-list"
         ref={listRef}
         data={items}
+        contentOffset={landing !== null ? { x: 0, y: landing.offset } : undefined}
+        initialScrollIndex={landing !== null && landing.index > 0 ? landing.index : undefined}
+        initialNumToRender={landing?.count ?? DEFAULT_CELL_BATCH}
+        maxToRenderPerBatch={landing?.count ?? DEFAULT_CELL_BATCH}
         keyExtractor={keyOf}
         renderItem={renderItem}
         getItemLayout={getItemLayout}

@@ -2,7 +2,9 @@ import {
   buildPlanDay,
   daysWithClash,
   defaultPlanDay,
+  itemAtOffset,
   itemOffsets,
+  itemsToFill,
   nowScrollOffset,
   PLAN_LAYOUT,
   type PlanInputs,
@@ -469,6 +471,27 @@ describe('itemOffsets', () => {
     for (let i = 1; i < items.length; i++) {
       expect(offsets[i]).toBe(offsets[i - 1] + items[i - 1].height + PLAN_LAYOUT.itemSpacing);
     }
+  });
+});
+
+// Friday holds one Must-see: the start cap at 12 (30 tall), Spectral Wound at
+// 48 (58), the end cap at 112 (30).
+const FRIDAY = (): PlanItem[] => build(DAY, { day: FRI, now: at(7, '11:00') });
+
+describe('itemAtOffset', () => {
+  it('is the item whose top is at or above the offset', () => {
+    const items = FRIDAY();
+    expect([0, 47, 48, 111, 112, 500].map((y) => itemAtOffset(items, y))).toEqual([0, 0, 1, 1, 2, 2]);
+  });
+});
+
+describe('itemsToFill', () => {
+  it('counts the items a screen of that height shows from the offset down', () => {
+    const items = FRIDAY();
+    expect(itemsToFill(items, 0, 50)).toBe(2);
+    expect(itemsToFill(items, 48, 70)).toBe(2);
+    expect(itemsToFill(items, 48, 63)).toBe(1);
+    expect(itemsToFill(items, 0, 1000)).toBe(3);
   });
 });
 

@@ -185,6 +185,28 @@ export function itemOffsets(items: PlanItem[]): number[] {
   return offsets;
 }
 
+/** Index of the item whose top is at or above content offset `y`: the one a list scrolled to `y` shows first. */
+export function itemAtOffset(items: PlanItem[], y: number): number {
+  const offsets = itemOffsets(items);
+  let index = 0;
+  while (index + 1 < offsets.length && offsets[index + 1] <= y) {
+    index += 1;
+  }
+  return index;
+}
+
+/** How many items a screen `height` tall shows, scrolled to `y`: from the one there down. */
+export function itemsToFill(items: PlanItem[], y: number, height: number): number {
+  const offsets = itemOffsets(items);
+  let index = itemAtOffset(items, y);
+  let count = 0;
+  while (index < offsets.length && offsets[index] < y + height) {
+    count += 1;
+    index += 1;
+  }
+  return Math.max(1, count);
+}
+
 /**
  * Scroll offset that puts the item carrying "now" about a third from the top of
  * a viewport of the given height; null when "now" is not on the shown day.

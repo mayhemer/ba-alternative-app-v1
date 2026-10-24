@@ -214,6 +214,7 @@ What each element shows comes from its own model (see Principles), built from th
   - First visit to a day: today lands with now about ⅓ from the top; other days land at the top.
   - Tapping today's button while today is shown scrolls to now (`requestScrollToNow`).
   - Tapping the now pill always goes to today at now.
+- **Switching days** mounts the new day the way the timeline does: once the screen's height is known, each day gets a list of its own that starts at its landing spot (saved position, else now, else the top) and draws about one screen of rows from there, the rest following one screenful per batch. Mounting the whole day at once, or its top first and then scrolling, made the switch visibly slow on phones. The very first list, before the screen is measured, starts from the top and is scrolled into place.
 
 ---
 

@@ -1,5 +1,5 @@
 import React, { Profiler } from 'react';
-import { act, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { MyPlanScreen } from './MyPlanScreen';
 import { NowPill } from '../components/plan/NowPill';
 import { PerfProviders } from '../../tests/setup/PerfProviders';
@@ -7,7 +7,7 @@ import { PlanProvider, usePlanFilters, usePlanStore } from '../context/PlanConte
 import { useInterest } from '../context/InterestContext';
 import { createDataCollector, populateCache, setInterest } from '../cache/cacheService';
 import { setCurrentTimeMs } from '../utils/clock';
-import { setPlanFilters } from '../store/uiStatePersistence';
+import { setPlanFilters, setScroll } from '../store/uiStatePersistence';
 import { getFestivalDayStart } from '../components/timeline/timelineLayout';
 import { rendersSinceReset, resetRenders } from '../../tests/setup/countRenders';
 import type { DbArtist, DbCategory, DbEvent, DbStage } from '../types/backend';
@@ -287,6 +287,50 @@ it('shows another day when it is picked', async () => {
   expect(texts).not.toContain('Gojira');
 });
 
+// ── Landing a day ─────────────────────────────────────────────────────────────
+//
+// Once the screen's height is known, each day gets a list of its own that starts
+// at its landing spot and draws the cells there first, the way the timeline
+// mounts a day. At Thursday 19:23 (Maybes hidden) the list is: the start cap at
+// 12 (30 tall), Hooded Menace at 48 (58), the 4 h 20 gap at 112 (150), Gojira
+// (live) at 268, Batushka at 332, the end cap at 396. On a 300 pt screen "now"
+// lands at 268 − 300 / 3 = 168, inside the gap.
+
+const THU = getFestivalDayStart(at(7, '12:00'));
+
+async function measureScreen(height: number): Promise<void> {
+  await fireEvent(screen.getByTestId('plan-screen'), 'layout', { nativeEvent: { layout: { x: 0, y: 0, width: 390, height } } });
+}
+
+function listOffset(): unknown {
+  return screen.getByTestId('plan-list').props.contentOffset;
+}
+
+it('starts another day at its landing spot, drawing the cells from there down', async () => {
+  await mount();
+  await measureScreen(300);
+  await act(async () => { controls.pickDay(FRI); });
+  // Not today, nothing saved: the top.
+  expect(listOffset()).toEqual({ x: 0, y: 0 });
+  expect(listTexts()).toContain('Spectral Wound');
+
+  await act(async () => { controls.pickDay(THU); });
+  // Today: "now" a third from the top.
+  expect(listOffset()).toEqual({ x: 0, y: 168 });
+  const texts = listTexts();
+  expect(texts).toEqual(expect.arrayContaining(['4 h 20', 'Gojira', 'Batushka']));
+  expect(texts).not.toContain('Hooded Menace');
+});
+
+// It leaves Friday's position saved, so no case after it lands on Friday.
+it('starts a day the user scrolled where they left it', async () => {
+  setScroll('plan', FRI, 60);
+  await mount();
+  await measureScreen(300);
+  await act(async () => { controls.pickDay(FRI); });
+  expect(listOffset()).toEqual({ x: 0, y: 60 });
+});
+
 // ── Render counts ─────────────────────────────────────────────────────────────
 //
 // Which elements render again after one change, by item key. An element renders
@@ -333,8 +377,9 @@ describe('render counts', () => {
 // ── Commits ───────────────────────────────────────────────────────────────────
 //
 // Two commits per change: the change itself, then FlatList's cell-window check,
-// which runs 50 ms after each update and commits the list again, unchanged
-// (no element renders in it: see the render counts above). The list is a
+// which runs 50 ms after each update and commits the list again, unchanged (no
+// element renders in it: see the render counts above). A day switch commits
+// once: the day gets a fresh list, which schedules no such check. The list is a
 // FlatList anyway: it scrolled faster on phones than a ScrollView rendering
 // every cell. Timers run on for a second after the change, so both are counted.
 
@@ -370,10 +415,11 @@ describe('commits', () => {
     expect(commits).toBe(2);
   });
 
-  it('another day commits twice: the change, then the cell-window check', async () => {
+  // A day gets a freshly mounted list of its own, which schedules no cell-window commit.
+  it('another day commits once', async () => {
     await mountSettled();
     await act(async () => { controls.pickDay(FRI); });
     await settle();
-    expect(commits).toBe(2);
+    expect(commits).toBe(1);
   });
 });
