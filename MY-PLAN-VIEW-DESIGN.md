@@ -32,7 +32,7 @@ Related: [DESIGN.md](DESIGN.md) (app-wide design, layout modes, chrome).
 │ └──────────────────────────────────────┘ │
 │ ┊             2 h 25                     │  gap: height ∝ duration, label
 │ ┌──────────────────────────────────────┐ │
-│▶┃ 19:00–20:00  Gojira                 ▓│ │  live: yellow left progress, white arrow
+│▶┃ 19:00–20:00  Gojira                 ▓│ │  live: yellow left progress, red arrow
 │ ┃ ● LIVE −37 min          Jägermeister▓│ │  clash: striped bar on the right edge
 │ └──────────────────────────────────────┘ │
 │                          ⚠ Conflict      │  floating group title
@@ -71,7 +71,7 @@ On every screen that has a top bar. On festival days it replaces the logo while 
 | **Otherwise** | the logo | — |
 
 - **Break window:** from the end of today's last finished Must-see (or **08:00** if none has finished yet) to the next Must-see today. Between 06:00 and 08:00, and after the day's last Must-see, the pill shows the logo.
-- **Source:** today's Must-sees only. The pill ignores both plan filters. With Maybes shown, the list's break or gap can count down to a Maybe while the pill counts down to the next Must-see. That's intended.
+- **Source:** today's Must-sees only. The pill ignores both plan filters. With Maybes shown, the list's break or gap can count down to a Maybe while the pill counts down to the next Must-see. That's intended: the list draws a countdown to a Maybe in a dashed box (see [Gaps](#gaps)), so the two read apart.
 - **No words:** the dot, the colours and the arrow carry the state, so nothing needs translating. The accessibility label still says it: `GOJIRA LIVE −37 min`, `NAPALM DEATH START −1 h 30`.
 - **Text:** 12.6 pt bold (10 % under the plan rows' 14 pt), to fit more of the band name, which the festival feed sends in capitals. Times join their numbers and units with narrow no-break spaces (U+202F): about half a space each, without running `37min` together.
 - **Size:** the whole centre between the side slots (56 pt each; the lens and filter chips are 54 pt), 8 pt in from each, so about 10 pt clear of the right chip. 36 pt tall (tap area extended to 44 pt with `hitSlop`), radius 18, 1 px `borderMid` border, `surfaceRaised` background, 12 pt padding, 7 pt gaps.
@@ -102,7 +102,7 @@ What each element shows comes from its own model (see Principles), built from th
 |---|---|---|
 | Day title | the shown day, now, whether today is a festival day | weekday, date, tone (today / past / future / outside) |
 | Set row | the set, its artist and stage, now, its overlaps with other Must-sees, the Must-sees live now, whether it heads a clash group | time range, stage, status (`LIVE −x`, `START −x`, `done`), progress, now arrow, clash bars |
-| Gap | where it starts (the end of everything listed above) and the set listed right under it, now | length or countdown, height, fill, now arrow, the conflict title of the group under it |
+| Gap | where it starts (the end of everything listed above) and the set listed right under it with its pick level, now | length or countdown (boxed when it counts to a Maybe), height, fill, now arrow, the conflict title of the group under it |
 | Day-start break | a gap from 08:00 to the first **listed** set | as a gap, with the start ring |
 | Cap / spacer | its edge, or the clash group under it | the rail end, the conflict title of the group under it |
 | Empty day | whether only conflicts are shown | its sentence |
@@ -119,7 +119,7 @@ What each element shows comes from its own model (see Principles), built from th
 
 ### Must-see row
 
-- **Box:** 58 pt tall, square corners, in its **category's colours, as on the timeline** (`categoryBlockColors`): the block's background, and a 1 px border in the brighter colour of the block's left edge. A live row's border is accent at 60%.
+- **Box:** 58 pt tall, square corners, in its **category's colours, as on the timeline** (`categoryBlockColors`): the block's background, and a 1 px border in the brighter colour of the block's left edge. A live row's border is the full accent (`LIVE_BORDER`), as a live Maybe's, to hold up in sunlight.
 - **Fixed inset for every row type and state:** content starts 18 pt from the left edge (1 + 17) and ends 23 pt from the right (1 + 22). The time, name and stage columns always line up, clear of the left progress bar and the right clash bar.
 - **Line 1:** `HH:MM–HH:MM` (13, `textMuted`, tabular figures), then the band name (15 bold, ellipsis).
 - **Line 2:** the status on the left, the stage right-aligned (13, `textSecondary`, ellipsis). Statuses:
@@ -133,10 +133,10 @@ What each element shows comes from its own model (see Principles), built from th
 ### Maybe row
 
 - Hidden unless "Show Maybe picks" is on.
-- **Look:** 26 pt tall, one line: `time · name · stage` (13, `#8a8a8a`).
+- **Look:** 26 pt tall, one line: `time · name · stage` (13, `textMuted`). Muted, but bright enough to read in sunlight.
 - **Box:** a **1 px dashed** border in the category's border colour (as Must-see rows) and no background, with the same fixed insets as Must-see rows.
 - Never marked as a clash, and never part of conflict logic.
-- **Live:** a grey 6.5 pt left bar (track `#333`, fill `#8a8a8a`) and the now arrow.
+- **Live:** a solid border in the full accent (`LIVE_BORDER`) instead of the dashed one, a red dot (7 pt) right before the name, a grey 6.5 pt left bar (track `#333`, fill `#8a8a8a`) and the now arrow. The dot moves only that row's name, by its width and gap.
 
 ### Gaps
 
@@ -150,7 +150,8 @@ What each element shows comes from its own model (see Principles), built from th
   - at least 44 pt tall;
   - a blue 6.5 pt left bar (track `#1c2f52`, fill `#5b9bff`, elapsed fraction);
   - the now arrow;
-  - a centred countdown `−1 h 20` (15 bold blue).
+  - a centred countdown `−1 h 20` (15 bold blue);
+  - counting down to a **Maybe** (the set listed under it is one), the countdown is 13 regular blue in a 1 pt **dashed** blue box (radius 4, 8 pt side padding): the Maybe's own outline. It tells the list's countdown to a Maybe apart from the now pill's, which always counts to the next Must-see.
 
 ### Day caps
 
@@ -171,7 +172,7 @@ What each element shows comes from its own model (see Principles), built from th
 
 ### Now arrow
 
-- A white triangle, 16 × 24 pt, with a 2 pt outline in the surface colour. Its tip reaches about 4 pt into the row, and it is drawn over the row.
+- A red (`danger`) triangle, 16 × 24 pt, with a 1 pt white outline. Its tip reaches about 4 pt into the row, halfway across the 6.5 pt progress bar, and it is drawn over the row. Red is the now colour across the app (the timeline's now line, the live dot).
 - Its centre sits at the **tip of the progress fill**: on a live row (Must-see or Maybe), in the current gap, or in the day-start break.
 - With two live sets there are two arrows. Rows aren't on a shared time scale, so each arrow means "this far into this set".
 - No arrow before the festival.
@@ -277,7 +278,7 @@ New values this screen introduces, to add as tokens:
 | live progress track | `#4a3f17` |
 | break / future blue | `#5b9bff` |
 | break track | `#1c2f52` |
-| Maybe text and live fill | `#8a8a8a` |
+| Maybe live fill (`maybeText`) | `#8a8a8a` |
 | past-day title | `#9a9a9a` |
 | row background and border | the set's category, as timeline blocks (`categoryBlockColors`) |
 

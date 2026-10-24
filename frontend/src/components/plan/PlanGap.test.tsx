@@ -4,6 +4,7 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 import { PlanGap } from './PlanGap';
 import { planGapModel } from './PlanGap.model';
 import type { DbEvent } from '../../types/backend';
+import { colors } from '../../styling/tokens';
 
 // ── A gap between sets, as drawn ──────────────────────────────────────────────
 //
@@ -33,6 +34,25 @@ it('while current, shows the countdown, the fill and the arrow at the tip of the
   expect(screen.getByText('−1 h 20')).toBeTruthy();
   expect(StyleSheet.flatten(screen.getByTestId('plan-gap-fill').props.style).height).toBe(`${gap.progress * 100}%`);
   expect(StyleSheet.flatten(screen.getByTestId('plan-now-arrow').props.style).top).toBe(gap.nowY! - 15);
+});
+
+it('draws a countdown to a Maybe at regular size, in a dashed box in the break blue', async () => {
+  const gap = planGapModel('g', at('20:30'), setAt('22:30'), at('21:10'), false, 'maybe');
+  await render(<PlanGap item={gap} />);
+  const box = StyleSheet.flatten(screen.getByTestId('plan-gap-maybe-box').props.style);
+  expect(box.borderStyle).toBe('dashed');
+  expect(box.borderWidth).toBe(1);
+  expect(box.borderColor).toBe(colors.breakBlue);
+  const text = StyleSheet.flatten(screen.getByText('−1 h 20').props.style);
+  expect(text.fontSize).toBe(13);
+  expect(text.color).toBe(colors.breakBlue);
+});
+
+it('draws a countdown to a Must-see bold and larger, with no box', async () => {
+  const gap = planGapModel('g', at('20:30'), setAt('22:30'), at('21:10'), false, 'will_go');
+  await render(<PlanGap item={gap} />);
+  expect(screen.queryByTestId('plan-gap-maybe-box')).toBeNull();
+  expect(StyleSheet.flatten(screen.getByText('−1 h 20').props.style).fontSize).toBe(15);
 });
 
 it('draws the conflict title its model carries, which opens the clash', async () => {

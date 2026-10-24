@@ -12,10 +12,35 @@ import { colors } from '../../styling/tokens';
 // ── A gap between sets ────────────────────────────────────────────────────────
 //
 // A dotted rail and its label; the current one adds the blue fill and the now
-// arrow; the one above a clash group carries its "Conflict" title. Draws its
+// arrow, and counts down in bold, or, to a Maybe, smaller in a dashed box (the
+// Maybe's own outline), so it reads apart from the pill's countdown to the next
+// Must-see. The one above a clash group carries its "Conflict" title. Draws its
 // model (PlanGap.model.ts) and computes nothing itself.
 
 type Props = { item: PlanGapModel; onPressConflict?: (event: DbEvent) => void };
+
+const MAYBE_COUNTDOWN_BOX = {
+  borderWidth: 1,
+  borderStyle: 'dashed' as const,
+  borderColor: colors.breakBlue,
+  borderRadius: 4,
+  paddingHorizontal: 8,
+  paddingVertical: 1,
+};
+
+function GapLabel({ item }: { item: PlanGapModel }) {
+  if (!item.current) {
+    return <Text style={[TABULAR, { fontSize: 12, color: colors.muted }]}>{item.label}</Text>;
+  }
+  if (item.countdownToMaybe) {
+    return (
+      <View testID="plan-gap-maybe-box" style={MAYBE_COUNTDOWN_BOX}>
+        <Text style={[TABULAR, { fontSize: 13, lineHeight: 18, color: colors.breakBlue }]}>{item.label}</Text>
+      </View>
+    );
+  }
+  return <Text style={[BOLD, TABULAR, { fontSize: 15, color: colors.breakBlue }]}>{item.label}</Text>;
+}
 
 const NO_OP = (): void => undefined;
 
@@ -34,11 +59,7 @@ function PlanGapBase({ item, onPressConflict = NO_OP }: Props) {
           <View testID="plan-gap-fill" style={{ width: PROGRESS_BAR_WIDTH, height: `${item.progress * 100}%`, backgroundColor: colors.breakBlue }} />
         </View>
       )}
-      {item.current ? (
-        <Text style={[BOLD, TABULAR, { fontSize: 15, color: colors.breakBlue }]}>{item.label}</Text>
-      ) : (
-        <Text style={[TABULAR, { fontSize: 12, color: colors.muted }]}>{item.label}</Text>
-      )}
+      <GapLabel item={item} />
       {item.opening && <RailEnd edge="start" height={item.height} />}
       {item.nowY !== null && <NowArrow y={item.nowY} />}
       {item.conflictTitle !== null && <ConflictGroupTitle event={item.conflictTitle} onPress={onPressConflict} />}

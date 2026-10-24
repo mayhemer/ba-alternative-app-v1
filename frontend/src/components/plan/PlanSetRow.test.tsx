@@ -2,11 +2,10 @@ import React from 'react';
 import { StyleSheet } from 'react-native';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { PlanSetRow } from './PlanSetRow';
-import { ConflictGroupTitle } from './PlanListItems';
+import { ConflictGroupTitle, NowArrow } from './PlanListItems';
 import { buildPlanDay, type PlanInputs } from '../../utils/planUtils';
 import type { PlanSetModel } from './PlanSetRow.model';
 import { getFestivalDayStart } from '../timeline/timelineLayout';
-import { LIVE_BORDER } from './planStyles';
 import { colors } from '../../styling/tokens';
 import type { DbArtist, DbEvent } from '../../types/backend';
 
@@ -83,6 +82,14 @@ it('draws the now arrow on a live set only, at the tip of its progress', async (
   expect(screen.queryByTestId('plan-now-arrow')).toBeNull();
 });
 
+it('draws the now arrow red, outlined in white', () => {
+  const arrow = NowArrow({ y: 20 }) as React.ReactElement<{ children: React.ReactElement<{ fill?: string; stroke?: string; strokeWidth?: number }> }>;
+  const shape = arrow.props.children;
+  expect(shape.props.fill).toBe(colors.danger);
+  expect(shape.props.stroke).toBe(colors.white);
+  expect(shape.props.strokeWidth).toBe(1);
+});
+
 it('marks a past set as done', async () => {
   await renderRow(item('Mgła', '19:23'));
   expect(screen.getByText('done')).toBeTruthy();
@@ -138,10 +145,10 @@ it('gives a Must-see row its category\'s background and border', async () => {
   expect(style.borderColor).toBe(BORDER);
 });
 
-it('keeps the live border on a live row', async () => {
+it('gives a live Must-see row the full accent border, over its category\'s', async () => {
   const style = await rowStyle(item('Gojira', '19:23'), { background: BG, border: BORDER });
   expect(style.backgroundColor).toBe(BG);
-  expect(style.borderColor).toBe(LIVE_BORDER);
+  expect(style.borderColor).toBe(colors.accent);
 });
 
 it('gives a Maybe row its category\'s border and no background', async () => {
@@ -149,6 +156,21 @@ it('gives a Maybe row its category\'s border and no background', async () => {
   expect(style.borderColor).toBe(BORDER);
   expect(style.borderStyle).toBe('dashed');
   expect(style.backgroundColor).toBeUndefined();
+  expect(screen.queryByTestId('plan-maybe-live-dot')).toBeNull();
+});
+
+it('gives a live Maybe row a solid full accent border and a red dot before its name', async () => {
+  const style = await rowStyle(item('Paysage', '20:30'), { background: BG, border: BORDER });
+  expect(style.borderColor).toBe(colors.accent);
+  expect(style.borderStyle).toBe('solid');
+  expect(StyleSheet.flatten(screen.getByTestId('plan-maybe-live-dot').props.style).backgroundColor).toBe(colors.danger);
+});
+
+it('writes a Maybe row in the muted text colour, readable in sunlight', async () => {
+  await renderRow(item('Paysage', '19:23'));
+  for (const text of ['20:10–21:00', 'Paysage', 'Octagon']) {
+    expect(StyleSheet.flatten(screen.getByText(text).props.style).color).toBe(colors.textMuted);
+  }
 });
 
 it('falls back to the surface and a grey border without category colours', async () => {

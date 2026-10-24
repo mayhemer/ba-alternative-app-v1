@@ -12,7 +12,9 @@ import { colors } from '../../styling/tokens';
 
 // ── One set in My plan ────────────────────────────────────────────────────────
 //
-// Must-see: a bordered two-line card. Maybe: one dimmed line in a dashed box.
+// Must-see: a bordered two-line card. Maybe: one line in a dashed box, its
+// text muted but bright enough for sunlight; while live, a solid accent border
+// and a red dot before the name.
 // Both share one fixed inset, so the time, name and stage columns line up in
 // every state, clear of the progress bar on the left edge and the clash bar on
 // the right. Tapping anywhere opens the artist's detail sheet. Draws its model
@@ -24,6 +26,9 @@ const INSET_LEFT = 17;
 const INSET_RIGHT = 22;
 
 const PAST_OPACITY = 0.45;
+
+/** The red dot that marks a live set, in a Must-see's status and before a live Maybe's name. */
+const LIVE_DOT = { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.danger };
 
 /** `clipId` must be unique in the whole list: on web, SVG ids are global to the page. */
 function ClashStripes({ bar, rowHeight, clipId }: { bar: ClashBar; rowHeight: number; clipId: string }) {
@@ -71,7 +76,7 @@ function Status({ status }: { status: SetStatus }) {
     case 'live':
       return (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: colors.danger }} />
+          <View style={LIVE_DOT} />
           <Text style={STATUS_LABEL}>{status.label}</Text>
           <Text style={[BOLD, TABULAR, { fontSize: 14, color: colors.accent }]}>{status.time}</Text>
         </View>
@@ -115,15 +120,18 @@ function SetCard({ item, onPressArtist, background = colors.surface, border = co
           paddingLeft: INSET_LEFT,
           paddingRight: INSET_RIGHT,
           borderWidth: 1,
-          borderStyle: 'dashed',
-          borderColor: border,
+          borderStyle: live ? 'solid' : 'dashed',
+          borderColor: live ? LIVE_BORDER : border,
           opacity: item.state === 'past' ? PAST_OPACITY : 1,
         }}
       >
         {live && <LeftProgress progress={item.progress} track={colors.borderMid} fill={colors.maybeText} />}
-        <Text style={[TABULAR, { fontSize: 13, color: colors.maybeText }]}>{item.timeText}</Text>
-        <Text numberOfLines={1} style={{ flex: 1, fontSize: 13, color: colors.maybeText }}>{item.artist.name}</Text>
-        <Text numberOfLines={1} style={{ maxWidth: '35%', fontSize: 13, color: colors.maybeText }}>{item.stageName}</Text>
+        <Text style={[TABULAR, { fontSize: 13, color: colors.textMuted }]}>{item.timeText}</Text>
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          {live && <View testID="plan-maybe-live-dot" style={LIVE_DOT} />}
+          <Text numberOfLines={1} style={{ flexShrink: 1, fontSize: 13, color: colors.textMuted }}>{item.artist.name}</Text>
+        </View>
+        <Text numberOfLines={1} style={{ maxWidth: '35%', fontSize: 13, color: colors.textMuted }}>{item.stageName}</Text>
       </Pressable>
     );
   }

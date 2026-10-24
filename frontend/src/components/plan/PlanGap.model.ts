@@ -36,6 +36,8 @@ export type PlanGapModel = {
   current: boolean;
   /** Its length, or while current the time left: "2 h", "−1 h 20". */
   label: string;
+  /** Current, and a Maybe is listed under it: the countdown is drawn smaller, in a dashed box. */
+  countdownToMaybe: boolean;
   height: number;
   /** Elapsed fraction while current, else 0: the blue fill. */
   progress: number;
@@ -45,14 +47,32 @@ export type PlanGapModel = {
   conflictTitle: DbEvent | null;
 };
 
-/** The gap from `from` to the start of `next`, the set listed right under it. */
-export function planGapModel(key: string, from: number, next: DbEvent, now: number, opening: boolean): PlanGapModel {
+/** The gap from `from` to the start of `next`, the set listed right under it, picked at `nextLevel`. */
+export function planGapModel(
+  key: string,
+  from: number,
+  next: DbEvent,
+  now: number,
+  opening: boolean,
+  nextLevel: 'will_go' | 'maybe' = 'will_go',
+): PlanGapModel {
   const to = next.dateFrom;
   const minutes = Math.round((to - from) / MINUTE_MS);
   if (now < from || now >= to) {
-    return { kind: 'gap', key, opening, current: false, label: formatDuration(to - from), height: gapHeight(minutes), progress: 0, nowY: null, conflictTitle: null };
+    return { kind: 'gap', key, opening, current: false, label: formatDuration(to - from), countdownToMaybe: false, height: gapHeight(minutes), progress: 0, nowY: null, conflictTitle: null };
   }
   const height = Math.max(GAP_LAYOUT.currentMinHeight, gapHeight(minutes));
   const progress = (now - from) / (to - from);
-  return { kind: 'gap', key, opening, current: true, label: formatRemaining(to - now), height, progress, nowY: progress * height, conflictTitle: null };
+  return {
+    kind: 'gap',
+    key,
+    opening,
+    current: true,
+    label: formatRemaining(to - now),
+    countdownToMaybe: nextLevel === 'maybe',
+    height,
+    progress,
+    nowY: progress * height,
+    conflictTitle: null,
+  };
 }

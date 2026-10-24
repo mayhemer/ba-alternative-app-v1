@@ -113,7 +113,7 @@ export function buildPlanDay(
   const first = visible[0];
   const hasMust = dayPicks.some((p) => p.level === 'will_go');
   const opening = !conflictsOnly && hasMust && first !== undefined
-    ? planGapModel('opening', dayStart + BREAK_WINDOW_OFFSET_MS, first.event, now, true)
+    ? planGapModel('opening', dayStart + BREAK_WINDOW_OFFSET_MS, first.event, now, true, first.level)
     : null;
   // The day caps open and close the day; never with only conflicts shown.
   const caps = !conflictsOnly && visible.length > 0;
@@ -127,7 +127,7 @@ export function buildPlanDay(
   let groupEnd: number | null = null;
   for (const { event, artist, level } of visible) {
     if (!conflictsOnly && groupEnd !== null && event.dateFrom > groupEnd) {
-      items.push(planGapModel(`gap-${event.eventId}`, groupEnd, event, now, false));
+      items.push(planGapModel(`gap-${event.eventId}`, groupEnd, event, now, false, level));
     }
 
     const set = planSetModel({

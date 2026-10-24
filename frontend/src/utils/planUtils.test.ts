@@ -36,7 +36,8 @@ import type { DbArtist, DbEvent, DbStage } from '../types/backend';
 //
 // Each expected list is written out by hand from the fixture times. Read a line
 // as: element, name, ⚠ when it heads a clash group, its state, and in quotes the
-// text it shows. "gap now" is the gap "now" falls in.
+// text it shows. "gap now" is the gap "now" falls in; "to Maybe" marks its
+// countdown to a Maybe, drawn in a dashed box.
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 //
@@ -153,7 +154,7 @@ function shape(items: PlanItem[]): string[] {
       case 'cap': return `cap ${item.edge}`;
       case 'spacer': return 'spacer';
       case 'empty': return `empty "${item.text}"`;
-      case 'gap': return `gap${item.current ? ' now' : ''} "${item.label}"${item.opening ? ' opening' : ''}`;
+      case 'gap': return `gap${item.current ? ' now' : ''} "${item.label}"${item.opening ? ' opening' : ''}${item.countdownToMaybe ? ' to Maybe' : ''}`;
       default: {
         const level = item.level === 'will_go' ? 'must' : 'maybe';
         return `${level} ${item.artist.name}${item.conflictHead ? ' ⚠' : ''} — ${item.state}${statusText(item.status)}`;
@@ -292,6 +293,15 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
     ...WITH_MAYBES_AHEAD.slice(11),
     'cap end',
   ]],
+  ['Maybes shown: a gap ending at a Maybe counts down to it, marked as a countdown to a Maybe', DAY, { now: at(7, '15:00'), maybe: true }, [
+    'title today',
+    'cap start',
+    'must Hooded Menace — past "done"',
+    'gap now "−30 min" to Maybe',
+    'maybe Blood Incantation — upcoming',
+    ...WITH_MAYBES_AHEAD.slice(3),
+    'cap end',
+  ]],
   ['Maybes shown: a Maybe overlapping a live Must-see is live too, with no status', DAY, { now: at(7, '20:20'), maybe: true }, [
     'title today',
     'cap start',
@@ -316,7 +326,7 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
 
   // A Maybe before the first Must-see
   ['Maybes shown: the day-start break ends at the Maybe', EARLY, { now: at(7, '11:00'), maybe: true }, [
-    'title today', 'gap now "−1 h" opening', 'maybe Early maybe — upcoming', 'gap "1 h 20"', 'must First must — upcoming', 'cap end',
+    'title today', 'gap now "−1 h" opening to Maybe', 'maybe Early maybe — upcoming', 'gap "1 h 20"', 'must First must — upcoming', 'cap end',
   ]],
   ['Maybes hidden: the day-start break ends at the first Must-see', EARLY, { now: at(7, '11:00') }, [
     'title today', 'gap now "−3 h" opening', 'must First must — upcoming', 'cap end',
@@ -369,7 +379,7 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
     'cap end',
   ]],
   ['sets over 2 h do not start the day: the break counts to the first listed set', LONG, { now: at(7, '11:00'), maybe: true }, [
-    'title today', 'gap now "−2 h" opening', 'maybe Early maybe — upcoming', 'gap "20 min"', ...WITH_MAYBES_AHEAD, 'cap end',
+    'title today', 'gap now "−2 h" opening to Maybe', 'maybe Early maybe — upcoming', 'gap "20 min"', ...WITH_MAYBES_AHEAD, 'cap end',
   ]],
   ['a set of exactly 2 h is listed', LONG, { day: FRI, now: at(7, '19:23') }, [
     'title future', 'cap start', 'must Spectral Wound — upcoming', 'gap "50 min"', 'must Exactly two hours — upcoming', 'cap end',

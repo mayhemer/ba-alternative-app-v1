@@ -12,8 +12,8 @@ export const STATUS_LABEL: TextStyle = { ...BOLD, fontSize: 11, letterSpacing: 0
 /** Tabular figures, so times and countdowns do not jitter as they change. */
 export const TABULAR: TextStyle = { fontVariant: ['tabular-nums'] };
 
-/** A live set's border: the accent at 60 %. */
-export const LIVE_BORDER = 'rgba(232, 200, 74, 0.6)';
+/** A live set's border, Must-see or Maybe: the full accent, to hold up in sunlight. */
+export const LIVE_BORDER = colors.accent;
 
 /** Width of the progress bar on a row's left edge, and of the gap rail's offset. */
 export const PROGRESS_BAR_WIDTH = 6.5;

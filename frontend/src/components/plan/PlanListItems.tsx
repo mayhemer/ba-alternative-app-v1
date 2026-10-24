@@ -23,9 +23,9 @@ const ARROW_HEIGHT = 30;
 const ARROW_PATH = 'M2 3L18 15L2 27z';
 
 /**
- * The white "you are here" triangle, its centre at `y` within the item. Drawn
- * from the gutter's edge, its tip reaching about 4 pt into the row; outlined in
- * the surface colour so it stays distinct over a progress bar.
+ * The red "you are here" triangle, its centre at `y` within the item. Drawn
+ * from the gutter's edge, its tip reaching about 4 pt into the row, halfway
+ * across the progress bar; a 1 pt white outline keeps it distinct over the bar.
  */
 export function NowArrow({ y }: { y: number }) {
   return (
@@ -36,8 +36,7 @@ export function NowArrow({ y }: { y: number }) {
       height={ARROW_HEIGHT}
       style={{ position: 'absolute', left: -2, top: y - ARROW_HEIGHT / 2, zIndex: 2 }}
     >
-      <Path d={ARROW_PATH} fill="none" stroke={colors.surface} strokeWidth={4} strokeLinejoin="round" />
-      <Path d={ARROW_PATH} fill={colors.white} />
+      <Path d={ARROW_PATH} fill={colors.danger} stroke={colors.white} strokeWidth={1} strokeLinejoin="round" />
     </Svg>
   );
 }
