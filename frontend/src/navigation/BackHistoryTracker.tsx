@@ -44,6 +44,9 @@ function currentScreen(): ScreenName | undefined {
     return undefined;
   }
   const state = navigationRef.getRootState();
+  if (state === undefined) {
+    return undefined;
+  }
   return state.routes[state.index]?.name as ScreenName | undefined;
 }
 
@@ -51,11 +54,15 @@ function isDrawerOpen(): boolean {
   if (!navigationRef.isReady()) {
     return false;
   }
-  const state = navigationRef.getRootState() as DrawerNavigationState<ParamListBase>;
-  if (state.history === undefined) {
+  const state = navigationRef.getRootState();
+  if (state === undefined) {
     return false;
   }
-  return getDrawerStatusFromState(state) === 'open';
+  const drawerState = state as DrawerNavigationState<ParamListBase>;
+  if (drawerState.history === undefined) {
+    return false;
+  }
+  return getDrawerStatusFromState(drawerState) === 'open';
 }
 
 export function BackHistoryTracker() {
