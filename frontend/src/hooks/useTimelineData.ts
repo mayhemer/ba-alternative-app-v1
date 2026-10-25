@@ -5,7 +5,6 @@ import {
   useArtists,
   useCategories,
   useEvents,
-  useLayoutMap,
   useStages,
 } from '../store/cacheStore';
 import { useInterest } from '../context/InterestContext';
@@ -15,10 +14,12 @@ import { useSocialData } from '../context/SocialContext';
 import type { LaneEvent } from '../components/timeline/CategoryLane';
 import type { DbArtist, DbCategory, DbEvent } from '../types/backend';
 import {
+  assignSubRows,
   DAY_DURATION_MS,
   LANE_HEIGHT,
   RULER_HEIGHT,
   stripHeightFor,
+  type SubRowLayout,
 } from '../components/timeline/timelineLayout';
 import { useLayoutMode } from './useLayoutMode';
 import { matchesScope } from '../utils/interestUtils';
@@ -73,7 +74,6 @@ export function useTimelineData({ dayStart: selectedDayStart, filterArtist, useS
   const categories = useCategories(selectedSlug);
   const stages     = useStages(selectedSlug);
   const artistEvents = useArtistEventMap(selectedSlug);
-  const layoutMap  = useLayoutMap(selectedSlug);
 
   const artistById = useMemo<Record<string, DbArtist>>(() => {
     const map: Record<string, DbArtist> = {};
@@ -113,27 +113,33 @@ export function useTimelineData({ dayStart: selectedDayStart, filterArtist, useS
       );
   }, [categories, hiddenCategories, eventsByCategory]);
 
+  // Overlapping sets stack in rows, counted from the sets each lane shows: a set
+  // the lens or the screen's filter hides takes no row, so a lane is exactly as
+  // tall as the most of its shown sets that overlap at once.
+  const laneLayouts = useMemo<Record<string, SubRowLayout>>(() => {
+    const map: Record<string, SubRowLayout> = {};
+    if (!useSubRows) { return map; }
+    for (const cat of visibleCategories) {
+      map[cat.categoryId] = assignSubRows(eventsByCategory[cat.categoryId].map(({ event }) => event));
+    }
+    return map;
+  }, [visibleCategories, useSubRows, eventsByCategory]);
+
   const laneHeights = useMemo<Record<string, number>>(() => {
     const map: Record<string, number> = {};
     for (const cat of visibleCategories) {
-      if (useSubRows) {
-        const layout = layoutMap[`${cat.categoryId}_${selectedDayStart}`];
-        map[cat.categoryId] = (layout?.subRowCount ?? 1) * LANE_HEIGHT;
-      } else {
-        map[cat.categoryId] = LANE_HEIGHT;
-      }
+      map[cat.categoryId] = (laneLayouts[cat.categoryId]?.subRowCount ?? 1) * LANE_HEIGHT;
     }
     return map;
-  }, [visibleCategories, useSubRows, layoutMap, selectedDayStart]);
+  }, [visibleCategories, laneLayouts]);
 
   const categorySubRows = useMemo<Record<string, Record<string, number>>>(() => {
-    if (!useSubRows) { return {}; }
     const map: Record<string, Record<string, number>> = {};
-    for (const cat of visibleCategories) {
-      map[cat.categoryId] = layoutMap[`${cat.categoryId}_${selectedDayStart}`]?.eventSubRows ?? {};
+    for (const [categoryId, layout] of Object.entries(laneLayouts)) {
+      map[categoryId] = layout.eventSubRows;
     }
     return map;
-  }, [visibleCategories, useSubRows, layoutMap, selectedDayStart]);
+  }, [laneLayouts]);
 
   // Where each lane's title strip starts. Owned here, alongside canvasHeight and
   // from the same inputs, so the label overlay — which is rendered outside the

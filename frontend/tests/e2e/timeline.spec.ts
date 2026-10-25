@@ -261,3 +261,28 @@ test('the now line stands at the current time', async ({ appPage }) => {
   await expect.poll(async () => Math.abs((await boxOf(appPage.getByTestId('now-line').first())).left - tick), { timeout: 5_000 })
     .toBeLessThanOrEqual(1);
 });
+
+test('a lane stacks only the sets the lens shows @layout', async ({ appPage }) => {
+  await ready(appPage);
+  await openSection(appPage, 'Support Program');
+  // Wednesday's exhibitions all open at 10:00 and overlap, so the lane stacks
+  // them; ART-BRUT-ALL is below KUNDY CREW. Picked alone, under "My picks" it
+  // is the lane's only set, in its first row, right under the title strip.
+  await visible(appPage, 'ART-BRUT-ALL').click();
+  await appPage.getByLabel('Toggle interest').filter({ visible: true }).first().click();
+  await appPage.getByText('✕', { exact: true }).filter({ visible: true }).first().click();
+  await appPage.getByLabel('View and share schedules').filter({ visible: true }).first().click();
+  await appPage.getByText('My picks', { exact: true }).filter({ visible: true }).first().click();
+  await expect(appPage.getByText('KUNDY CREW', { exact: true }).filter({ visible: true })).toHaveCount(0);
+
+  const blockTop = (await boxOf(visible(appPage, 'ART-BRUT-ALL'))).top - 8;
+  const title = await boxOf(visible(appPage, 'Exhibition'));
+  if (appPage.viewportSize()!.height < 500) {
+    // Landscape: the title is drawn over the lane's first row.
+    expect(title.top).toBeGreaterThanOrEqual(blockTop - 2);
+    expect(title.bottom).toBeLessThanOrEqual(blockTop + 70);
+  } else {
+    expect(title.bottom).toBeLessThanOrEqual(blockTop + 1);
+    expect(title.top).toBeGreaterThanOrEqual(blockTop - 32 - 1);
+  }
+});

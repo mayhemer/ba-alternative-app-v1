@@ -31,11 +31,9 @@ function getStages(slug: string): DbStage[];
 function getEvents(slug: string): DbEvent[];
 function getFestivalDays(slug: string): DbFestivalDays;
 function getArtistEvents(slug: string, artistId: string): DbEvent[];
-function getCategoryDayLayout(slug, categoryId, dayStart): DbCategoryDayLayout;
 function getArtistBio(slug: string, artistId: string): DbArtistBioLocalized[] | undefined;
 
 function getArtistEventMap(slug: string): DbArtistEventMap;
-function getLayoutMap(slug: string): DbLayoutMap;
 
 function populateCache(slug: string, data: CacheData, syncedAt: number): void;
 function getSyncWatermark(slug: string): number;
@@ -49,13 +47,12 @@ function getCacheVersion(): number;
   cached" cases return shared frozen constants rather than a fresh `[]`, because these
   getters are read through `useSyncExternalStore`, which compares snapshots by identity —
   a snapshot that allocates on each read re-renders forever.
-- Callers needing lookups across many artists or lanes take `getArtistEventMap` /
-  `getLayoutMap` rather than calling the per-key getter in a loop: one stable value they
-  can depend on, instead of a hidden read.
+- Callers needing lookups across many artists take `getArtistEventMap` rather than calling
+  the per-key getter in a loop: one stable value they can depend on, instead of a hidden read.
 
 - In-memory cache for the session, backed by **AsyncStorage persistence** (shipped 2026-08-01):
   `festival:data:{slug}`, roughly 800 kB per edition. Only the raw datasets are stored; derived
-  maps (artist→events, per-category day layout) are rebuilt on load by the shared
+  maps (artist→events, festival days) are rebuilt on load by the shared
   `buildCacheData`. Artist bios persist separately and are evicted per edition.
 - `populateCache` is called exclusively by the background sync service, and takes the **server's**
   `lastSyncedAt` as `syncedAt` — data and the watermark describing it are written together.
@@ -124,7 +121,7 @@ that to React with `useSyncExternalStore`:
 ```typescript
 useArtists(slug) / useCategories(slug) / useStages(slug) / useEvents(slug)
 useFestivalDays(slug) / useArtistEvents(slug, id) / useArtistEventMap(slug)
-useLayoutMap(slug) / useArtistBio(slug, id) / useHasBios(slug) / useBiosLoading(slug)
+useArtistBio(slug, id) / useHasBios(slug) / useBiosLoading(slug)
 useCacheSnapshot(getSnapshot)   // escape hatch, stable snapshots only
 ```
 

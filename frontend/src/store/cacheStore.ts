@@ -9,14 +9,13 @@ import {
   getCategories,
   getEvents,
   getFestivalDays,
-  getLayoutMap,
   getStages,
   hasBios,
   hasTimelineCategories,
   subscribeToCache,
 } from '../cache/cacheService';
 import type {
-  DbArtistEventMap, DbFestivalDays, DbLayoutMap,
+  DbArtistEventMap, DbFestivalDays,
 } from '../cache/cacheService';
 import type {
   DbArtist, DbArtistBioLocalized, DbCategory, DbEvent, DbStage,
@@ -94,9 +93,6 @@ export function useArtistEventMap(slug: string): DbArtistEventMap {
   return useCacheSnapshot(() => getArtistEventMap(slug));
 }
 
-export function useLayoutMap(slug: string): DbLayoutMap {
-  return useCacheSnapshot(() => getLayoutMap(slug));
-}
 
 export function useArtistBio(
   slug: string,

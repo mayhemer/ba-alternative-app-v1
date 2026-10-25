@@ -3,23 +3,13 @@ import type {
   DbArtist, DbArtistBioLocalized, DbArtistBios, DbArtistLocalized, DbCategory,
   DbEvent, DbStage, DbUserInterest,
 } from '../types/backend';
-import { assignSubRows, deriveFestivalDays, DAY_DURATION_MS } from '../components/timeline/timelineLayout';
+import { deriveFestivalDays } from '../components/timeline/timelineLayout';
 import { currentTimeMs } from '../utils/clock';
 
 // ── Public festival data types ────────────────────────────────────────────────
 
 export type DbArtistEventMap = Record<string, DbEvent[]>;
 export type DbFestivalDays = number[];
-
-// Per-day layout for one category: how many sub-rows are needed and which
-// sub-row each event occupies. Computed once at build time; used by the
-// non-playable timeline to render overlapping events without visual collision.
-export type DbCategoryDayLayout = {
-  subRowCount: number;
-  eventSubRows: Record<string, number>; // eventId → 0-based sub-row index
-};
-// Key: `${categoryId}_${dayStart}`
-export type DbLayoutMap = Record<string, DbCategoryDayLayout>;
 
 // The four datasets exactly as the API serves them. Everything else in
 // CacheData is derived from these, so this is all that gets persisted.
@@ -33,7 +23,6 @@ export type FestivalRawData = {
 export type CacheData = FestivalRawData & {
   artistEventMap: DbArtistEventMap;
   festivalDays: DbFestivalDays;
-  layoutMap: DbLayoutMap;
 };
 
 export type DataCollector = {
@@ -161,12 +150,7 @@ const EMPTY_CATEGORIES = Object.freeze([]) as unknown as DbCategory[];
 const EMPTY_STAGES   = Object.freeze([]) as unknown as DbStage[];
 const EMPTY_EVENTS   = Object.freeze([]) as unknown as DbEvent[];
 const EMPTY_DAYS     = Object.freeze([]) as unknown as DbFestivalDays;
-const EMPTY_LAYOUT: DbCategoryDayLayout = Object.freeze({
-  subRowCount: 1,
-  eventSubRows: Object.freeze({}) as Record<string, number>,
-});
 const EMPTY_ARTIST_EVENTS = Object.freeze({}) as DbArtistEventMap;
-const EMPTY_LAYOUT_MAP    = Object.freeze({}) as DbLayoutMap;
 
 export function getArtists(slug: string): DbArtist[] {
   return festivalCache[slug]?.artists ?? EMPTY_ARTISTS;
@@ -226,14 +210,7 @@ export function getArtistEventMap(slug: string): DbArtistEventMap {
   return festivalCache[slug]?.artistEventMap ?? EMPTY_ARTIST_EVENTS;
 }
 
-/** The whole per-category/day layout map, by reference. Same rationale. */
-export function getLayoutMap(slug: string): DbLayoutMap {
-  return festivalCache[slug]?.layoutMap ?? EMPTY_LAYOUT_MAP;
-}
 
-export function getCategoryDayLayout(slug: string, categoryId: string, dayStart: number): DbCategoryDayLayout {
-  return festivalCache[slug]?.layoutMap[`${categoryId}_${dayStart}`] ?? EMPTY_LAYOUT;
-}
 
 export function hasCachedData(slug: string): boolean {
   return festivalCache[slug] !== undefined;
@@ -484,33 +461,6 @@ async function evictBiosExcept(slug: string): Promise<void> {
   }
 }
 
-// ── Layout map builder ────────────────────────────────────────────────────────
-
-// Assigns each event to the minimum sub-row where it does not overlap with
-// any already-placed event. Uses a greedy interval-scheduling algorithm:
-// sort by start time, then place each event in the first sub-row whose last
-// event has already ended.
-function buildLayoutMap(events: DbEvent[], festivalDays: DbFestivalDays): DbLayoutMap {
-  const layoutMap: DbLayoutMap = {};
-
-  for (const day of festivalDays) {
-    const dayEnd = day + DAY_DURATION_MS;
-    const byCategory: Record<string, DbEvent[]> = {};
-
-    for (const event of events) {
-      if (event.dateFrom < day || event.dateFrom >= dayEnd) { continue; }
-      if (byCategory[event.categoryId] === undefined) { byCategory[event.categoryId] = []; }
-      byCategory[event.categoryId].push(event);
-    }
-
-    for (const [categoryId, catEvents] of Object.entries(byCategory)) {
-      layoutMap[`${categoryId}_${day}`] = assignSubRows(catEvents);
-    }
-  }
-
-  return layoutMap;
-}
-
 // ── Derived structure builder ─────────────────────────────────────────────────
 
 // The single place where the derived views are computed, shared by a fresh
@@ -528,8 +478,7 @@ function buildCacheData(raw: FestivalRawData): CacheData {
     artistEventMap[event.artistId].push(event);
   }
 
-  const layoutMap = buildLayoutMap(events, festivalDays);
-  return { artists, categories, stages, events, artistEventMap, festivalDays, layoutMap };
+  return { artists, categories, stages, events, artistEventMap, festivalDays };
 }
 
 // ── DataCollector factory ─────────────────────────────────────────────────────
