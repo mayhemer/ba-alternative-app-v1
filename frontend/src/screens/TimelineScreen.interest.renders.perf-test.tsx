@@ -243,3 +243,24 @@ for (const c of CASES) {
     });
   });
 }
+
+// The sheet alone, without the timeline under it: what one star press costs
+// the sheet itself. Which of its elements render inside the commit is checked
+// by the render counts in ArtistDetailSheet.test.tsx.
+function SheetOnly() {
+  return (
+    <>
+      <DetailControl />
+      <ArtistDetailSheet />
+    </>
+  );
+}
+
+test('artist sheet: a star into a conflict', async () => {
+  await measureRenders(<SheetOnly />, {
+    ...MEASURE_OPTIONS,
+    wrapper: Wrapper,
+    beforeEach: startingFrom({ [CRYSTAL_LAKE]: 'maybe' }),
+    scenario: () => pressSheet({ from: {}, artist: CRYSTAL_LAKE, conflicts: [false, true] }),
+  });
+});

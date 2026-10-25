@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text } from '../ui/Text';
@@ -6,17 +6,15 @@ import { FriendFacepile } from './FriendFacepile';
 import { FriendAvatar } from './FriendAvatar';
 import { colors } from '../../styling/tokens';
 import type { FriendPick } from '../../context/SocialContext';
+import { friendPickListModel } from './FriendPickList.model';
 
 // Shows which friends picked an artist: a facepile + summary line that expands
 // on tap to the full avatars + names + status list. Renders nothing when empty.
+// What it shows comes from its model (FriendPickList.model.ts).
 export function FriendPickList({ friends }: { friends: FriendPick[] }) {
   const [expanded, setExpanded] = useState(false);
-  if (friends.length === 0) { return null; }
-
-  const summary =
-    friends.length === 1
-      ? `${friends[0].label} picked this`
-      : `${friends.length} friends picked this`;
+  const model = useMemo(() => friendPickListModel(friends), [friends]);
+  if (!model.shown) { return null; }
 
   return (
     <View style={{ marginTop: 10 }}>
@@ -26,7 +24,7 @@ export function FriendPickList({ friends }: { friends: FriendPick[] }) {
       >
         <FriendFacepile friends={friends} size={22} />
         <Text style={{ color: colors.textSecondary, fontSize: 13, marginLeft: 8, flex: 1 }} numberOfLines={1}>
-          {summary}
+          {model.summary}
         </Text>
         <Ionicons
           name={expanded ? 'chevron-up' : 'chevron-down'}
@@ -46,17 +44,17 @@ export function FriendPickList({ friends }: { friends: FriendPick[] }) {
             paddingVertical: 8,
           }}
         >
-          {friends.map((friend) => (
+          {model.rows.map((row) => (
             <View
-              key={friend.token}
+              key={row.key}
               style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 8 }}
             >
-              <FriendAvatar label={friend.label} avatarUrl={friend.avatarUrl} size={20} />
+              <FriendAvatar label={row.label} avatarUrl={row.avatarUrl} size={20} />
               <Text style={{ color: colors.textPrimary, fontSize: 14, marginLeft: 8, flex: 1 }} numberOfLines={1}>
-                {friend.label}
+                {row.label}
               </Text>
               <Ionicons
-                name={friend.status === 'will_go' ? 'star' : 'star-half'}
+                name={row.star}
                 size={15}
                 color={colors.accent}
               />

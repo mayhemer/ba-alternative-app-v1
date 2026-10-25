@@ -3,36 +3,30 @@ import { ActivityIndicator, Linking, TouchableOpacity, View } from 'react-native
 import { Image as ExpoImage } from 'expo-image';
 import RenderHtml from 'react-native-render-html';
 import { Text } from '../components/ui/Text';
-import { StarButton } from '../components/StarButton';
-import { getStageLocalized } from '../utils/localization';
-import { formatTime, formatDayLabel, getFestivalDayStart } from '../components/timeline/timelineLayout';
 import { useArtistEvents, useCategories, useStages } from '../store/cacheStore';
-import { decodeCategoryColor } from '../utils/color';
 import { colors } from '../styling/tokens';
-import type { DbArtist, DbEvent } from '../types/backend';
+import type { DbArtist } from '../types/backend';
 import { useArtistDerived } from '../hooks/useArtistDerived';
 import { useArtistBio } from '../hooks/useArtistBio';
-import { fitFontSize } from '../utils/textFit';
 import { useTimelineFilter } from '../context/TimelineFilterContext';
 import { navigationRef } from '../navigation/navigationRef';
-import { Exclamation, ExclamationTouchable } from '../components/ui/Exclamation';
 import { useSocialData } from '../context/SocialContext';
 import { FriendPickList } from '../components/social/FriendPickList';
+import { ArtistDetailTitle } from '../components/artist/ArtistDetailTitle';
+import { artistDetailTitleModel } from '../components/artist/ArtistDetailTitle.model';
+import { ArtistSetRow } from '../components/artist/ArtistSetRow';
+import { artistSetRowModel, type ArtistSetRowModel } from '../components/artist/ArtistSetRow.model';
+import { artistLinksModel, type StreamingSite } from '../components/artist/ArtistLinks.model';
+import { heroHeight } from '../components/artist/ArtistHero.model';
 
 const STREAMING_ICON_SIZE = 24;
 
-// Header title size at full scale; long names step down once by
-// TEXT_SHRINK_SCALE — see utils/textFit.
-const TITLE_FONT_SIZE = 24;
-const TITLE_LINES = 3;
-const TITLE_MARGIN_RIGHT = 8;
-
-// Widths of the controls sharing the title's row, used to work out how much
-// room the title actually has.
-const STAR_BUTTON_WIDTH = 32;   // StarButton size="large" icon
-const CONFLICT_ICON_WIDTH = 24; // ExclamationTouchable default size
-const HEADER_ROW_GAP = 4;
-const WEB_CLOSE_WIDTH = 30;     // ✕ glyph plus its marginLeft
+const STREAMING_ICONS: Record<StreamingSite, number> = {
+  'spotify': require('../../assets/spotify-icon-72.png'),
+  'tidal': require('../../assets/tidal-icon-72.png'),
+  'metal-archives': require('../../assets/metal-archives-icon-72.png'),
+  'setlist-fm': require('../../assets/setlist-fm-icon-72.png'),
+};
 
 const HTML_TAG_STYLES = {
   body: { color: colors.textPrimary, fontSize: 14, lineHeight: 22 },
@@ -45,65 +39,18 @@ type Props = { artist: DbArtist };
 // ── Header (sticky — rendered outside scroll view) ────────────────────────────
 
 export function ArtistDetailHeader({ artist }: Props) {
-  const { closeDetail, expandDetail, status, innerWidth, hPad, isWeb, meta, handleStarPress, conflictMap } = useArtistDerived(artist);
-  const hasConflict = conflictMap.size > 0;
-
-  // Title size is picked here rather than by adjustsFontSizeToFit — see
-  // utils/textFit for why that prop cannot hold a floor under Fabric. The
-  // controls to the right of the title vary with state, so subtract only the
-  // ones actually rendered.
-  const controlsWidth =
-    STAR_BUTTON_WIDTH +
-    (hasConflict ? CONFLICT_ICON_WIDTH + HEADER_ROW_GAP : 0) +
-    (isWeb ? WEB_CLOSE_WIDTH : 0);
-  const titleWidth = innerWidth - hPad * 2 - TITLE_MARGIN_RIGHT - controlsWidth;
-  const titleFontSize = fitFontSize(artist.name.length, titleWidth, TITLE_LINES, TITLE_FONT_SIZE);
-
-  return (
-    <View style={{
-      alignSelf: 'center',
-      width: innerWidth,
-      paddingHorizontal: hPad,
-      paddingTop: 12,
-      paddingBottom: 8,
-    }}>
-      <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-        <Text
-          numberOfLines={TITLE_LINES}
-          style={{
-            color: colors.textPrimary,
-            flex: 1,
-            fontSize: titleFontSize,
-            fontWeight: '700',
-            fontFamily: 'Bold-Default',
-            marginRight: TITLE_MARGIN_RIGHT,
-          }}
-        >
-          {artist.name}
-        </Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-          {hasConflict && <ExclamationTouchable onPress={expandDetail} />}
-          <StarButton status={status} onPress={handleStarPress} label="Toggle interest" size="large" />
-          {isWeb && (
-            <TouchableOpacity onPress={closeDetail} hitSlop={8} style={{ marginLeft: 16 }}>
-              <Text style={{ fontSize: 20, color: colors.textSecondary, lineHeight: 36 }}>✕</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-      {meta !== '' && (
-        <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 4 }}>
-          {meta}
-        </Text>
-      )}
-    </View>
+  const { closeDetail, expandDetail, status, innerWidth, hPad, isWeb, handleStarPress, conflicts } = useArtistDerived(artist);
+  const item = useMemo(
+    () => artistDetailTitleModel({ artist, status, hasConflict: conflicts.size > 0, innerWidth, padding: hPad, isWeb }),
+    [artist, status, conflicts, innerWidth, hPad, isWeb],
   );
+  return <ArtistDetailTitle item={item} onStar={handleStarPress} onExpand={expandDetail} onClose={closeDetail} />;
 }
 
 // ── Body (scrollable content) ─────────────────────────────────────────────────
 
 export function ArtistDetailBody({ artist }: Props) {
-  const { closeDetail, innerWidth, heroHeight, hPad, artistNameForURL, artistWebDomain, width, conflictMap, openConflict } = useArtistDerived(artist);
+  const { closeDetail, innerWidth, hPad, width, height, conflicts, openConflict } = useArtistDerived(artist);
   const bio = useArtistBio(artist);
   const { setSelectedDayStart, requestScrollToTime } = useTimelineFilter();
   const { friendsByArtist } = useSocialData();
@@ -112,22 +59,22 @@ export function ArtistDetailBody({ artist }: Props) {
   // Jump to this artist's event on the timeline: select its day, center its time
   // and its category's lane, switch to the matching timeline tab (support vs
   // main), and close the sheet.
-  const handleEventPress = useCallback((event: DbEvent): void => {
-    const isSupport = !artist.isPlayable;
-    const screenKey = isSupport ? 'support' : 'timeline';
-    setSelectedDayStart(getFestivalDayStart(event.dateFrom));
-    requestScrollToTime(screenKey, event.dateFrom, event.dateTo, event.categoryId);
+  const handleEventPress = useCallback((row: ArtistSetRowModel): void => {
+    const screenKey = row.jump.support ? 'support' : 'timeline';
+    setSelectedDayStart(row.jump.day);
+    requestScrollToTime(screenKey, row.event.dateFrom, row.event.dateTo, row.event.categoryId);
     if (navigationRef.isReady()) {
-      if (isSupport) {
+      if (row.jump.support) {
         navigationRef.navigate('SupportTimeline');
       } else {
         navigationRef.navigate('Timeline');
       }
     }
     closeDetail();
-  }, [artist.isPlayable, setSelectedDayStart, requestScrollToTime, closeDetail]);
+  }, [setSelectedDayStart, requestScrollToTime, closeDetail]);
 
-  const imageHeight = heroHeight;
+  const imageHeight = heroHeight(innerWidth, height);
+  const links = useMemo(() => artistLinksModel(artist), [artist]);
   const htmlWidth   = innerWidth - hPad * 2;
   const [imageLoading, setImageLoading] = useState(true);
 
@@ -157,6 +104,18 @@ export function ArtistDetailBody({ artist }: Props) {
     [categoriesForSlug],
   );
 
+  const rows = useMemo(
+    () => artistEvents.map((event) => artistSetRowModel({
+      event,
+      artist,
+      stage: stageById[event.stageId],
+      category: categoryById[event.categoryId],
+      conflict: conflicts.get(event.eventId),
+      padding: hPad,
+    })),
+    [artistEvents, artist, stageById, categoryById, conflicts, hPad],
+  );
+
   const bioHtml = bio.state === 'ready' ? bio.content : '';
   const htmlSource = useMemo(() => ({ html: bioHtml }), [bioHtml]);
 
@@ -172,7 +131,7 @@ export function ArtistDetailBody({ artist }: Props) {
         </View>
 
         {/* External links to the band */}
-        {(artist.isPlayable || artist.url !== '') && (
+        {links.shown && (
           <View style={{
             paddingHorizontal: hPad,
             marginTop: 16,
@@ -182,10 +141,10 @@ export function ArtistDetailBody({ artist }: Props) {
             flexWrap: 'wrap',
             gap: 18,
           }}>
-            {artist.isPlayable && (
-              <TouchableOpacity onPress={() => Linking.openURL(`https://open.spotify.com/search/${artistNameForURL}`)}>
+            {links.streaming.map((link) => (
+              <TouchableOpacity key={link.site} onPress={() => Linking.openURL(link.url)}>
                 <ExpoImage
-                  source={require('../../assets/spotify-icon-72.png')}
+                  source={STREAMING_ICONS[link.site]}
                   style={{ width: STREAMING_ICON_SIZE, height: STREAMING_ICON_SIZE }}
                   contentFit="contain"
                   // Bundled assets: the bundle is already their persistent copy, so a
@@ -196,54 +155,9 @@ export function ArtistDetailBody({ artist }: Props) {
                   priority="high"
                 />
               </TouchableOpacity>
-            )}
-            {artist.isPlayable && (
-              <TouchableOpacity onPress={() => Linking.openURL(`https://tidal.com/search?q=${artistNameForURL}`)}>
-                <ExpoImage
-                  source={require('../../assets/tidal-icon-72.png')}
-                  style={{ width: STREAMING_ICON_SIZE, height: STREAMING_ICON_SIZE }}
-                  contentFit="contain"
-                  // Bundled assets: the bundle is already their persistent copy, so a
-                  // disk-cache round trip buys nothing and puts them in the same queue
-                  // as the hero's ~300 kB download — which is what kept them blank
-                  // until it finished. Memory + high priority keeps them independent.
-                  cachePolicy="memory"
-                  priority="high"
-                />
-              </TouchableOpacity>
-            )}
-            {artist.isPlayable && (
-              <TouchableOpacity onPress={() => Linking.openURL(`https://www.metal-archives.com/search?searchString=${artistNameForURL}&type=band_name`)}>
-                <ExpoImage
-                  source={require('../../assets/metal-archives-icon-72.png')}
-                  style={{ width: STREAMING_ICON_SIZE, height: STREAMING_ICON_SIZE }}
-                  contentFit="contain"
-                  // Bundled assets: the bundle is already their persistent copy, so a
-                  // disk-cache round trip buys nothing and puts them in the same queue
-                  // as the hero's ~300 kB download — which is what kept them blank
-                  // until it finished. Memory + high priority keeps them independent.
-                  cachePolicy="memory"
-                  priority="high"
-                />
-              </TouchableOpacity>
-            )}
-            {artist.isPlayable && (
-              <TouchableOpacity onPress={() => Linking.openURL(`https://www.setlist.fm/search?query=${artistNameForURL}`)}>
-                <ExpoImage
-                  source={require('../../assets/setlist-fm-icon-72.png')}
-                  style={{ width: STREAMING_ICON_SIZE, height: STREAMING_ICON_SIZE }}
-                  contentFit="contain"
-                  // Bundled assets: the bundle is already their persistent copy, so a
-                  // disk-cache round trip buys nothing and puts them in the same queue
-                  // as the hero's ~300 kB download — which is what kept them blank
-                  // until it finished. Memory + high priority keeps them independent.
-                  cachePolicy="memory"
-                  priority="high"
-                />
-              </TouchableOpacity>
-            )}
-            {artistWebDomain !== '' && (
-              <TouchableOpacity onPress={() => Linking.openURL(artist.url)}>
+            ))}
+            {links.web !== null && (
+              <TouchableOpacity onPress={() => Linking.openURL(links.web!.url)}>
                 <Text style={{
                   fontSize: 12,
                   color: colors.textSecondary,
@@ -254,7 +168,7 @@ export function ArtistDetailBody({ artist }: Props) {
                   paddingVertical: 2,
                   textAlign: 'center',
                 }}>
-                  {artistWebDomain} ↗
+                  {links.web.domain} ↗
                 </Text>
               </TouchableOpacity>
             )}
@@ -284,55 +198,11 @@ export function ArtistDetailBody({ artist }: Props) {
         </View>
 
         {/* ── Event info ── */}
-        {artistEvents.length !== 0 &&
+        {rows.length !== 0 &&
           <View style={{ marginVertical: 30 }}>
-            {artistEvents.map((event) => {
-              const stage = stageById[event.stageId];
-              const category = categoryById[event.categoryId];
-              const borderColor = category !== undefined ? decodeCategoryColor(category.color) : colors.textPrimary;
-              const hasConflict = conflictMap.has(event.eventId);
-
-              return (
-                <View
-                  key={event.eventId}
-                  style={{
-                    marginHorizontal: hPad,
-                    paddingHorizontal: 16,
-                    marginTop: 10,
-                    borderLeftWidth: 5,
-                    borderColor,
-                  }}
-                >
-                  <TouchableOpacity
-                    onPress={() => handleEventPress(event)}
-                    activeOpacity={0.75}
-                  >
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <Text style={{ fontSize: 16, color: colors.textPrimary }}>
-                        {stage !== undefined ? getStageLocalized(stage.localized, 'name') : ''}
-                      </Text>
-                    </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
-                      <Text style={{ fontSize: 16, color: colors.textSecondary }}>{formatDayLabel(event.dateFrom)}</Text>
-                      <Text style={{ fontSize: 16, color: colors.textSecondary }}>·</Text>
-                      <Text style={{ fontSize: 16, color: colors.textSecondary }}>{formatTime(event.dateFrom)}–{formatTime(event.dateTo)}</Text>
-                    </View>
-                  </TouchableOpacity>
-                  {hasConflict && (
-                    <TouchableOpacity
-                      onPress={() => openConflict(event)}
-                      activeOpacity={0.75}
-                      style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}
-                    >
-                      <Exclamation/>
-                      <Text style={{ color: colors.danger }}>
-                        Overlaps with {conflictMap.get(event.eventId)?.length} other event(s)
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              );
-            })}
+            {rows.map((row) => (
+              <ArtistSetRow key={row.key} item={row} onPress={handleEventPress} onConflict={openConflict} />
+            ))}
           </View>
         }
 
