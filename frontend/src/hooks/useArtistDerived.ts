@@ -1,96 +1,44 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Platform } from 'react-native';
 import { getFeedbackLabel } from '../components/StarButton';
 import { useArtistDetail as useArtistDetailContext } from '../context/ArtistDetailContext';
 import { useInterest } from '../context/InterestContext';
 import { useConflictDetail } from '../context/ConflictDetailContext';
-import { getArtistLocalized } from '../utils/localization';
+import { useConflicts } from '../context/ConflictContext';
 import { useStartProgress } from '../context/ScreenUIContext';
-import { useArtistEventMap, useArtists } from '../store/cacheStore';
-import { eventsOverlap } from '../utils/conflictUtils';
-import { useSelectedSlug } from '../store/AppContext';
-import type { DbArtist, DbEvent } from '../types/backend';
+import type { ConflictEntry } from '../utils/conflictUtils';
+import type { DbArtist } from '../types/backend';
 import { MAX_CONTENT_WIDTH } from '../styling/tokens';
 import { useLayoutMode } from './useLayoutMode';
 
-// Hero box height as a fraction of its width — 3:2.
-const HERO_ASPECT = 0.666;
-// …and its ceiling as a fraction of the viewport height.
-const HERO_MAX_VIEWPORT_FRACTION = 1;
-
-// ── Shared derived values ─────────────────────────────────────────────────────
+// ── What the artist sheet's header and body read ──────────────────────────────
+//
+// The contexts both parts of the sheet need, in one place. What they show is
+// decided by their elements' models (components/artist/*.model.ts).
 
 export function useArtistDerived(artist: DbArtist) {
   const { closeDetail, expandDetail } = useArtistDetailContext();
-  const { interests, getStatus, cycleStatus } = useInterest();
+  const { getStatus, cycleStatus } = useInterest();
   const { openConflict } = useConflictDetail();
-  const selectedSlug = useSelectedSlug();
+  const { entries } = useConflicts();
   const startProgress = useStartProgress();
   const { width, height, contentPadding } = useLayoutMode();
 
-  const status  = getStatus(artist.artistId);
-  const genre   = getArtistLocalized(artist.localized, 'genre');
-  const country = getArtistLocalized(artist.localized, 'country');
-
+  const status = getStatus(artist.artistId);
   const innerWidth = Math.min(width, MAX_CONTENT_WIDTH);
-  const hPad       = contentPadding;
-  const isWeb      = Platform.OS === 'web';
-  const meta       = [genre, country].filter(Boolean).join('  ·  ');
+  const isWeb = Platform.OS === 'web';
 
-  // Hero keeps its 3:2 aspect, capped against the viewport height.
-  //
-  // The cap is a full viewport rather than half of one, and only ever binds in
-  // landscape (in portrait the width-derived height is the smaller of the two).
-  // The image is laid out `contentFit: 'contain'` in a box the full content
-  // width, so on a wide screen it is the box's *height* that limits it: halving
-  // that height did not crop the image, it shrank it and padded the sides with
-  // black. Letting the box fill the viewport is what makes the image large,
-  // accepting that it no longer fits on screen alongside the rest of the detail.
-  const heroHeight = Math.round(Math.min(innerWidth * HERO_ASPECT, height * HERO_MAX_VIEWPORT_FRACTION));
+  // The artist's clashing sets, from the shared conflict calculation — the one
+  // My plan, the timeline's bars and the drawer's count follow.
+  const conflicts = useMemo<Map<string, ConflictEntry>>(
+    () => new Map(entries.filter((e) => e.event.artistId === artist.artistId).map((e) => [e.event.eventId, e])),
+    [entries, artist.artistId],
+  );
 
-  const artistNameForURL = encodeURIComponent(artist.name.toLocaleLowerCase());
-  let artistWebDomain = '';
-  try {
-    if (artist.url !== '') { artistWebDomain = new URL(artist.url).hostname.replace(/^www\./, ''); }
-  } catch (_) { /* invalid URL */ }
-
-  // Subscribed cache reads. This hook previously read the cache directly and
-  // depended only on [selectedSlug, artist, interests], so the detail screen's
-  // conflict marker was recomputed on a star press but never on a sync — it was
-  // correct only when a sibling subscriber happened to re-render the component.
-  const allArtists  = useArtists(selectedSlug);
-  const artistEvents = useArtistEventMap(selectedSlug);
-
-  // Per-event conflict map: eventId → overlapping events from other marked artists.
-  const conflictMap = useMemo<Map<string, DbEvent[]>>(() => {
-    const map = new Map<string, DbEvent[]>();
-    const localInterest = interests[artist.artistId] ?? 'none';
-    if (localInterest !== 'will_go') { return map; }
-
-    for (const event of artistEvents[artist.artistId] ?? []) {
-      const overlapping: DbEvent[] = [];
-      for (const other of allArtists) {
-        if (other.artistId === artist.artistId) { continue; }
-        const otherStatus = interests[other.artistId] ?? 'none';
-        if (otherStatus !== 'will_go') { continue; }
-        for (const otherEvent of artistEvents[other.artistId] ?? []) {
-          if (eventsOverlap(event, otherEvent)) {
-            overlapping.push(otherEvent);
-          }
-        }
-      }
-      if (overlapping.length > 0) {
-        map.set(event.eventId, overlapping);
-      }
-    }
-    return map;
-  }, [artist, interests, allArtists, artistEvents]);
-
-  function handleStarPress(): void {
+  const handleStarPress = useCallback((): void => {
     const { next, promise } = cycleStatus(artist.artistId);
     startProgress(getFeedbackLabel(next), next).wrap(promise);
-  }
+  }, [artist.artistId, cycleStatus, startProgress]);
 
-  return { closeDetail, expandDetail, status, innerWidth, heroHeight, hPad, isWeb, meta, artistNameForURL, artistWebDomain, handleStarPress, width, conflictMap, openConflict };
+  return { closeDetail, expandDetail, status, innerWidth, hPad: contentPadding, isWeb, width, height, handleStarPress, conflicts, openConflict };
 }
-
