@@ -1,6 +1,6 @@
 import { measureFunction } from 'reassure';
 import { BATCH, MEASURE_OPTIONS, repeat } from '../../tests/setup/perfOptions';
-import { buildSections } from './ArtistListScreen';
+import { buildSections } from './ArtistList.model';
 import type { DbArtist } from '../types/backend';
 
 import artistsFixture from '../../tests/fixtures/generated/ba2025/artists.json';

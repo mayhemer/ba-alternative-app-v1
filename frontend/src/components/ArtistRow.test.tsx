@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react-native';
 import { ArtistRow } from './ArtistRow';
+import { artistRowModel } from './ArtistRow.model';
 import { FeatureProviders } from '../../tests/setup/PerfProviders';
 import type { DbArtist } from '../types/backend';
 
@@ -39,7 +40,7 @@ const SPARSE = {
 it('renders an artist with no photo, genre or country', async () => {
   const view = await render(
     <FeatureProviders>
-      <ArtistRow artist={SPARSE} status="none" onPress={() => undefined} />
+      <ArtistRow item={artistRowModel({ artist: SPARSE, status: 'none', friends: undefined })} onPress={() => undefined} />
     </FeatureProviders>,
   );
 
