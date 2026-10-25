@@ -31,8 +31,8 @@
     "start:web": "npx expo start --web",
     "prebuild:ios": "npx expo prebuild --platform ios --clean",
     "build:preview:ios": "eas build --platform ios --profile preview",
-    "build:preview:android": "eas build --platform android --profile preview",
-    "build:perf:android": "eas build --platform android --profile perf",
+    "build:preview:android": "eas build --platform android --profile preview --non-interactive",
+    "build:perf:android": "eas build --platform android --profile perf --non-interactive",
     "build:e2e:ios": "eas build --platform ios --profile e2e-ios-sim",
     "build:web": "npx expo export --platform web"
   },
