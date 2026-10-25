@@ -496,3 +496,28 @@ describe('what the timeline draws', () => {
       .toEqual([0, 102, 274, 376]);
   });
 });
+
+// ── Rows from the sets shown ──────────────────────────────────────────────────
+//
+// A lane stacks only the sets it shows: one hidden by the lens takes no row.
+// On Tuesday the exhibitions KUNDY CREW and ART-BRUT-ALL (both 13:00–01:00)
+// need two rows; with only ART-BRUT-ALL picked and the lens on "My picks", the
+// lane shows one set, in one row.
+
+describe('rows from the sets shown', () => {
+  it('lays a lane out for the sets the lens shows, not for all of them', async () => {
+    await setInterest('ba2025', '219', 'maybe');
+    await hydrateInterests('ba2025');
+    try {
+      await mountScreen('rows-shown', TUE, (a) => !a.isPlayable, true);
+      await act(async () => { setScope({ kind: 'me', level: null }); });
+      await settleWholeDay();
+      expect(screen.queryByText('KUNDY CREW')).toBeNull();
+      expect(laneOf('ART-BRUT-ALL').height).toBe(70);
+      expect(blockOf('ART-BRUT-ALL').top).toBe(0);
+    } finally {
+      await setInterest('ba2025', '219', 'none');
+      await hydrateInterests('ba2025');
+    }
+  });
+});

@@ -5,6 +5,10 @@
 - 2D scroll canvas. Horizontal axis = time. Vertical axis = categories.
 - Artist blocks sized proportionally to set duration.
 - Each category is a horizontal swim lane.
+- On the Support Program, overlapping sets of one lane stack in rows. The rows are counted from the
+  sets the lane **shows** (after the lens): a lane is as tall as the most of its shown sets that
+  overlap at once, and a set the lens hides takes no row. The conflict sheet stacks its sets the
+  same way. The Program draws its lanes one row tall.
 - Fixed scale — no zoom. Default scale tuned empirically for a typical festival day (12–16 hours).
 - **Festival time.** Days (06:00 → 06:00), set times and day labels are always Europe/Prague time,
   whatever zone the device is in — someone planning from abroad sees the same timeline as someone on

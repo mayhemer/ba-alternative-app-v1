@@ -4,10 +4,8 @@ import {
   getArtists,
   getCacheVersion,
   getCategories,
-  getCategoryDayLayout,
   getEvents,
   getFestivalDays,
-  getLayoutMap,
   getStages,
   getSyncWatermark,
   hasBios,
@@ -172,8 +170,6 @@ describe('snapshot identity', () => {
     expect(getEvents(slug)).toBe(getEvents(slug));
     expect(getFestivalDays(slug)).toBe(getFestivalDays(slug));
     expect(getArtistEventMap(slug)).toBe(getArtistEventMap(slug));
-    expect(getLayoutMap(slug)).toBe(getLayoutMap(slug));
-    expect(getCategoryDayLayout(slug, 'c1', 0)).toBe(getCategoryDayLayout(slug, 'c1', 0));
   });
 
   it('returns a stable reference for populated data too', () => {
@@ -226,20 +222,6 @@ describe('derived structures', () => {
 
     expect(days.length).toBeGreaterThan(0);
     expect([...days]).toEqual([...days].sort((a, b) => a - b));
-  });
-
-  it('gives every event a sub-row within its category and day', () => {
-    const slug = freshSlug();
-    populate(slug);
-
-    for (const [key, layout] of Object.entries(getLayoutMap(slug))) {
-      expect(layout.subRowCount).toBeGreaterThanOrEqual(1);
-      for (const subRow of Object.values(layout.eventSubRows)) {
-        expect(subRow).toBeLessThan(layout.subRowCount);
-        expect(subRow).toBeGreaterThanOrEqual(0);
-      }
-      expect(key).toMatch(/^.+_\d+$/);
-    }
   });
 
   it('exposes the datasets unchanged', () => {

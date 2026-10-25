@@ -5,7 +5,7 @@ own startup does not depend on the network either.
 
 `cacheService` keeps the four datasets in memory and mirrors them to AsyncStorage
 per slug (`festival:data:{slug}`, ~800 kB for a full edition). Only the **raw**
-datasets are stored; `artistEventMap`, `festivalDays` and `layoutMap` are rebuilt
+datasets are stored; `artistEventMap` and `festivalDays` are rebuilt
 on load through `buildCacheData`, the same function `collector.build()` uses — a
 restored cache therefore cannot differ in shape from a fetched one. A schema
 version guards the stored copy, and a failed write (typically a web localStorage
