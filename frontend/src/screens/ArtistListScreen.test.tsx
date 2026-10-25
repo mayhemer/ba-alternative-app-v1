@@ -6,7 +6,10 @@ import { PerfProviders } from '../../tests/setup/PerfProviders';
 import { useLens } from '../context/LensContext';
 import { setLensScope } from '../store/uiStatePersistence';
 import { DEFAULT_SCOPE } from '../utils/interestUtils';
-import { createDataCollector, populateCache } from '../cache/cacheService';
+import { createDataCollector, hydrateInterests, populateCache, setInterest } from '../cache/cacheService';
+import { useInterestCycle } from '../context/InterestContext';
+import { rendersSinceReset, resetRenders } from '../../tests/setup/countRenders';
+import type { LensScope } from '../utils/interestUtils';
 import type { DbArtist, DbCategory, DbEvent, DbStage } from '../types/backend';
 
 import artistsFixture from '../../tests/fixtures/generated/ba2025/artists.json';
@@ -25,8 +28,19 @@ jest.mock('../store/AppContext', () => {
   return { ...actual, useSelectedSlug: () => 'ba2025' };
 });
 
-jest.mock('../context/AuthContext', () => ({
-  useAuth: () => ({
+// The row is swapped for a counting copy that renders exactly the same
+// (tests/setup/countRenders.ts), for the render counts at the end.
+jest.mock('../components/ArtistRow', () => {
+  const { counted } = require('../../tests/setup/countRenders');
+  const actual = jest.requireActual('../components/ArtistRow');
+  return { ...actual, ArtistRow: counted(actual.ArtistRow) };
+});
+
+// One auth value for the whole run, as the real provider memoises its own: a
+// fresh getAccessToken on every call would change the interest context on each
+// pick, and every row reading it would render again — in the test only.
+jest.mock('../context/AuthContext', () => {
+  const auth = {
     isLoggedIn: false,
     isRestoringSession: false,
     userId: null,
@@ -35,16 +49,22 @@ jest.mock('../context/AuthContext', () => ({
     getAccessToken: async () => null,
     signIn: async () => undefined,
     signOut: async () => undefined,
-  }),
-}));
+  };
+  return { useAuth: () => auth };
+});
 
-beforeAll(() => {
+/** Syncs the cache with the fixture, its artists changed by `change`, as a background sync does. */
+function syncWith(change: (artists: DbArtist[]) => DbArtist[] = (artists) => artists): void {
   const collector = createDataCollector();
-  collector.setArtists(artistsFixture as unknown as DbArtist[]);
+  collector.setArtists(change(artistsFixture as unknown as DbArtist[]));
   collector.setCategories(categoriesFixture as unknown as DbCategory[]);
   collector.setStages(stagesFixture as unknown as DbStage[]);
   collector.setEvents(scheduleFixture as unknown as DbEvent[]);
   populateCache('ba2025', collector.build(), Date.parse('2025-08-06T09:00:00+02:00'));
+}
+
+beforeAll(() => {
+  syncWith();
 });
 
 beforeEach(async () => {
@@ -84,4 +104,110 @@ it('says so when "my picks" has no picks yet', async () => {
 
   expect(await screen.findByText('No artists found')).toBeTruthy();
   expect(screen.queryByText('3 INCHES OF BLOOD')).toBeNull();
+});
+
+// ── The list reacts to every input ────────────────────────────────────────────
+//
+// The search, the lens, a pick and a sync that adds, renames or removes an
+// artist. Then the render counts: after one change, which rows render again,
+// by artistId. As in the list's existing perf scenarios, no timers run after
+// the change. The list opens on 3 INCHES OF BLOOD (92), ABBIE FALLS (163),
+// ABSU (101); EXORCIZPHOBIA (216) is further down, not mounted at first.
+
+let setScope: (scope: LensScope) => void;
+let cycle: (artistId: string) => void;
+let search: (query: string) => void;
+
+function Controls() {
+  setScope = useLens().setScope;
+  const { cycleStatus } = useInterestCycle();
+  cycle = (artistId) => { cycleStatus(artistId); };
+  return null;
+}
+
+async function mountList(): Promise<void> {
+  await render(<PerfProviders><><Controls /><ArtistListScreen /></></PerfProviders>);
+  search = (query) => { screen.getByPlaceholderText('Search artists…').props.onChangeText(query); };
+}
+
+async function withPicks(picks: Record<string, 'maybe' | 'will_go'>, run: () => Promise<void>): Promise<void> {
+  for (const [artistId, status] of Object.entries(picks)) {
+    await setInterest('ba2025', artistId, status);
+  }
+  await hydrateInterests('ba2025');
+  try {
+    await run();
+  } finally {
+    for (const artistId of Object.keys(picks)) {
+      await setInterest('ba2025', artistId, 'none');
+    }
+    await hydrateInterests('ba2025');
+  }
+}
+
+describe('the list reacts', () => {
+  afterEach(async () => {
+    syncWith();
+    await act(async () => { search(''); });
+  });
+
+  it('lists an artist picked after the lens narrowed to my picks', async () => {
+    await mountList();
+    await act(async () => { setScope({ kind: 'me', level: null }); });
+    expect(screen.queryByText('ABSU')).toBeNull();
+    // none → Maybe.
+    await act(async () => { cycle('101'); });
+    expect(screen.getByText('ABSU')).toBeTruthy();
+    await act(async () => { cycle('101'); cycle('101'); cycle('101'); });
+  });
+
+  it('follows a sync that renames an artist, adds one and removes one', async () => {
+    await mountList();
+    await act(async () => {
+      syncWith((artists) => [
+        ...artists.filter((a) => a.artistId !== '163').map((a) => (a.artistId === '101' ? { ...a, name: 'ABSU (US)' } : a)),
+        { ...artists.find((a) => a.artistId === '92')!, artistId: 'new-1', name: '1349' },
+      ]);
+    });
+    expect(screen.getByText('ABSU (US)')).toBeTruthy();
+    expect(screen.getByText('1349')).toBeTruthy();
+    expect(screen.queryByText('ABBIE FALLS')).toBeNull();
+  });
+
+  describe('render counts', () => {
+    async function mountCounted(): Promise<void> {
+      await mountList();
+      resetRenders();
+    }
+
+    it('a pick renders only its row', async () => {
+      await mountCounted();
+      await act(async () => { cycle('163'); });
+      expect(rendersSinceReset()).toEqual({ '163': 1 });
+      await act(async () => { cycle('163'); cycle('163'); cycle('163'); });
+    });
+
+    it('a search down to one artist renders only that row, newly shown', async () => {
+      await mountCounted();
+      await act(async () => { search('exorcizphobia'); });
+      expect(rendersSinceReset()).toEqual({ '216': 1 });
+    });
+
+    it('the lens on my picks renders none of the rows it keeps', async () => {
+      await withPicks({ '92': 'maybe', '163': 'will_go' }, async () => {
+        await mountCounted();
+        await act(async () => { setScope({ kind: 'me', level: null }); });
+        expect(screen.getByText('ABBIE FALLS')).toBeTruthy();
+        expect(rendersSinceReset()).toEqual({});
+      });
+    });
+
+    it('a sync that renames one artist renders only its row', async () => {
+      await mountCounted();
+      await act(async () => {
+        syncWith((artists) => artists.map((a) => (a.artistId === '101' ? { ...a, name: 'ABSU (US)' } : a)));
+      });
+      expect(rendersSinceReset()).toEqual({ '101': 1 });
+    });
+  });
 });

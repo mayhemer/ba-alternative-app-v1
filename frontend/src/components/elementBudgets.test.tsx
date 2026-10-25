@@ -1,6 +1,7 @@
 import React from 'react';
 import { render } from '@testing-library/react-native';
 import { ArtistRow } from './ArtistRow';
+import { artistRowModel } from './ArtistRow.model';
 import { ArtistBlock } from './timeline/ArtistBlock';
 import { artistBlockModel, type ArtistBlockInputs } from './timeline/ArtistBlock.model';
 import { FeatureProviders } from '../../tests/setup/PerfProviders';
@@ -73,7 +74,7 @@ describe('one artist row', () => {
   it('stays within its element budget', async () => {
     const view = await render(
       <FeatureProviders>
-        <ArtistRow artist={ARTIST} status="none" onPress={() => undefined} />
+        <ArtistRow item={artistRowModel({ artist: ARTIST, status: 'none', friends: undefined })} onPress={() => undefined} />
       </FeatureProviders>,
     );
 
@@ -85,12 +86,12 @@ describe('one artist row', () => {
   it('costs the same with a star as without', async () => {
     const plain = await render(
       <FeatureProviders>
-        <ArtistRow artist={ARTIST} status="none" onPress={() => undefined} />
+        <ArtistRow item={artistRowModel({ artist: ARTIST, status: 'none', friends: undefined })} onPress={() => undefined} />
       </FeatureProviders>,
     );
     const starred = await render(
       <FeatureProviders>
-        <ArtistRow artist={ARTIST} status="will_go" onPress={() => undefined} />
+        <ArtistRow item={artistRowModel({ artist: ARTIST, status: 'will_go', friends: undefined })} onPress={() => undefined} />
       </FeatureProviders>,
     );
 

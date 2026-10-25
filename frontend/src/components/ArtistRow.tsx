@@ -3,29 +3,27 @@ import { TouchableOpacity, View } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 import { Text } from './ui/Text';
 import type { DbArtist } from '../types/backend';
-import type { InterestStatus } from '../context/InterestContext';
-import { getArtistLocalized } from '../utils/localization';
 import { useInterestCycle } from '../context/InterestContext';
-import { useSocialData } from '../context/SocialContext';
 import { useStartProgress } from '../context/ScreenUIContext';
 import { StarButton, getFeedbackLabel } from './StarButton';
 import { FriendFacepile } from './social/FriendFacepile';
+import { sameProps } from './sameProps';
+import type { ArtistRowModel } from './ArtistRow.model';
+
+// ── An artist row ─────────────────────────────────────────────────────────────
+//
+// Draws its model (ArtistRow.model.ts). A tap on the row opens the artist; the
+// star cycles my pick.
 
 type Props = {
-  artist: DbArtist;
-  status: InterestStatus;
+  item: ArtistRowModel;
   onPress: (artist: DbArtist) => void;
 };
 
-export const ArtistRow = React.memo(function ArtistRow({ artist, status, onPress }: Props) {
+function ArtistRowBase({ item, onPress }: Props) {
   const { cycleStatus } = useInterestCycle();
-  const { friendsByArtist } = useSocialData();
   const startProgress = useStartProgress();
-
-  const friends = friendsByArtist[artist.artistId];
-
-  const genre = getArtistLocalized(artist.localized, 'genre');
-  const country = getArtistLocalized(artist.localized, 'country');
+  const { artist } = item;
 
   const handleStarPress = useCallback((): void => {
     const { next, promise } = cycleStatus(artist.artistId);
@@ -48,14 +46,14 @@ export const ArtistRow = React.memo(function ArtistRow({ artist, status, onPress
       >
         {/* Thumbnail */}
         <View className="w-18 h-14 mr-3 bg-surface overflow-hidden">
-          {artist.thumbUrl !== '' ? (
+          {item.thumbUrl !== null ? (
             // Disk-backed on purpose: the list unmounts rows as they scroll off, so a
             // memory-only policy re-downloads ~280 kB per row every time one comes back.
             // The corpus is bounded (~44 MB for a full edition, and the detail hero reuses
             // this exact URL) and both platforms evict it themselves — Glide by a 250 MB
             // LRU, SDWebImage by a one-week age limit.
             <ExpoImage
-              source={{ uri: artist.thumbUrl }}
+              source={{ uri: item.thumbUrl }}
               style={{ width: 75, height: 56 }}
               contentFit="cover"
               cachePolicy="memory-disk"
@@ -68,30 +66,33 @@ export const ArtistRow = React.memo(function ArtistRow({ artist, status, onPress
         {/* Artist info */}
         <View className="flex-1 mr-3">
           <Text className="text-textPrimary text-base font-semibold" numberOfLines={1}>
-            {artist.name}
+            {item.name}
           </Text>
-          {genre !== '' && (
+          {item.genre !== null && (
             <Text className="text-textSecondary text-xs mt-0.5" numberOfLines={1}>
-              {genre}
+              {item.genre}
             </Text>
           )}
-          {country !== '' && (
+          {item.country !== null && (
             <Text className="text-textSecondary text-xs" numberOfLines={1}>
-              {country}
+              {item.country}
             </Text>
           )}
         </View>
 
         {/* Friends who picked this artist */}
-        {friends !== undefined && (
+        {item.friends.length > 0 && (
           <View className="mr-3">
-            <FriendFacepile friends={friends} size={20} />
+            <FriendFacepile friends={item.friends} size={20} />
           </View>
         )}
       </TouchableOpacity>
 
       {/* Star */}
-      <StarButton status={status} onPress={handleStarPress} label="Toggle interest" />
+      <StarButton status={item.status} onPress={handleStarPress} label="Toggle interest" />
     </View>
   );
-});
+}
+
+/** Renders again only when what it shows changes (sameProps). */
+export const ArtistRow = React.memo(ArtistRowBase, sameProps);
