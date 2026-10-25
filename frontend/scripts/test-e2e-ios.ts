@@ -19,8 +19,8 @@
 // native code as of the last `npm run prebuild:ios`. `--app` swaps in any other
 // simulator app without touching the rest of this script.
 //
-// Exit codes: 0 pass, 1 fail, 4 skipped (a prerequisite is missing) — `verify`
-// reports a skip without failing on it.
+// Exit codes: 0 pass, 1 fail, 4 skipped (a prerequisite is missing; the reason
+// and the fix are printed last) — `verify` fails on a skip too.
 
 import { existsSync, mkdirSync, rmSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';

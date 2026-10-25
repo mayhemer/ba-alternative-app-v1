@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# ── One command to check everything that runs without a device ────────────────
+# ── One command to check everything that runs on this Mac ─────────────────────
 #
 # Fail-fast and in cheapest-first order, so a typo is reported in seconds rather
-# than after the browser suite. The suites that test a built binary — the iOS
-# simulator E2E and the physical Android phone — are printed as a follow-up:
-# they run a build, not this working tree (the iOS :local variant makes that
-# build here first, which takes minutes).
+# than after the browser suite. Last comes the iOS simulator E2E, on a Release
+# build of this working tree made here first (minutes). The physical Android
+# phone suite tests an EAS build, not this tree, so it is printed as a follow-up.
 #
 #   npm run verify
-#   npm run verify -- --fast    skip the slow step: performance regressions
+#   npm run verify -- --fast    skip the slow steps: performance regressions and
+#                               the iOS simulator E2E
 
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -56,17 +56,34 @@ npm run --silent build:web
 npx playwright test
 
 if [ "$FAST" -eq 1 ]; then
-  printf '\n\033[32m✓ fast check green\033[0m — performance was not run\n'
+  skipped "iOS simulator end-to-end"
+else
+  step "iOS simulator end-to-end"
+  # A suite that could not run is a failure, not a pass: an unnoticed skip
+  # would leave iOS untested. Exit 4 is the runner's "a prerequisite is
+  # missing" (Xcode, Maestro, the simulator, a prebuilt ios/); it has just
+  # printed which one and the command that fixes it.
+  ios_status=0
+  npm run --silent test:e2e:ios:local || ios_status=$?
+  if [ "$ios_status" -eq 4 ]; then
+    printf '\n\033[31m✗ verify failed: the iOS simulator E2E could not run.\033[0m\n'
+    printf '  The reason and the fix are printed just above (SKIPPED — …). Fix it and re-run;\n'
+    printf '  the iOS suite is required, a skip does not count as a pass.\n'
+    exit 1
+  elif [ "$ios_status" -ne 0 ]; then
+    exit "$ios_status"
+  fi
+fi
+
+if [ "$FAST" -eq 1 ]; then
+  printf '\n\033[32m✓ fast check green\033[0m — performance and iOS E2E were not run\n'
 else
   printf '\n\033[32m✓ everything that tests this working tree is green\033[0m\n'
 fi
 cat <<'NEXT'
 
-Not covered above — these test a built binary, so rebuild after app changes
-(test:e2e:ios:local builds one itself):
+Not covered above — these test an EAS build, so rebuild after app changes:
 
-  npm run test:e2e:ios:local       iOS simulator E2E, built here from this tree
-  npm run build:e2e:ios            or via EAS, then npm run test:e2e:ios
   npm run build:perf:android       then, with the phone connected over USB:
   npm run install:perf:android     latest `perf` build onto the phone
   npm run test:perf:device         frame, start-up and memory measurements

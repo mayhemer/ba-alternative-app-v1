@@ -22,8 +22,17 @@ const SCHEME = 'BrutalAssaultalt';
 export function buildLocalSimulatorApp(root: string, profile: string): string {
   const ios = join(root, 'ios');
   const workspace = join(ios, `${SCHEME}.xcworkspace`);
-  if (!existsSync(workspace) || !existsSync(join(ios, 'Pods'))) {
-    skip('no prebuilt ios/ project to build from', 'Run `npm run prebuild:ios`.');
+  if (!existsSync(workspace)) {
+    skip(
+      'no prebuilt ios/ project to build from — ios/ is generated from app.json and not in git',
+      'Run `npm run prebuild:ios` (regenerates ios/ and installs its Pods, a few minutes), then re-run.',
+    );
+  }
+  if (!existsSync(join(ios, 'Pods'))) {
+    skip(
+      'ios/ is prebuilt but its CocoaPods are not installed',
+      'Run `npx pod-install` (or `npm run prebuild:ios` to regenerate ios/ as well), then re-run.',
+    );
   }
 
   const derivedData = join(ios, 'build', 'e2e');
