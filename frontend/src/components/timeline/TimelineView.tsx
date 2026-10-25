@@ -10,6 +10,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useInterest } from '../../context/InterestContext';
 import { useTimelineFilter } from '../../context/TimelineFilterContext';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
+import { useNowX } from '../../hooks/useNowX';
 import { getScroll, setScroll } from '../../store/uiStatePersistence';
 import { CategoryLane } from './CategoryLane';
 import type { LaneEvent } from './CategoryLane';
@@ -23,12 +24,10 @@ import {
   VIEW_OFFSET_X,
   VIEW_WIDTH,
   labelRepeatPx,
-  timeToX,
   defaultScrollX,
   eventScrollTarget,
 } from './timelineLayout';
 import { colors } from '../../styling/tokens';
-import { currentTimeMs } from '../../utils/clock';
 import { perfMark, perfMarksEnabled } from '../../utils/perfMarks';
 import type { DbArtist, DbCategory, DbEvent } from '../../types/backend';
 import type { ConflictOverlap } from '../../utils/conflictUtils';
@@ -208,18 +207,10 @@ export function TimelineView({
   const verticalScrollRef = useRef<ScrollView>(null);
 
   // ── Now-line position ────────────────────────────────────────────────────────
-  // Computed once here and shared with every NowLine. A single interval keeps it
-  // current; the value is consumed on the UI thread, so updates cause no JS re-renders.
+  // Shared with every NowLine and consumed on the UI thread; it follows the
+  // minute clock without re-rendering anything (useNowX).
 
-  const nowX = useSharedValue(timeToX(currentTimeMs(), selectedDayStart));
-
-  useEffect(() => {
-    nowX.value = timeToX(currentTimeMs(), selectedDayStart);
-    const interval = setInterval(() => {
-      nowX.value = timeToX(currentTimeMs(), selectedDayStart);
-    }, 60_000);
-    return () => clearInterval(interval);
-  }, [selectedDayStart, nowX]);
+  const nowX = useNowX(selectedDayStart);
 
   // ── Scroll save / restore on day switch ────────────────────────────────────
 

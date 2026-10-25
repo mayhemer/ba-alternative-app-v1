@@ -1,10 +1,12 @@
-import { useSyncExternalStore } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 import { AppState, type NativeEventSubscription } from 'react-native';
 import { currentTimeMs } from '../utils/clock';
+import { festivalToday } from '../components/timeline/DayButton.model';
 
 // ── A shared minute clock ─────────────────────────────────────────────────────
 //
-// "Now" for everything time-based on My plan and the now pill, at minute
+// "Now" for everything time-based — My plan, the now pill, the timelines' now
+// lines and the day buttons' today notch — at minute
 // resolution: one timer for the whole app, firing on the minute boundary, and an
 // immediate tick when the app returns to the foreground — timers stall while
 // the phone is locked, and a stale countdown is what this must never show.
@@ -76,4 +78,27 @@ function getSnapshot(): number {
 /** "Now" in Unix ms, floored to the minute; re-renders on every new minute. */
 export function useMinuteNow(): number {
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+}
+
+/**
+ * Calls `listener` on every new minute (and on return to the foreground),
+ * outside React: for values drawn on the UI thread, such as a now line's
+ * position, which must not re-render anything. Returns the unsubscribe.
+ */
+export function subscribeMinute(listener: () => void): () => void {
+  return subscribe(listener);
+}
+
+/** The current minute, as useMinuteNow reports it. */
+export function minuteNow(): number {
+  return getSnapshot();
+}
+
+/**
+ * The festival day that holds now (festivalToday), or null outside the
+ * festival. Re-renders only when that day changes, at 06:00, not every minute.
+ */
+export function useFestivalToday(festivalDays: readonly number[]): number | null {
+  const getToday = useCallback((): number | null => festivalToday(festivalDays, getSnapshot()), [festivalDays]);
+  return useSyncExternalStore(subscribe, getToday, getToday);
 }
