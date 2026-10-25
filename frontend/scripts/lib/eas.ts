@@ -25,8 +25,31 @@ type RawBuild = {
   buildProfile: string;
   appBuildVersion: string;
   gitCommitHash?: string | null;
+  completedAt?: string | null;
   artifacts?: { buildUrl?: string };
 };
+
+/** Finished, downloadable builds for a profile, newest first. */
+export function listBuilds(platform: 'android' | 'ios', profile: string, limit = 50):
+  (EasBuild & { completedAt: string | null })[] {
+  const r = run('eas', [
+    'build:list', '--platform', platform, '--build-profile', profile, '--status', 'finished',
+    '--limit', String(limit), '--json', '--non-interactive',
+  ]);
+  if (!r.ok) {
+    throw new Error(`eas build:list failed — logged in? (${r.err.split('\n')[0]})`);
+  }
+  return (JSON.parse(r.out) as RawBuild[])
+    .filter((b) => b.artifacts?.buildUrl)
+    .map((b) => ({
+      id: b.id,
+      profile: b.buildProfile,
+      buildVersion: b.appBuildVersion,
+      commit: b.gitCommitHash ?? null,
+      url: b.artifacts!.buildUrl!,
+      completedAt: b.completedAt ?? null,
+    }));
+}
 
 /** Newest finished build for a profile, or null when there is none. */
 export function latestBuild(platform: 'android' | 'ios', profile: string): EasBuild | null {

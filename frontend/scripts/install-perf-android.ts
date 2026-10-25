@@ -5,6 +5,8 @@
 //                                                e.g. an older one to re-measure
 //   npm run install:perf:android -- --serial X   when several devices are connected
 //   npm run install:perf:android -- --force      reinstall even if already there
+//   npm run install:perf:android -- --list       the perf builds there are, one per
+//                                                line: versionCode, commit, date
 //
 // The perf build points at the fixture API (http://localhost:4010, reached over
 // USB via `adb reverse`) and opens on ba2025, so it replaces whatever build of
@@ -12,10 +14,34 @@
 // same build does not download it again.
 
 import { adb, installedVersion, PACKAGE, pickDevice } from './lib/adb.ts';
-import { buildByVersion, fetchArtifact, latestBuild, staleness } from './lib/eas.ts';
+import { buildByVersion, fetchArtifact, latestBuild, listBuilds, staleness } from './lib/eas.ts';
 import { EXIT, has, parseArgs, run, skip } from './lib/proc.ts';
 
 const args = parseArgs(process.argv.slice(2));
+
+// Listing needs no device, so it comes before one is picked.
+if (args.list === true) {
+  if (!has('eas')) {
+    skip('eas-cli is not installed', 'npm install -g eas-cli');
+  }
+  let builds;
+  try {
+    builds = listBuilds('android', 'perf');
+  } catch (e) {
+    skip((e as Error).message, 'Run `eas login`.');
+  }
+  if (builds.length === 0) {
+    skip('no finished EAS build for the "perf" profile yet', 'Run `npm run build:perf:android`.');
+  }
+  for (const b of builds) {
+    const at = b.completedAt === null
+      ? '-'
+      : new Date(b.completedAt).toLocaleString('sv-SE', { dateStyle: 'short', timeStyle: 'short' });
+    console.log(`${b.buildVersion.padStart(4)}  ${b.commit?.slice(0, 7) ?? '-------'}  ${at}`);
+  }
+  process.exit(EXIT.PASS);
+}
+
 const device = pickDevice(typeof args.serial === 'string' ? args.serial : undefined);
 console.log(`device: ${device.model} — Android ${device.android} (API ${device.sdk}), ${device.serial}`);
 
