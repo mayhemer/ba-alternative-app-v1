@@ -1,0 +1,29 @@
+appId: cz.janbambas.ba
+name: the lens narrows the Support Program to my picks
+---
+# The simulator's clock is outside the 2025 festival, so the Support Program
+# opens on its first day, the warm-up Tuesday. From 13:00 it has KUNDY CREW and
+# ART-BRUT-ALL (the exhibitions, both until 01:00) and PIT OF DOOM, all on
+# screen where the day opens (12:45).
+- runFlow: common/launch-fresh.yaml
+- runFlow:
+    file: common/open-section.yaml
+    env: { SECTION: "Support Program" }
+- tapOn: ".*KUNDY CREW.*"
+- waitForAnimationToEnd
+# The sheet's title is the bare name; one press = "maybe", which "My picks" includes.
+- tapOn: { text: "Toggle interest", rightOf: "KUNDY CREW" }
+- assertVisible: "Maybe"
+# Close the sheet: swipe it down by its handle. Its backdrop covers the top bar,
+# lens chip included, while it is open.
+- swipe:
+    start: "50%,62%"
+    end: "50%,99%"
+- waitForAnimationToEnd
+- tapOn: "View and share schedules"
+- tapOn: ".*My picks.*"
+- waitForAnimationToEnd
+- assertVisible: ".*KUNDY CREW.*"
+# Unpicked, so filtered out — proves the lens on this timeline, not just the list.
+- assertNotVisible: ".*ART-BRUT-ALL.*"
+- assertNotVisible: ".*PIT OF DOOM.*"

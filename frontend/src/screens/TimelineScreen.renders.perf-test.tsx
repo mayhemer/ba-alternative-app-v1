@@ -102,3 +102,20 @@ test('switching to another festival day', async () => {
     },
   });
 });
+
+// Under Jest each act() lets the progressive mount grow by one slice only, so
+// `settle` above leaves most of a wide day unmounted: the two scenarios above
+// measure the opening slice. This one runs act() until Wednesday is complete
+// (five slices in the 2025 capture; eight leaves room), so the count covers
+// every mount step and the memos that keep each step to its own slice.
+test('mounting the timeline, the whole day', async () => {
+  await measureRenders(<Subject />, {
+    ...MEASURE_OPTIONS,
+    wrapper: PerfProviders,
+    scenario: async () => {
+      for (let i = 0; i < 8; i++) {
+        await settle();
+      }
+    },
+  });
+});

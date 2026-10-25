@@ -55,7 +55,7 @@ function TimeRulerBase(_props: Props) {
       }}
     >
       <Animated.View style={[{ width: CANVAS_WIDTH, height: RULER_HEIGHT, position: 'relative' }, animatedStyle]}>
-        <NowLine nowX={nowX} canvasHeight={RULER_HEIGHT} showArrow />
+        <NowLine testID="now-line" nowX={nowX} canvasHeight={RULER_HEIGHT} showArrow />
         <HourTicks />
       </Animated.View>
     </View>
