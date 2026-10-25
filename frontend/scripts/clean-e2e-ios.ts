@@ -10,6 +10,8 @@
 //     the app and re-applies its keyboard settings. Its first boot afterwards
 //     is slow.
 //   - downloaded EAS simulator builds (re-downloaded; Android APKs are kept)
+//   - the local Release build in ios/build/e2e (rebuilt by test:e2e:ios:local,
+//     from scratch, which takes minutes)
 //   - Maestro's debug output in ~/.maestro/tests, and the last run's reports
 
 import { existsSync, readdirSync, rmSync } from 'node:fs';
@@ -67,6 +69,7 @@ if (existsSync(BUILD_CACHE)) {
     }
   }
 }
+remove(join(ROOT, 'ios', 'build', 'e2e'), 'local simulator build');
 remove(join(homedir(), '.maestro', 'tests'), 'Maestro debug output');
 remove(join(ROOT, 'e2e-results', 'ios'), 'last run\'s reports');
 

@@ -1,6 +1,7 @@
 // ── Native E2E on the iOS Simulator ───────────────────────────────────────────
 //
 //   npm run test:e2e:ios                      latest EAS `e2e-ios-sim` build
+//   npm run test:e2e:ios:local                builds the working tree here first
 //   npm run test:e2e:ios -- --app path/X.app  a local simulator build instead
 //   npm run test:e2e:ios -- --sim "iPhone 17" a different simulator
 //   npm run test:e2e:ios -- --show            bring up the Simulator window
@@ -12,8 +13,11 @@
 //
 // It tests a BUILT BINARY. Anything changed since that build is not covered,
 // which is why it prints where the build came from — rebuild with
-// `npm run build:e2e:ios` after app changes. `--app` exists so a locally built
-// simulator app can be swapped in without touching the rest of this script.
+// `npm run build:e2e:ios` after app changes. `--local` skips EAS: it makes the
+// same Release simulator build with xcodebuild from the prebuilt ios/ folder
+// (see lib/iosLocalBuild.ts), so the run covers the working tree's JS — and its
+// native code as of the last `npm run prebuild:ios`. `--app` swaps in any other
+// simulator app without touching the rest of this script.
 //
 // Exit codes: 0 pass, 1 fail, 4 skipped (a prerequisite is missing) — `verify`
 // reports a skip without failing on it.
@@ -23,6 +27,7 @@ import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { fetchArtifact, findAppBundle, latestBuild, staleness } from './lib/eas.ts';
 import { startFixtureProcess } from './lib/fixtureProcess.ts';
+import { buildLocalSimulatorApp } from './lib/iosLocalBuild.ts';
 import { EXIT, has, must, parseArgs, run, skip } from './lib/proc.ts';
 import { findSimulator, simulatorName } from './lib/simulator.ts';
 
@@ -79,6 +84,12 @@ async function resolveApp(): Promise<string> {
       skip(`--app ${app} does not exist`);
     }
     console.log(`app: ${app} (local build — origin is whatever it was built with)`);
+    return app;
+  }
+
+  if (args.local === true) {
+    const app = buildLocalSimulatorApp(ROOT, PROFILE);
+    console.log(`app: ${app} (local Release build of the working tree)`);
     return app;
   }
 

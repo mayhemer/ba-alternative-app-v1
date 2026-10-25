@@ -12,6 +12,7 @@
     "test:perf:gate": "node --experimental-strip-types --no-warnings scripts/check-render-counts.ts",
     "test:e2e:web": "playwright test",
     "test:e2e:ios": "node --experimental-strip-types --no-warnings scripts/test-e2e-ios.ts",
+    "test:e2e:ios:local": "node --experimental-strip-types --no-warnings scripts/test-e2e-ios.ts --local",
     "clean:e2e:ios": "node --experimental-strip-types --no-warnings scripts/clean-e2e-ios.ts",
     "test:perf:device": "node --experimental-strip-types --no-warnings scripts/test-perf-device.ts",
     "test:perf:device:baseline": "node --experimental-strip-types --no-warnings scripts/test-perf-device.ts --baseline",

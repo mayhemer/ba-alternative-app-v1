@@ -4,7 +4,8 @@
 # Fail-fast and in cheapest-first order, so a typo is reported in seconds rather
 # than after the browser suite. The suites that test a built binary — the iOS
 # simulator E2E and the physical Android phone — are printed as a follow-up:
-# they run whatever build EAS last made, not this working tree.
+# they run a build, not this working tree (the iOS :local variant makes that
+# build here first, which takes minutes).
 #
 #   npm run verify
 #   npm run verify -- --fast    skip the slow step: performance regressions
@@ -61,9 +62,11 @@ else
 fi
 cat <<'NEXT'
 
-Not covered above — these test a built binary, so rebuild after app changes:
+Not covered above — these test a built binary, so rebuild after app changes
+(test:e2e:ios:local builds one itself):
 
-  npm run build:e2e:ios            then npm run test:e2e:ios (iOS simulator E2E)
+  npm run test:e2e:ios:local       iOS simulator E2E, built here from this tree
+  npm run build:e2e:ios            or via EAS, then npm run test:e2e:ios
   npm run build:perf:android       then, with the phone connected over USB:
   npm run install:perf:android     latest `perf` build onto the phone
   npm run test:perf:device         frame, start-up and memory measurements
