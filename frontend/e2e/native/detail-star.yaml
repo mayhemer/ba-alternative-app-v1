@@ -14,4 +14,4 @@ name: an artist can be starred from the detail sheet
 # rather than being one opaque "Bottom Sheet" element.
 - assertVisible: "EXORCIZPHOBIA"
 - tapOn: { text: "Toggle interest", rightOf: "EXORCIZPHOBIA" }
-- assertVisible: ".*Maybe want to see.*"
+- assertVisible: "Maybe"
