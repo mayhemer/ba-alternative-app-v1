@@ -118,6 +118,18 @@ let setScope: (scope: LensScope) => void;
 let cycle: (artistId: string) => void;
 let search: (query: string) => void;
 
+/** One press of a pick's star, in a render of its own, as a tap would. */
+async function press(artistId: string): Promise<void> {
+  await act(async () => { cycle(artistId); });
+}
+
+/** Cycles a pick `times` times, one press per render. */
+async function pressTimes(artistId: string, times: number): Promise<void> {
+  for (let i = 0; i < times; i++) {
+    await press(artistId);
+  }
+}
+
 function Controls() {
   setScope = useLens().setScope;
   const { cycleStatus } = useInterestCycle();
@@ -158,7 +170,8 @@ describe('the list reacts', () => {
     // none → Maybe.
     await act(async () => { cycle('101'); });
     expect(screen.getByText('ABSU')).toBeTruthy();
-    await act(async () => { cycle('101'); cycle('101'); cycle('101'); });
+    // Back to none: Must-see, don't go, none — one press per render.
+    await pressTimes('101', 3);
   });
 
   it('follows a sync that renames an artist, adds one and removes one', async () => {
@@ -184,7 +197,8 @@ describe('the list reacts', () => {
       await mountCounted();
       await act(async () => { cycle('163'); });
       expect(rendersSinceReset()).toEqual({ '163': 1 });
-      await act(async () => { cycle('163'); cycle('163'); cycle('163'); });
+      // Back to none: Must-see, don't go, none — one press per render.
+      await pressTimes('163', 3);
     });
 
     it('a search down to one artist renders only that row, newly shown', async () => {

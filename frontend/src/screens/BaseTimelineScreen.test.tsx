@@ -134,6 +134,18 @@ let requestScrollToTime: (screenKey: string, fromMs: number, toMs: number, categ
 let requestScrollToNow: (screenKey: string) => void;
 let cycle: (artistId: string) => void;
 
+/** One press of a pick's star, in a render of its own, as a tap would. */
+async function press(artistId: string): Promise<void> {
+  await act(async () => { cycle(artistId); });
+}
+
+/** Cycles a pick `times` times, one press per render. */
+async function pressTimes(artistId: string, times: number): Promise<void> {
+  for (let i = 0; i < times; i++) {
+    await press(artistId);
+  }
+}
+
 function Controls() {
   setScope = useLens().setScope;
   const { cycleStatus } = useInterestCycle();
@@ -710,7 +722,8 @@ describe('the timeline reacts', () => {
       await act(async () => { cycle('51'); });
       await settle();
       expect(rendersSinceReset()).toEqual({ '3': 1, '7029': 1 });
-      await act(async () => { cycle('51'); cycle('51'); cycle('51'); });
+      // Back to none: Must-see, don't go, none — one press per render.
+      await pressTimes('51', 3);
     });
 
     it('a pick into a clash renders only the two blocks and their lanes', async () => {

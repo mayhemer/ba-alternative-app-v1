@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useScreenUI } from '../../context/ScreenUIContext';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
 import { DrawerButton } from './DrawerButton';
+import { bottomBarMode } from './BottomBar.model';
 import { colors, DAY_SWITCHER_MAX_FRACTION } from '../../styling/tokens';
 
 // Reserve matching space on both sides so the screen's own content stays
@@ -21,13 +22,14 @@ export function BottomBar() {
 
   // On short viewports the TopBar is not rendered, so this bar carries its
   // controls — which means it must appear even on screens that contribute no
-  // content of their own (Conflicts, Settings, ArtistList).
-  if (ContentComponent === undefined && !isShort) {
+  // content of their own (Settings, ArtistList). See BottomBar.model.ts.
+  const mode = bottomBarMode({ hasContent: ContentComponent !== undefined, isShort });
+  if (mode === 'hidden') {
     return null;
   }
 
   // Portrait: a solid row in the flex column, below the content.
-  if (!isShort) {
+  if (mode === 'row') {
     return (
       <View className="bg-surface border-t border-border px-4 py-3">
         {ContentComponent !== undefined ? <ContentComponent /> : null}

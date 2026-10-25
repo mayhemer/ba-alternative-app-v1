@@ -26,3 +26,10 @@ with no conversion layer:
 - Visual state change is immediate. A star tap shows the cycle-strip toast (see Feedback Zone in [navigation.md](navigation.md)).
 - Visual distinction must be strong — color weight, not fill level alone. Color progression: neutral → amber/dim → bright accent.
 - Half-star must render crisply at small sizes.
+
+## The star's one table
+
+Every place a pick is drawn — the star button, the indicator beside names, the toast's cycle strip,
+the lens chip — reads one table, `components/StarButton.model.ts`: each status's icon, colour,
+strike-through and label, and the star button's size and reach (`STAR_COLUMN_RESERVE`, which the
+toast keeps clear of). The toast's strip has its own model (`InterestCycleStrip.model.ts`).

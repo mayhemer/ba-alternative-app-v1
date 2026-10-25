@@ -111,3 +111,13 @@ plays when the detail is dismissed from code rather than by gesture.
 `enableDynamicSizing` — on by default — is off on both sheets: it splices a content-sized stop into
 `detents` and re-sorts, so with short content index 1 stops being `'100%'` and mounting at a fixed
 index lands on the wrong stop.
+
+## Chrome elements and their sources
+
+- **Bottom bar** (`layout/BottomBar.model.ts`): a row under a screen with content for it, nothing
+  under one without; on a short viewport it floats over the content, carrying the TopBar's controls.
+- **Feedback toast** (`layout/FeedbackToast.model.ts`): the band clear of the star column
+  (`toastBand`), and its content — the interest strip after a star tap, else the message — and
+  whether a tap dismisses it.
+- **Friend avatar and facepile** (`social/FriendAvatar.model.ts`, `FriendFacepile.model.ts`): the
+  photo or the initial, the pick's badge, sized from the avatar; three faces and "+N".

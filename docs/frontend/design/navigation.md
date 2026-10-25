@@ -75,3 +75,12 @@ when the festival edition changes, since ids are scoped to an edition.
   (`toastBand()` in FeedbackToast; the reserve is derived from the star sizes and hit slop in
   StarButton). Unit-tested across widths and insets, and E2E-checked with real bounding boxes.
 - Other messages are plain text in the same band.
+
+## Elements and their sources
+
+| Element | Model | Source |
+|---|---|---|
+| Drawer entries | `layout/SideDrawerContent.model.ts` (drawn by `DrawerItem`) | the active screen, whether each timeline has categories for its artists, and the clash count of the shared conflict calculation (`useConflicts`), the one My plan follows |
+| Lens chip | `social/LensChip.model.ts` (drawn by `LensChipView`) | the lens and the focused friend; the panel's open state |
+| Lens panel | `social/LensPanel.model.ts` (each source a `LensScopeRow`) | the lens, the followed friends, the friend armed for removal, the session and the share |
+| Settings | `screens/SettingsScreen.model.ts` | the session (restoring, signed in, signed out, busy, error) and the editions |
