@@ -2,6 +2,7 @@ import React from 'react';
 import { render } from '@testing-library/react-native';
 import { ArtistRow } from './ArtistRow';
 import { ArtistBlock } from './timeline/ArtistBlock';
+import { artistBlockModel, type ArtistBlockInputs } from './timeline/ArtistBlock.model';
 import { FeatureProviders } from '../../tests/setup/PerfProviders';
 import { countElements, expectWithinBudget, formatCensus } from '../../tests/setup/countElements';
 import type { DbArtist, DbEvent } from '../types/backend';
@@ -104,12 +105,16 @@ describe('one timeline block', () => {
     const view = await render(
       <FeatureProviders>
         <ArtistBlock
-          event={EVENT}
-          artist={ARTIST}
-          dayStart={EVENT.dateFrom}
-          status="none"
-          categoryColor="#888888"
-          labelRepeat={400}
+          item={artistBlockModel({
+            event: EVENT,
+            artist: ARTIST,
+            dayStart: EVENT.dateFrom,
+            status: 'none',
+            categoryColor: '#888888',
+            labelRepeat: 400,
+            subRow: 0,
+            overlaps: undefined,
+          })}
           onPress={() => undefined}
         />
       </FeatureProviders>,
@@ -123,19 +128,20 @@ describe('one timeline block', () => {
   });
 
   it('adds views for a conflict only when there is one', async () => {
-    const common = {
+    const common: ArtistBlockInputs = {
       event: EVENT,
       artist: ARTIST,
       dayStart: EVENT.dateFrom,
-      status: 'will_go' as const,
+      status: 'will_go',
       categoryColor: '#888888',
       labelRepeat: 400,
-      onPress: () => undefined,
+      subRow: 0,
+      overlaps: undefined,
     };
-    const clean = await render(<FeatureProviders><ArtistBlock {...common} /></FeatureProviders>);
+    const clean = await render(<FeatureProviders><ArtistBlock item={artistBlockModel(common)} onPress={() => undefined} /></FeatureProviders>);
     const clashing = await render(
       <FeatureProviders>
-        <ArtistBlock {...common} conflictOverlaps={[{ from: EVENT.dateFrom, to: EVENT.dateTo }]} />
+        <ArtistBlock item={artistBlockModel({ ...common, overlaps: [{ from: EVENT.dateFrom, to: EVENT.dateTo }] })} onPress={() => undefined} />
       </FeatureProviders>,
     );
 

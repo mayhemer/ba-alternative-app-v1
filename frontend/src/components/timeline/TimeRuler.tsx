@@ -3,7 +3,8 @@ import { View } from 'react-native';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 import { Text } from '../ui/Text';
-import { CANVAS_WIDTH, DAY_BOUNDARY_HOUR, PIXELS_PER_HOUR, RULER_HEIGHT, VIEW_OFFSET_X, VIEW_WIDTH } from './timelineLayout';
+import { CANVAS_WIDTH, RULER_HEIGHT, VIEW_OFFSET_X, VIEW_WIDTH } from './timelineLayout';
+import { hourTickModels } from './TimeRuler.model';
 import { NowLine } from './NowLine';
 import { colors } from '../../styling/tokens';
 
@@ -13,25 +14,24 @@ type Props = {
   nowX: SharedValue<number>;
 };
 
-/** The hour labels and ticks across the whole day canvas, 06:00 to 06:00. */
+// The same 25 ticks for every day.
+const HOUR_TICKS = hourTickModels();
+
+/** The hour labels and ticks across the whole day canvas, 06:00 to 06:00 (TimeRuler.model.ts). */
 export function HourTicks() {
   return (
     <>
-      {Array.from({ length: 25 }, (_, h) => {
-        const hour = (DAY_BOUNDARY_HOUR + h) % 24;
-        const x    = h * PIXELS_PER_HOUR;
-        return (
-          <View
-            key={h}
-            style={{ position: 'absolute', left: x, top: 0, bottom: 0, alignItems: 'flex-start' }}
-          >
-            <View style={{ width: 1, height: 10, backgroundColor: colors.muted, marginTop: 0  }} />
-            <Text style={{ fontSize: 12, color: colors.timeline.rulerText, marginTop: 2, marginLeft: 2 }}>
-              {String(hour).padStart(2, '0') + ':00'}
-            </Text>
-          </View>
-        );
-      })}
+      {HOUR_TICKS.map((tick) => (
+        <View
+          key={tick.key}
+          style={{ position: 'absolute', left: tick.x, top: 0, bottom: 0, alignItems: 'flex-start' }}
+        >
+          <View style={{ width: 1, height: 10, backgroundColor: colors.muted, marginTop: 0  }} />
+          <Text style={{ fontSize: 12, color: colors.timeline.rulerText, marginTop: 2, marginLeft: 2 }}>
+            {tick.label}
+          </Text>
+        </View>
+      ))}
     </>
   );
 }

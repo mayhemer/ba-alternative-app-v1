@@ -2,7 +2,8 @@ import React from 'react';
 import { View } from 'react-native';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
-import { CANVAS_WIDTH, NOW_LINE_ARROW_SIZE } from './timelineLayout';
+import { NOW_LINE_ARROW_SIZE } from './timelineLayout';
+import { nowLineStyle } from './NowLine.model';
 import { colors } from '../../styling/tokens';
 
 type Props = {
@@ -15,16 +16,7 @@ type Props = {
 
 function NowLineBase({ nowX, canvasHeight, top = 0, showArrow = false, testID }: Props) {
   // Position and visibility are driven on the UI thread — no JS re-renders.
-  const lineStyle = useAnimatedStyle(() => {
-    const x = nowX.value;
-    const visible = x > 0 && x < CANVAS_WIDTH;
-    return {
-      left: x,
-      // Collapse to zero width when outside the day window so nothing shows.
-      width: visible ? 1 : 0,
-      opacity: visible ? 1 : 0,
-    };
-  });
+  const lineStyle = useAnimatedStyle(() => nowLineStyle(nowX.value));
 
   return (
     <Animated.View

@@ -27,6 +27,23 @@
   foreground. The conflict sheet's now line follows it too. Written to a shared value outside React,
   so a new minute re-renders nothing.
 
+## Elements and their sources
+
+Each element computes what it shows in a pure model next to its component (`components/timeline/`):
+
+| Element | Model | Source |
+|---|---|---|
+| A set's block | `ArtistBlock.model.ts` | its set, its day and its row: position, width, label (size, lines, repeats), star, conflict bars |
+| A lane and its title | `CategoryLane.model.ts` | the sets the lane shows: rows and height; the title from the same lane |
+| A day's lanes | `TimelineDay.model.ts` | the cache, the screen's filter, the lens and the hidden lanes: which lanes, their tops, the canvas height, where the day lands |
+| Now line | `NowLine.model.ts` | the minute clock (`useNowX`) |
+| Ruler ticks | `TimeRuler.model.ts` | the day's 25 hours |
+| Day buttons | `DayButton.model.ts` | the shown day and the minute clock (shared with My plan) |
+| Conflict sheet | `ConflictTimeline.model.ts`, `ConflictDetailHeader.model.ts` | the clash group and the sheet's measured width; the header's calendar date |
+
+Under every lens a block's star and conflict bars follow **your** picks; the lens decides only which
+sets are listed.
+
 ## Block Visual States
 
 | State | Appearance |
@@ -50,7 +67,7 @@ press and said nothing the block itself could not show.
 - **Conflict sheet** (`ConflictDetailSheet`) shows one whole clash group: every set the group
   chains through its overlaps (`conflictGroupOf`, the groups My plan titles), from both the main
   and the support timeline, and nothing else. Its body, `ConflictTimeline`, is built from the
-  timeline's own `CategoryLane`, `HourTicks` and `LaneLabelOverlay`, cut to the group's span plus
+  timeline's own `CategoryLane`, `HourTicks` and lane titles (`ConflictTimeline.model.ts`), cut to the group's span plus
   exactly half an hour either side (`conflictWindow`), widened evenly to fill the sheet when that
   is narrower, so the clash stays centred. No lens, hidden lanes or scroll memory apply.
   Tapping a block opens the artist sheet.

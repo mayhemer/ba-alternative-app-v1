@@ -3,39 +3,16 @@ import { TouchableOpacity, View } from 'react-native';
 import Svg, { ClipPath, Defs, Path, Rect } from 'react-native-svg';
 import { Text } from '../ui/Text';
 import type { DbArtist, DbEvent } from '../../types/backend';
-import { type InterestStatus } from '../../cache/cacheService';
-import {
-  timeToX,
-  formatTime,
-  BLOCK_FONT_SIZE,
-  LANE_BORDER_WIDTH,
-  LANE_HEIGHT,
-  MIN_BLOCK_WIDTH,
-  PIXELS_PER_MS,
-} from './timelineLayout';
-import { fitFontSize } from '../../utils/textFit';
 import { colors } from '../../styling/tokens';
-import { dimColor } from '../../utils/color';
 import { StarIndicator } from '../StarButton';
-import { isInterested } from '../../utils/interestUtils';
-import type { ConflictOverlap } from '../../utils/conflictUtils';
+import { sameProps } from '../sameProps';
+import { BLOCK_LAYOUT, type ArtistBlockModel, type BlockLabelModel } from './ArtistBlock.model';
 
-// Block chrome — shared between the rendered styles and the label width maths
-// below, so the two cannot drift apart.
-const BLOCK_PADDING = 8;
-const BLOCK_BORDER_LEFT = 3;
-const STAR_SIZE = 11;
+// ── A set's block on the timeline ─────────────────────────────────────────────
+//
+// Draws its model (ArtistBlock.model.ts): the box at its time and row, the
+// label (repeated along a long block), the star, and the conflict bars.
 
-// Repeated labels on long blocks. A repeat is skipped rather than rendered as a
-// clipped sliver once less than this remains before the star.
-const LABEL_MIN_WIDTH = 90;
-// Breathing room between one copy and the next, so a long name ellipsizes
-// instead of running into the following one.
-const LABEL_GAP = 12;
-
-const CONFLICT_BAR_HEIGHT = 10;
-const CONFLICT_BAR_RAISE = 1; // px the bar sits above the block's top edge ("over" it)
-const CONFLICT_BAR_MIN_WIDTH = 4;
 export const CONFLICT_STRIPE = 2; // perpendicular width of each 45° dark-red band
 
 // Horizontal spacing between stripe start points. At 45° the perpendicular gap
@@ -61,13 +38,7 @@ export function stripePath(w: number, h: number): string {
 }
 
 type Props = {
-  event: DbEvent;
-  artist: DbArtist;
-  dayStart: number;
-  status: InterestStatus;
-  categoryColor: string;
-  /** Gap between repeated labels on long blocks; scales with the viewport. */
-  labelRepeat: number;
+  item: ArtistBlockModel;
   /**
    * Takes the block's own event/artist rather than being pre-bound by the lane:
    * a per-block closure would be a fresh function on every lane render and defeat
@@ -75,175 +46,100 @@ type Props = {
    * re-rendering everything already on screen at each step.
    */
   onPress: (event: DbEvent, artist: DbArtist) => void;
-  subRow?: number;
-  conflictOverlaps?: ConflictOverlap[];
 };
 
-// ── Block colors per interest state ──────────────────────────────────────────
-
-type BlockStyle = { bg: string; border: string };
-
-/** A set's background and its brighter border from its category's colour; My plan's rows use them too. */
-export function categoryBlockColors(categoryColor: string): BlockStyle {
-  return { bg: dimColor(categoryColor, 48), border: dimColor(categoryColor, 128) };
-}
-
-function blockStyle(_status: InterestStatus, categoryColor: string): BlockStyle {
-  const { bg, border } = categoryBlockColors(categoryColor);
-  return { bg, border };
-}
-
-
-// ── Component ─────────────────────────────────────────────────────────────────
-
-function ArtistBlockBase({ event, artist, dayStart, status, categoryColor, labelRepeat, onPress, subRow = 0, conflictOverlaps }: Props) {
-  const x     = timeToX(event.dateFrom, dayStart);
-  const right = timeToX(event.dateTo,   dayStart);
-  const width = Math.max(MIN_BLOCK_WIDTH, right - x);
-
-  const { bg, border } = blockStyle(status, categoryColor);
-
-  const showLabel = width >= 40;
-
-  const oneWordArtist = artist.name.indexOf(' ') === -1;
-
-  // Title size is picked here rather than by adjustsFontSizeToFit — see
-  // utils/textFit for why that prop cannot hold a floor under Fabric.
-  // StarIndicator renders nothing unless the artist is a pick, so its column
-  // only costs width when it is.
-  const labelLines = oneWordArtist ? 1 : 2;
-  const labelWidth =
-    width - BLOCK_BORDER_LEFT - BLOCK_PADDING * 2 - (isInterested(status) ? STAR_SIZE : 0);
-
-  // Long blocks repeat their label so one is always near the viewport, offset
-  // from the block's own start. Offsets are measured from the first label, so
-  // the loop bound is the width that label has to work with. No explicit
-  // "is this long?" test is needed — a short block simply produces none.
-  const labelRepeats: number[] = [];
-  for (
-    let offset = labelRepeat;
-    offset + LABEL_MIN_WIDTH <= labelWidth;
-    offset += labelRepeat
-  ) {
-    labelRepeats.push(offset);
-  }
-  const isRepeating = labelRepeats.length > 0;
-  const labelSegmentWidth = labelRepeat - LABEL_GAP;
-
-  // Every copy must be sized alike, so a repeating block measures its font
-  // against one segment rather than the block's full width.
-  const labelFontSize = fitFontSize(
-    artist.name.length,
-    isRepeating ? Math.min(labelWidth, labelSegmentWidth) : labelWidth,
-    labelLines,
-    BLOCK_FONT_SIZE,
-  );
-
-  const labelContent = (
+function LabelContent({ label }: { label: BlockLabelModel }) {
+  return (
     <>
       <Text
-        numberOfLines={labelLines}
-        style={{ fontSize: labelFontSize, color: colors.textPrimary, fontFamily: 'Bold-Default' }}
+        numberOfLines={label.lines}
+        style={{ fontSize: label.fontSize, color: colors.textPrimary, fontFamily: 'Bold-Default' }}
       >
-        {artist.name}
+        {label.name}
       </Text>
       <Text numberOfLines={1} style={{ fontSize: 10, color: colors.textPrimary }}>
-        {formatTime(event.dateFrom)}–{formatTime(event.dateTo)}
+        {label.time}
       </Text>
     </>
   );
+}
 
-  // Conflict bar geometry — one bar per overlap interval, each spanning only the
-  // overlapping portion of the block (mirrors the conflict detail mini-timeline).
-  const conflictBars = (conflictOverlaps ?? []).map((interval) => {
-    const fromPx = (interval.from - event.dateFrom) * PIXELS_PER_MS;
-    const toPx   = (interval.to   - event.dateFrom) * PIXELS_PER_MS;
-    const left   = Math.max(0, Math.min(width, fromPx));
-    const barWidth = Math.max(CONFLICT_BAR_MIN_WIDTH, Math.min(width, toPx) - left);
-    return { key: interval.from, left, barWidth };
-  });
-
-  // A block fills its sub-row exactly. The lane's bottom border is inside the
-  // lane's height, so the space a block can occupy is LANE_HEIGHT less that
-  // border — and the gap between stacked sub-rows is the same border's width.
+function ArtistBlockBase({ item, onPress }: Props) {
+  const { label } = item;
+  const handlePress = (): void => { onPress(item.event, item.artist); };
   return (
     <View
       style={{
         position: 'absolute',
-        left: x,
-        top: subRow * LANE_HEIGHT,
-        width,
-        height: LANE_HEIGHT - LANE_BORDER_WIDTH,
+        left: item.left,
+        top: item.top,
+        width: item.width,
+        height: item.height,
       }}
     >
       <TouchableOpacity
-        onPress={() => { onPress(event, artist); }}
+        onPress={handlePress}
         style={{
           flex: 1,
-          backgroundColor: bg,
-          borderColor: border,
-          borderLeftWidth: BLOCK_BORDER_LEFT,
+          backgroundColor: item.bg,
+          borderColor: item.border,
+          borderLeftWidth: BLOCK_LAYOUT.borderLeft,
           overflow: 'hidden',
           justifyContent: 'flex-start',
-          padding: BLOCK_PADDING,
+          padding: BLOCK_LAYOUT.padding,
         }}
       >
-        {showLabel ? (
+        {label !== null ? (
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', flex: 1 }}>
             {/* Label area. Repeats are positioned against this box, so their
                 offsets are measured from the first label rather than from the
                 block's border — no padding arithmetic. The block already clips,
                 and the offsets stay clear of the star. */}
             <View style={{ flex: 1 }}>
-              {isRepeating ? (
-                <View style={{ maxWidth: labelSegmentWidth }}>{labelContent}</View>
+              {label.segmentWidth !== null ? (
+                <View style={{ maxWidth: label.segmentWidth }}><LabelContent label={label} /></View>
               ) : (
-                labelContent
+                <LabelContent label={label} />
               )}
-              {labelRepeats.map((offset) => (
+              {label.repeats.map((repeat) => (
                 <View
-                  key={offset}
-                  style={{
-                    position: 'absolute',
-                    left: offset,
-                    top: 0,
-                    width: Math.min(labelSegmentWidth, labelWidth - offset),
-                  }}
+                  key={repeat.left}
+                  style={{ position: 'absolute', left: repeat.left, top: 0, width: repeat.width }}
                 >
-                  {labelContent}
+                  <LabelContent label={label} />
                 </View>
               ))}
             </View>
             {/* Rendered bare rather than in a row wrapper: StarIndicator is a
                 single glyph, so the wrapper only ever added one more native view
                 per block — and there are ~75 blocks in a day. */}
-            <StarIndicator status={status} size={STAR_SIZE} />
+            <StarIndicator status={item.status} size={BLOCK_LAYOUT.starSize} />
           </View>
         ) : null}
       </TouchableOpacity>
 
       {/* Conflict markers — 45° red / dark-red striped bars laid OVER the block,
           one per overlap interval */}
-      {conflictBars.map((bar) => {
+      {item.bars.map((bar) => {
         const clipId = `conflictClip-${bar.key}`;
         return (
           <Svg
             key={bar.key}
             pointerEvents="none"
-            width={bar.barWidth}
-            height={CONFLICT_BAR_HEIGHT}
-            style={{ position: 'absolute', bottom: -CONFLICT_BAR_RAISE, left: bar.left }}
+            width={bar.width}
+            height={BLOCK_LAYOUT.barHeight}
+            style={{ position: 'absolute', bottom: -BLOCK_LAYOUT.barRaise, left: bar.left }}
           >
             {/* The stripes start off-box on both sides so they reach the corners;
                 clip them back to the bar. */}
             <Defs>
               <ClipPath id={clipId}>
-                <Rect width={bar.barWidth} height={CONFLICT_BAR_HEIGHT} />
+                <Rect width={bar.width} height={BLOCK_LAYOUT.barHeight} />
               </ClipPath>
             </Defs>
-            <Rect width={bar.barWidth} height={CONFLICT_BAR_HEIGHT} fill={colors.danger} />
+            <Rect width={bar.width} height={BLOCK_LAYOUT.barHeight} fill={colors.danger} />
             <Path
-              d={stripePath(bar.barWidth, CONFLICT_BAR_HEIGHT)}
+              d={stripePath(bar.width, BLOCK_LAYOUT.barHeight)}
               stroke={colors.dangerMuted}
               strokeWidth={CONFLICT_STRIPE}
               clipPath={`url(#${clipId})`}
@@ -256,11 +152,8 @@ function ArtistBlockBase({ event, artist, dayStart, status, categoryColor, label
 }
 
 /**
- * Memoised: a day's blocks are mounted progressively (see TimelineView), so a
- * lane re-renders once per expansion step. Every prop is either a primitive or
- * an object owned by the cache / a memo — `event` and `artist` come straight from
- * cacheService, `onPress` is a stable callback, and `conflictOverlaps` is
- * `undefined` for all but the conflicting blocks — so a shallow compare skips
- * everything already on screen and only the newly-revealed blocks render.
+ * Renders again only when what it shows changes (sameProps). The lane rebuilds
+ * its blocks' models on every render — a mount step, a pick — so each block
+ * skips exactly the renders that would repaint the same thing.
  */
-export const ArtistBlock = React.memo(ArtistBlockBase);
+export const ArtistBlock = React.memo(ArtistBlockBase, sameProps);

@@ -4,7 +4,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useTopBar, useBottomBar } from '../context/ScreenUIContext';
 import { useSelectedSlug } from '../store/AppContext';
 import { useArtistEventMap, useArtists, useCategories, useFestivalDays, useStages } from '../store/cacheStore';
-import { categoryBlockColors } from '../components/timeline/ArtistBlock';
+import { categoryBlockColors } from '../components/timeline/ArtistBlock.model';
 import { decodeCategoryColor } from '../utils/color';
 import { useInterest } from '../context/InterestContext';
 import { useArtistDetail } from '../context/ArtistDetailContext';
