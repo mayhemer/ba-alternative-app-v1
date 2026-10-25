@@ -10,9 +10,10 @@ type Props = {
   canvasHeight: number;
   top?: number;
   showArrow?: boolean;
+  testID?: string;
 };
 
-function NowLineBase({ nowX, canvasHeight, top = 0, showArrow = false }: Props) {
+function NowLineBase({ nowX, canvasHeight, top = 0, showArrow = false, testID }: Props) {
   // Position and visibility are driven on the UI thread — no JS re-renders.
   const lineStyle = useAnimatedStyle(() => {
     const x = nowX.value;
@@ -27,6 +28,7 @@ function NowLineBase({ nowX, canvasHeight, top = 0, showArrow = false }: Props) 
 
   return (
     <Animated.View
+      testID={testID}
       pointerEvents="none"
       style={[
         {

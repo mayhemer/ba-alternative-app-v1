@@ -216,3 +216,48 @@ test.describe('on a device in another time zone', () => {
     await expect(scroller.getByText(setTime, { exact: true }).first()).toBeVisible();
   });
 });
+
+// ── What the timeline draws ───────────────────────────────────────────────────
+//
+// Positions in a real browser layout, which Jest cannot see: a lane's title on
+// its lane, and the now line at the pinned time.
+
+/** The text's box, from the page's own layout. */
+async function boxOf(target: Locator): Promise<{ top: number; bottom: number; left: number }> {
+  return target.evaluate((el) => {
+    const r = el.getBoundingClientRect();
+    return { top: r.top, bottom: r.bottom, left: r.left };
+  });
+}
+
+const visible = (page: Page, text: string): Locator =>
+  page.getByText(text, { exact: true }).filter({ visible: true }).first();
+
+test('a lane title sits on its own lane @layout', async ({ appPage }) => {
+  await ready(appPage);
+  await openSection(appPage, 'Support Program');
+  // The museum lane holds a single set, FIELD HOSPITAL, Wednesday 10:00–23:00,
+  // on screen where the day opens (09:45). Its name sits 8 px inside the block.
+  const blockTop = (await boxOf(visible(appPage, 'FIELD HOSPITAL'))).top - 8;
+  const title = await boxOf(visible(appPage, 'Museum'));
+  const short = appPage.viewportSize()!.height < 500;
+  if (short) {
+    // Landscape: no strip; the title is drawn over its lane, near the top.
+    expect(title.top).toBeGreaterThanOrEqual(blockTop - 2);
+    expect(title.bottom).toBeLessThanOrEqual(blockTop + 70);
+  } else {
+    // Portrait and desktop: the title has the 32 px strip right above the lane.
+    expect(title.top).toBeGreaterThanOrEqual(blockTop - 32 - 1);
+    expect(title.bottom).toBeLessThanOrEqual(blockTop + 1);
+  }
+});
+
+test('the now line stands at the current time', async ({ appPage }) => {
+  await ready(appPage);
+  await openSection(appPage, 'Program');
+  // The ruler's 14:00 label starts 2 px right of its tick; the clock is pinned
+  // to 14:00 and has run for only seconds since (well under a pixel per 20 s).
+  const tick = (await boxOf(appPage.getByText('14:00', { exact: true }).first())).left - 2;
+  await expect.poll(async () => Math.abs((await boxOf(appPage.getByTestId('now-line').first())).left - tick), { timeout: 5_000 })
+    .toBeLessThanOrEqual(1);
+});

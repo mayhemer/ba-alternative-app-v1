@@ -1,0 +1,33 @@
+appId: cz.janbambas.ba
+name: a clash opens from the artist sheet on a timeline of its own
+---
+# EXORCIZPHOBIA (14:30–15:05) and CRYSTAL LAKE (14:00–14:40) overlap on
+# Wednesday in the ba2025 capture. Two presses each = "must see"; only
+# must-sees clash. The search narrows the list to one row, so its star is
+# element 0 (see plan.yaml).
+- runFlow: common/launch-fresh.yaml
+- runFlow:
+    file: common/search-artist.yaml
+    env: { QUERY: "crystal lake" }
+- tapOn: { text: "Toggle interest", index: 0 }
+- tapOn: { text: "Toggle interest", index: 0 }
+- runFlow:
+    file: common/search-artist.yaml
+    env: { QUERY: "exorcizphobia" }
+- tapOn: { text: "Toggle interest", index: 0 }
+- tapOn: { text: "Toggle interest", index: 0 }
+# The artist sheet lists the clashing set under its stage and time.
+- tapOn: ".*EXORCIZPHOBIA, THRASH METAL.*"
+- waitForAnimationToEnd
+# The row's label merges the warning sign with the text, so it is matched as a pattern.
+- scrollUntilVisible:
+    element: ".*Overlaps with 1 other event.*"
+    direction: DOWN
+- tapOn: ".*Overlaps with 1 other event.*"
+- waitForAnimationToEnd
+# The conflict sheet: the group's festival day and its span, from the first
+# set's start to the last one's end, and the other set of the clash, which
+# appears nowhere else on screen.
+- assertVisible: "Conflict"
+- assertVisible: ".*Wed 6.*14:00–15:05.*"
+- assertVisible: ".*CRYSTAL LAKE.*"

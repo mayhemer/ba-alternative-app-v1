@@ -1,5 +1,7 @@
 import React from 'react';
+import { StyleSheet } from 'react-native';
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import type { TestInstance } from 'test-renderer';
 import { ConflictTimeline } from './ConflictTimeline';
 import { FeatureProviders } from '../../../tests/setup/PerfProviders';
 import { createDataCollector, populateCache } from '../../cache/cacheService';
@@ -88,4 +90,68 @@ it('opens a set when its block is tapped', async () => {
   const onBlockPress = await renderGroup();
   await fireEvent.press(screen.getAllByText(artistOf(band).name)[0]);
   expect(onBlockPress).toHaveBeenCalledWith(band, artistOf(band));
+});
+
+// ── What it draws ─────────────────────────────────────────────────────────────
+//
+// The style values handed to its lanes, titles and blocks, worked out by hand
+// from the fixture's times: 170 px per hour from the day's 06:00, a lane 70 tall
+// per row, a 32 px title strip above each lane. The sheet is 700 wide here
+// (the test window's 750, capped at MAX_CONTENT_WIDTH).
+
+type Style = Record<string, unknown>;
+const styleOf = (node: TestInstance): Style => (StyleSheet.flatten(node.props.style) ?? {}) as Style;
+
+function viewAbove(node: TestInstance, test: (style: Style) => boolean): Style {
+  for (let n: TestInstance | null = node.parent; n !== null; n = n.parent) {
+    if (n.type === 'View' && test(styleOf(n))) {
+      return styleOf(n);
+    }
+  }
+  throw new Error('no such view above the node');
+}
+
+const blockOf = (name: string): Style =>
+  viewAbove(screen.getAllByText(name)[0], (s) => s.position === 'absolute' && typeof s.width === 'number' && typeof s.height === 'number');
+const laneOf = (name: string): Style =>
+  viewAbove(screen.getAllByText(name)[0], (s) => s.borderBottomWidth === 2 && typeof s.height === 'number');
+const titleOf = (title: string): Style =>
+  viewAbove(screen.getByText(title), (s) => s.position === 'absolute' && typeof s.top === 'number');
+
+const byId = (eventId: string): DbEvent => EVENTS.find((e) => e.eventId === eventId)!;
+
+describe('what it draws', () => {
+  // CRYSTAL LAKE (Sea Shepherd, 14:00–14:40) and EXORCIZPHOBIA (Obscure,
+  // 14:30–15:05), Wednesday.
+  const CLASH = [byId('7020'), byId('7022')];
+
+  it('cuts the day to the clash, widened evenly to the sheet', async () => {
+    await render(<FeatureProviders><ConflictTimeline events={CLASH} onBlockPress={jest.fn()} /></FeatureProviders>);
+    // 13:30–15:35 (half an hour either side) is 354 px; widened to 700 around
+    // its middle, 14:32:30, which is 8 h 32 min 30 s after 06:00.
+    const range = screen.getByTestId('conflict-timeline-range');
+    expect(styleOf(range).width).toBeCloseTo(700);
+    const canvas = styleOf(range.children[0] as TestInstance);
+    expect(canvas.transform).toEqual([{ translateX: expect.closeTo(-(8.5417 * 170 - 350), 1) }]);
+  });
+
+  it('gives each set a lane of its own category, one row each, titled in order', async () => {
+    await render(<FeatureProviders><ConflictTimeline events={CLASH} onBlockPress={jest.fn()} /></FeatureProviders>);
+    expect(laneOf('CRYSTAL LAKE').height).toBe(70);
+    expect(laneOf('EXORCIZPHOBIA').height).toBe(70);
+    expect([titleOf('Sea Shepherd').top, titleOf('Obscure').top]).toEqual([0, 102]);
+    expect(blockOf('EXORCIZPHOBIA').left).toBeCloseTo(8.5 * 170);
+    expect(blockOf('EXORCIZPHOBIA').width).toBeCloseTo(35 * 170 / 60);
+  });
+
+  it('stacks overlapping sets of one category in rows', async () => {
+    // LINOCUT LABORATORY and LOCAL ART BRUTAL WORKSHOPS, Lectures and workshops,
+    // both Wednesday 10:00–17:00.
+    const workshops = EVENTS.filter((e) => ['LINOCUT LABORATORY', 'LOCAL ART BRUTAL WORKSHOPS'].includes(artistOf(e)?.name ?? '')
+      && getFestivalDayStart(e.dateFrom) === Date.parse('2025-08-06T06:00:00+02:00'));
+    expect(workshops).toHaveLength(2);
+    await render(<FeatureProviders><ConflictTimeline events={workshops} onBlockPress={jest.fn()} /></FeatureProviders>);
+    expect(laneOf('LINOCUT LABORATORY').height).toBe(140);
+    expect([blockOf('LINOCUT LABORATORY').top, blockOf('LOCAL ART BRUTAL WORKSHOPS').top].sort()).toEqual([0, 70]);
+  });
 });

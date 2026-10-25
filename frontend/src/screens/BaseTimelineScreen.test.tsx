@@ -1,16 +1,18 @@
 import React from 'react';
-import { ScrollView } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import type { TestInstance } from 'test-renderer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BaseTimelineScreen } from './BaseTimelineScreen';
 import { PerfProviders } from '../../tests/setup/PerfProviders';
 import { useLens } from '../context/LensContext';
 import { useTimelineFilter } from '../context/TimelineFilterContext';
-import { createDataCollector, getCategories, populateCache } from '../cache/cacheService';
+import { createDataCollector, getCategories, hydrateInterests, populateCache, setInterest } from '../cache/cacheService';
 import { getScroll, setHiddenCategories, setLensScope, setSelectedDay } from '../store/uiStatePersistence';
 import { defaultScrollX, eventScrollTarget } from '../components/timeline/timelineLayout';
 import { setCurrentTimeMs } from '../utils/clock';
 import { DEFAULT_SCOPE, type LensScope } from '../utils/interestUtils';
+import { getCategoryLocalized } from '../utils/localization';
 import type { DbArtist, DbCategory, DbEvent, DbStage } from '../types/backend';
 
 import artistsFixture from '../../tests/fixtures/generated/ba2025/artists.json';
@@ -321,4 +323,176 @@ it('going to a set scrolls to its time and its lane', async () => {
   // The exact lane offset is layout (fixtureLayout.test.ts); here, that it moves.
   expect(scrollCommands(SCROLL_Y)).toEqual([{ y: expect.any(Number), animated: true }]);
   expect(scrollCommands(SCROLL_Y)[0].y).toBeGreaterThan(0);
+});
+
+// ── What the timeline draws ───────────────────────────────────────────────────
+//
+// The style values the screen hands to its blocks, lanes and lane titles: where
+// each one is drawn and how big. Jest lays nothing out, so this is the only
+// layer that sees these numbers for every element; the web E2E measures a few of
+// them in a real browser. Expected values are worked out by hand from the
+// fixture's times: 170 px per hour from the day's 06:00, a lane 70 tall (68 for
+// the block, less the lane's 2 px border), a 32 px title strip above it.
+
+type Style = Record<string, unknown>;
+
+const styleOf = (node: TestInstance): Style => (StyleSheet.flatten(node.props.style) ?? {}) as Style;
+
+/** The nearest host View above `node` whose style passes `test`. */
+function viewAbove(node: TestInstance, test: (style: Style) => boolean): TestInstance {
+  for (let n: TestInstance | null = node.parent; n !== null; n = n.parent) {
+    if (n.type === 'View' && test(styleOf(n))) {
+      return n;
+    }
+  }
+  throw new Error('no such view above the node');
+}
+
+/** Every node below `node` that passes `test`. */
+function nodesBelow(node: TestInstance, test: (n: TestInstance) => boolean): TestInstance[] {
+  const found: TestInstance[] = [];
+  for (const child of node.children) {
+    if (typeof child !== 'string') {
+      if (test(child)) {
+        found.push(child);
+      }
+      found.push(...nodesBelow(child, test));
+    }
+  }
+  return found;
+}
+
+const isBlockBox = (s: Style): boolean => s.position === 'absolute' && typeof s.width === 'number' && typeof s.height === 'number';
+
+/** A block's box: the absolute view sized by time. */
+function blockOf(name: string): Style {
+  return styleOf(viewAbove(screen.getAllByText(name)[0], isBlockBox));
+}
+
+/** A block's events row: the lane's own view, with the 2 px bottom border. */
+function laneOf(name: string): Style {
+  return styleOf(viewAbove(screen.getAllByText(name)[0], (s) => s.borderBottomWidth === 2 && typeof s.height === 'number'));
+}
+
+/** A lane title's box, in the overlay beside the scroller. */
+function titleOf(title: string): Style {
+  return styleOf(viewAbove(screen.getByText(title), (s) => s.position === 'absolute' && typeof s.top === 'number'));
+}
+
+/** Each conflict bar over a block, as [left, width]: the striped boxes hung from its bottom edge. */
+function barsOf(name: string): [unknown, unknown][] {
+  const block = viewAbove(screen.getAllByText(name)[0], isBlockBox);
+  return nodesBelow(block, (n) => typeof n.props.width === 'number' && styleOf(n).bottom === -1)
+    .filter((n) => n.type !== 'View')
+    .map((n) => [styleOf(n).left, n.props.width]);
+}
+
+/**
+ * Mounts the whole day. Under Jest each act() lets the progressive mount grow by
+ * one slice, so a wide day takes several; this goes on until the number of
+ * blocks stops changing.
+ */
+async function settleWholeDay(): Promise<void> {
+  let blocks = -1;
+  for (let i = 0; i < 20; i++) {
+    await settle();
+    const now = screen.queryAllByText(/^[0-9]{2}:[0-9]{2}–[0-9]{2}:[0-9]{2}$/).length;
+    if (now === blocks) {
+      return;
+    }
+    blocks = now;
+  }
+  throw new Error('the day never finished mounting');
+}
+
+const TUE = WED - DAY_MS;
+const PX_PER_MIN = 170 / 60;
+const titleOfCategory = (categoryId: string): string =>
+  getCategoryLocalized((categoriesFixture as unknown as DbCategory[]).find((c) => c.categoryId === categoryId)!.localized, 'title');
+
+async function mountScreen(screenKey: string, day: number, filterArtist: (a: DbArtist) => boolean, useSubRows = false) {
+  setSelectedDay(screenKey, day);
+  await render(
+    <PerfProviders>
+      <>
+        <Controls />
+        <BaseTimelineScreen
+          title="Timeline"
+          screenKey={screenKey}
+          BottomBarComponent={NoBottomBar}
+          filterArtist={filterArtist}
+          useSubRows={useSubRows}
+        />
+      </>
+    </PerfProviders>,
+  );
+  await settleWholeDay();
+}
+
+describe('what the timeline draws', () => {
+  // Wednesday's Program has five lanes, in category order: Marshall, Sea
+  // Shepherd, Obscure, KAL stage, Octagon. Each takes 32 + 70 = 102.
+  it('draws a set at its time, as long as it lasts, in its lane', async () => {
+    await mountScreen('net-block', WED, playable);
+    // EXORCIZPHOBIA, Obscure, 14:30–15:05: 8 h 30 after 06:00, 35 minutes long.
+    const block = blockOf('EXORCIZPHOBIA');
+    expect(block.left).toBeCloseTo(8.5 * 170);
+    expect(block.width).toBeCloseTo(35 * PX_PER_MIN);
+    expect(block.top).toBe(0);
+    expect(block.height).toBe(68);
+    expect(laneOf('EXORCIZPHOBIA').height).toBe(70);
+  });
+
+  it('draws a set after midnight on the day it belongs to, past the 24:00 mark', async () => {
+    await mountScreen('net-night', WED, playable);
+    const block = blockOf('THRASH COBRA');
+    expect(block.left).toBeCloseTo(18.5 * 170);
+    expect(block.width).toBeCloseTo(45 * PX_PER_MIN);
+  });
+
+  it('stacks the lane titles, each on its own lane', async () => {
+    await mountScreen('net-titles', WED, playable);
+    expect([titleOf('Marshall'), titleOf('Sea Shepherd'), titleOf('Obscure'), titleOf('KAL stage'), titleOf('Octagon')]
+      .map((t) => [t.top, t.height])).toEqual([[0, 32], [102, 32], [204, 32], [306, 32], [408, 32]]);
+  });
+
+  it('draws a conflict bar over just the overlapping part of each clashing Must-see', async () => {
+    // CRYSTAL LAKE (Sea Shepherd, 14:00–14:40) and EXORCIZPHOBIA (14:30–15:05)
+    // overlap 14:30–14:40.
+    await setInterest('ba2025', '35', 'will_go');
+    await setInterest('ba2025', '216', 'will_go');
+    await hydrateInterests('ba2025');
+    try {
+      await mountScreen('net-bars', WED, playable);
+      const [[crystalLeft, crystalWidth], ...moreCrystal] = barsOf('CRYSTAL LAKE');
+      const [[exorLeft, exorWidth], ...moreExor] = barsOf('EXORCIZPHOBIA');
+      expect([moreCrystal, moreExor]).toEqual([[], []]);
+      // 30 minutes into CRYSTAL LAKE; at EXORCIZPHOBIA's very start; 10 minutes each.
+      expect(crystalLeft).toBeCloseTo(30 * PX_PER_MIN);
+      expect(crystalWidth).toBeCloseTo(10 * PX_PER_MIN);
+      expect(exorLeft).toBe(0);
+      expect(exorWidth).toBeCloseTo(10 * PX_PER_MIN);
+    } finally {
+      await setInterest('ba2025', '35', 'none');
+      await setInterest('ba2025', '216', 'none');
+      await hydrateInterests('ba2025');
+    }
+  });
+
+  // Tuesday's Support Program: Meet & Greet (category 6), the exhibitions
+  // (7: KUNDY CREW and ART-BRUT-ALL, both 13:00–01:00, so two rows), the pit
+  // (8) and the museum (9).
+  it('stacks overlapping support sets in rows, the lane as tall as its rows', async () => {
+    await mountScreen('net-support', TUE, (a) => !a.isPlayable, true);
+    expect(laneOf('KUNDY CREW').height).toBe(140);
+    expect(blockOf('KUNDY CREW').top).toBe(0);
+    expect(blockOf('ART-BRUT-ALL').top).toBe(70);
+    // 13:00 is 7 h after 06:00; twelve hours long.
+    expect(blockOf('ART-BRUT-ALL').left).toBeCloseTo(7 * 170);
+    expect(blockOf('ART-BRUT-ALL').width).toBeCloseTo(12 * 170);
+    expect(laneOf('PIT OF DOOM').height).toBe(70);
+    // The titles below the two-row lane move down by its extra row.
+    expect([titleOfCategory('6'), titleOfCategory('7'), titleOfCategory('8'), titleOfCategory('9')].map((t) => titleOf(t).top))
+      .toEqual([0, 102, 274, 376]);
+  });
 });
