@@ -8,6 +8,11 @@
 # only reports. Durations stay advisory: the baseline is machine-specific, so
 # re-record it locally with `npm run test:perf:baseline` before trusting a
 # duration change; render counts are comparable anywhere.
+#
+# Last, warns on any render issue (initial or redundant updates) that differs
+# from the committed .reassure/render-issues.json, better or worse
+# (perf-issues.ts). That check never fails the unit, so it runs after the gate
+# whatever the gate decided.
 
 set -euo pipefail
 cd "$(dirname "$0")/../.."
@@ -18,4 +23,7 @@ if [ ! -f .reassure/baseline.perf ]; then
 fi
 
 npm run --silent test:perf:measure
-npm run --silent test:perf:gate
+status=0
+npm run --silent test:perf:gate || status=$?
+npm run --silent test:perf:issues
+exit "$status"

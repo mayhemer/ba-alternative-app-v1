@@ -1,0 +1,5 @@
+{
+  "My plan: a new minute": {"initialUpdateCount":0,"redundantUpdates":[2]},
+  "My plan: one pick changed": {"initialUpdateCount":0,"redundantUpdates":[2]},
+  "My plan: switching to another day": {"initialUpdateCount":0,"redundantUpdates":[1,2]}
+}
