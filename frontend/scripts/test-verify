@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# ── The full batch: everything that tests this working tree on this Mac ────────
+#
+#   npm run verify              about 7 min (more after `npm run clean:e2e:ios`)
+#
+# Ends with the iOS simulator E2E, on a Release build of this tree made here
+# first; it installs the app on the simulator. The physical Android phone suite
+# tests an EAS build, not this tree, so it is printed as a follow-up.
+
+source "$(dirname "$0")/lib/batch.sh"
+
+unit "Types" test:types
+unit "Lint" test:lint
+unit "Unit + integration" test:unit
+unit "Expo doctor" test:doctor
+unit "Web end-to-end" test:e2e:web
+unit "Performance regressions" test:perf
+unit "iOS simulator end-to-end" test:e2e:ios
+
+passed "everything that tests this working tree is green"
+cat <<'NEXT'
+
+Not covered above — these test an EAS build, so rebuild after app changes:
+
+  npm run build:perf:android       then, with the phone connected over USB:
+  npm run install:perf:android     latest `perf` build onto the phone
+  npm run test:perf:device         frame, start-up and memory measurements
+
+NEXT

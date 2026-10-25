@@ -27,15 +27,15 @@
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { adb, type Device, installedVersion, PACKAGE, pickDevice, shell } from './lib/adb.ts';
-import { batteryTempC, coldStart, coolDown, FRAMES_READ, FRAMES_RESET, type FramePhases, type Frames, type Memory, markGapMs, parseFramePhases, parseFrames, readMemory } from './lib/androidMetrics.ts';
-import { drift, inject, pushInjector, type Step } from './lib/androidInput.ts';
-import { dumpUi, find, tap, tapWhenVisible, type UiNode, waitFor } from './lib/androidUi.ts';
-import { buildByVersion, staleness } from './lib/eas.ts';
-import { type FixtureProcess, startFixtureProcess } from './lib/fixtureProcess.ts';
-import { EXIT, parseArgs, run, skip, sleep } from './lib/proc.ts';
+import { adb, type Device, installedVersion, PACKAGE, pickDevice, shell } from '../lib/adb.ts';
+import { batteryTempC, coldStart, coolDown, FRAMES_READ, FRAMES_RESET, type FramePhases, type Frames, type Memory, markGapMs, parseFramePhases, parseFrames, readMemory } from '../lib/androidMetrics.ts';
+import { drift, inject, pushInjector, type Step } from '../lib/androidInput.ts';
+import { dumpUi, find, tap, tapWhenVisible, type UiNode, waitFor } from '../lib/androidUi.ts';
+import { buildByVersion, staleness } from '../lib/eas.ts';
+import { type FixtureProcess, startFixtureProcess } from '../lib/fixtureProcess.ts';
+import { EXIT, parseArgs, run, skip, sleep } from '../lib/proc.ts';
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const args = parseArgs(process.argv.slice(2));
 const RUNS = Number(args.runs ?? 7);
 const WARMUP = Number(args.warmup ?? 1);

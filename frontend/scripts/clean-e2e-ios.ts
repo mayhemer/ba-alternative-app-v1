@@ -3,15 +3,16 @@
 //   npm run clean:e2e:ios
 //   npm run clean:e2e:ios -- --sim "iPhone 17"   the simulator a --sim run used
 //
-// Deletes only what the next `npm run test:e2e:ios` rebuilds by itself:
+// Deletes only what the next iOS E2E run rebuilds or re-downloads by itself:
 //
 //   - the test simulator, erased to factory state (the bulk, ~3 GB). Every app
 //     and setting on it goes, not just this one; the runner boots it, installs
 //     the app and re-applies its keyboard settings. Its first boot afterwards
 //     is slow.
-//   - downloaded EAS simulator builds (re-downloaded; Android APKs are kept)
-//   - the local Release build in ios/build/e2e (rebuilt by test:e2e:ios:local,
+//   - the local Release build in ios/build/e2e (rebuilt by test:e2e:ios,
 //     from scratch, which takes minutes)
+//   - downloaded EAS simulator builds (re-downloaded by test:e2e:ios:eas;
+//     Android APKs are kept)
 //   - Maestro's debug output in ~/.maestro/tests, and the last run's reports
 
 import { existsSync, readdirSync, rmSync } from 'node:fs';
@@ -73,4 +74,4 @@ remove(join(ROOT, 'ios', 'build', 'e2e'), 'local simulator build');
 remove(join(homedir(), '.maestro', 'tests'), 'Maestro debug output');
 remove(join(ROOT, 'e2e-results', 'ios'), 'last run\'s reports');
 
-console.log(`\nfreed ~${(freedMb / 1024).toFixed(1)} GB; the next test:e2e:ios rebuilds all of it`);
+console.log(`\nfreed ~${(freedMb / 1024).toFixed(1)} GB; the next iOS E2E run rebuilds all of it`);

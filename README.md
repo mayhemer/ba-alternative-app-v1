@@ -260,7 +260,7 @@ repository.
 # frontend
 cd frontend && npm install
 npm run web            # or: npm start, npm run start:device:ios
-npm run tscheck        # strict type check, no unused locals/params
+npm test               # types, lint, unit, web E2E (see FRONTEND.md › Testing)
 
 # backend
 cd backend && npm install

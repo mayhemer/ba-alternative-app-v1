@@ -43,7 +43,7 @@ jobs:
 
       - run: npm ci
 
-      - run: npm run tscheck
+      - run: npm run test:types
 
       - run: npx eslint src
 
@@ -151,7 +151,7 @@ jobs:
           git checkout --quiet "$CURRENT"
           mv "$RUNNER_TEMP/baseline.perf" .reassure/baseline.perf
           npm ci
-          npm run test:perf
+          npm run test:perf:measure
 
       # Render counts are the deterministic part of the comparison, so they are
       # gated even here; the job as a whole stays advisory.

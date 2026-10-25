@@ -37,20 +37,27 @@ ESLint extension in VSCode
 
 ## Testing
 
-One command runs everything that does not need a device:
+Each kind of test is a **unit**: an npm script that runs on its own. **Batches** run a list of
+units, cheapest first, stop at the first failure and end with how long each unit took
+(`scripts/test-*`, sharing `scripts/lib/batch.sh`). A unit that cannot run — a missing simulator,
+Maestro, or prebuilt `ios/` — fails its batch and prints how to fix the cause.
 
 ```bash
-npm run verify      # types → lint → jest (×3 platforms) → performance → web E2E
-npm run verify -- --fast   # the same without performance
+npm run commit-check   # ~25 s   types → lint → unit
+npm test               # ~1 min  types → lint → unit → web E2E
+npm run verify         # ~7 min  types → lint → unit → doctor → web E2E → performance → iOS E2E
 ```
 
-| Layer | Command | What it is for |
+| Unit | Command | What it is for |
 |---|---|---|
-| Unit / integration | `npm test` | Logic, caching, sync, interests, auth storage. Runs three times, once per platform preset |
-| Performance | `npm run test:perf` | Render-count and JS-duration regressions, vs `.reassure/baseline.perf`. `npm run test:perf:gate` then fails on any render count that went up — Reassure itself only reports |
-| Web end-to-end | `npm run test:e2e:web` | Real browser against the exported build. Desktop runs every test; tests tagged `@layout` also run on a phone in portrait and in landscape (the compact and short layouts) |
-| iOS end-to-end | `npm run test:e2e:ios` | Maestro flows on the iOS Simulator, against the `e2e-ios-sim` build. **Not** in `verify` — it tests the last EAS build, not the working tree |
-| Device performance | `npm run test:perf:device` | Frames, start-up and memory on the physical Android phone. **Not** in `verify` — needs the phone, and takes 15-25 min |
+| Types | `npm run test:types` | Strict type check, no unused locals or parameters |
+| Lint | `npm run test:lint` | ESLint over `src/` |
+| Unit / integration | `npm run test:unit` | Logic, caching, sync, interests, auth storage. Runs three times, once per platform preset. `-- <path>` runs one file; `test:unit:watch` re-runs on change |
+| Expo doctor | `npm run test:doctor` | `expo-doctor`, pinned: dependency versions against the SDK, duplicates, peer dependencies, the app config. Needs network. `react-native-render-html` is excluded from its "unmaintained" check (`expo.doctor` in `package.json`) |
+| Performance | `npm run test:perf` | Render-count and JS-duration regressions, vs `.reassure/baseline.perf`: `test:perf:measure` (Reassure, which only reports), then `test:perf:gate`, which fails on any render count that went up |
+| Web end-to-end | `npm run test:e2e:web` | Exports the web build, then a real browser against it. Desktop runs every test; tests tagged `@layout` also run on a phone in portrait and in landscape (the compact and short layouts) |
+| iOS end-to-end | `npm run test:e2e:ios` | Maestro flows on the iOS Simulator, against a Release build of the working tree made here first. Installs the app on the simulator |
+| Device performance | `npm run test:perf:device` | Frames, start-up and memory on the physical Android phone. In no batch — needs the phone, tests an EAS build, and takes 15-25 min |
 
 Conventions worth knowing before adding a test:
 
@@ -73,19 +80,24 @@ Conventions worth knowing before adding a test:
 
 ### Native end-to-end (iOS Simulator)
 
-`npm run test:e2e:ios` boots a simulator (`--sim "<name>"`, default iPhone 17 Pro), installs the
-newest `e2e-ios-sim` build from EAS, serves the fixtures on `:4010` and runs every flow in
+`npm run test:e2e:ios` builds the app, boots a simulator (`--sim "<name>"` or `IOS_SIM`, default
+iPhone 17 Pro), installs the build, serves the fixtures on `:4010` and runs every flow in
 `e2e/native/` with Maestro. The simulator shares the Mac's network, so the build's
 `http://localhost:4010` reaches the server with no further setup.
 
-It tests a **built binary**, not your working tree, and prints how far behind HEAD that build is.
-After app changes, `npm run build:e2e:ios` first. To use a locally built simulator app instead of
-EAS, pass `--app path/to/App.app`; nothing else in the runner changes.
+The build is a Release simulator build made with `xcodebuild` from the prebuilt `ios/` folder, into
+`ios/build/e2e`, with the `e2e-ios-sim` profile's env from `eas.json` (`scripts/lib/iosLocalBuild.ts`).
+It covers the working tree's JS, and its native code as of the last `npm run prebuild:ios` — run that
+first after changing `app.json`, a config plugin or a native dependency. The first build takes about
+7 minutes, later ones about one.
 
-`npm run clean:e2e:ios` frees what the suite leaves on disk, about 3.5 GB. It erases the test
-simulator to factory state (every app on it, not just this one), and deletes the downloaded simulator
-builds, Maestro's debug output and the last reports. The next run rebuilds all of it, at the cost of a
-slower first boot and a fresh download.
+`npm run test:e2e:ios:eas` tests the newest EAS `e2e-ios-sim` build instead (`npm run build:e2e:ios`)
+and prints how far behind HEAD it is; `--app path/to/App.app` tests any other simulator app.
+
+`npm run clean:e2e:ios` frees what the suite leaves on disk, about 3.5 GB plus the local build. It
+erases the test simulator to factory state (every app on it, not just this one), and deletes the
+local and downloaded simulator builds, Maestro's debug output and the last reports. The next run
+rebuilds all of it, at the cost of a slower first boot and a from-scratch build.
 
 Two things to know when writing flows:
 
@@ -232,14 +244,14 @@ eas config --profile preview --platform ios
 | `preview` | **Release**, self-contained, ad-hoc iOS / `.apk` Android | testing on real devices + inviting testers |
 | `production` | Release, App Store profile / `.aab` | store submission |
 | `perf` | `preview` + fixture API, ba2025, perf marker, plain HTTP allowed | `test:perf:device` on the Android phone |
-| `e2e-ios-sim` | Release **simulator** build + fixture API, ba2025 | `test:e2e:ios` |
+| `e2e-ios-sim` | Release **simulator** build + fixture API, ba2025 | `test:e2e:ios:eas` (`test:e2e:ios` builds the same locally) |
 
 ```bash
 npm run build:preview:ios       # eas build -p ios --profile preview
 npm run build:preview:android   # eas build -p android --profile preview
 npm run build:perf:android      # eas build -p android --profile perf
 npm run build:e2e:ios           # eas build -p ios --profile e2e-ios-sim
-npm run doctor                  # expo-doctor; run before every build
+npm run test:doctor             # expo-doctor; run before every build
 ```
 
 `appVersionSource` is `remote`, so EAS owns the build counter — do **not** put `ios.buildNumber` or

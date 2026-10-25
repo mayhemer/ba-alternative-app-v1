@@ -1,6 +1,6 @@
 // ── Render-count gate over the last Reassure comparison ──────────────────────
 //
-//   node --experimental-strip-types scripts/check-render-counts.ts
+//   npm run test:perf:gate     (part of npm run test:perf)
 //
 // Reassure's compare step only *reports*: it exits 0 however far a scenario
 // regressed, so on its own the performance suite can never fail a run. This
@@ -23,7 +23,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const OUTPUT = join(ROOT, '.reassure', 'output.json');
 
 type Issues = { initialUpdateCount?: number; redundantUpdates?: number[] };

@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# ── The commit batch: what a commit should never break ────────────────────────
+#
+#   npm run commit-check        about 25 s
+#
+# Types, lint and the unit suite: the checks fast enough to run on every
+# commit. `npm test` adds the web E2E; `npm run verify` everything else.
+
+source "$(dirname "$0")/lib/batch.sh"
+
+unit "Types" test:types
+unit "Lint" test:lint
+unit "Unit + integration" test:unit
+
+passed "commit check green"

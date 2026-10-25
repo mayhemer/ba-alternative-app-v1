@@ -1,8 +1,8 @@
 // ── Native E2E on the iOS Simulator ───────────────────────────────────────────
 //
-//   npm run test:e2e:ios                      latest EAS `e2e-ios-sim` build
-//   npm run test:e2e:ios:local                builds the working tree here first
-//   npm run test:e2e:ios -- --app path/X.app  a local simulator build instead
+//   npm run test:e2e:ios                      builds the working tree here first
+//   npm run test:e2e:ios:eas                  latest EAS `e2e-ios-sim` build
+//   npm run test:e2e:ios -- --app path/X.app  any other simulator app
 //   npm run test:e2e:ios -- --sim "iPhone 17" a different simulator
 //   npm run test:e2e:ios -- --show            bring up the Simulator window
 //
@@ -11,27 +11,27 @@
 // reaches it), runs every Maestro flow in e2e/native, and exits with Maestro's
 // result.
 //
-// It tests a BUILT BINARY. Anything changed since that build is not covered,
-// which is why it prints where the build came from — rebuild with
-// `npm run build:e2e:ios` after app changes. `--local` skips EAS: it makes the
-// same Release simulator build with xcodebuild from the prebuilt ios/ folder
-// (see lib/iosLocalBuild.ts), so the run covers the working tree's JS — and its
-// native code as of the last `npm run prebuild:ios`. `--app` swaps in any other
+// It tests a BUILT BINARY. By default that is a Release simulator build made
+// here with xcodebuild from the prebuilt ios/ folder (see lib/iosLocalBuild.ts):
+// the working tree's JS, and its native code as of the last
+// `npm run prebuild:ios`. `--eas` takes the newest EAS `e2e-ios-sim` build
+// instead and prints how far behind HEAD it is — rebuild with
+// `npm run build:e2e:ios` after app changes. `--app` swaps in any other
 // simulator app without touching the rest of this script.
 //
 // Exit codes: 0 pass, 1 fail, 4 skipped (a prerequisite is missing; the reason
-// and the fix are printed last) — `verify` fails on a skip too.
+// and the fix are printed last) — the test batches fail on a skip too.
 
 import { existsSync, mkdirSync, rmSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { fetchArtifact, findAppBundle, latestBuild, staleness } from './lib/eas.ts';
-import { startFixtureProcess } from './lib/fixtureProcess.ts';
-import { buildLocalSimulatorApp } from './lib/iosLocalBuild.ts';
-import { EXIT, has, must, parseArgs, run, skip } from './lib/proc.ts';
-import { findSimulator, simulatorName } from './lib/simulator.ts';
+import { fetchArtifact, findAppBundle, latestBuild, staleness } from '../lib/eas.ts';
+import { startFixtureProcess } from '../lib/fixtureProcess.ts';
+import { buildLocalSimulatorApp } from '../lib/iosLocalBuild.ts';
+import { EXIT, has, must, parseArgs, run, skip } from '../lib/proc.ts';
+import { findSimulator, simulatorName } from '../lib/simulator.ts';
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const FLOWS = join(ROOT, 'e2e', 'native');
 const REPORTS = join(ROOT, 'e2e-results', 'ios');
 const BUNDLE_ID = 'cz.janbambas.ba';
@@ -87,14 +87,14 @@ async function resolveApp(): Promise<string> {
     return app;
   }
 
-  if (args.local === true) {
+  if (args.eas !== true) {
     const app = buildLocalSimulatorApp(ROOT, PROFILE);
     console.log(`app: ${app} (local Release build of the working tree)`);
     return app;
   }
 
   if (!has('eas')) {
-    skip('eas-cli is not installed, and no --app was given', 'npm install -g eas-cli');
+    skip('eas-cli is not installed, and --eas needs it', 'npm install -g eas-cli');
   }
   let build;
   try {
