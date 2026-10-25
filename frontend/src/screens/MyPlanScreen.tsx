@@ -30,7 +30,7 @@ import { colors } from '../styling/tokens';
 //
 // Today, now and next, one festival day at a time. The list's content comes from
 // buildPlanDay, with deterministic heights, so the FlatList needs no measuring
-// (getItemLayout) and scroll targets are computed. Spec: app/MY-PLAN-VIEW-DESIGN.md.
+// (getItemLayout) and scroll targets are computed. Spec: app/docs/frontend/design/my-plan.md.
 //
 // A FlatList, not a ScrollView rendering every item: it scrolled faster on
 // phones, a high-end one included. The cost is a second commit after every

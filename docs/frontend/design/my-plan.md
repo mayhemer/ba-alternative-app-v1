@@ -4,7 +4,7 @@ The "My plan" screen is the festival-time view of your own picks. It answers thr
 
 Status: **implemented** (2026-10-16, branch `my-plan-screen`). The interactive mockup is the visual reference: https://claude.ai/artifact/SV4HR7nh3sod4MrJxBKfw4 (private; open it with the owner's account). This document wins over the mockup wherever they differ.
 
-Related: [DESIGN.md](DESIGN.md) (app-wide design, layout modes, chrome).
+Related: [overview.md](../../general/design/overview.md) (app-wide design), [layout-and-chrome.md](layout-and-chrome.md) (layout modes, chrome).
 
 ---
 

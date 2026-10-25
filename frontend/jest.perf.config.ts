@@ -9,7 +9,7 @@ import type { Config } from 'jest';
 // One platform preset only. Reassure compares a baseline run against a current
 // one; comparing across presets would just measure the presets. What this gates
 // is render counts and JS durations in Node — emphatically NOT device
-// performance, which needs Hermes and real view creation. See ARCHITECTURE.md.
+// performance, which needs Hermes and real view creation. See docs/frontend/instructions/testing.md.
 
 const config: Config = {
   preset: 'jest-expo/ios',

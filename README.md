@@ -73,15 +73,11 @@ app/
 ├── frontend/     Expo (React Native) app — iOS, Android, web
 ├── backend/      AWS Lambda handlers (TypeScript) + tests and API fixtures
 ├── infra/        AWS CDK stack — everything above is deployed from here
-├── DESIGN.md     Product/architecture brief: data model, endpoints, sync design, layout rules
-├── FRONTEND.md   Frontend dev, EAS builds, credentials, deep-link setup
-├── BACKEND.md    Deployment runbook (certificates, DNS, cdk deploy)
+├── docs/         Design, build and run/test docs, split general / backend / frontend
 └── CLAUDE.md     Coding conventions, enforced during AI-assisted work
 ```
 
-`frontend/DESIGN.md` holds the UX decisions (navigation, interest states, timeline behaviour) and
-`frontend/ARCHITECTURE.md` the original frontend architecture agreement — kept as written, so the
-starting assumptions stay visible next to what the code became.
+[`docs/README.md`](docs/README.md) indexes every document.
 
 Roughly 8k lines of TypeScript/TSX in the frontend, ~1.5k in the Lambdas, plus the CDK stack;
 ~200 commits since late March 2026.
@@ -214,7 +210,7 @@ adapter (HTTP)  ──▶  cacheService (in-memory, single source for the UI)  �
 - The interest state is local-first with `updatedAt` timestamps; on sign-in, local and cloud sets
   are merged by latest-write-wins per `slug#artistId`.
 
-Two frontend problems were interesting enough to be written up in `DESIGN.md`, in case they are
+Two frontend problems were interesting enough to be written up in `docs/frontend/design/`, in case they are
 useful elsewhere:
 
 - **Progressive mount of the timeline.** A festival day is ~75 blocks over a canvas roughly nine
@@ -230,7 +226,7 @@ useful elsewhere:
 
 Builds go through EAS cloud builds. iOS is distributed ad-hoc by UDID (deliberately not TestFlight
 at this size), Android as a plain APK, and the web build is a static export served from
-`ba.janbambas.cz`. Details, including the deep-link `.well-known` files, are in `FRONTEND.md`.
+`ba.janbambas.cz`. Details, including the deep-link `.well-known` files, are in `docs/frontend/build/`.
 
 ---
 
@@ -260,7 +256,7 @@ repository.
 # frontend
 cd frontend && npm install
 npm run web            # or: npm start, npm run start:device:ios
-npm test               # types, lint, unit, web E2E (see FRONTEND.md › Testing)
+npm test               # types, lint, unit, web E2E (see docs/frontend/instructions/testing.md)
 
 # backend
 cd backend && npm install
@@ -273,8 +269,8 @@ cd infra && npm install
 npx cdk diff && npx cdk deploy
 ```
 
-Full deployment runbook (ACM certificate, DNS, first-deploy ordering) is in `BACKEND.md`; native
-build and credential setup in `FRONTEND.md`.
+Full deployment runbook (ACM certificate, DNS, first-deploy ordering) is in
+`docs/backend/build/deployment.md`; native build and credential setup in `docs/frontend/build/`.
 
 ---
 
@@ -284,7 +280,7 @@ The project is written almost entirely with AI assistance — Claude Code (Anthr
 driving the edits, with me as designer, reviewer and the one who says no. It is not "generated
 code"; the working method matters, and it is visible in the repository:
 
-- **Documents are the source of truth, and they are kept current.** `DESIGN.md` is a living brief,
+- **Documents are the source of truth, and they are kept current.** `docs/` is a living brief,
   not a historical artifact: architecture decisions, the data model, and the non-obvious layout and
   rendering rules are written down *and updated* whenever the code moves. `CLAUDE.md` holds the
   coding conventions the agent must follow (adapter/data-source separation, mandatory
@@ -317,7 +313,7 @@ Alpha. In practical terms:
   share, follow a friend.
 - The startup path now loads from a persisted cache first and only then checks the server, so a cold
   start works offline and the freshness check actually skips unchanged data (see *Client-side cache
-  and freshness* in `DESIGN.md`).
+  and freshness* in `docs/frontend/design/architecture/cache-freshness.md`).
 - What remains in that area is known and written down rather than fixed: the festival cache lives
   outside React and is bridged to it by a hand-rolled event emitter, so a consumer that forgets to
   subscribe silently reads stale data; and the sync service is a module singleton, which leaves a

@@ -65,4 +65,4 @@ When you add, rename, or delete a table or key in `tables.ts`, make the matching
 
 # Project description
 
-Read DESIGN.md side by this file to understand the UX and most of internal design and implementation details.  Keep DESIGN.md file up to date when the design of the project changes, new features are added.
+Read the docs in docs/ (index: docs/README.md) side by this file to understand the UX and most of internal design and implementation details.  Keep the docs up to date when the design of the project changes, new features are added.

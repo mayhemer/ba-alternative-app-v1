@@ -362,7 +362,7 @@ async function scenarioDaySwitch(): Promise<void> {
 
 async function scenarioTimelinePan(): Promise<void> {
   // Panning a settled day — the interaction the festival is spent in. No JS
-  // render should happen (DESIGN.md, progressive mount); what is left is the UI
+  // render should happen (docs/frontend/design/timeline.md, progressive mount); what is left is the UI
   // thread moving several hundred native views.
   //
   // Horizontal only: a day's lanes overflow the screen by about a lane at most

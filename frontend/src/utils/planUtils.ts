@@ -12,7 +12,7 @@ import type { DbArtist, DbEvent } from '../types/backend';
 // element's own model (components/plan/*.model.ts) decides everything it shows,
 // its height included, from the raw inputs handed to it here. Heights are
 // deterministic, so the screen aims its scrolls (itemOffsets) without
-// measuring. The visual spec is app/MY-PLAN-VIEW-DESIGN.md.
+// measuring. The visual spec is app/docs/frontend/design/my-plan.md.
 
 export type PlanInputs = ConflictInputs;
 

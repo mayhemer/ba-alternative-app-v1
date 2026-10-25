@@ -59,7 +59,7 @@ export const BLOCK_FONT_SIZE = 12;
 // A long set can span more than the viewport, leaving a wide colour box whose
 // title has scrolled off to the left. Rather than sticking the title to the
 // viewport's edge — which would mean animating against the scroll offset, and
-// so jittering (see DESIGN.md) — the title is simply repeated along the block.
+// so jittering (see docs/frontend/design/timeline-rendering.md) — the title is simply repeated along the block.
 //
 // The gap scales with the viewport rather than being fixed, because no single
 // interval suits both orientations: one dense enough for portrait litters a
@@ -172,7 +172,7 @@ export const TIMELINE_PRE_ROLL_MS = 15 * 60 * 1000;
  *
  * Derived where it is read rather than precomputed into storage: a precomputed
  * default has to win a race against the view that consumes it, and loses (see
- * DESIGN.md). Returns 0 — i.e. the window's left edge, 08:30 — when the day has
+ * docs/frontend/design/timeline-rendering.md). Returns 0 — i.e. the window's left edge, 08:30 — when the day has
  * no events to aim at.
  *
  * The 06:00 day boundary needs no special handling here: `dayStartMs` is already
