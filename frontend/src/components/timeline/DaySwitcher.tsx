@@ -1,25 +1,13 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 import { useShownDay, useTimelineFilter } from '../../context/TimelineFilterContext';
 import { DayButtons } from './DayButtons';
 import { dayButtonModels } from './DayButton.model';
-import { currentTimeMs } from '../../utils/clock';
+import { useFestivalToday } from '../../hooks/useMinuteNow';
 import { perfMark } from '../../utils/perfMarks';
 
 // Module-level component — registered as BottomBar ContentComponent for TimelineScreen.
 // Reads its own context directly; no props needed. The buttons themselves are
 // DayButtons, shared with My plan.
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-function getCurrentDayStart(festivalDays: number[]): number | null {
-  const now = currentTimeMs();
-  for (const dayStart of festivalDays) {
-    if (now >= dayStart && now < dayStart + DAY_MS) {
-      return dayStart;
-    }
-  }
-  return null;
-}
 
 type Props = {
   screenKey: string;
@@ -30,10 +18,16 @@ export function DaySwitcher({ screenKey }: Props) {
   // The day this switcher's screen shows, derived the same way the screen does,
   // so the active day is right on the first frame.
   const selectedDayStart = useShownDay(screenKey);
-  const currentDayStart = getCurrentDayStart(festivalDays);
+  // Today follows the shared minute clock: the notch moves at 06:00.
+  const currentDayStart = useFestivalToday(festivalDays);
 
+  // Read at the tap, not a dependency: a callback that changed with the shown
+  // day would render every button again on each pick.
+  const stateRef = useRef({ selectedDayStart, currentDayStart });
+  stateRef.current = { selectedDayStart, currentDayStart };
   const handlePick = useCallback((dayStart: number): void => {
-    if (dayStart === selectedDayStart && dayStart === currentDayStart) {
+    const { selectedDayStart: shown, currentDayStart: today } = stateRef.current;
+    if (dayStart === shown && dayStart === today) {
       requestScrollToNow(screenKey);
     } else {
       // Start of the day-switch mount the device perf runner times;
@@ -41,7 +35,7 @@ export function DaySwitcher({ screenKey }: Props) {
       perfMark('day:select');
       setSelectedDayStart(dayStart);
     }
-  }, [selectedDayStart, currentDayStart, requestScrollToNow, screenKey, setSelectedDayStart]);
+  }, [requestScrollToNow, screenKey, setSelectedDayStart]);
 
   const buttons = useMemo(
     () => dayButtonModels(festivalDays, { selected: selectedDayStart, today: currentDayStart }),

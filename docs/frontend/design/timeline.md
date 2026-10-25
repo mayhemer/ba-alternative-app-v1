@@ -22,6 +22,10 @@
 ## Now Line
 
 - Persistent vertical line at current time, labeled "NOW". Always visible. Does not auto-scroll.
+- **Source:** the shared minute clock (`useMinuteNow`, via `useNowX`), the same "now" as My plan and
+  the now pill: floored to the minute, moved on each minute boundary and when the app returns to the
+  foreground. The conflict sheet's now line follows it too. Written to a shared value outside React,
+  so a new minute re-renders nothing.
 
 ## Block Visual States
 
@@ -56,7 +60,9 @@ press and said nothing the block itself could not show.
 
 ## Bottom Bar
 
-- DaySwitcher.
+- DaySwitcher: the day buttons shared with My plan. The selected day is the one the screen shows;
+  today's red ▼ notch is the festival day that holds now (`festivalToday`), following the same minute
+  clock (`useFestivalToday`), so it moves to the next day at 06:00.
 
 ## Progressive mount
 

@@ -1,9 +1,10 @@
 import React from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import { AppState, ScrollView, StyleSheet } from 'react-native';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import type { TestInstance } from 'test-renderer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BaseTimelineScreen } from './BaseTimelineScreen';
+import { DaySwitcher } from '../components/timeline/DaySwitcher';
 import { PerfProviders } from '../../tests/setup/PerfProviders';
 import { useLens } from '../context/LensContext';
 import { useTimelineFilter } from '../context/TimelineFilterContext';
@@ -519,5 +520,71 @@ describe('rows from the sets shown', () => {
       await setInterest('ba2025', '219', 'none');
       await hydrateInterests('ba2025');
     }
+  });
+});
+
+// ── "Now" follows the minute clock ────────────────────────────────────────────
+//
+// The ruler's now line, the lanes' and the today notch on the day buttons all
+// follow the shared minute clock (useMinuteNow), as My plan does: "now" floored
+// to the minute, a tick on each minute boundary, and one more when the app comes
+// back to the foreground, where timers stalled while the phone was locked.
+
+/** Where the ruler's now line is drawn: its live animated left. */
+function nowLineX(): number {
+  const line = screen.getByTestId('now-line');
+  return (line.props.jestAnimatedStyle?.value?.left ?? StyleSheet.flatten(line.props.style).left) as number;
+}
+
+async function minuteTo(time: number, advanceMs: number): Promise<void> {
+  setCurrentTimeMs(time);
+  await act(async () => { await jest.advanceTimersByTimeAsync(advanceMs); });
+}
+
+describe('now', () => {
+  afterEach(() => { setCurrentTimeMs(NOW); });
+
+  it('draws the now line at the current minute', async () => {
+    setCurrentTimeMs(Date.parse('2025-08-06T14:00:30+02:00'));
+    await mountScreen('now-minute', WED, playable);
+    // 14:00 is 8 h after 06:00.
+    expect(nowLineX()).toBeCloseTo(8 * 170);
+  });
+
+  it('moves the now line on the minute boundary', async () => {
+    setCurrentTimeMs(Date.parse('2025-08-06T14:00:30+02:00'));
+    await mountScreen('now-tick', WED, playable);
+    // The next minute starts 30 s after the mount.
+    await minuteTo(Date.parse('2025-08-06T14:01:00+02:00'), 30 * 1000);
+    expect(nowLineX()).toBeCloseTo(8 * 170 + 170 / 60);
+  });
+
+  it('moves the now line when the app comes back to the foreground', async () => {
+    const appState = jest.spyOn(AppState, 'addEventListener');
+    setCurrentTimeMs(Date.parse('2025-08-06T14:00:00+02:00'));
+    await mountScreen('now-foreground', WED, playable);
+    // Locked for an hour and a half: no timer fired, then the app is active again.
+    setCurrentTimeMs(Date.parse('2025-08-06T15:30:00+02:00'));
+    await act(async () => {
+      for (const [type, listener] of appState.mock.calls) {
+        if (type === 'change') {
+          (listener as (state: string) => void)('active');
+        }
+      }
+    });
+    appState.mockRestore();
+    // 15:30 is 9 h 30 after 06:00.
+    expect(nowLineX()).toBeCloseTo(9.5 * 170);
+  });
+
+  it("moves the day buttons' today notch to the next day at 06:00", async () => {
+    const THU_DAY = WED + DAY_MS;
+    const FRI_DAY = THU_DAY + DAY_MS;
+    setCurrentTimeMs(Date.parse('2025-08-08T05:59:00+02:00'));
+    await render(<PerfProviders><DaySwitcher screenKey="now-notch" /></PerfProviders>);
+    expect(screen.queryByTestId(`day-today-${THU_DAY}`)).not.toBeNull();
+    await minuteTo(Date.parse('2025-08-08T06:00:00+02:00'), 60 * 1000);
+    expect(screen.queryByTestId(`day-today-${THU_DAY}`)).toBeNull();
+    expect(screen.queryByTestId(`day-today-${FRI_DAY}`)).not.toBeNull();
   });
 });

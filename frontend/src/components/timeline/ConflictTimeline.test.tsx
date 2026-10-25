@@ -1,12 +1,13 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import type { TestInstance } from 'test-renderer';
 import { ConflictTimeline } from './ConflictTimeline';
 import { FeatureProviders } from '../../../tests/setup/PerfProviders';
 import { createDataCollector, populateCache } from '../../cache/cacheService';
 import { getCategoryLocalized } from '../../utils/localization';
 import { getFestivalDayStart } from './timelineLayout';
+import { setCurrentTimeMs } from '../../utils/clock';
 import type { DbArtist, DbCategory, DbEvent, DbStage } from '../../types/backend';
 
 import artistsFixture from '../../../tests/fixtures/generated/ba2025/artists.json';
@@ -153,5 +154,39 @@ describe('what it draws', () => {
     await render(<FeatureProviders><ConflictTimeline events={workshops} onBlockPress={jest.fn()} /></FeatureProviders>);
     expect(laneOf('LINOCUT LABORATORY').height).toBe(140);
     expect([blockOf('LINOCUT LABORATORY').top, blockOf('LOCAL ART BRUTAL WORKSHOPS').top].sort()).toEqual([0, 70]);
+  });
+});
+
+// ── Its now line follows the minute clock ─────────────────────────────────────
+
+describe('now', () => {
+  /** Where the lanes' now lines are drawn: their live animated left. */
+  function nowLinesX(): number[] {
+    const lines: number[] = [];
+    const walk = (node: TestInstance): void => {
+      const animated = node.props.jestAnimatedStyle?.value as { left?: number } | undefined;
+      if (node.type === 'View' && animated?.left !== undefined) {
+        lines.push(animated.left);
+      }
+      node.children.forEach((child) => { if (typeof child !== 'string') { walk(child); } });
+    };
+    walk(screen.getByTestId('conflict-timeline'));
+    return lines;
+  }
+
+  afterEach(() => {
+    setCurrentTimeMs(null);
+    jest.useRealTimers();
+  });
+
+  it('moves while the sheet is open', async () => {
+    jest.useFakeTimers({ doNotFake: ['nextTick', 'queueMicrotask', 'performance', 'hrtime', 'Date'] });
+    setCurrentTimeMs(Date.parse('2025-08-06T14:20:00+02:00'));
+    await render(<FeatureProviders><ConflictTimeline events={[byId('7020'), byId('7022')]} onBlockPress={jest.fn()} /></FeatureProviders>);
+    // 14:20 is 8 h 20 after 06:00; one line per lane, two lanes.
+    expect(nowLinesX().map((x) => Math.round(x * 100) / 100)).toEqual([1416.67, 1416.67]);
+    setCurrentTimeMs(Date.parse('2025-08-06T14:21:00+02:00'));
+    await act(async () => { await jest.advanceTimersByTimeAsync(60 * 1000); });
+    expect(nowLinesX().map((x) => Math.round(x * 100) / 100)).toEqual([1419.5, 1419.5]);
   });
 });

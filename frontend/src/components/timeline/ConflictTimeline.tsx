@@ -1,12 +1,11 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { ScrollView, useWindowDimensions, View } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
-import { useSharedValue } from 'react-native-reanimated';
 import { useSelectedSlug } from '../../store/AppContext';
 import { useArtistEventMap, useArtists, useCategories, useStages } from '../../store/cacheStore';
 import { useInterest } from '../../context/InterestContext';
 import { computeConflictOverlaps } from '../../utils/conflictUtils';
-import { currentTimeMs } from '../../utils/clock';
+import { useNowX } from '../../hooks/useNowX';
 import { CategoryLane, type LaneEvent } from './CategoryLane';
 import { HourTicks } from './TimeRuler';
 import { LaneLabelOverlay } from './LaneLabelOverlay';
@@ -62,7 +61,7 @@ export function ConflictTimeline({ events, onBlockPress }: Props) {
   const range = conflictWindow(events, dayStart, viewWidth);
   const fromX = timeToX(range.from, dayStart);
   const windowWidth = timeToX(range.to, dayStart) - fromX;
-  const nowX = useSharedValue(timeToX(currentTimeMs(), dayStart));
+  const nowX = useNowX(dayStart);
 
   const lanes = useMemo<Lane[]>(() => {
     const artistById = new Map(artists.map((a) => [a.artistId, a]));
