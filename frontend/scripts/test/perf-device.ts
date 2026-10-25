@@ -115,6 +115,16 @@ if (/isStatusBarKeyguard=true/.test(shell(d, 'dumpsys window policy'))) {
   restore();
   skip('the device is locked', 'Set its screen lock to None — automation cannot type a PIN.');
 }
+// The app starts every session wiped. It reopens the edition it was last left
+// on, which may be one the fixtures do not have (an empty, endlessly loading
+// list), and keeps whatever another build cached: production data is newer
+// than the fixtures, so they would never replace it. The phone is for perf
+// runs only; nothing in the app is worth keeping.
+if (!/Success/.test(shell(d, `pm clear ${PACKAGE}`))) {
+  restore();
+  console.error(`\n✖ could not clear ${PACKAGE}'s data`);
+  process.exit(EXIT.FAIL);
+}
 shell(d, 'am kill-all');
 
 const size = /(\d+)x(\d+)/.exec(shell(d, 'wm size'))!;
@@ -167,6 +177,35 @@ async function settle(): Promise<number> {
   const tempC = await coolDown(d, MAX_TEMP);
   await sleep(SETTLE_MS);
   return tempC;
+}
+
+/**
+ * Waits until the launched app has fetched its edition, bios last, and had time
+ * to store it. Fails when the app never asked the fixture API, or asked for an
+ * edition the fixtures do not have.
+ */
+async function editionCached(): Promise<void> {
+  if (server === null) {
+    await sleep(10_000); // the live API: nothing to watch, so a generous wait
+    return;
+  }
+  let slug: string | undefined;
+  for (let waited = 0; slug === undefined && waited < 30_000; waited += 500) {
+    await sleep(500);
+    const requests = await server.requests();
+    slug = requests.map((r) => /^\/(ba\d+)\/bios/.exec(r)?.[1]).find((s) => s !== undefined);
+    if (slug === undefined && waited >= 15_000 && !requests.some((r) => /^\/ba\d+\//.test(r))) {
+      throw new Error('the app made no requests to the fixture API — is a perf build installed? '
+        + '(`npm run install:perf:android`)');
+    }
+  }
+  if (slug === undefined) {
+    throw new Error('the app did not fetch its edition from the fixture API within 30 s');
+  }
+  if (!existsSync(join(ROOT, 'tests', 'fixtures', 'generated', slug))) {
+    throw new Error(`the app opened ${slug}, which the fixtures do not have — a perf build defaults to ba2025`);
+  }
+  await sleep(3000); // parsing and writing it to storage
 }
 
 type Window = { frames: Frames; phases: FramePhases; lateMaxMs: number };
@@ -252,17 +291,11 @@ function listToMiddle(): void {
 // ── Scenarios ─────────────────────────────────────────────────────────────────
 
 async function scenarioColdStart(): Promise<void> {
-  let checked = false;
   await repeat('cold-start', async () => {
     const tempC = await settle();
     const c = coldStart(d, component);
     await sleep(2000);
     const mem = readMemory(d);
-    if (!checked && server !== null && !(await server.requests()).some((r) => /^\/ba\d+\//.test(r))) {
-      throw new Error('the app made no requests to the fixture API — is a perf build installed? '
-        + '(`npm run install:perf:android`)');
-    }
-    checked = true;
     return {
       sample: { firstFrameMs: c.firstFrameMs, readyMs: c.readyMs, ...memorySample(mem), tempC },
       line: `first frame ${c.firstFrameMs} ms, ready ${c.readyMs ?? 'n/a'} ms`,
@@ -291,7 +324,8 @@ async function scenarioDetailOpen(): Promise<void> {
   // image and the HTML bio rendered into it — the heaviest single tap in the app.
   await openSection('Artists');
   listToTop();
-  // Whichever artist is first: the phone keeps the edition it was last on.
+  // Whichever artist is first in the build's default edition, which the wiped
+  // app opens on.
   const row = dumpUi(d).find(isArtistRow);
   if (row === undefined) {
     throw new Error('no artist row on screen — is the lineup loaded?');
@@ -404,12 +438,11 @@ const RUNNERS: Record<string, () => Promise<void>> = {
 
 let failed = false;
 try {
-  // Every other scenario starts inside the running app, which cold-start leaves
-  // behind; without it, launch the app once, unmeasured.
-  if (!SCENARIOS.includes('cold-start')) {
-    coldStart(d, component);
-    await sleep(2000);
-  }
+  // The wiped app's first launch downloads the whole edition. Unmeasured, so
+  // every measured run, cold start included, starts from a filled cache; it also
+  // leaves the app running for the scenarios that start inside it.
+  coldStart(d, component);
+  await editionCached();
   for (const name of SCENARIOS) {
     if (RUNNERS[name] === undefined) {
       throw new Error(`unknown scenario "${name}" — one of ${ALL.join(', ')}`);

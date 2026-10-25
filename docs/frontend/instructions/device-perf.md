@@ -40,7 +40,11 @@ the screen by about one lane, so a vertical fling can only hit both ends.
 
 For repeatability the runner keeps the screen on, kills background processes, routes the fixture
 API over USB (`adb reverse`) and **switches Wi-Fi off for the run** — restored afterwards, including on
-Ctrl-C. It waits for the battery to cool before every repetition: Android 9 has no thermal service and
+Ctrl-C. It also **wipes the app's data** (`pm clear`) at the start of every session: the app would
+otherwise reopen whatever edition it was last left on, possibly one the fixtures do not have, and
+keep data another build cached, which the older fixtures never replace. The phone is for perf runs
+only. One unmeasured launch then downloads the build's default edition (ba2025), and the runner waits
+until the app has fetched its bios; it fails if the app asks for an edition the fixtures lack. It waits for the battery to cool before every repetition: Android 9 has no thermal service and
 the CPU sensors need root, so the battery is the only gauge available. After cooling it idles a fixed
 3 s, so every window starts from the same CPU state, and each scenario plays one unrecorded warm-up
 run first (`--warmup N`). Cold start waits for its marker with one blocked `logcat` on the phone
