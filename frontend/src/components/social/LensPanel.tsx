@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -7,7 +7,8 @@ import {
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text } from '../ui/Text';
-import { FriendAvatar } from './FriendAvatar';
+import { LensScopeRow } from './LensScopeRow';
+import { lensPanelModel, type LensScopeRowModel } from './LensPanel.model';
 import { useLens, useLensPanel } from '../../context/LensContext';
 import { useSocialData, useSocialActions } from '../../context/SocialContext';
 import { useAuth } from '../../context/AuthContext';
@@ -23,11 +24,6 @@ import {
   OVERLAY_PANEL_RADIUS,
   OVERLAY_PANEL_MAX_WIDTH,
 } from '../../styling/tokens';
-
-// The avatar is the tallest thing in a friend row, so it sets the row height.
-// Capping the trailing action slot to the same height keeps the row from
-// growing when the ✕ is swapped for the Cancel / Remove pair.
-const FRIEND_AVATAR_SIZE = 22;
 
 // ── Section header ──────────────────────────────────────────────────────────────
 
@@ -45,38 +41,6 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
     >
       {children}
     </Text>
-  );
-}
-
-// ── A selectable source row ──────────────────────────────────────────────────────
-
-type RowProps = {
-  active: boolean;
-  onPress: () => void;
-  children: React.ReactNode;
-};
-
-function ScopeRow({ active, onPress, children }: RowProps) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 10,
-        paddingHorizontal: 8,
-        borderRadius: 8,
-        backgroundColor: active ? colors.surfaceRaised : 'transparent',
-      }}
-    >
-      <Ionicons
-        name={active ? 'radio-button-on' : 'radio-button-off'}
-        size={18}
-        color={active ? colors.accent : colors.notInterested}
-        style={{ marginRight: 10 }}
-      />
-      {children}
-    </Pressable>
   );
 }
 
@@ -122,13 +86,35 @@ export function LensPanel() {
     [refreshFriend, refreshFromServer, setScope, close],
   );
 
+  const model = useMemo(
+    () => lensPanelModel({ scope, friends, pendingRemove, isLoggedIn, hasShare: myShare !== null }),
+    [scope, friends, pendingRemove, isLoggedIn, myShare],
+  );
+
+  // While armed, a friend's row is an escape hatch rather than a selector:
+  // tapping anywhere outside the explicit Remove backs out.
+  const handleRowPress = useCallback((row: LensScopeRowModel): void => {
+    if (row.friend?.confirming === true) {
+      setPendingRemove(null);
+    } else {
+      selectScope(row.scope);
+    }
+  }, [selectScope]);
+  const handleArm = useCallback((token: string): void => { setPendingRemove(token); }, []);
+  const handleDisarm = useCallback((): void => { setPendingRemove(null); }, []);
+
+  // Reads the lens at the tap, not as a dependency: a callback that changed
+  // with the lens would render every source row again on each lens change.
+  const scopeRef = useRef(scope);
+  scopeRef.current = scope;
   const handleRemoveFriend = useCallback(
     async (token: string) => {
       setPendingRemove(null);
-      if (scope.kind === 'friend' && scope.token === token) { setScope({ kind: 'all' }); }
+      const current = scopeRef.current;
+      if (current.kind === 'friend' && current.token === token) { setScope({ kind: 'all' }); }
       await removeFriend(token);
     },
-    [removeFriend, scope, setScope],
+    [removeFriend, setScope],
   );
 
   // The panel renders above NavigationContainer, so it navigates through the
@@ -216,84 +202,22 @@ export function LensPanel() {
           {/* ── SHOW ─────────────────────────────────────────────── */}
           <SectionLabel>Show</SectionLabel>
 
-          <ScopeRow active={scope.kind === 'all'} onPress={() => selectScope({ kind: 'all' })}>
-            <Text style={{ color: colors.textPrimary, fontSize: 15, flex: 1 }}>Everything</Text>
-          </ScopeRow>
-
-          <ScopeRow
-            active={scope.kind === 'me'}
-            onPress={() => selectScope({ kind: 'me', level: null })}
-          >
-            <Text style={{ color: colors.textPrimary, fontSize: 15, flex: 1 }}>My picks</Text>
-          </ScopeRow>
-
-          {friends.map((friend) => {
-            const active = scope.kind === 'friend' && scope.token === friend.token;
-            const confirming = pendingRemove === friend.token;
-            return (
-              <ScopeRow
-                key={friend.token}
-                active={active}
-                // While armed the row is an escape hatch rather than a selector:
-                // tapping anywhere outside the explicit Remove backs out.
-                onPress={() =>
-                  confirming
-                    ? setPendingRemove(null)
-                    : selectScope({ kind: 'friend', token: friend.token, level: null })
-                }
-              >
-                <FriendAvatar label={friend.label} avatarUrl={friend.avatarUrl} size={FRIEND_AVATAR_SIZE} />
-                <Text
-                  numberOfLines={1}
-                  style={{ color: colors.textPrimary, fontSize: 15, flex: 1, marginLeft: 8 }}
-                >
-                  {friend.label}
-                </Text>
-                {confirming ? (
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      height: FRIEND_AVATAR_SIZE,
-                    }}
-                  >
-                    <Pressable
-                      onPress={() => setPendingRemove(null)}
-                      hitSlop={8}
-                      style={{ paddingHorizontal: 10 }}
-                    >
-                      <Text style={{ color: colors.textSecondary, fontSize: 13 }}>Cancel</Text>
-                    </Pressable>
-                    <Pressable
-                      onPress={() => handleRemoveFriend(friend.token)}
-                      hitSlop={8}
-                      style={{ paddingLeft: 10 }}
-                    >
-                      <Text style={{ color: colors.danger, fontSize: 13, fontFamily: 'Bold-Default' }}>
-                        Remove
-                      </Text>
-                    </Pressable>
-                  </View>
-                ) : (
-                  <Pressable
-                    onPress={() => setPendingRemove(friend.token)}
-                    hitSlop={8}
-                    style={{ marginLeft: 10 }}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Remove ${friend.label}`}
-                  >
-                    <Ionicons name="close-circle-outline" size={20} color={colors.notInterested} />
-                  </Pressable>
-                )}
-              </ScopeRow>
-            );
-          })}
+          {model.rows.map((row) => (
+            <LensScopeRow
+              key={row.key}
+              item={row}
+              onPress={handleRowPress}
+              onArm={handleArm}
+              onDisarm={handleDisarm}
+              onRemove={handleRemoveFriend}
+            />
+          ))}
 
           {/* ── MY SCHEDULE ──────────────────────────────────────── */}
           <View style={{ height: 1, backgroundColor: colors.border, marginVertical: 10 }} />
           <SectionLabel>My schedule</SectionLabel>
 
-          {!isLoggedIn ? (
+          {model.mySchedule.kind === 'signed-out' ? (
             <View
               style={{
                 flexDirection: 'row',
@@ -326,12 +250,12 @@ export function LensPanel() {
               >
                 <Ionicons name="share-outline" size={20} color={colors.accent} style={{ marginRight: 10 }} />
                 <Text style={{ color: colors.textPrimary, fontSize: 15, flex: 1 }}>
-                  {myShare === null ? 'Share my schedule' : 'Share again'}
+                  {model.mySchedule.shareLabel}
                 </Text>
                 {busy && <ActivityIndicator size="small" color={colors.notInterested} />}
               </Pressable>
 
-              {myShare !== null && (
+              {model.mySchedule.canCopyOrRevoke && (
                 <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8 }}>
                   <Pressable onPress={handleCopyMine} style={{ paddingVertical: 8, paddingRight: 16 }}>
                     <Text style={{ color: colors.accent, fontSize: 14 }}>Copy link</Text>

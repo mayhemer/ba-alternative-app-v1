@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { render, screen, within } from '@testing-library/react-native';
-import { FeedbackToast, toastBand } from './FeedbackToast';
+import { FeedbackToast } from './FeedbackToast';
+import { toastBand } from './FeedbackToast.model';
 import { ScreenUIProvider, useStartProgress } from '../../context/ScreenUIContext';
 import type { InterestStatus } from '../../context/InterestContext';
 import { MAX_CONTENT_WIDTH } from '../../styling/tokens';

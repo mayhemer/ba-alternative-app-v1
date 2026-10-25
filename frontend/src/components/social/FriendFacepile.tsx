@@ -4,8 +4,8 @@ import { Text } from '../ui/Text';
 import { FriendAvatar } from './FriendAvatar';
 import { colors } from '../../styling/tokens';
 import type { FriendPick } from '../../context/SocialContext';
+import { friendFacepileModel } from './FriendFacepile.model';
 
-const MAX_AVATARS = 3;
 const OVERLAP = 4; // px each avatar overlaps the previous one
 
 type Props = {
@@ -18,8 +18,7 @@ type Props = {
 export function FriendFacepile({ friends, size = 22 }: Props) {
   if (friends.length === 0) { return null; }
 
-  const shown = friends.slice(0, MAX_AVATARS);
-  const extra = friends.length - shown.length;
+  const { shown, extra } = friendFacepileModel(friends);
 
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center' }}>

@@ -6,6 +6,7 @@ import { useAppContext } from '../store/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { useLayoutMode } from '../hooks/useLayoutMode';
 import { getSlugs } from '../adapters/slugAdapter';
+import { accountModel, editionRowModels } from './SettingsScreen.model';
 
 // ── Account section ───────────────────────────────────────────────────────────
 
@@ -47,7 +48,9 @@ function AccountSection() {
     await signOut();
   }, [signOut]);
 
-  if (isRestoringSession) {
+  const account = accountModel({ isRestoringSession, isLoggedIn, name, email, isBusy, error });
+
+  if (account.kind === 'restoring') {
     return (
       <View className="mb-8">
         <Text className="text-textSecondary text-xs tracking-widest uppercase mb-4">
@@ -58,19 +61,19 @@ function AccountSection() {
     );
   }
 
-  if (isLoggedIn) {
+  if (account.kind === 'signed-in') {
     return (
       <View className="mb-8">
         <Text className="text-textSecondary text-xs tracking-widest uppercase mb-4">
           Account
         </Text>
         <View className="py-4 border-b border-border">
-          {name !== null && (
-            <Text className="text-textPrimary text-base font-semibold">{name}</Text>
-          )}
-          <Text className={name !== null ? 'text-textSecondary text-sm mt-1' : 'text-textPrimary text-base'}>
-            {email}
+          <Text className={account.subtitle !== null ? 'text-textPrimary text-base font-semibold' : 'text-textPrimary text-base'}>
+            {account.title}
           </Text>
+          {account.subtitle !== null && (
+            <Text className="text-textSecondary text-sm mt-1">{account.subtitle}</Text>
+          )}
         </View>
         <TouchableOpacity
           onPress={handleSignOut}
@@ -87,25 +90,25 @@ function AccountSection() {
       <Text className="text-textSecondary text-xs tracking-widest uppercase mb-4">
         Account
       </Text>
-      {error !== null && (
-        <Text className="text-red-400 text-sm mb-3">{error}</Text>
+      {account.error !== null && (
+        <Text className="text-red-400 text-sm mb-3">{account.error}</Text>
       )}
       <TouchableOpacity
         onPress={() => handleSignIn('google')}
-        disabled={isBusy}
+        disabled={account.busy}
         className="mb-3 py-3 px-4 bg-white rounded-lg flex-row items-center justify-center"
       >
         <Text className="text-black text-sm font-semibold">
-          {isBusy ? 'Signing in…' : 'Sign in with Google'}
+          {account.googleLabel}
         </Text>
       </TouchableOpacity>
       <TouchableOpacity
         onPress={() => handleSignIn('apple')}
-        disabled={isBusy}
+        disabled={account.busy}
         className="py-3 px-4 bg-black border border-border rounded-lg flex-row items-center justify-center"
       >
         <Text className="text-white text-sm font-semibold">
-          {isBusy ? 'Signing in…' : 'Sign in with Apple'}
+          {account.appleLabel}
         </Text>
       </TouchableOpacity>
     </View>
@@ -141,31 +144,28 @@ export function SettingsScreen() {
         Festival Edition
       </Text>
 
-      {slugs.map((slug) => {
-        const isSelected = slug === selectedSlug;
-        return (
-          <TouchableOpacity
-            key={slug}
-            onPress={() => setSelectedSlug(slug)}
-            className="py-4 border-b border-border flex-row items-center justify-between"
+      {editionRowModels(slugs, selectedSlug).map((row) => (
+        <TouchableOpacity
+          key={row.key}
+          onPress={() => setSelectedSlug(row.key)}
+          className="py-4 border-b border-border flex-row items-center justify-between"
+        >
+          <Text
+            className={
+              row.active
+                ? 'text-accent text-base font-semibold'
+                : 'text-textPrimary text-base'
+            }
           >
-            <Text
-              className={
-                isSelected
-                  ? 'text-accent text-base font-semibold'
-                  : 'text-textPrimary text-base'
-              }
-            >
-              {slug.toUpperCase()}
+            {row.label}
+          </Text>
+          {row.active && (
+            <Text className="text-accent text-xs tracking-widest uppercase">
+              Active
             </Text>
-            {isSelected && (
-              <Text className="text-accent text-xs tracking-widest uppercase">
-                Active
-              </Text>
-            )}
-          </TouchableOpacity>
-        );
-      })}
+          )}
+        </TouchableOpacity>
+      ))}
     </ScrollView>
   );
 }

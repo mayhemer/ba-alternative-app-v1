@@ -2,36 +2,15 @@ import React from 'react';
 import { ActivityIndicator, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../ui/Text';
-import { useScreenUI } from '../../context/ScreenUIContext';
+import { useScreenUI, type FeedbackVariant } from '../../context/ScreenUIContext';
 import { InterestCycleStrip } from '../InterestCycleStrip';
-import { STAR_COLUMN_RESERVE } from '../StarButton';
-import { colors, MAX_CONTENT_WIDTH } from '../../styling/tokens';
+import { feedbackToastModel, toastBand } from './FeedbackToast.model';
+import { colors } from '../../styling/tokens';
 
-const TOAST_GUTTER = 12;
-
-/**
- * The horizontal band a toast may occupy. It is shown right after a star tap,
- * and the star buttons sit at the right end of their rows — the artist list and
- * the detail header, which an expanded sheet lifts into the toast's own height —
- * so the band stops short of the star column.
- *
- * `centeredWidth` is the widest a toast can be and still sit centred on the
- * screen inside the band: a span centred on the screen, ending at the band's
- * right edge. A toast that fits is centred; a wider one moves left only as far
- * as it must.
- */
-export function toastBand(
-  screenWidth: number,
-  insets: { left: number; right: number },
-): { left: number; width: number; centeredWidth: number } {
-  const columnWidth = Math.min(screenWidth, MAX_CONTENT_WIDTH);
-  const columnLeft = (screenWidth - columnWidth) / 2;
-  const left = Math.max(columnLeft, insets.left) + TOAST_GUTTER;
-  const right = Math.min(columnLeft + columnWidth, screenWidth - insets.right) - STAR_COLUMN_RESERVE;
-  const width = Math.max(0, right - left);
-  const centeredWidth = Math.max(0, Math.min(2 * (right - screenWidth / 2), width));
-  return { left, width, centeredWidth };
-}
+// ── The feedback toast ────────────────────────────────────────────────────────
+//
+// Draws its model (FeedbackToast.model.ts): placed in the band clear of the star
+// column, showing the interest strip after a star tap, else the message.
 
 export function FeedbackToast() {
   const { state, dismissFeedback } = useScreenUI();
@@ -40,14 +19,16 @@ export function FeedbackToast() {
   const { width: screenWidth } = useWindowDimensions();
 
   if (feedback === null) { return null; }
+  const model = feedbackToastModel(feedback);
+  const { content } = model;
 
   function handleTap(): void {
-    if (feedback?.variant === 'progress') { return; }
+    if (!model.tappable) { return; }
     dismissFeedback();
   }
 
-  function renderIcon(): React.ReactNode {
-    switch (feedback!.variant) {
+  function renderIcon(icon: FeedbackVariant): React.ReactNode {
+    switch (icon) {
       case 'progress':
         return <ActivityIndicator testID="feedback-progress" size="small" color={colors.black} />;
       case 'confirmation':
@@ -84,8 +65,8 @@ export function FeedbackToast() {
         <TouchableOpacity
           testID="feedback-toast"
           onPress={handleTap}
-          disabled={feedback.variant === 'progress'}
-          activeOpacity={feedback.variant === 'progress' ? 1 : 0.8}
+          disabled={!model.tappable}
+          activeOpacity={model.tappable ? 0.8 : 1}
           style={{
             maxWidth: band.width,
             flexDirection: 'row',
@@ -102,21 +83,21 @@ export function FeedbackToast() {
             elevation: 8,
           }}
         >
-          {feedback.interest !== undefined ? (
+          {content.kind === 'interest' ? (
             // No spinner or tick: they would only track the local write, which is
             // instant, and the star itself already shows the change. A failure
             // still shows, as a warning beside the label.
             <View style={{ marginHorizontal: 6 }}>
-              <InterestCycleStrip status={feedback.interest} failed={feedback.variant === 'warning'} />
+              <InterestCycleStrip status={content.status} failed={content.failed} />
             </View>
           ) : (
             <>
               <Text style={{ flexShrink: 1, fontSize: 13, fontWeight: '700', color: colors.black, marginHorizontal: 6 }}>
-                {feedback.text}
+                {content.text}
               </Text>
               {/* Fixed-width icon slot prevents text from shifting between variants */}
               <View style={{ width: 22, alignItems: 'center' }}>
-                {renderIcon()}
+                {renderIcon(content.icon)}
               </View>
             </>
           )}

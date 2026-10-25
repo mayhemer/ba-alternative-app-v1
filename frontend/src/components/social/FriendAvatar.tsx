@@ -5,13 +5,10 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text } from '../ui/Text';
 import { colors } from '../../styling/tokens';
 import type { SharedInterestStatus } from '../../adapters/baShareApiAdapter';
+import { friendAvatarModel } from './FriendAvatar.model';
 
-// Single-letter placeholder from a display name: just the first character.
-export function initialsOf(label: string): string {
-  const trimmed = label.trim();
-  if (trimmed === '') { return '?'; }
-  return trimmed[0].toUpperCase();
-}
+// A circular friend avatar — profile image when available, otherwise an
+// initials chip on the friend accent color. Draws its model (FriendAvatar.model.ts).
 
 type Props = {
   label: string;
@@ -22,26 +19,25 @@ type Props = {
   status?: SharedInterestStatus;
 };
 
-// A circular friend avatar — profile image when available, otherwise an
-// initials chip on the friend accent color.
 export function FriendAvatar({ label, avatarUrl, size = 22, status }: Props) {
-  const radius = size / 2;
+  const model = friendAvatarModel({ label, avatarUrl, size, status });
+  const radius = model.size / 2;
   // 1px white ring to lift the avatar off the background and separate stacked avatars.
   const ring = { borderWidth: 1, borderColor: colors.accent };
 
   const avatar =
-    avatarUrl !== undefined && avatarUrl !== '' ? (
+    model.photo !== null ? (
       <ExpoImage
-        source={{ uri: avatarUrl }}
-        style={{ width: size, height: size, borderRadius: radius, ...ring }}
+        source={{ uri: model.photo }}
+        style={{ width: model.size, height: model.size, borderRadius: radius, ...ring }}
         contentFit="cover"
         cachePolicy="memory-disk"
       />
     ) : (
       <View
         style={{
-          width: size,
-          height: size,
+          width: model.size,
+          height: model.size,
           borderRadius: radius,
           backgroundColor: colors.friend,
           alignItems: 'center',
@@ -51,34 +47,31 @@ export function FriendAvatar({ label, avatarUrl, size = 22, status }: Props) {
       >
         <Text
           style={{
-            fontSize: Math.round(size * 0.67),
+            fontSize: model.initialFontSize,
             color: colors.white,
             fontFamily: 'Bold-Default',
           }}
         >
-          {initialsOf(label)}
+          {model.initial}
         </Text>
       </View>
     );
 
-  if (status === undefined) {
+  if (model.badge === null) {
     return avatar;
   }
 
   // Star badge — an outlined star (dark star behind, gold in front) so it reads
   // over both photos and the initials chip.
-  const iconName = status === 'will_go' ? 'star' : 'star-half';
-  const starSize = Math.max(9, Math.round(size * 0.6));
-  const offset = Math.round(size * 0.18);
-
+  const { badge } = model;
   return (
-    <View style={{ width: size, height: size }}>
+    <View style={{ width: model.size, height: model.size }}>
       {avatar}
       <View
-        style={{ position: 'absolute', top: -offset, right: -offset, alignItems: 'center', justifyContent: 'center' }}
+        style={{ position: 'absolute', top: -badge.offset, right: -badge.offset, alignItems: 'center', justifyContent: 'center' }}
       >
-        <Ionicons name={iconName} size={starSize + 2} color={colors.background} style={{ position: 'absolute' }} />
-        <Ionicons name={iconName} size={starSize} color={colors.accent} />
+        <Ionicons name={badge.icon} size={badge.size + 2} color={colors.background} style={{ position: 'absolute' }} />
+        <Ionicons name={badge.icon} size={badge.size} color={colors.accent} />
       </View>
     </View>
   );
