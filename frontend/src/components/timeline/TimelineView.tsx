@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import Animated, {
@@ -7,20 +7,17 @@ import Animated, {
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { useFocusEffect } from '@react-navigation/native';
-import { useInterest } from '../../context/InterestContext';
 import { useTimelineFilter } from '../../context/TimelineFilterContext';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
 import { useNowX } from '../../hooks/useNowX';
 import { getScroll, setScroll } from '../../store/uiStatePersistence';
 import { CategoryLane } from './CategoryLane';
-import type { LaneEvent } from './CategoryLane';
+import type { TimelineDayModel } from './TimelineDay.model';
 import { TimeRuler } from './TimeRuler';
 import { LaneLabelOverlay } from './LaneLabelOverlay';
 import {
   CANVAS_WIDTH,
-  LANE_HEIGHT,
   RULER_HEIGHT,
-  stripHeightFor,
   VIEW_OFFSET_X,
   VIEW_WIDTH,
   labelRepeatPx,
@@ -29,12 +26,7 @@ import {
 } from './timelineLayout';
 import { colors } from '../../styling/tokens';
 import { perfMark, perfMarksEnabled } from '../../utils/perfMarks';
-import type { DbArtist, DbCategory, DbEvent } from '../../types/backend';
-import type { ConflictOverlap } from '../../utils/conflictUtils';
-
-// Stable identity for a category that ended up with no events, so the lane's
-// memo is not defeated by a fresh literal on every render.
-const NO_LANE_EVENTS: LaneEvent[] = [];
+import type { DbArtist, DbEvent } from '../../types/backend';
 
 // ── Progressive mount ─────────────────────────────────────────────────────────
 //
@@ -68,59 +60,28 @@ function clampToViewWindow(x: number): number {
 
 type Props = {
   screenKey: string;
-  visibleCategories: DbCategory[];
-  eventsByCategory: Record<string, LaneEvent[]>;
-  laneHeights: Record<string, number>;
-  laneOffsets: Record<string, number>;
-  categorySubRows?: Record<string, Record<string, number>>;
-  canvasHeight: number;
+  /** The shown day's lanes, titles and geometry (TimelineDay.model.ts). */
+  day: TimelineDayModel;
   selectedDayStart: number;
   onBlockPress: (event: DbEvent, artist: DbArtist) => void;
-  conflictOverlaps: Map<string, ConflictOverlap[]>;
 };
 
-export function TimelineView({
-  screenKey,
-  visibleCategories,
-  eventsByCategory,
-  laneHeights,
-  laneOffsets,
-  categorySubRows,
-  canvasHeight,
-  selectedDayStart,
-  onBlockPress,
-  conflictOverlaps,
-}: Props) {
+export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress }: Props) {
+  const { lanes, titles, tops, canvasHeight, firstEventMs } = day;
   const [areaHeight, setAreaHeight] = useState(0);
   // The same measurement in two forms: a ref for the scroll-to-event centring,
   // which reads it imperatively, and state for the label spacing, which has to
   // re-render the lanes when the viewport resizes.
   const scrollViewWidthRef = useRef(0);
   const [viewportWidth, setViewportWidth] = useState(0);
-  const { getStatus } = useInterest();
   const { scrollToTimeSignal } = useTimelineFilter();
-  const { bottomClearance, isShort } = useLayoutMode();
-
-  // Landscape overlays the category title on its lane instead of reserving a
-  // strip above it. useTimelineData reads the same flag from the same hook, so
-  // the offsets it hands down cannot disagree with the layout rendered here.
-  const stripHeight = stripHeightFor(isShort);
+  const { bottomClearance } = useLayoutMode();
 
   // ── Default landing position ────────────────────────────────────────────────
 
-  // Earliest event of the day *as this screen renders it* — so the support
-  // timeline aims at its own first event, not the main stage's.
-  const firstEventMs = useMemo<number | undefined>(() => {
-    let earliest: number | undefined;
-    for (const laneEvents of Object.values(eventsByCategory)) {
-      for (const { event } of laneEvents) {
-        if (earliest === undefined || event.dateFrom < earliest) {
-          earliest = event.dateFrom;
-        }
-      }
-    }
-    return earliest;
-  }, [eventsByCategory]);
+  // The day lands at its earliest set *as this screen shows it* (the day's
+  // model), so the support timeline aims at its own first set, not the main
+  // stage's.
 
   // Read imperatively by the persist guard, which must keep a stable identity —
   // it feeds useAnimatedScrollHandler's dependency list.
@@ -267,7 +228,7 @@ export function TimelineView({
     });
   }
 
-  // laneOffsets are measured from the top of the lane stack; canvasHeight counts
+  // Lane tops are measured from the top of the lane stack; canvasHeight counts
   // the ruler, which sits outside both scrollers.
   const laneStackHeight = canvasHeight - RULER_HEIGHT;
   const mountComplete =
@@ -313,9 +274,9 @@ export function TimelineView({
   // Everything the deferred scroll needs about the lane stack, refreshed every
   // render: the timer can outlive the render that scheduled it. Arriving from
   // another tab, the lanes are still empty when the signal lands and only fill in
-  // once useTimelineData has read the cache — a captured laneOffsets would be {}.
-  const laneGeometryRef = useRef({ laneOffsets, laneHeights, stripHeight, areaHeight, bottomClearance });
-  laneGeometryRef.current = { laneOffsets, laneHeights, stripHeight, areaHeight, bottomClearance };
+  // once useTimelineData has read the cache — captured lane tops would be empty.
+  const laneGeometryRef = useRef({ lanes, tops, areaHeight, bottomClearance });
+  laneGeometryRef.current = { lanes, tops, areaHeight, bottomClearance };
 
   useEffect(() => {
     if (scrollToTimeSignal.counter === 0) { return; }
@@ -326,11 +287,9 @@ export function TimelineView({
       // the filter; the vertical offset then stands.
       const geometry = laneGeometryRef.current;
       let lane: { top: number; span: number } | undefined;
-      if (categoryId !== undefined && geometry.laneOffsets[categoryId] !== undefined) {
-        lane = {
-          top: geometry.laneOffsets[categoryId],
-          span: geometry.stripHeight + (geometry.laneHeights[categoryId] ?? LANE_HEIGHT),
-        };
+      const target = geometry.lanes.find((l) => l.key === categoryId);
+      if (target !== undefined) {
+        lane = { top: geometry.tops[target.key], span: target.stripHeight + target.height };
       }
       const { x: targetX, y: targetY, visibleHeight } = eventScrollTarget({
         fromMs,
@@ -410,12 +369,7 @@ export function TimelineView({
             }}
           />
           {/* Before the scroller, so the lanes paint over the titles. */}
-          <LaneLabelOverlay
-            categories={visibleCategories}
-            laneOffsets={laneOffsets}
-            laneHeights={laneHeights}
-            overlayTitles={isShort}
-          />
+          <LaneLabelOverlay titles={titles} />
           <Animated.ScrollView
             ref={horizontalScrollRef}
             testID="timeline-scroll-x"
@@ -442,27 +396,21 @@ export function TimelineView({
                   at least as tall as the viewport, so that a horizontal drag below
                   the last lane still pans the timeline on a day with few lanes. */}
               <View style={{ width: CANVAS_WIDTH, position: 'relative', transform: [{ translateX: -VIEW_OFFSET_X }], paddingBottom: Math.max(bottomClearance, areaHeight - canvasHeight)}}>
-                {visibleCategories.map((cat) => {
-                  const laneTop    = laneOffsets[cat.categoryId] ?? 0;
-                  const laneBottom = laneTop + stripHeight + (laneHeights[cat.categoryId] ?? LANE_HEIGHT);
+                {lanes.map((lane) => {
+                  const laneTop    = tops[lane.key];
+                  const laneBottom = laneTop + lane.stripHeight + lane.height;
                   // A lane below the window ignores the X span, so feed it a
                   // constant one — its props then stop changing per step and its
                   // memo skips it outright.
                   const mountEvents = laneBottom >= mountWindow.fromY && laneTop <= mountWindow.toY;
                   return (
                     <CategoryLane
-                      key={cat.categoryId}
-                      category={cat}
-                      events={eventsByCategory[cat.categoryId] ?? NO_LANE_EVENTS}
+                      key={lane.key}
+                      item={lane}
                       dayStart={selectedDayStart}
                       nowX={nowX}
-                      getStatus={getStatus}
                       onBlockPress={onBlockPress}
                       labelRepeat={labelRepeat}
-                      laneHeight={laneHeights[cat.categoryId]}
-                      overlayTitles={isShort}
-                      eventSubRows={categorySubRows?.[cat.categoryId]}
-                      conflictOverlaps={conflictOverlaps}
                       mountEvents={mountEvents}
                       mountFromX={mountEvents ? mountWindow.fromX : 0}
                       mountToX={mountEvents ? mountWindow.toX : 0}

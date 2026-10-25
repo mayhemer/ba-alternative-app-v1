@@ -6,22 +6,13 @@ import { useArtistEventMap, useArtists, useCategories, useStages } from '../../s
 import { useInterest } from '../../context/InterestContext';
 import { computeConflictOverlaps } from '../../utils/conflictUtils';
 import { useNowX } from '../../hooks/useNowX';
-import { CategoryLane, type LaneEvent } from './CategoryLane';
+import { CategoryLane } from './CategoryLane';
+import { conflictTimelineModel } from './ConflictTimeline.model';
 import { HourTicks } from './TimeRuler';
 import { LaneLabelOverlay } from './LaneLabelOverlay';
-import {
-  assignSubRows,
-  CANVAS_WIDTH,
-  conflictWindow,
-  getFestivalDayStart,
-  labelRepeatPx,
-  LANE_HEIGHT,
-  RULER_HEIGHT,
-  STRIP_HEIGHT,
-  timeToX,
-} from './timelineLayout';
+import { CANVAS_WIDTH, RULER_HEIGHT } from './timelineLayout';
 import { colors, MAX_CONTENT_WIDTH } from '../../styling/tokens';
-import type { DbArtist, DbCategory, DbEvent } from '../../types/backend';
+import type { DbArtist, DbEvent } from '../../types/backend';
 
 // ── One clash group on a timeline of its own ──────────────────────────────────
 //
@@ -34,6 +25,7 @@ import type { DbArtist, DbCategory, DbEvent } from '../../types/backend';
 // ruler that runs edge to edge.
 //
 // No lens, hidden lanes, scroll memory or landing: it is a fixed view of the clash.
+// What it shows comes from its model (ConflictTimeline.model.ts).
 
 type Props = {
   /** The clash group, non-empty, all on one festival day. */
@@ -41,15 +33,13 @@ type Props = {
   onBlockPress: (event: DbEvent, artist: DbArtist) => void;
 };
 
-type Lane = { category: DbCategory; events: LaneEvent[]; height: number; offset: number; subRows: Record<string, number> };
-
 export function ConflictTimeline({ events, onBlockPress }: Props) {
   const slug = useSelectedSlug();
   const artists = useArtists(slug);
   const categories = useCategories(slug);
   const stages = useStages(slug);
   const artistEvents = useArtistEventMap(slug);
-  const { interests, getStatus } = useInterest();
+  const { interests } = useInterest();
   const { width } = useWindowDimensions();
   // The sheet spans the window up to its maximum width; measured to be exact.
   const [viewWidth, setViewWidth] = useState(() => Math.min(width, MAX_CONTENT_WIDTH));
@@ -57,46 +47,16 @@ export function ConflictTimeline({ events, onBlockPress }: Props) {
     setViewWidth(e.nativeEvent.layout.width);
   }, []);
 
-  const dayStart = getFestivalDayStart(events[0].dateFrom);
-  const range = conflictWindow(events, dayStart, viewWidth);
-  const fromX = timeToX(range.from, dayStart);
-  const windowWidth = timeToX(range.to, dayStart) - fromX;
-  const nowX = useNowX(dayStart);
-
-  const lanes = useMemo<Lane[]>(() => {
-    const artistById = new Map(artists.map((a) => [a.artistId, a]));
-    const result: Lane[] = [];
-    let offset = 0;
-    const ordered = [...categories].sort((a, b) => parseInt(a.categoryId) - parseInt(b.categoryId));
-    for (const category of ordered) {
-      const laneEvents: LaneEvent[] = [];
-      for (const event of events) {
-        const artist = artistById.get(event.artistId);
-        if (event.categoryId === category.categoryId && artist !== undefined) {
-          laneEvents.push({ event, artist });
-        }
-      }
-      if (laneEvents.length === 0) {
-        continue;
-      }
-      const { subRowCount, eventSubRows } = assignSubRows(laneEvents.map((e) => e.event));
-      const height = subRowCount * LANE_HEIGHT;
-      result.push({ category, events: laneEvents, height, offset, subRows: eventSubRows });
-      offset += STRIP_HEIGHT + height;
-    }
-    return result;
-  }, [events, artists, categories]);
-
   // The same overlaps the timeline draws its conflict bars from.
   const conflictOverlaps = useMemo(
     () => computeConflictOverlaps(interests, { artists, stages, artistEvents }),
     [interests, artists, stages, artistEvents],
   );
-
-  const laneOffsets = useMemo(() => Object.fromEntries(lanes.map((l) => [l.category.categoryId, l.offset])), [lanes]);
-  const laneHeights = useMemo(() => Object.fromEntries(lanes.map((l) => [l.category.categoryId, l.height])), [lanes]);
-  const laneStackHeight = lanes.reduce((sum, l) => sum + STRIP_HEIGHT + l.height, 0);
-  const labelRepeat = labelRepeatPx(Math.min(width, MAX_CONTENT_WIDTH));
+  const model = useMemo(
+    () => conflictTimelineModel({ group: events, artists, categories, interests, conflictOverlaps, viewWidth }),
+    [events, artists, categories, interests, conflictOverlaps, viewWidth],
+  );
+  const nowX = useNowX(model.dayStart);
 
   return (
     <View testID="conflict-timeline" onLayout={handleLayout}>
@@ -108,21 +68,16 @@ export function ConflictTimeline({ events, onBlockPress }: Props) {
           top: RULER_HEIGHT,
           left: 0,
           right: 0,
-          height: laneStackHeight,
+          height: model.stackHeight,
           backgroundColor: colors.timeline.laneBg,
         }}
       />
-      <View style={{ position: 'absolute', top: RULER_HEIGHT, left: 0, right: 0, height: laneStackHeight }}>
-        <LaneLabelOverlay
-          categories={lanes.map((l) => l.category)}
-          laneOffsets={laneOffsets}
-          laneHeights={laneHeights}
-          overlayTitles={false}
-        />
+      <View style={{ position: 'absolute', top: RULER_HEIGHT, left: 0, right: 0, height: model.stackHeight }}>
+        <LaneLabelOverlay titles={model.titles} />
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <View testID="conflict-timeline-range" style={{ width: windowWidth, overflow: 'hidden' }}>
-          <View style={{ width: CANVAS_WIDTH, transform: [{ translateX: -fromX }] }}>
+        <View testID="conflict-timeline-range" style={{ width: model.width, overflow: 'hidden' }}>
+          <View style={{ width: CANVAS_WIDTH, transform: [{ translateX: -model.fromX }] }}>
             <View
               style={{
                 height: RULER_HEIGHT,
@@ -133,23 +88,17 @@ export function ConflictTimeline({ events, onBlockPress }: Props) {
             >
               <HourTicks />
             </View>
-            {lanes.map((lane) => (
+            {model.lanes.map((lane) => (
               <CategoryLane
-                key={lane.category.categoryId}
-                category={lane.category}
-                events={lane.events}
-                dayStart={dayStart}
+                key={lane.key}
+                item={lane}
+                dayStart={model.dayStart}
                 nowX={nowX}
-                getStatus={getStatus}
                 onBlockPress={onBlockPress}
-                labelRepeat={labelRepeat}
-                laneHeight={lane.height}
-                overlayTitles={false}
-                eventSubRows={lane.subRows}
-                conflictOverlaps={conflictOverlaps}
+                labelRepeat={model.labelRepeat}
                 mountEvents
-                mountFromX={fromX}
-                mountToX={fromX + windowWidth}
+                mountFromX={model.fromX}
+                mountToX={model.fromX + model.width}
               />
             ))}
           </View>

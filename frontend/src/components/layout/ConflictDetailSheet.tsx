@@ -12,7 +12,7 @@ import { useArtistDetail } from '../../context/ArtistDetailContext';
 import { useBottomSheetMount } from '../../hooks/useBottomSheetMount';
 import { conflictGroupOf } from '../../utils/conflictUtils';
 import { ConflictTimeline } from '../timeline/ConflictTimeline';
-import { formatDayLabel, formatTime } from '../timeline/timelineLayout';
+import { conflictHeaderWhen } from './ConflictDetailHeader.model';
 import { planStrings } from '../plan/planStrings';
 import { colors, MAX_CONTENT_WIDTH } from '../../styling/tokens';
 import type { DbArtist, DbEvent } from '../../types/backend';
@@ -43,8 +43,7 @@ function Backdrop(props: BottomSheetBackdropProps) {
 // ── Header ────────────────────────────────────────────────────────────────────
 
 function ConflictDetailHeader({ group, onClose }: { group: DbEvent[]; onClose: () => void }) {
-  const from = Math.min(...group.map((e) => e.dateFrom));
-  const to = Math.max(...group.map((e) => e.dateTo));
+  const when = conflictHeaderWhen(group);
   return (
     <View style={{
       paddingHorizontal: 16,
@@ -63,7 +62,7 @@ function ConflictDetailHeader({ group, onClose }: { group: DbEvent[]; onClose: (
             </Text>
           </View>
           <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 2 }}>
-            {formatDayLabel(from)}  ·  {formatTime(from)}–{formatTime(to)}
+            {when}
           </Text>
         </View>
         <TouchableOpacity onPress={onClose} hitSlop={8} accessibilityRole="button" accessibilityLabel="Close conflict">

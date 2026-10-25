@@ -2,10 +2,14 @@ import React from 'react';
 import { measureRenders } from 'reassure';
 import { act } from '@testing-library/react-native';
 import { TimelineScreen } from './TimelineScreen';
+import { SupportTimelineScreen } from './SupportTimelineScreen';
 import { PerfProviders } from '../../tests/setup/PerfProviders';
 import { MEASURE_OPTIONS } from '../../tests/setup/perfOptions';
 import { useTimelineFilter } from '../context/TimelineFilterContext';
-import { createDataCollector, getFestivalDays, populateCache } from '../cache/cacheService';
+import { useLens } from '../context/LensContext';
+import { setHiddenCategories, setLensScope } from '../store/uiStatePersistence';
+import { DEFAULT_SCOPE, type LensScope } from '../utils/interestUtils';
+import { createDataCollector, getFestivalDays, hydrateInterests, populateCache, setInterest } from '../cache/cacheService';
 import { setCurrentTimeMs } from '../utils/clock';
 import type { DbArtist, DbCategory, DbEvent, DbStage } from '../types/backend';
 
@@ -118,4 +122,107 @@ test('mounting the timeline, the whole day', async () => {
       }
     },
   });
+});
+
+// ── What one change costs, the whole day mounted ──────────────────────────────
+//
+// The day is mounted in full first (as in the scenario above), then one change.
+// Which elements render inside each commit is checked by the render counts in
+// BaseTimelineScreen.test.tsx. The lens and the hidden lanes are remembered, so
+// every run starts from Everything with no lane hidden.
+
+let setScope: (scope: LensScope) => void;
+let toggleCategory: (categoryId: string) => void;
+
+function FilterControl() {
+  setScope = useLens().setScope;
+  toggleCategory = useTimelineFilter().toggleCategory;
+  return null;
+}
+
+function Program() {
+  return (
+    <>
+      <FilterControl />
+      <TimelineScreen />
+    </>
+  );
+}
+
+function SupportProgram() {
+  return (
+    <>
+      <FilterControl />
+      <SupportTimelineScreen />
+    </>
+  );
+}
+
+async function everything(): Promise<void> {
+  setLensScope(DEFAULT_SCOPE);
+  setHiddenCategories([]);
+}
+
+async function settleWholeDay(): Promise<void> {
+  for (let i = 0; i < 8; i++) {
+    await settle();
+  }
+}
+
+function measureChange(subject: React.ReactElement, change: () => void): Promise<void> {
+  return measureRenders(subject, {
+    ...MEASURE_OPTIONS,
+    wrapper: PerfProviders,
+    beforeEach: everything,
+    scenario: async () => {
+      await settleWholeDay();
+      await act(async () => { change(); });
+      await settle();
+    },
+  }).then(() => undefined);
+}
+
+/** Picks a few sets the lens can narrow to: two clashing bands and a support exhibition. */
+async function withPicks(run: () => Promise<void>): Promise<void> {
+  const picks = { '35': 'will_go', '216': 'maybe', '51': 'maybe', '219': 'maybe' } as const;
+  for (const [artistId, status] of Object.entries(picks)) {
+    await setInterest('ba2025', artistId, status);
+  }
+  await hydrateInterests('ba2025');
+  try {
+    await run();
+  } finally {
+    for (const artistId of Object.keys(picks)) {
+      await setInterest('ba2025', artistId, 'none');
+    }
+    await hydrateInterests('ba2025');
+    await everything();
+  }
+}
+
+test('timeline: a new minute', async () => {
+  await measureRenders(<Program />, {
+    ...MEASURE_OPTIONS,
+    wrapper: PerfProviders,
+    beforeEach: everything,
+    scenario: async () => {
+      await settleWholeDay();
+      setCurrentTimeMs(NOW + 60 * 1000);
+      await act(async () => { await jest.advanceTimersByTimeAsync(60 * 1000); });
+      setCurrentTimeMs(NOW);
+    },
+  });
+});
+
+test('timeline: hiding a lane', async () => {
+  // Marshall, the top lane: every lane below moves up.
+  await measureChange(<Program />, () => { toggleCategory('1'); });
+});
+
+test('timeline: lens to My picks', async () => {
+  await withPicks(() => measureChange(<Program />, () => { setScope({ kind: 'me', level: null }); }));
+});
+
+test('support timeline: lens to My picks', async () => {
+  await withPicks(() => measureChange(<SupportProgram />, () => { setScope({ kind: 'me', level: null }); }));
 });

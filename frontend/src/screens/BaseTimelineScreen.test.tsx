@@ -7,6 +7,8 @@ import { BaseTimelineScreen } from './BaseTimelineScreen';
 import { DaySwitcher } from '../components/timeline/DaySwitcher';
 import { PerfProviders } from '../../tests/setup/PerfProviders';
 import { useLens } from '../context/LensContext';
+import { useInterestCycle } from '../context/InterestContext';
+import { rendersSinceReset, resetRenders } from '../../tests/setup/countRenders';
 import { useTimelineFilter } from '../context/TimelineFilterContext';
 import { createDataCollector, getCategories, hydrateInterests, populateCache, setInterest } from '../cache/cacheService';
 import { getScroll, setHiddenCategories, setLensScope, setSelectedDay } from '../store/uiStatePersistence';
@@ -35,6 +37,24 @@ import scheduleFixture from '../../tests/fixtures/generated/ba2025/schedule.json
 jest.mock('../store/AppContext', () => {
   const actual = jest.requireActual('../store/AppContext');
   return { ...actual, useSelectedSlug: () => 'ba2025' };
+});
+
+// Each timeline element is swapped for a counting copy that renders exactly the
+// same (tests/setup/countRenders.ts), for the render counts at the end.
+jest.mock('../components/timeline/ArtistBlock', () => {
+  const { counted } = require('../../tests/setup/countRenders');
+  const actual = jest.requireActual('../components/timeline/ArtistBlock');
+  return { ...actual, ArtistBlock: counted(actual.ArtistBlock) };
+});
+jest.mock('../components/timeline/CategoryLane', () => {
+  const { counted } = require('../../tests/setup/countRenders');
+  const actual = jest.requireActual('../components/timeline/CategoryLane');
+  return { ...actual, CategoryLane: counted(actual.CategoryLane) };
+});
+jest.mock('../components/timeline/LaneTitle', () => {
+  const { counted } = require('../../tests/setup/countRenders');
+  const actual = jest.requireActual('../components/timeline/LaneTitle');
+  return { ...actual, LaneTitle: counted(actual.LaneTitle) };
 });
 
 jest.mock('../context/AuthContext', () => ({
@@ -112,9 +132,12 @@ let toggleCategory: (categoryId: string) => void;
 let setSelectedDayStart: (day: number) => void;
 let requestScrollToTime: (screenKey: string, fromMs: number, toMs: number, categoryId?: string) => void;
 let requestScrollToNow: (screenKey: string) => void;
+let cycle: (artistId: string) => void;
 
 function Controls() {
   setScope = useLens().setScope;
+  const { cycleStatus } = useInterestCycle();
+  cycle = (artistId) => { cycleStatus(artistId); };
   ({ toggleCategory, setSelectedDayStart, requestScrollToTime, requestScrollToNow } = useTimelineFilter());
   return null;
 }
@@ -586,5 +609,141 @@ describe('now', () => {
     await minuteTo(Date.parse('2025-08-08T06:00:00+02:00'), 60 * 1000);
     expect(screen.queryByTestId(`day-today-${THU_DAY}`)).toBeNull();
     expect(screen.queryByTestId(`day-today-${FRI_DAY}`)).not.toBeNull();
+  });
+});
+
+// ── The timeline reacts to every input ────────────────────────────────────────
+//
+// The Program on Wednesday, while each input changes: the lens, a hidden lane,
+// a pick, a sync that moves or removes a set (the minute tick and the day
+// switch are covered above). Then the render counts: after one change, which
+// elements render again, by key — a block by its eventId, a lane by its
+// categoryId, a title as `title-<categoryId>`. Lanes, in order: Marshall (1),
+// Sea Shepherd (2), Obscure (3), KAL stage (4), Octagon (5).
+//
+// CRYSTAL LAKE (artist 35, set 7020, Sea Shepherd) 14:00–14:40 and
+// EXORCIZPHOBIA (216, 7022, Obscure) 14:30–15:05 overlap; RIVERS OF NIHIL (51,
+// 7029, Obscure) at 16:40 overlaps nothing.
+
+/** Re-syncs the cache with the fixture's sets, changed by `change`, the way a background sync does. */
+function syncWith(change: (events: DbEvent[]) => DbEvent[]): void {
+  const collector = createDataCollector();
+  collector.setArtists(artistsFixture as unknown as DbArtist[]);
+  collector.setCategories(categoriesFixture as unknown as DbCategory[]);
+  collector.setStages(stagesFixture as unknown as DbStage[]);
+  collector.setEvents(change(scheduleFixture as unknown as DbEvent[]));
+  populateCache('ba2025', collector.build(), NOW);
+}
+
+async function withPicks(picks: Record<string, string>, run: () => Promise<void>): Promise<void> {
+  for (const [artistId, status] of Object.entries(picks)) {
+    await setInterest('ba2025', artistId, status as 'maybe' | 'will_go');
+  }
+  await hydrateInterests('ba2025');
+  try {
+    await run();
+  } finally {
+    for (const artistId of Object.keys(picks)) {
+      await setInterest('ba2025', artistId, 'none');
+    }
+    await hydrateInterests('ba2025');
+  }
+}
+
+describe('the timeline reacts', () => {
+  afterEach(() => { syncWith((events) => events); });
+
+  it('narrows to my picks when the lens changes', async () => {
+    await withPicks({ '35': 'maybe' }, async () => {
+      await mountScreen('react-lens', WED, playable);
+      await act(async () => { setScope({ kind: 'me', level: null }); });
+      await settleWholeDay();
+      expect(screen.getAllByText('CRYSTAL LAKE').length).toBeGreaterThan(0);
+      expect(screen.queryByText('EXORCIZPHOBIA')).toBeNull();
+      expect(titleOf('Sea Shepherd').top).toBe(0);
+    });
+  });
+
+  it('moves the lanes below a hidden one up', async () => {
+    await mountScreen('react-hide', WED, playable);
+    await act(async () => { toggleCategory('1'); });
+    await settle();
+    expect(screen.queryByText('Marshall')).toBeNull();
+    expect(titleOf('Sea Shepherd').top).toBe(0);
+  });
+
+  it('draws the conflict bars when a pick makes a clash, and drops them when it ends', async () => {
+    await withPicks({ '35': 'will_go', '216': 'maybe' }, async () => {
+      await mountScreen('react-pick', WED, playable);
+      expect(barsOf('EXORCIZPHOBIA')).toEqual([]);
+      // Maybe → Must-see.
+      await act(async () => { cycle('216'); });
+      expect(barsOf('EXORCIZPHOBIA')).toHaveLength(1);
+      expect(barsOf('CRYSTAL LAKE')).toHaveLength(1);
+      // Must-see → don't go.
+      await act(async () => { cycle('216'); });
+      expect(barsOf('CRYSTAL LAKE')).toEqual([]);
+    });
+  });
+
+  it('follows a sync that moves a set, and one that removes it', async () => {
+    await mountScreen('react-sync', WED, playable);
+    await act(async () => {
+      syncWith((events) => events.map((e) => (e.eventId === '7022' ? { ...e, dateFrom: Date.parse('2025-08-06T16:00:00+02:00'), dateTo: Date.parse('2025-08-06T16:35:00+02:00') } : e)));
+    });
+    await settleWholeDay();
+    // 16:00 is 10 h after 06:00.
+    expect(blockOf('EXORCIZPHOBIA').left).toBeCloseTo(10 * 170);
+    await act(async () => { syncWith((events) => events.filter((e) => e.eventId !== '7022')); });
+    await settle();
+    expect(screen.queryByText('EXORCIZPHOBIA')).toBeNull();
+  });
+
+  describe('render counts', () => {
+    async function mountSettled(screenKey: string): Promise<void> {
+      await mountScreen(screenKey, WED, playable);
+      resetRenders();
+    }
+
+    it('a pick with no clash renders only its block and its lane', async () => {
+      await mountSettled('count-pick');
+      await act(async () => { cycle('51'); });
+      await settle();
+      expect(rendersSinceReset()).toEqual({ '3': 1, '7029': 1 });
+      await act(async () => { cycle('51'); cycle('51'); cycle('51'); });
+    });
+
+    it('a pick into a clash renders only the two blocks and their lanes', async () => {
+      await withPicks({ '35': 'will_go', '216': 'maybe' }, async () => {
+        await mountSettled('count-clash');
+        // Maybe → Must-see.
+        await act(async () => { cycle('216'); });
+        await settle();
+        expect(rendersSinceReset()).toEqual({ '2': 1, '3': 1, '7020': 1, '7022': 1 });
+      });
+    });
+
+    it('a new minute renders nothing', async () => {
+      await mountSettled('count-minute');
+      setCurrentTimeMs(NOW + 60 * 1000);
+      await act(async () => { await jest.advanceTimersByTimeAsync(60 * 1000); });
+      expect(rendersSinceReset()).toEqual({});
+    });
+
+    it('hiding the top lane renders only the titles that move up', async () => {
+      await mountSettled('count-hide');
+      await act(async () => { toggleCategory('1'); });
+      await settle();
+      expect(rendersSinceReset()).toEqual({ 'title-2': 1, 'title-3': 1, 'title-4': 1, 'title-5': 1 });
+    });
+
+    it('the lens on my picks renders the lanes that lost sets and the titles that moved, no block', async () => {
+      await withPicks({ '35': 'maybe', '216': 'maybe' }, async () => {
+        await mountSettled('count-lens');
+        await act(async () => { setScope({ kind: 'me', level: null }); });
+        await settle();
+        expect(rendersSinceReset()).toEqual({ '2': 1, '3': 1, 'title-2': 1, 'title-3': 1 });
+      });
+    });
   });
 });

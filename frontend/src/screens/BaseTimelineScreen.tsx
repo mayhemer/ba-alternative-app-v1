@@ -42,8 +42,7 @@ export function BaseTimelineScreen({ title, screenKey, BottomBarComponent, filte
   // context, so a sync that repopulates the cache re-derives everything below.
   const dayToShow = useShownDay(screenKey);
 
-  const { eventsByCategory, visibleCategories, laneHeights, laneOffsets, categorySubRows, canvasHeight, conflictOverlaps } =
-    useTimelineData({ dayStart: dayToShow, filterArtist, useSubRows });
+  const day = useTimelineData({ dayStart: dayToShow, filterArtist, useSubRows });
 
   useTopBar({ title, RightComponent: TopBarRight });
   useBottomBar({ ContentComponent: BottomBarComponent });
@@ -83,15 +82,9 @@ export function BaseTimelineScreen({ title, screenKey, BottomBarComponent, filte
   return (
     <TimelineView
       screenKey={screenKey}
-      visibleCategories={visibleCategories}
-      eventsByCategory={eventsByCategory}
-      laneHeights={laneHeights}
-      laneOffsets={laneOffsets}
-      categorySubRows={categorySubRows}
-      canvasHeight={canvasHeight}
+      day={day}
       selectedDayStart={dayToShow}
       onBlockPress={handleBlockPress}
-      conflictOverlaps={conflictOverlaps}
     />
   );
 }

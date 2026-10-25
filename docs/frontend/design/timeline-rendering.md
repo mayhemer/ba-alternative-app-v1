@@ -10,11 +10,11 @@ what keeps that from being ~2.
 `useTimelineData` and `ConflictTimeline` in the conflict sheet, so making it viewport-dependent is a
 far wider change than it appears.
 
-`STRIP_HEIGHT` is the cheap one, and landscape does drop it. It has four consumers, all inside the
-timeline — `useTimelineData` (`laneOffsets`, `canvasHeight`), `CategoryLane` (spacer, `NowLine`
-span), `LaneLabelOverlay` (title box) and `TimelineView` (the mount window's `laneBottom`) — so
-`stripHeightFor(isShort)` in `timelineLayout.ts` is the single switch, and every one of them derives
-from it rather than branching itself. On a short viewport it returns 0 and the category title is
+`STRIP_HEIGHT` is the cheap one, and landscape does drop it. It is read in one place: the lane's
+model (`categoryLaneModel`, via `stripHeightFor(isShort)` in `timelineLayout.ts`) holds each lane's
+strip height, and everything else — the day's lane tops and canvas height (`timelineDayModel`), the
+lane's spacer and `NowLine` span, the title's box (`laneTitleModel`) and the mount window's
+`laneBottom` in `TimelineView` — reads it from that model rather than branching itself. On a short viewport it returns 0 and the category title is
 drawn *behind* its lane instead of in a strip above it, buying back 32 pt per lane — about one extra
 lane on a landscape phone. The trigger is `useLayoutMode().isShort`, the same flag that drops the
 TopBar, so a landscape iPad keeps the strips: it has the vertical budget to spare.
@@ -43,8 +43,9 @@ starts — so "scroll offset 0" *is* 08:30; there is no 08:30 default anywhere t
 `TimelineView` calls it at both places that need it: the day-restore effect and the progressive-mount
 anchor. Those two must agree or the mount window prepares a different span from the one the view
 lands on. The 06:00 boundary needs no handling — `dayStart` is already the 06:00 start and `timeToX`
-is relative to it. `firstEventMs` comes from `eventsByCategory`, i.e. the day as *this screen*
-renders it, so the support timeline aims at its own first event.
+is relative to it. `firstEventMs` comes from the day's model (`timelineDayModel`), i.e. the day as
+*this screen* shows it after its filter and the lens, so the support timeline aims at its own first
+event. A lane the user hid still counts here.
 
 The view **mounts** at that offset via the ScrollView's `contentOffset` rather than scrolling there
 afterwards, and `scrollX` is seeded to the same value. Both native platforms honour the prop
@@ -84,10 +85,10 @@ replaced a per-lane `useAnimatedStyle` that counter-translated each title by
 `scrollX + VIEW_OFFSET_X`, which jittered.
 
 The cost is that an overlay sits outside the lanes and so cannot infer positions from layout: it has
-to be told where each strip is, and in landscape how tall each lane is too. `useTimelineData`'s
-`laneOffsets` owns that accumulation, next to the identical one behind `canvasHeight`, so the lane
-stack's geometry has a single owner and cannot drift when sub-rows change a lane's height or when
-the strip collapses. Any future left- or top-pinned timeline chrome should follow the same pattern.
+to be told where each strip is, and in landscape how tall each lane is too. The day's model
+(`timelineDayModel`) owns that accumulation: each lane's model, its title's model built from the same
+lane, its top and the canvas height come out of one loop, so the lane stack's geometry has a single
+owner and cannot drift when sub-rows change a lane's height or when the strip collapses. Any future left- or top-pinned timeline chrome should follow the same pattern.
 
 Note this seam does **not** help with anything whose *content* depends on scroll position — e.g. a
 sticky title on a long event, where which title to show changes as you scroll. Those need a design
