@@ -11,7 +11,7 @@
 // the app the device had. APKs are cached by EAS build id, so reinstalling the
 // same build does not download it again.
 
-import { adb, installedVersion, pickDevice } from './lib/adb.ts';
+import { adb, installedVersion, PACKAGE, pickDevice } from './lib/adb.ts';
 import { buildByVersion, fetchArtifact, latestBuild, staleness } from './lib/eas.ts';
 import { EXIT, has, parseArgs, run, skip } from './lib/proc.ts';
 
@@ -68,12 +68,21 @@ console.log(`installing ${apk}…`);
 
 // A plain update first. It is refused when the device holds a *higher*
 // versionCode (a newer preview build, say) — release apps cannot be downgraded
-// in place, so fall back to uninstalling, which also clears the app's data.
+// in place — or a build signed with another key. Only those two fall back to
+// uninstalling, which also clears the app's data; any other failure (device
+// dropped off USB, rebooted, out of space) stops here with the app untouched.
+const UNINSTALL_FIRST = ['INSTALL_FAILED_VERSION_DOWNGRADE', 'INSTALL_FAILED_UPDATE_INCOMPATIBLE'];
 const update = run('adb', ['-s', device.serial, 'install', '-r', apk]);
 if (!update.ok || /Failure/.test(update.out)) {
-  const reason = (update.out + update.err).match(/INSTALL_FAILED_\w+/)?.[0] ?? 'unknown';
+  const output = `${update.out}\n${update.err}`.trim();
+  const reason = output.match(/INSTALL_FAILED_\w+/)?.[0];
+  if (reason === undefined || !UNINSTALL_FIRST.includes(reason)) {
+    console.error(`\x1b[31minstall failed\x1b[0m (${reason ?? `adb exit ${update.code}`}) — the installed app was left as it was.`);
+    console.error(output);
+    process.exit(EXIT.FAIL);
+  }
   console.log(`update refused (${reason}); uninstalling the existing app and installing fresh…`);
-  adb(device, ['uninstall', 'cz.janbambas.ba']);
+  adb(device, ['uninstall', PACKAGE]);
   adb(device, ['install', apk]);
 }
 

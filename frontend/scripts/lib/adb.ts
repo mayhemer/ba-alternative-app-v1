@@ -31,6 +31,14 @@ export function pickDevice(serialArg: string | undefined): Device {
   }
 
   const prop = (k: string): string => must('adb', ['-s', serial, 'shell', 'getprop', k]);
+  // Listed by adb is not ready: while booting, or while system_server restarts
+  // after a crash, the package manager is missing — `dumpsys package` then reads
+  // as "not installed" and installs fail without an INSTALL_FAILED_ code.
+  const pm = run('adb', ['-s', serial, 'shell', 'service', 'check', 'package']).out;
+  if (prop('sys.boot_completed') !== '1' || !/: found/.test(pm)) {
+    skip(`device ${serial} has not finished booting (package manager not up)`,
+      'Wait until the phone is unlocked and responsive, then rerun.');
+  }
   return {
     serial,
     model: prop('ro.product.model'),
