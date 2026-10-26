@@ -38,6 +38,21 @@ npm run build:e2e:ios           # eas build -p ios --profile e2e-ios-sim
 npm run test:doctor             # expo-doctor; run before every build
 ```
 
+An Android `preview` or `perf` build goes onto the USB-connected phone with its install command; both
+take the same flags:
+
+```bash
+npm run install:preview:android                  # newest finished preview build (APK cached by build id)
+npm run install:preview:android -- --list        # preview builds: versionCode, commit, date
+npm run install:preview:android -- --version 29  # that versionCode, e.g. an older build
+npm run install:preview:android -- --serial X    # pick a device when several are connected
+npm run install:preview:android -- --force       # reinstall even if that versionCode is installed
+```
+
+`install:perf:android` is the same for the `perf` profile. Both profiles share one package name, so
+each replaces the other; installing a lower versionCode than the one on the phone uninstalls the app
+first, which clears its data.
+
 `appVersionSource` is `remote`, so EAS owns the build counter — do **not** put `ios.buildNumber` or
 `android.versionCode` in `app.json`, they would be ignored. Inspect with `eas build:version:get`.
 

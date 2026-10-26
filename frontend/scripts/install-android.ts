@@ -1,4 +1,4 @@
-// ── Install a perf build on the connected Android device ──────────────────────
+// ── Install a perf or preview build on the connected Android device ───────────
 //
 //   npm run install:perf:android                 newest finished `perf` build
 //   npm run install:perf:android -- --version 22 that build number (versionCode),
@@ -8,16 +8,27 @@
 //   npm run install:perf:android -- --list       the perf builds there are, one per
 //                                                line: versionCode, commit, date
 //
+// install:preview:android takes the same flags for the `preview` profile; both
+// run this script with `--profile <name>`.
+//
 // The perf build points at the fixture API (http://localhost:4010, reached over
-// USB via `adb reverse`) and opens on ba2025, so it replaces whatever build of
-// the app the device had. APKs are cached by EAS build id, so reinstalling the
-// same build does not download it again.
+// USB via `adb reverse`) and opens on ba2025; the preview build talks to the
+// production API. Both share one package name, so either replaces whatever
+// build of the app the device had. APKs are cached by EAS build id, so
+// reinstalling the same build does not download it again.
 
 import { adb, installedVersion, PACKAGE, pickDevice } from './lib/adb.ts';
 import { buildByVersion, fetchArtifact, latestBuild, listBuilds, staleness } from './lib/eas.ts';
 import { EXIT, has, parseArgs, run, skip } from './lib/proc.ts';
 
+const PROFILES = ['perf', 'preview'];
+
 const args = parseArgs(process.argv.slice(2));
+const profile = args.profile;
+if (typeof profile !== 'string' || !PROFILES.includes(profile)) {
+  console.error(`--profile must be one of: ${PROFILES.join(', ')}`);
+  process.exit(EXIT.FAIL);
+}
 
 // Listing needs no device, so it comes before one is picked.
 if (args.list === true) {
@@ -26,12 +37,12 @@ if (args.list === true) {
   }
   let builds;
   try {
-    builds = listBuilds('android', 'perf');
+    builds = listBuilds('android', profile);
   } catch (e) {
     skip((e as Error).message, 'Run `eas login`.');
   }
   if (builds.length === 0) {
-    skip('no finished EAS build for the "perf" profile yet', 'Run `npm run build:perf:android`.');
+    skip(`no finished EAS build for the "${profile}" profile yet`, `Run \`npm run build:${profile}:android\`.`);
   }
   for (const b of builds) {
     const at = b.completedAt === null
@@ -63,19 +74,20 @@ if (wanted !== null) {
     skip(`build ${build.id.slice(0, 8)} (versionCode ${wanted}) has no artifact — not finished, or failed`,
       'Pick another versionCode.');
   }
-  if (build.profile !== 'perf') {
-    // Installable, but it talks to the production API: test:perf:device refuses
-    // it unless run with --allow-live-api.
-    console.log(`\x1b[33m⚠ a "${build.profile}" build, not "perf"\x1b[0m`);
+  if (build.profile !== profile) {
+    // Installable, but it talks to a different API than the profile asked for:
+    // test:perf:device refuses a non-perf build unless run with
+    // --allow-live-api, and a perf build shows only fixture data.
+    console.log(`\x1b[33m⚠ a "${build.profile}" build, not "${profile}"\x1b[0m`);
   }
 } else {
   try {
-    build = latestBuild('android', 'perf');
+    build = latestBuild('android', profile);
   } catch (e) {
     skip((e as Error).message, 'Run `eas login`.');
   }
   if (build === null) {
-    skip('no finished EAS build for the "perf" profile yet', 'Run `npm run build:perf:android`.');
+    skip(`no finished EAS build for the "${profile}" profile yet`, `Run \`npm run build:${profile}:android\`.`);
   }
 }
 

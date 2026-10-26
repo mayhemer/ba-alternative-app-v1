@@ -62,7 +62,7 @@ console.log(`${String(erasedMb).padStart(6)} MB  simulator ${sim.name} (${sim.ud
 // ── Files ─────────────────────────────────────────────────────────────────────
 
 // A simulator build is cached as app.tar.gz; an Android one as an .apk, which
-// install:perf:android still wants.
+// install:perf:android and install:preview:android still want.
 if (existsSync(BUILD_CACHE)) {
   for (const id of readdirSync(BUILD_CACHE)) {
     if (existsSync(join(BUILD_CACHE, id, 'app.tar.gz'))) {
