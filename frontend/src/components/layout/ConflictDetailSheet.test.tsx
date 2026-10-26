@@ -17,7 +17,18 @@ import scheduleFixture from '../../../tests/fixtures/generated/ba2025/schedule.j
 // start to the last one's end. A clash after midnight is dated the next day, as
 // any date is; only the timeline's day tabs run 06:00 to 06:00.
 
-jest.mock('@gorhom/bottom-sheet', () => ({ __esModule: true, ...require('@gorhom/bottom-sheet/mock') }));
+// The library's own mock, with the props each sheet is given recorded.
+const mockSheetProps: Record<string, unknown>[] = [];
+jest.mock('@gorhom/bottom-sheet', () => {
+  const ReactActual = jest.requireActual('react');
+  const mock = { __esModule: true, ...require('@gorhom/bottom-sheet/mock') };
+  const Sheet = mock.default;
+  const Recorded = ReactActual.forwardRef((props: Record<string, unknown>, ref: unknown) => {
+    mockSheetProps.push(props);
+    return ReactActual.createElement(Sheet, { ...props, ref });
+  });
+  return { ...mock, default: Recorded };
+});
 
 jest.mock('../../store/AppContext', () => {
   const actual = jest.requireActual('../../store/AppContext');
@@ -85,4 +96,18 @@ it('names the day and the span of a daytime clash', async () => {
 it('dates a clash after midnight to the next day', async () => {
   await openWith(byId('7055'));
   expect(screen.getByText('Thu 7  ·  00:30–01:30')).toBeTruthy();
+});
+
+// ── Sideways scrolling ────────────────────────────────────────────────────────
+//
+// The clash timeline scrolls sideways inside the sheet. The sheet's own drag
+// gesture would otherwise start on a move in any direction, and on Android it
+// then takes the touch from the timeline's scroller: the sheet gives up its
+// drag once a move goes 10 pt sideways, and starts only after 10 pt up or down.
+
+it('leaves sideways drags to the clash timeline', async () => {
+  mockSheetProps.length = 0;
+  await openWith(byId('7022'));
+  const sheet = mockSheetProps.at(-1)!;
+  expect({ failOffsetX: sheet.failOffsetX, activeOffsetY: sheet.activeOffsetY }).toEqual({ failOffsetX: [-10, 10], activeOffsetY: [-10, 10] });
 });

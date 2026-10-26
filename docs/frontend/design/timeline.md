@@ -70,7 +70,9 @@ press and said nothing the block itself could not show.
   timeline's own `CategoryLane`, `HourTicks` and lane titles (`ConflictTimeline.model.ts`), cut to the group's span plus
   exactly half an hour either side (`conflictWindow`), widened evenly to fill the sheet when that
   is narrower, so the clash stays centred. No lens, hidden lanes or scroll memory apply.
-  Tapping a block opens the artist sheet.
+  Tapping a block opens the artist sheet. The timeline scrolls sideways inside the sheet: the sheet's drag
+  gesture gives up once a move goes 10 pt sideways (`failOffsetX`) and starts only after 10 pt up
+  or down (`activeOffsetY`), or on Android it would take the touch from the scroller.
 - **ConflictsScreen** is a dedicated list of the current conflicts.
 - Overlap computation lives in `src/utils/conflictUtils.ts`; `ConflictContext` holds the result.
   Only `must_see` counts today — including `maybe` is an open option (TODO in `conflictUtils`).

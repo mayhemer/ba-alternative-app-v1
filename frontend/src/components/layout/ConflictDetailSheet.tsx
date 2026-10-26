@@ -25,6 +25,14 @@ import type { DbArtist, DbEvent } from '../../types/backend';
 // one My plan titles.
 
 const SNAP_POINTS = ['100%'];
+
+// The clash timeline scrolls sideways inside the sheet. The sheet's drag gesture
+// would otherwise start on a move in any direction, and on Android it then takes
+// the touch from the timeline's scroller (a plain ScrollView, outside the gesture
+// handler system); iOS lets both run. So the drag gives up once a move goes
+// 10 pt sideways, and starts only after 10 pt up or down.
+const SIDEWAYS_FAIL: [number, number] = [-10, 10];
+const VERTICAL_START: [number, number] = [-10, 10];
 const strings = planStrings();
 
 // ── Backdrop ──────────────────────────────────────────────────────────────────
@@ -190,6 +198,8 @@ export function ConflictDetailSheet() {
       topInset={top}
       animationConfigs={{ reduceMotion: ReduceMotion.Never }}
       enablePanDownToClose
+      failOffsetX={SIDEWAYS_FAIL}
+      activeOffsetY={VERTICAL_START}
       onClose={handleSheetClosed}
       // The library makes the whole sheet one accessibility element by default,
       // which hides everything in it from VoiceOver: the star, the links, the text.
