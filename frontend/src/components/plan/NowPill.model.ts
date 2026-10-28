@@ -2,7 +2,8 @@ import { getFestivalDayStart } from '../timeline/timelineLayout';
 import { isConflictEligible } from '../../utils/conflictUtils';
 import { BREAK_WINDOW_OFFSET_MS, type PlanInputs } from '../../utils/planUtils';
 import { formatRemaining, NARROW_SPACE, planStrings } from './planStrings';
-import type { DbEvent } from '../../types/backend';
+import { timelineJump, type TimelineJump } from '../../navigation/timelineJump';
+import type { DbArtist, DbEvent } from '../../types/backend';
 
 // ── What the now pill in the top bar says ─────────────────────────────────────
 //
@@ -15,6 +16,8 @@ import type { DbEvent } from '../../types/backend';
 //           finished one, or from 08:00 when none has finished yet;
 //   logo  — nothing to say: outside the festival, before 08:00, after the day's
 //           last Must-see, or no Must-see today at all.
+// One selection (pillSet) picks the set the pill names; nowPillTarget hands the
+// same set to a tap on My plan (see nowPillTap), so the two never disagree.
 
 const strings = planStrings();
 
@@ -23,9 +26,12 @@ export type NowPillModel =
   | { kind: 'live'; artistName: string; time: string; progress: number; more: number; accessibilityLabel: string }
   | { kind: 'break'; artistName: string; time: string; accessibilityLabel: string };
 
+/** The set the pill names, and where it is on the timelines. */
+export type NowPillTarget = { event: DbEvent; jump: TimelineJump };
+
 const LOGO: NowPillModel = { kind: 'logo' };
 
-type Must = { event: DbEvent; artistName: string };
+type Must = { event: DbEvent; artist: DbArtist };
 
 function todaysMusts(interests: Record<string, string>, { artists, artistEvents }: PlanInputs, today: number): Must[] {
   const musts: Must[] = [];
@@ -35,11 +41,52 @@ function todaysMusts(interests: Record<string, string>, { artists, artistEvents 
     }
     for (const event of artistEvents[artist.artistId] ?? []) {
       if (isConflictEligible(event) && getFestivalDayStart(event.dateFrom) === today) {
-        musts.push({ event, artistName: artist.name });
+        musts.push({ event, artist });
       }
     }
   }
   return musts;
+}
+
+/** The set the pill names: live (the one ending soonest) or next, or none for the logo. */
+type PillSet =
+  | { kind: 'live'; must: Must; others: number }
+  | { kind: 'break'; must: Must }
+  | null;
+
+function pillSet(
+  interests: Record<string, string>,
+  inputs: PlanInputs,
+  festivalDays: number[],
+  now: number,
+): PillSet {
+  const today = getFestivalDayStart(now);
+  if (!festivalDays.includes(today)) {
+    return null;
+  }
+  const musts = todaysMusts(interests, inputs, today);
+
+  const live = musts
+    .filter((m) => m.event.dateFrom <= now && now < m.event.dateTo)
+    .sort((a, b) => a.event.dateTo - b.event.dateTo);
+  if (live.length > 0) {
+    return { kind: 'live', must: live[0], others: live.length - 1 };
+  }
+
+  const next = musts
+    .filter((m) => m.event.dateFrom > now)
+    .sort((a, b) => a.event.dateFrom - b.event.dateFrom)[0];
+  if (next === undefined) {
+    return null;
+  }
+  const breakFrom = Math.max(
+    today + BREAK_WINDOW_OFFSET_MS,
+    ...musts.filter((m) => m.event.dateTo <= now).map((m) => m.event.dateTo),
+  );
+  if (now < breakFrom) {
+    return null;
+  }
+  return { kind: 'break', must: next };
 }
 
 export function nowPillModel(
@@ -48,46 +95,64 @@ export function nowPillModel(
   festivalDays: number[],
   now: number,
 ): NowPillModel {
-  const today = getFestivalDayStart(now);
-  if (!festivalDays.includes(today)) {
+  const set = pillSet(interests, inputs, festivalDays, now);
+  if (set === null) {
     return LOGO;
   }
-  const musts = todaysMusts(interests, inputs, today);
-
-  const live = musts
-    .filter((m) => m.event.dateFrom <= now && now < m.event.dateTo)
-    .sort((a, b) => a.event.dateTo - b.event.dateTo);
-  if (live.length > 0) {
-    const { event, artistName } = live[0];
+  const { event, artist } = set.must;
+  if (set.kind === 'live') {
     const time = formatRemaining(event.dateTo - now, NARROW_SPACE);
     return {
       kind: 'live',
-      artistName,
+      artistName: artist.name,
       time,
       progress: (now - event.dateFrom) / (event.dateTo - event.dateFrom),
-      more: live.length - 1,
-      accessibilityLabel: `${artistName} ${strings.live} ${time}`,
+      more: set.others,
+      accessibilityLabel: `${artist.name} ${strings.live} ${time}`,
     };
   }
-
-  const next = musts
-    .filter((m) => m.event.dateFrom > now)
-    .sort((a, b) => a.event.dateFrom - b.event.dateFrom)[0];
-  if (next === undefined) {
-    return LOGO;
-  }
-  const breakFrom = Math.max(
-    today + BREAK_WINDOW_OFFSET_MS,
-    ...musts.filter((m) => m.event.dateTo <= now).map((m) => m.event.dateTo),
-  );
-  if (now < breakFrom) {
-    return LOGO;
-  }
-  const time = formatRemaining(next.event.dateFrom - now, NARROW_SPACE);
+  const time = formatRemaining(event.dateFrom - now, NARROW_SPACE);
   return {
     kind: 'break',
-    artistName: next.artistName,
+    artistName: artist.name,
     time,
-    accessibilityLabel: `${next.artistName} ${strings.start} ${time}`,
+    accessibilityLabel: `${artist.name} ${strings.start} ${time}`,
   };
+}
+
+/** The set the pill names and where it is drawn; null while the pill shows the logo. */
+export function nowPillTarget(
+  interests: Record<string, string>,
+  inputs: PlanInputs,
+  festivalDays: number[],
+  now: number,
+): NowPillTarget | null {
+  const set = pillSet(interests, inputs, festivalDays, now);
+  if (set === null) {
+    return null;
+  }
+  return { event: set.must.event, jump: timelineJump(set.must.artist, set.must.event) };
+}
+
+// ── What a tap does ───────────────────────────────────────────────────────────
+//
+// The pill toggles between My plan and the timeline: on My plan a tap shows the
+// pill's set on its timeline (My plan's own "now" is a tap on today's day
+// button); on any other screen it opens My plan on today at now. The logo has
+// no set and is not a button.
+
+export type NowPillTap =
+  | { kind: 'none' }
+  | { kind: 'plan' }
+  | { kind: 'timeline'; target: NowPillTarget };
+
+/** `activeRoute` is the drawer screen shown, undefined before navigation is ready. */
+export function nowPillTap(activeRoute: string | undefined, target: NowPillTarget | null): NowPillTap {
+  if (target === null) {
+    return { kind: 'none' };
+  }
+  if (activeRoute === 'MyPlan') {
+    return { kind: 'timeline', target };
+  }
+  return { kind: 'plan' };
 }

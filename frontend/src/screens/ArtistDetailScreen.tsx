@@ -8,8 +8,7 @@ import { colors } from '../styling/tokens';
 import type { DbArtist } from '../types/backend';
 import { useArtistDerived } from '../hooks/useArtistDerived';
 import { useArtistBio } from '../hooks/useArtistBio';
-import { useTimelineFilter } from '../context/TimelineFilterContext';
-import { navigationRef } from '../navigation/navigationRef';
+import { useJumpToTimeline } from '../navigation/useJumpToTimeline';
 import { useSocialData } from '../context/SocialContext';
 import { FriendPickList } from '../components/social/FriendPickList';
 import { ArtistDetailTitle } from '../components/artist/ArtistDetailTitle';
@@ -52,26 +51,15 @@ export function ArtistDetailHeader({ artist }: Props) {
 export function ArtistDetailBody({ artist }: Props) {
   const { closeDetail, innerWidth, hPad, width, height, conflicts, openConflict } = useArtistDerived(artist);
   const bio = useArtistBio(artist);
-  const { setSelectedDayStart, requestScrollToTime } = useTimelineFilter();
+  const jumpToTimeline = useJumpToTimeline();
   const { friendsByArtist } = useSocialData();
   const friends = friendsByArtist[artist.artistId] ?? [];
 
-  // Jump to this artist's event on the timeline: select its day, center its time
-  // and its category's lane, switch to the matching timeline tab (support vs
-  // main), and close the sheet.
+  // Jump to this artist's event on its timeline, and close the sheet.
   const handleEventPress = useCallback((row: ArtistSetRowModel): void => {
-    const screenKey = row.jump.support ? 'support' : 'timeline';
-    setSelectedDayStart(row.jump.day);
-    requestScrollToTime(screenKey, row.event.dateFrom, row.event.dateTo, row.event.categoryId);
-    if (navigationRef.isReady()) {
-      if (row.jump.support) {
-        navigationRef.navigate('SupportTimeline');
-      } else {
-        navigationRef.navigate('Timeline');
-      }
-    }
+    jumpToTimeline(row.event, row.jump);
     closeDetail();
-  }, [setSelectedDayStart, requestScrollToTime, closeDetail]);
+  }, [jumpToTimeline, closeDetail]);
 
   const imageHeight = heroHeight(innerWidth, height);
   const links = useMemo(() => artistLinksModel(artist), [artist]);

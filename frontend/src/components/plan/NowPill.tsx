@@ -9,7 +9,8 @@ import { useInterest } from '../../context/InterestContext';
 import { usePlanStore } from '../../context/PlanContext';
 import { useMinuteNow } from '../../hooks/useMinuteNow';
 import { navigationRef } from '../../navigation/navigationRef';
-import { nowPillModel, type NowPillModel } from './NowPill.model';
+import { useJumpToTimeline } from '../../navigation/useJumpToTimeline';
+import { nowPillModel, nowPillTap, nowPillTarget, type NowPillModel, type NowPillTarget } from './NowPill.model';
 import { BOLD, PROGRESS_COLORS, TABULAR } from './planStyles';
 import { colors } from '../../styling/tokens';
 
@@ -135,15 +136,31 @@ function NowPillViewBase({ state, onPress }: ViewProps) {
  */
 export const NowPillView = memo(NowPillViewBase);
 
-/** Opens My plan on today, scrolled to now. */
-function useOpenPlanAtNow(): () => void {
+/**
+ * What a tap does (nowPillTap): on My plan, shows the pill's set on its
+ * timeline; elsewhere, opens My plan on today, scrolled to now. The screen is
+ * read at tap time, so changing screens does not re-render the pill.
+ */
+function useNowPillPress(target: NowPillTarget | null): () => void {
   const store = usePlanStore();
+  const jumpToTimeline = useJumpToTimeline();
   return useCallback((): void => {
-    store.requestNow();
-    if (navigationRef.isReady()) {
-      navigationRef.navigate('MyPlan');
+    if (!navigationRef.isReady()) {
+      return;
     }
-  }, [store]);
+    const tap = nowPillTap(navigationRef.getCurrentRoute()?.name, target);
+    switch (tap.kind) {
+      case 'timeline':
+        jumpToTimeline(tap.target.event, tap.target.jump);
+        break;
+      case 'plan':
+        store.requestNow();
+        navigationRef.navigate('MyPlan');
+        break;
+      case 'none':
+        break;
+    }
+  }, [target, store, jumpToTimeline]);
 }
 
 export function NowPill() {
@@ -154,12 +171,17 @@ export function NowPill() {
   const artistEvents = useArtistEventMap(slug);
   const festivalDays = useFestivalDays(slug);
   const now = useMinuteNow();
-  const openPlanAtNow = useOpenPlanAtNow();
 
   const state = useMemo(
     () => nowPillModel(interests, { artists, stages, artistEvents }, festivalDays, now),
     [interests, artists, stages, artistEvents, festivalDays, now],
   );
 
-  return <NowPillView state={state} onPress={openPlanAtNow} />;
+  const target = useMemo(
+    () => nowPillTarget(interests, { artists, stages, artistEvents }, festivalDays, now),
+    [interests, artists, stages, artistEvents, festivalDays, now],
+  );
+  const onPress = useNowPillPress(target);
+
+  return <NowPillView state={state} onPress={onPress} />;
 }

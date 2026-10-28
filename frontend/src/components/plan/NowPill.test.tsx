@@ -76,7 +76,7 @@ it('steps its background up while pressed, as a button does, live or in a break'
   }
 });
 
-it('opens the plan when tapped', async () => {
+it('reacts to a tap', async () => {
   const onPress = jest.fn();
   await render(<NowPillView state={START_EMPEROR} onPress={onPress} />);
   await fireEvent.press(screen.getByRole('button'));

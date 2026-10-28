@@ -108,3 +108,39 @@ test('switches days and filters to conflicts only', async ({ appPage }) => {
   // No gaps in this mode.
   await expect(appPage.getByTestId('plan-gap')).toHaveCount(0);
 });
+
+test('on My plan the now pill goes to its set on the timeline, and back', async ({ appPage }) => {
+  await ready(appPage);
+  await pickClashingPair(appPage);
+  const pill = appPage.getByTestId('now-pill');
+  await pill.click();
+  await expect(appPage.getByTestId('plan-clash-bar').first()).toBeVisible({ timeout: 20_000 });
+
+  // On My plan: the Program, scrolled to the live set the pill names.
+  await pill.click();
+  const timeline = appPage.getByTestId('timeline-scroll-x').filter({ visible: true });
+  await expect(timeline).toBeVisible();
+  await expect(timeline.getByText('CRYSTAL LAKE', { exact: true }).first()).toBeInViewport();
+
+  // On the timeline: back to My plan.
+  await pill.click();
+  await expect(appPage.getByTestId('plan-clash-bar').first()).toBeVisible({ timeout: 20_000 });
+  await expect(timeline).toHaveCount(0);
+});
+
+test('in a break, the now pill on My plan goes to the next band, not to now', async ({ appPage }) => {
+  await ready(appPage);
+  // At 14:00 MINISTRY (22:20) is hours away: the pill counts down to it.
+  await mustSee(appPage, 'ministry');
+  await appPage.getByTestId('artist-search').fill('');
+  const pill = appPage.getByTestId('now-pill');
+  await expect(pill).toHaveAccessibleName(/MINISTRY START/);
+  await pill.click();
+  await expect(appPage.getByText('MINISTRY', { exact: true }).filter({ visible: true }).first()).toBeVisible({ timeout: 20_000 });
+
+  // On My plan: the Program, scrolled eight hours on from now to the band.
+  await pill.click();
+  const timeline = appPage.getByTestId('timeline-scroll-x').filter({ visible: true });
+  await expect(timeline).toBeVisible();
+  await expect(timeline.getByText('MINISTRY', { exact: true }).first()).toBeInViewport();
+});

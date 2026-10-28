@@ -2,7 +2,8 @@ import type { DbArtist, DbCategory, DbEvent, DbStage } from '../../types/backend
 import type { ConflictEntry } from '../../utils/conflictUtils';
 import { decodeCategoryColor } from '../../utils/color';
 import { getStageLocalized } from '../../utils/localization';
-import { formatDayLabel, formatTime, getFestivalDayStart } from '../timeline/timelineLayout';
+import { formatDayLabel, formatTime } from '../timeline/timelineLayout';
+import { timelineJump, type TimelineJump } from '../../navigation/timelineJump';
 import { colors } from '../../styling/tokens';
 
 // ── One of the artist's sets in the sheet: what it shows ──────────────────────
@@ -26,7 +27,7 @@ export type ArtistSetRowModel = {
   /** "Overlaps with 2 other event(s)" while the set clashes, else null. */
   conflict: string | null;
   /** Where a tap goes: the timeline (support or main) and the festival day it is drawn on. */
-  jump: { support: boolean; day: number };
+  jump: TimelineJump;
   /** The sheet's side padding, kept clear on either side. */
   margin: number;
 };
@@ -51,7 +52,7 @@ export function artistSetRowModel({ event, artist, stage, category, conflict, pa
     time: `${formatTime(event.dateFrom)}–${formatTime(event.dateTo)}`,
     borderColor: category !== undefined ? decodeCategoryColor(category.color) : colors.textPrimary,
     conflict: conflict !== undefined ? `Overlaps with ${conflict.overlapCount} other event(s)` : null,
-    jump: { support: !artist.isPlayable, day: getFestivalDayStart(event.dateFrom) },
+    jump: timelineJump(artist, event),
     margin: padding,
   };
 }

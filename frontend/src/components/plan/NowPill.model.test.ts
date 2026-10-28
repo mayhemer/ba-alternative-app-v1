@@ -1,4 +1,4 @@
-import { nowPillModel, type NowPillModel } from './NowPill.model';
+import { nowPillModel, nowPillTap, nowPillTarget, type NowPillModel } from './NowPill.model';
 import { getFestivalDayStart } from '../timeline/timelineLayout';
 import type { PlanInputs } from '../../utils/planUtils';
 import type { DbArtist, DbEvent, DbStage } from '../../types/backend';
@@ -118,5 +118,89 @@ describe('nowPillModel', () => {
   it.each(CASES)('%s', (_name, data, now, expected) => {
     const { inputs, interests } = setup(data);
     expect(nowPillModel(interests, inputs, DAYS, now)).toEqual(expected);
+  });
+});
+
+// ── Where a tap goes ──────────────────────────────────────────────────────────
+//
+// The pill's set is the set a tap on My plan jumps to on the timeline: the one
+// it names, on the festival day the timeline draws it on, on the main or the
+// support timeline. Dimensions: live, live in a clash (the one ending first,
+// not the other), the day-start break, a break, a set after midnight (the
+// festival day, not the calendar date), a support set; the logo (no set).
+
+/** `[eventId, support, day]` of the pill's set, or null for the logo. */
+function target(data: Spec[], now: number, supportIds: string[] = []): [string, boolean, number] | null {
+  const { inputs, interests } = setup(data);
+  const artists = inputs.artists.map((a) => (supportIds.includes(a.artistId) ? { ...a, isPlayable: false } : a));
+  const set = nowPillTarget(interests, { ...inputs, artists }, DAYS, now);
+  if (set === null) {
+    return null;
+  }
+  return [set.event.eventId, set.jump.support, set.jump.day];
+}
+
+describe('the set a tap goes to', () => {
+  it('a live set: that set, on the main timeline, today', () => {
+    expect(target(DAY, at(7, '19:23'))).toEqual(['e5', false, THU]);
+  });
+
+  it('two live Must-sees: Gojira, the one the pill names (ending first), not Batushka', () => {
+    expect(target(DAY, at(7, '19:52'))).toEqual(['e5', false, THU]);
+  });
+
+  it('in the day-start break: the first Must-see', () => {
+    expect(target(DAY, at(7, '11:00'))).toEqual(['e1', false, THU]);
+  });
+
+  it('in a break: the next Must-see', () => {
+    expect(target(DAY, at(7, '21:10'))).toEqual(['e8', false, THU]);
+  });
+
+  it('a set after midnight: Thursday, the festival day it is drawn on, not Friday', () => {
+    expect(target(DAY, at(8, '00:10'))).toEqual(['e9', false, THU]);
+  });
+
+  it('a support set: the support timeline', () => {
+    expect(target(DAY, at(7, '19:23'), ['5'])).toEqual(['e5', true, THU]);
+  });
+
+  it('the logo: no set', () => {
+    expect(target(DAY, at(7, '07:00'))).toBeNull();
+  });
+});
+
+// ── What a tap does ───────────────────────────────────────────────────────────
+//
+// Dimensions: the screen shown (My plan, each other screen, none known yet) ×
+// the pill (live, break, logo). On My plan a tap goes to the pill's set on the
+// timeline; anywhere else to My plan at now. The logo has no set: no tap.
+
+describe('nowPillTap', () => {
+  const { inputs, interests } = setup(DAY);
+  const gojiraLive = nowPillTarget(interests, inputs, DAYS, at(7, '19:23'));
+  const emperorNext = nowPillTarget(interests, inputs, DAYS, at(7, '21:10'));
+
+  it.each([['ArtistList'], ['Timeline'], ['SupportTimeline'], ['Settings'], [undefined]])(
+    'on %s: My plan at now',
+    (route) => {
+      expect(nowPillTap(route, gojiraLive)).toEqual({ kind: 'plan' });
+      expect(nowPillTap(route, emperorNext)).toEqual({ kind: 'plan' });
+    },
+  );
+
+  it('on My plan, live: the live set on its timeline', () => {
+    const tap = nowPillTap('MyPlan', gojiraLive);
+    expect(tap.kind === 'timeline' && tap.target.event.eventId).toBe('e5');
+  });
+
+  it('on My plan, in a break: the next set on its timeline', () => {
+    const tap = nowPillTap('MyPlan', emperorNext);
+    expect(tap.kind === 'timeline' && tap.target.event.eventId).toBe('e8');
+  });
+
+  it('the logo does nothing, on My plan or elsewhere', () => {
+    expect(nowPillTap('MyPlan', null)).toEqual({ kind: 'none' });
+    expect(nowPillTap('ArtistList', null)).toEqual({ kind: 'none' });
   });
 });

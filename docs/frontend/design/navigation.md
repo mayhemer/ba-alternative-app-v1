@@ -36,7 +36,8 @@ selected festival day, the lens scope, and which sheet is open (artist / conflic
 
 - **What is a position**: switching section from the drawer nav, jumping to an event
   from the artist detail view, switching the day on a timeline, opening the artist or
-  conflict sheet, changing the lens filter.
+  conflict sheet, changing the lens filter. Jumping to a set from the now pill on My plan is
+  the same position change as the artist sheet's jump.
 - **What is not**: opening the drawer or the lens panel, hidden categories, the artist
   list's search query, and expanding the artist sheet from collapsed. The drawer is
   left to React Navigation, which already closes it on back; the lens panel is closed
