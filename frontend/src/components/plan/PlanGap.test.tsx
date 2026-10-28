@@ -66,6 +66,13 @@ it('draws the conflict title its model carries, which opens the clash', async ()
   expect(onPressConflict).toHaveBeenCalledWith(setAt('19:00'));
 });
 
+it('starts the day-start break\'s bar below the start ring, the arrow at the tip of its fill', async () => {
+  // 6 h break, 160 pt tall; half gone at 11:00: the bar starts 10 pt down, the arrow centred at 10 + 75.
+  await render(<PlanGap item={planGapModel('opening', at('08:00'), setAt('14:00'), at('11:00'), true)} />);
+  expect(StyleSheet.flatten(screen.getByTestId('plan-gap-progress').props.style).top).toBe(10);
+  expect(StyleSheet.flatten(screen.getByTestId('plan-now-arrow').props.style).top).toBe(85 - 15);
+});
+
 it('draws the start ring only on the day-start break', async () => {
   const { rerender } = await render(<PlanGap item={planGapModel('opening', at('08:00'), setAt('14:00'), at('11:00'), true)} />);
   expect(screen.getByTestId('plan-rail-start')).toBeTruthy();

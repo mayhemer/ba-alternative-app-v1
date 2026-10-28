@@ -160,7 +160,7 @@ What each element shows comes from its own model (see Principles), built from th
 ### Day-start break
 
 - On today, from **08:00** until the first listed set starts, the list opens with a break. With Maybes shown, that set can be a Maybe; the now pill still counts down to the first Must-see.
-- It looks like a current gap: blue bar from 08:00, the arrow, `−3 h`. It takes the start cap's place, with the cap's ring at its top.
+- It looks like a current gap: blue bar from 08:00, the arrow, `−3 h`. It takes the start cap's place, with the cap's ring at its top; the blue bar starts below the ring (10 pt down), so its fill and the arrow measure the break from there.
 - None outside that window, on a day with no Must-see, or in conflicts-only mode.
 
 ### Now arrow

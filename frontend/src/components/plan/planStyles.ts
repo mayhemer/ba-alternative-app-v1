@@ -23,3 +23,6 @@ export const CLASH_BAR_WIDTH = 9.75;
 
 /** The list's side gutter, which the now arrow sits in. */
 export const LIST_GUTTER = 12;
+
+/** Size of the rail's end glyphs: the day's start ring and end square. */
+export const CAP_GLYPH = 10;

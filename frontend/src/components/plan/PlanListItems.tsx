@@ -4,7 +4,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { Text } from '../ui/Text';
 import { planStrings } from './planStrings';
-import { LIST_GUTTER, PROGRESS_BAR_WIDTH } from './planStyles';
+import { CAP_GLYPH, LIST_GUTTER, PROGRESS_BAR_WIDTH } from './planStyles';
 import type { DbEvent } from '../../types/backend';
 import { colors } from '../../styling/tokens';
 
@@ -74,7 +74,6 @@ export function ConflictGroupTitle({ event, onPress }: {
 
 export const RAIL_WIDTH = 2;
 export const RAIL_X = LIST_GUTTER + PROGRESS_BAR_WIDTH;
-export const CAP_GLYPH = 10;
 
 /** The day's start (a ring) or end (a filled square), centred on the rail at the cell's top or bottom. */
 export function RailEnd({ edge, height }: { edge: 'start' | 'end'; height: number }) {

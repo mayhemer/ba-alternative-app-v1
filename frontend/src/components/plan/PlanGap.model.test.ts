@@ -42,7 +42,7 @@ describe('planGapModel', () => {
 
   it('has no fill and no arrow while now is outside it', () => {
     expect(planGapModel('g', at('18:40'), setAt('19:00'), at('12:00'), false)).toEqual({
-      kind: 'gap', key: 'g', opening: false, current: false, label: '20 min', countdownToMaybe: false, height: 30, progress: 0, nowY: null, conflictTitle: null,
+      kind: 'gap', key: 'g', opening: false, current: false, label: '20 min', countdownToMaybe: false, height: 30, barTop: 0, progress: 0, nowY: null, conflictTitle: null,
     });
   });
 
@@ -88,5 +88,23 @@ describe('planGapModel', () => {
 
   it('carries the day-start flag it was built with', () => {
     expect(planGapModel('opening', at('08:00'), setAt('14:00'), at('11:00'), true).opening).toBe(true);
+  });
+
+  it('starts the bar of a running gap at its top', () => {
+    expect(planGapModel('g', at('20:30'), setAt('22:30'), at('21:10'), false).barTop).toBe(0);
+  });
+
+  it('starts the day-start break\'s bar below the start ring, the arrow at the tip of the shorter fill', () => {
+    // 08:00 → 14:00 is 6 h: 160 pt tall (capped); at 11:00 half of it has gone.
+    const gap = planGapModel('opening', at('08:00'), setAt('14:00'), at('11:00'), true);
+    expect(gap.height).toBe(160);
+    expect(gap.barTop).toBe(10);
+    expect(gap.progress).toBeCloseTo(0.5);
+    expect(gap.nowY).toBeCloseTo(85);
+  });
+
+  it('puts the arrow right under the start ring in the day-start break\'s first minute', () => {
+    const gap = planGapModel('opening', at('08:00'), setAt('14:00'), at('08:00'), true);
+    expect(gap.nowY).toBe(10);
   });
 });

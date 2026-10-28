@@ -54,7 +54,7 @@ function PlanGapBase({ item, onPressConflict = NO_OP }: Props) {
         <View
           testID="plan-gap-progress"
           pointerEvents="none"
-          style={{ position: 'absolute', left: LIST_GUTTER, top: 0, bottom: 0, width: PROGRESS_BAR_WIDTH, borderRadius: 3, overflow: 'hidden', backgroundColor: colors.breakTrack }}
+          style={{ position: 'absolute', left: LIST_GUTTER, top: item.barTop, bottom: 0, width: PROGRESS_BAR_WIDTH, borderRadius: 3, overflow: 'hidden', backgroundColor: colors.breakTrack }}
         >
           <View testID="plan-gap-fill" style={{ width: PROGRESS_BAR_WIDTH, height: `${item.progress * 100}%`, backgroundColor: colors.breakBlue }} />
         </View>

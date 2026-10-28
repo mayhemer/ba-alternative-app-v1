@@ -1,7 +1,8 @@
 import React, { memo } from 'react';
 import { View } from 'react-native';
 import Svg, { Line } from 'react-native-svg';
-import { CAP_GLYPH, ConflictGroupTitle, RAIL_WIDTH, RAIL_X, RailEnd } from './PlanListItems';
+import { ConflictGroupTitle, RAIL_WIDTH, RAIL_X, RailEnd } from './PlanListItems';
+import { CAP_GLYPH } from './planStyles';
 import { sameProps } from '../sameProps';
 import type { PlanCapModel } from './PlanCap.model';
 import type { DbEvent } from '../../types/backend';

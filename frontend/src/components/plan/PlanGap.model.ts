@@ -1,4 +1,5 @@
 import { formatDuration, formatRemaining } from './planStrings';
+import { CAP_GLYPH } from './planStyles';
 import type { DbEvent } from '../../types/backend';
 
 // ── A gap between sets: what it shows ─────────────────────────────────────────
@@ -39,9 +40,11 @@ export type PlanGapModel = {
   /** Current, and a Maybe is listed under it: the countdown is drawn smaller, in a dashed box. */
   countdownToMaybe: boolean;
   height: number;
+  /** Where the blue bar starts, from the gap's top: below the start ring on the day-start break, else 0. */
+  barTop: number;
   /** Elapsed fraction while current, else 0: the blue fill. */
   progress: number;
-  /** The now arrow's centre from the gap's top while current, else null. */
+  /** The now arrow's centre from the gap's top while current (the tip of the fill), else null. */
   nowY: number | null;
   /** The first set of the clash group right under it: the "Conflict" title it draws. */
   conflictTitle: DbEvent | null;
@@ -59,10 +62,11 @@ export function planGapModel(
   const to = next.dateFrom;
   const minutes = Math.round((to - from) / MINUTE_MS);
   if (now < from || now >= to) {
-    return { kind: 'gap', key, opening, current: false, label: formatDuration(to - from), countdownToMaybe: false, height: gapHeight(minutes), progress: 0, nowY: null, conflictTitle: null };
+    return { kind: 'gap', key, opening, current: false, label: formatDuration(to - from), countdownToMaybe: false, height: gapHeight(minutes), barTop: 0, progress: 0, nowY: null, conflictTitle: null };
   }
   const height = Math.max(GAP_LAYOUT.currentMinHeight, gapHeight(minutes));
   const progress = (now - from) / (to - from);
+  const barTop = opening ? CAP_GLYPH : 0;
   return {
     kind: 'gap',
     key,
@@ -71,8 +75,9 @@ export function planGapModel(
     label: formatRemaining(to - now),
     countdownToMaybe: nextLevel === 'maybe',
     height,
+    barTop,
     progress,
-    nowY: progress * height,
+    nowY: barTop + progress * (height - barTop),
     conflictTitle: null,
   };
 }
