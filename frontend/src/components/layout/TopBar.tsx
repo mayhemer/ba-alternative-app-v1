@@ -17,7 +17,8 @@ export function TopBar() {
     >
 
       {/* Left slot — DrawerButton renders nothing on wide screens (drawer is permanent); LeftComponent layered after if set.
-          The side slots are 56 pt: the widest controls in them, the lens and filter chips, are 54 pt. */}
+          The side slots are 56 pt; the widest controls in them, the lens and filter chips (TopBarChip), are 38 pt,
+          right-aligned, which leaves the now pill room on its right. */}
       <View className="w-14 items-start">
         <DrawerButton />
         {LeftComponent !== undefined ? <LeftComponent /> : null}

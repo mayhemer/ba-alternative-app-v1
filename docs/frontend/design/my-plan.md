@@ -73,14 +73,14 @@ On every screen that has a top bar. On festival days it replaces the logo while 
 - **Source:** today's Must-sees only. The pill ignores both plan filters. With Maybes shown, the list's break or gap can count down to a Maybe while the pill counts down to the next Must-see. That's intended: the list draws a countdown to a Maybe in a dashed box (see [Gaps](#gaps)), so the two read apart.
 - **No words:** the dot, the colours and the arrow carry the state, so nothing needs translating. The accessibility label still says it: `GOJIRA LIVE −37 min`, `NAPALM DEATH START −1 h 30`.
 - **Text:** 12.6 pt bold (10 % under the plan rows' 14 pt), to fit more of the band name, which the festival feed sends in capitals. Times join their numbers and units with narrow no-break spaces (U+202F): about half a space each, without running `37min` together.
-- **Size:** the whole centre between the side slots (56 pt each; the lens and filter chips are 54 pt), 8 pt in from each, so about 10 pt clear of the right chip. 36 pt tall (tap area extended to 44 pt with `hitSlop`), radius 18, 1 px `borderMid` border, `surfaceRaised` background, 12 pt padding, 7 pt gaps.
+- **Size:** the whole centre between the side slots (56 pt each; the lens and filter chips are 38 pt, right-aligned), 8 pt in from each, so 26 pt clear of the right chip. 36 pt tall (tap area extended to 44 pt with `hitSlop`), radius 18, 1 px `borderMid` border, `surfaceRaised` background, 12 pt padding, 7 pt gaps.
 - **Pressed:** while a finger is down, the background steps up from `surfaceRaised` to `surfacePressed` (`#262626`), as a button's does.
 - **Conflicts:** the pill never cycles or animates. Motion at the top of every screen is distracting, a mid-glance switch is unreadable, and it ignores the reduce-motion setting.
 - **Tap:** opens My plan on **today, scrolled to now**. Back returns to the previous screen through the existing back history.
 
 ### Filter chip (right, My plan only)
 
-- **Shape:** the same "state + ⋮" shape as the lens chip on Artists and Program.
+- **Shape:** the same "state + ⋮" frame as the lens chip on Artists and Program (`TopBarChip`): a 24 pt state slot right against a 14 pt slot for the dots, 38 pt in all. The dots slot is narrower than the 20 pt glyph, whose dots are a thin column in its middle; 14 pt keeps them clear of a friend avatar's star badge.
 - **State slot:**
   - the ½ star, accent and half-filled when Maybe picks are shown, a grey outline when they're hidden;
   - or a **red ⚠** while "Show only conflicts" is on.
