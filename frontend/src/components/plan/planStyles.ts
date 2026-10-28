@@ -24,5 +24,8 @@ export const CLASH_BAR_WIDTH = 9.75;
 /** The list's side gutter, which the now arrow sits in. */
 export const LIST_GUTTER = 12;
 
+/** Space below every item of the list: between two sets back to back, or a set and the gap rail. */
+export const ITEM_SPACING = 6;
+
 /** Size of the rail's end glyphs: the day's start ring and end square. */
 export const CAP_GLYPH = 10;

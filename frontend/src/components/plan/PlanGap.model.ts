@@ -1,5 +1,5 @@
 import { formatDuration, formatRemaining } from './planStrings';
-import { CAP_GLYPH } from './planStyles';
+import { CAP_GLYPH, ITEM_SPACING } from './planStyles';
 import type { DbEvent } from '../../types/backend';
 
 // ── A gap between sets: what it shows ─────────────────────────────────────────
@@ -40,7 +40,7 @@ export type PlanGapModel = {
   /** Current, and a Maybe is listed under it: the countdown is drawn smaller, in a dashed box. */
   countdownToMaybe: boolean;
   height: number;
-  /** Where the blue bar starts, from the gap's top: below the start ring on the day-start break, else 0. */
+  /** Where the blue bar starts, from the gap's top: on the day-start break below the start ring, an item spacing clear of it; else 0. */
   barTop: number;
   /** Elapsed fraction while current, else 0: the blue fill. */
   progress: number;
@@ -66,7 +66,7 @@ export function planGapModel(
   }
   const height = Math.max(GAP_LAYOUT.currentMinHeight, gapHeight(minutes));
   const progress = (now - from) / (to - from);
-  const barTop = opening ? CAP_GLYPH : 0;
+  const barTop = opening ? CAP_GLYPH + ITEM_SPACING : 0;
   return {
     kind: 'gap',
     key,

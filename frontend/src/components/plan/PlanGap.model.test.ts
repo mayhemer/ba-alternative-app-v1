@@ -96,15 +96,16 @@ describe('planGapModel', () => {
 
   it('starts the day-start break\'s bar below the start ring, the arrow at the tip of the shorter fill', () => {
     // 08:00 → 14:00 is 6 h: 160 pt tall (capped); at 11:00 half of it has gone.
+    // The bar starts under the 10 pt ring plus the 6 pt item spacing: 16 + 144 / 2.
     const gap = planGapModel('opening', at('08:00'), setAt('14:00'), at('11:00'), true);
     expect(gap.height).toBe(160);
-    expect(gap.barTop).toBe(10);
+    expect(gap.barTop).toBe(16);
     expect(gap.progress).toBeCloseTo(0.5);
-    expect(gap.nowY).toBeCloseTo(85);
+    expect(gap.nowY).toBeCloseTo(88);
   });
 
   it('puts the arrow right under the start ring in the day-start break\'s first minute', () => {
     const gap = planGapModel('opening', at('08:00'), setAt('14:00'), at('08:00'), true);
-    expect(gap.nowY).toBe(10);
+    expect(gap.nowY).toBe(16);
   });
 });

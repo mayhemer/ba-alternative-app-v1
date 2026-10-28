@@ -4,6 +4,7 @@ import { planCapModel, type PlanCapModel } from '../components/plan/PlanCap.mode
 import { planEmptyModel, type PlanEmptyModel } from '../components/plan/PlanEmpty.model';
 import { planGapModel, type PlanGapModel } from '../components/plan/PlanGap.model';
 import { planSetModel, type PlanSetModel } from '../components/plan/PlanSetRow.model';
+import { ITEM_SPACING } from '../components/plan/planStyles';
 import type { DbArtist, DbEvent } from '../types/backend';
 
 // ── My plan: one festival day of the user's picks ─────────────────────────────
@@ -33,7 +34,7 @@ export type PlanItem = PlanSetModel | PlanGapModel | PlanCapModel | PlanSpacerIt
 
 export const PLAN_LAYOUT = {
   paddingTop: 12,
-  itemSpacing: 6,
+  itemSpacing: ITEM_SPACING,
   spacer: 24,
 } as const;
 

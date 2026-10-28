@@ -67,10 +67,11 @@ it('draws the conflict title its model carries, which opens the clash', async ()
 });
 
 it('starts the day-start break\'s bar below the start ring, the arrow at the tip of its fill', async () => {
-  // 6 h break, 160 pt tall; half gone at 11:00: the bar starts 10 pt down, the arrow centred at 10 + 75.
+  // 6 h break, 160 pt tall; half gone at 11:00: the bar starts 16 pt down (10 pt ring + 6 pt item spacing),
+  // the arrow centred at 16 + 72.
   await render(<PlanGap item={planGapModel('opening', at('08:00'), setAt('14:00'), at('11:00'), true)} />);
-  expect(StyleSheet.flatten(screen.getByTestId('plan-gap-progress').props.style).top).toBe(10);
-  expect(StyleSheet.flatten(screen.getByTestId('plan-now-arrow').props.style).top).toBe(85 - 15);
+  expect(StyleSheet.flatten(screen.getByTestId('plan-gap-progress').props.style).top).toBe(16);
+  expect(StyleSheet.flatten(screen.getByTestId('plan-now-arrow').props.style).top).toBe(88 - 15);
 });
 
 it('draws the start ring only on the day-start break', async () => {
