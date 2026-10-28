@@ -159,8 +159,8 @@ export function buildPlanDay(
     groupEnd = groupEnd === null ? event.dateTo : Math.max(groupEnd, event.dateTo);
   }
 
-  if (caps) {
-    items.push(planCapModel('end'));
+  if (caps && groupEnd !== null) {
+    items.push(planCapModel('end', { listedEnd: groupEnd, dayStart, now }));
   }
   if (visible.length === 0) {
     items.push(planEmptyModel(conflictsOnly));
@@ -170,9 +170,9 @@ export function buildPlanDay(
 
 // ── Positions ─────────────────────────────────────────────────────────────────
 
-/** Whether the white "now" arrow sits on this item. */
+/** Whether the red "now" arrow sits on this item. */
 function hostsNow(item: PlanItem): boolean {
-  return (item.kind === 'set' || item.kind === 'gap') && item.nowY !== null;
+  return (item.kind === 'set' || item.kind === 'gap' || item.kind === 'cap') && item.nowY !== null;
 }
 
 /** Top y of each item in the list's content, padding and spacing included. */

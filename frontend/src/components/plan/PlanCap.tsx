@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { View } from 'react-native';
 import Svg, { Line } from 'react-native-svg';
-import { ConflictGroupTitle, RAIL_WIDTH, RAIL_X, RailEnd } from './PlanListItems';
+import { ConflictGroupTitle, NowArrow, RAIL_WIDTH, RAIL_X, RailEnd } from './PlanListItems';
 import { CAP_GLYPH } from './planStyles';
 import { sameProps } from '../sameProps';
 import type { PlanCapModel } from './PlanCap.model';
@@ -11,7 +11,8 @@ import { colors } from '../../styling/tokens';
 // ── A day cap ─────────────────────────────────────────────────────────────────
 //
 // A bare rail of fixed length, ring on top or square at the bottom. The start
-// cap right above a clash group carries its "Conflict" title.
+// cap right above a clash group carries its "Conflict" title; the end cap, once
+// the day's listed sets are over, the now arrow.
 
 type Props = { item: PlanCapModel; onPressConflict?: (event: DbEvent) => void };
 
@@ -26,6 +27,7 @@ function PlanCapBase({ item, onPressConflict = NO_OP }: Props) {
         <Line x1={RAIL_WIDTH / 2} y1={from} x2={RAIL_WIDTH / 2} y2={to} stroke={colors.borderMid} strokeWidth={RAIL_WIDTH} strokeDasharray="2,2" />
       </Svg>
       <RailEnd edge={item.edge} height={item.height} />
+      {item.nowY !== null && <NowArrow y={item.nowY} />}
       {item.conflictTitle !== null && <ConflictGroupTitle event={item.conflictTitle} onPress={onPressConflict} />}
     </View>
   );

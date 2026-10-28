@@ -103,7 +103,7 @@ What each element shows comes from its own model (see Principles), built from th
 | Set row | the set, its artist and stage, now, its overlaps with other Must-sees, the Must-sees live now, whether it heads a clash group | time range, stage, status (`LIVE −x`, `START −x`, `done`), progress, now arrow, clash bars |
 | Gap | where it starts (the end of everything listed above) and the set listed right under it with its pick level, now | length or countdown (boxed when it counts to a Maybe), height, fill, now arrow, the conflict title of the group under it |
 | Day-start break | a gap from 08:00 to the first **listed** set | as a gap, with the start ring |
-| Cap / spacer | its edge, or the clash group under it | the rail end, the conflict title of the group under it |
+| Cap / spacer | its edge, or the clash group under it; the end cap also the end of everything listed, the shown day, now | the rail end, the conflict title of the group under it; the end cap the now arrow once the day's listed sets are over |
 | Empty day | whether only conflicts are shown | its sentence |
 
 ### No day title
@@ -154,7 +154,7 @@ What each element shows comes from its own model (see Principles), built from th
 - **End:** a filled square (8 pt, rail colour) centred on the rail at the bottom.
 - While the day-start break runs, the break opens the list instead of the start cap, with the ring at its top.
 - The first set's `⚠ Conflict` title floats in the start cap like in any gap, so no spacer is needed.
-- They never carry the now arrow.
+- The start cap never carries the now arrow. The end cap carries it, centred on its square, from the minute the last **listed** set ends until the 06:00 day change.
 - None in conflicts-only mode, or on an empty day.
 
 ### Day-start break
@@ -166,10 +166,10 @@ What each element shows comes from its own model (see Principles), built from th
 ### Now arrow
 
 - A red (`danger`) triangle, 16 × 24 pt, with a 1 pt white outline. Its tip reaches about 4 pt into the row, halfway across the 6.5 pt progress bar, and it is drawn over the row. Red is the now colour across the app (the timeline's now line, the live dot).
-- Its centre sits at the **tip of the progress fill**: on a live row (Must-see or Maybe), in the current gap, or in the day-start break.
+- Its centre sits at the **tip of the progress fill**: on a live row (Must-see or Maybe), in the current gap, or in the day-start break. Once the last listed set has ended it sits on the end cap's square instead, as there is no fill left.
 - With two live sets there are two arrows. Rows aren't on a shared time scale, so each arrow means "this far into this set".
 - No arrow before the festival.
-- After the day's last Must-see ends there is no arrow until the 06:00 day change. An "End of the day" marker that carried it was tried and dropped; the end cap closes the day instead, without the arrow.
+- After the day's last listed set ends the end cap carries the arrow until the 06:00 day change; from then the day is past and has no arrow. (An "End of the day" marker that carried it was tried and dropped; the end cap does the job without an extra element.) Opening My plan at now then scrolls to the end cap.
 - A full-length "now line" was tried and dropped. It sat at the screen edge (rounded corners, cases, the back-swipe zone), was the brightest element with the weakest meaning, and duplicated the dimmed past rows.
 
 ### End of the day and empty day

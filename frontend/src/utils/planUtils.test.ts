@@ -39,7 +39,8 @@ import type { DbArtist, DbEvent, DbStage } from '../types/backend';
 // Each expected list is written out by hand from the fixture times. Read a line
 // as: element, name, ⚠ when it heads a clash group, its state, and in quotes the
 // text it shows. "gap now" is the gap "now" falls in; "to Maybe" marks its
-// countdown to a Maybe, drawn in a dashed box.
+// countdown to a Maybe, drawn in a dashed box. "cap end now" is the end cap
+// carrying the now arrow, after the last listed set.
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 //
@@ -152,7 +153,7 @@ function statusText(status: SetStatus): string {
 function shape(items: PlanItem[]): string[] {
   return items.map((item) => {
     switch (item.kind) {
-      case 'cap': return `cap ${item.edge}`;
+      case 'cap': return `cap ${item.edge}${item.nowY !== null ? ' now' : ''}`;
       case 'spacer': return 'spacer';
       case 'empty': return `empty "${item.text}"`;
       case 'gap': return `gap${item.current ? ' now' : ''} "${item.label}"${item.opening ? ' opening' : ''}${item.countdownToMaybe ? ' to Maybe' : ''}`;
@@ -278,7 +279,13 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
     ...MUSTS_AHEAD.slice(9),
     'cap end',
   ]],
-  ['after the last set, before the 06:00 day change: nothing current', DAY, { now: at(8, '02:00') }, [
+  ['the minute the last set ends: the end cap takes the arrow', DAY, { now: at(8, '01:30') }, [
+    'cap start', ...MUSTS_DONE, 'cap end now',
+  ]],
+  ['after the last set, before the 06:00 day change: the end cap keeps the arrow', DAY, { now: at(8, '05:59') }, [
+    'cap start', ...MUSTS_DONE, 'cap end now',
+  ]],
+  ['at the 06:00 day change: the day is past, the end cap without the arrow', DAY, { now: at(8, '06:00') }, [
     'cap start', ...MUSTS_DONE, 'cap end',
   ]],
 
@@ -341,6 +348,9 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
   ['only Maybes, hidden: an empty day', MAYBE_ONLY, { now: at(7, '11:00') }, [
     'empty "Nothing planned for this day"',
   ]],
+  ['only Maybes, shown, after the last one: the end cap takes the arrow without a Must-see', MAYBE_ONLY, { now: at(7, '16:00'), maybe: true }, [
+    'cap start', 'maybe Only maybe — past', 'cap end now',
+  ]],
 
   // Only conflicts
   ['only conflicts: just the clashing Must-sees, with room for the group title', DAY, { now: at(7, '19:23'), conflictsOnly: true }, [
@@ -348,6 +358,9 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
   ]],
   ['only conflicts: no Maybes and no day-start break, whatever the Maybe switch', DAY, { now: at(7, '11:00'), conflictsOnly: true, maybe: true }, [
     'spacer', 'must Gojira ⚠ — upcoming', 'must Batushka — upcoming',
+  ]],
+  ['only conflicts, after the last set: no end cap, so no arrow', DAY, { now: at(8, '02:00'), conflictsOnly: true }, [
+    'spacer', 'must Gojira ⚠ — past "done"', 'must Batushka — past "done"',
   ]],
   ['only conflicts, on a day without a clash', DAY, { day: FRI, now: at(7, '11:00'), conflictsOnly: true }, [
     'empty "No conflicts on this day"',
@@ -512,8 +525,10 @@ describe('nowScrollOffset', () => {
     expect(nowScrollOffset(build(DAY, { day: FRI, now: at(7, '19:23') }), 600)).toBeNull();
   });
 
-  it('is null once today\'s last set has ended', () => {
-    expect(nowScrollOffset(build(DAY, { now: at(8, '02:00') }), 600)).toBeNull();
+  it('aims at the end cap once today\'s last set has ended', () => {
+    const items = build(DAY, { now: at(8, '02:00') });
+    const cap = items.findIndex((i) => i.kind === 'cap' && i.edge === 'end');
+    expect(nowScrollOffset(items, 600)).toBe(Math.max(0, itemOffsets(items)[cap] - 200));
   });
 
   it('is null outside the festival', () => {
