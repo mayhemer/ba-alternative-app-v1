@@ -252,16 +252,19 @@ const SCROLL_Y = 'timeline-scroll-y';
 
 type ScrollCommand = { x?: number; y?: number; animated?: boolean };
 
+/** The Jest mock is still a class; ScrollView's own type stopped being one in RN 0.88. */
+type MockScrollView = { props: { testID?: string }; scrollTo: (options: ScrollCommand) => void };
+
 /**
  * Every scrollTo issued to the scroller with this testID, oldest first. React
  * Native's Jest mock puts a single jest.fn on the ScrollView prototype, shared by
  * every instance; the call's `this` tells them apart.
  */
 function scrollCommands(testID: string): ScrollCommand[] {
-  const scrollTo = jest.mocked(ScrollView.prototype.scrollTo);
+  const scrollTo = jest.mocked((ScrollView.prototype as MockScrollView).scrollTo);
   return scrollTo.mock.calls
-    .filter((_, i) => (scrollTo.mock.contexts[i] as ScrollView).props.testID === testID)
-    .map(([options]) => options as ScrollCommand);
+    .filter((_, i) => (scrollTo.mock.contexts[i] as MockScrollView).props.testID === testID)
+    .map(([options]) => options);
 }
 
 function clearScrollCommands(): void {

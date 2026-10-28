@@ -21,6 +21,8 @@ const config: Config = {
     '<rootDir>/tests/setup/perf.setup.ts',
   ],
   testPathIgnorePatterns: ['<rootDir>/node_modules/'],
+  // Same as jest.config.ts: Reanimated's and Worklets' web implementations.
+  resolver: 'react-native-reanimated/jest/resolver',
   // Generous on purpose. Each scenario repeats its subject to fill a ~20 ms
   // window and runs 30 times, so a scenario is already seconds long — and a real
   // regression multiplies that. At Jest's 5 s default a large slowdown makes the

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+import type { NativeScrollEvent, NativeSyntheticEvent, ScrollViewInstance } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedScrollHandler,
@@ -165,7 +165,7 @@ export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress }:
   }, []);
 
   // Imperative handle for the scroll-to-event jump below.
-  const verticalScrollRef = useRef<ScrollView>(null);
+  const verticalScrollRef = useRef<ScrollViewInstance>(null);
 
   // ── Now-line position ────────────────────────────────────────────────────────
   // Shared with every NowLine and consumed on the UI thread; it follows the

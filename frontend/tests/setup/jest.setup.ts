@@ -1,5 +1,6 @@
 // ── Shared test setup ─────────────────────────────────────────────────────────
 
+import { Platform } from 'react-native';
 import { setCurrentTimeMs } from '../../src/utils/clock';
 import { loadFonts } from '../../src/styling/fonts';
 
@@ -8,10 +9,14 @@ import { loadFonts } from '../../src/styling/fonts';
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'));
 
-// Worklets (Reanimated's runtime) throws at import when its native half is
-// missing, which under Jest it always is. Its own mock stands in for the native
-// part only; Reanimated itself still runs its real JS path.
-jest.mock('react-native-worklets', () => require('react-native-worklets/src/mock'));
+// Reanimated's supported Jest setup: its resolver (in the Jest configs) loads the
+// web implementations of Reanimated and Worklets, and this adds its matchers.
+// https://docs.swmansion.com/react-native-reanimated/docs/guides/testing/
+// Native presets only: the web preset runs no component tests, and under jsdom
+// Reanimated fails at import (no window.matchMedia).
+if (Platform.OS !== 'web') {
+  require('react-native-reanimated').setUpTests();
+}
 
 // SecureStore backs the native half of tokenStorage. jest-expo auto-mocks the
 // module so calls do not crash, but that stub stores nothing — a write followed
