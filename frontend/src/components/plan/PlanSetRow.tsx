@@ -3,7 +3,7 @@ import { Pressable, View } from 'react-native';
 import Svg, { ClipPath, Defs, Path, Rect } from 'react-native-svg';
 import { Text } from '../ui/Text';
 import { stripePath, CONFLICT_STRIPE } from '../timeline/ArtistBlock';
-import { BOLD, CLASH_BAR_WIDTH, LIST_GUTTER, LIVE_BORDER, PROGRESS_BAR_WIDTH, STATUS_LABEL, TABULAR } from './planStyles';
+import { BOLD, CLASH_BAR_WIDTH, LIST_GUTTER, LIVE_BORDER, PROGRESS_BAR_WIDTH, PROGRESS_COLORS, STATUS_LABEL, TABULAR, type ProgressColors } from './planStyles';
 import { NowArrow } from './PlanListItems';
 import { sameProps } from '../sameProps';
 import type { ClashBar, PlanSetModel, SetStatus } from './PlanSetRow.model';
@@ -59,14 +59,14 @@ function ClashStripes({ bar, rowHeight, clipId }: { bar: ClashBar; rowHeight: nu
   );
 }
 
-function LeftProgress({ progress, track, fill }: { progress: number; track: string; fill: string }) {
+function LeftProgress({ progress, palette }: { progress: number; palette: ProgressColors }) {
   return (
     <View
       testID="plan-live-progress"
       pointerEvents="none"
-      style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: PROGRESS_BAR_WIDTH, backgroundColor: track }}
+      style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: PROGRESS_BAR_WIDTH, backgroundColor: palette.remaining }}
     >
-      <View style={{ width: PROGRESS_BAR_WIDTH, height: `${progress * 100}%`, backgroundColor: fill }} />
+      <View testID="plan-live-fill" style={{ width: PROGRESS_BAR_WIDTH, height: `${progress * 100}%`, backgroundColor: palette.passed }} />
     </View>
   );
 }
@@ -125,7 +125,7 @@ function SetCard({ item, onPressArtist, background = colors.surface, border = co
           opacity: item.state === 'past' ? PAST_OPACITY : 1,
         }}
       >
-        {live && <LeftProgress progress={item.progress} track={colors.borderMid} fill={colors.maybeText} />}
+        {live && <LeftProgress progress={item.progress} palette={PROGRESS_COLORS.maybeLive} />}
         <Text style={[TABULAR, { fontSize: 13, color: colors.textMuted }]}>{item.timeText}</Text>
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           {live && <View testID="plan-maybe-live-dot" style={LIVE_DOT} />}
@@ -157,7 +157,7 @@ function SetCard({ item, onPressArtist, background = colors.surface, border = co
       {item.clashBars.map((bar, i) => (
         <ClashStripes key={`${item.key}-${i}`} bar={bar} rowHeight={item.height} clipId={`planClash-${item.key}-${i}`} />
       ))}
-      {live && <LeftProgress progress={item.progress} track={colors.liveTrack} fill={colors.accent} />}
+      {live && <LeftProgress progress={item.progress} palette={PROGRESS_COLORS.live} />}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <Text style={[TABULAR, { fontSize: 13, color: colors.textMuted }]}>{item.timeText}</Text>
         <Text numberOfLines={1} style={[BOLD, { flex: 1, fontSize: 15, color: colors.textPrimary }]}>{item.artist.name}</Text>

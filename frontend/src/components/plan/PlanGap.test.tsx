@@ -36,6 +36,12 @@ it('while current, shows the countdown, the fill and the arrow at the tip of the
   expect(StyleSheet.flatten(screen.getByTestId('plan-now-arrow').props.style).top).toBe(gap.nowY! - 15);
 });
 
+it('fills the current gap\'s bar dark blue for the time passed, over the break blue for what remains', async () => {
+  await render(<PlanGap item={planGapModel('g', at('20:30'), setAt('22:30'), at('21:10'), false)} />);
+  expect(StyleSheet.flatten(screen.getByTestId('plan-gap-progress').props.style).backgroundColor).toBe(colors.breakBlue);
+  expect(StyleSheet.flatten(screen.getByTestId('plan-gap-fill').props.style).backgroundColor).toBe(colors.breakPassed);
+});
+
 it('draws a countdown to a Maybe at regular size, in a dashed box in the break blue', async () => {
   const gap = planGapModel('g', at('20:30'), setAt('22:30'), at('21:10'), false, 'maybe');
   await render(<PlanGap item={gap} />);

@@ -15,6 +15,22 @@ export const TABULAR: TextStyle = { fontVariant: ['tabular-nums'] };
 /** A live set's border, Must-see or Maybe: the full accent, to hold up in sunlight. */
 export const LIVE_BORDER = colors.accent;
 
+/**
+ * Every progress bar's two colours: the passed part dark, what remains light,
+ * so the bright part is the time still to come. The bar is the remaining
+ * colour, and the passed part fills it from the start.
+ */
+export const PROGRESS_COLORS = {
+  /** A live Must-see: its row and the now pill. */
+  live: { passed: colors.livePassed, remaining: colors.accent },
+  /** A live Maybe. */
+  maybeLive: { passed: colors.borderMid, remaining: colors.maybeText },
+  /** The current gap and the day-start break. */
+  break: { passed: colors.breakPassed, remaining: colors.breakBlue },
+} as const;
+
+export type ProgressColors = { passed: string; remaining: string };
+
 /** Width of the progress bar on a row's left edge, and of the gap rail's offset. */
 export const PROGRESS_BAR_WIDTH = 6.5;
 

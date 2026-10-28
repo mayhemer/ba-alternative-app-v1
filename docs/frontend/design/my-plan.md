@@ -64,7 +64,7 @@ On every screen that has a top bar. On festival days it replaces the logo while 
 
 | State | Content | Progress |
 |---|---|---|
-| **Live** | left: red dot (7 pt), band name (bold, ellipsis); right: time left (bold accent): `● GOJIRA ……… −37 min` | 3 px bar along the bottom: track `liveTrack` `#4a3f17`, fill accent, elapsed fraction |
+| **Live** | left: red dot (7 pt), band name (bold, ellipsis); right: time left (bold accent): `● GOJIRA ……… −37 min` | 3 px bar along the bottom: accent for what remains, dark `livePassed` `#4a3f17` filling it for the elapsed fraction |
 | **Live, clash** | the live Must-see that **ends soonest**, then a red `warning-outline` glyph (13) at the far right; no count | same |
 | **Break** | centred: time to the start (bold blue `#5b9bff`), a chevron (`textMuted`), band name: `−1 h 30 › NAPALM DEATH` | none |
 | **Otherwise** | the logo | — |
@@ -120,7 +120,7 @@ What each element shows comes from its own model (see Principles), built from th
   - *upcoming, clashing with a Must-see that is live now*: `START` (11 bold caps), then `−17 min` (14 bold **red**). It tells you how long you can stay at the live band.
   - *past*: `done` (12, `textMuted`); the whole row at 45% opacity. Only during the festival: outside it (before or after) every set reads as upcoming, with no live bars, current gaps or arrows.
   - *upcoming otherwise*: empty. The countdown lives in the gap and the pill.
-- **Live progress:** a 6.5 pt bar on the left edge. Track `#4a3f17`, accent fill growing top → bottom with the elapsed fraction.
+- **Live progress:** a 6.5 pt bar on the left edge: accent for what remains, dark `#4a3f17` growing top → bottom with the elapsed fraction. Every progress bar (now pill, live rows, current gap) reads the same way: passed dark, remaining light (`PROGRESS_COLORS`).
 - **Tap behaviour:** see [Taps](#taps).
 
 ### Maybe row
@@ -129,7 +129,7 @@ What each element shows comes from its own model (see Principles), built from th
 - **Look:** 26 pt tall, one line: `time · name · stage` (13, `textMuted`). Muted, but bright enough to read in sunlight.
 - **Box:** a **1 px dashed** border in the category's border colour (as Must-see rows) and no background, with the same fixed insets as Must-see rows.
 - Never marked as a clash, and never part of conflict logic.
-- **Live:** a solid border in the full accent (`LIVE_BORDER`) instead of the dashed one, a red dot (7 pt) right before the name, a grey 6.5 pt left bar (track `#333`, fill `#8a8a8a`) and the now arrow. The dot moves only that row's name, by its width and gap.
+- **Live:** a solid border in the full accent (`LIVE_BORDER`) instead of the dashed one, a red dot (7 pt) right before the name, a grey 6.5 pt left bar (`#8a8a8a` for what remains, `#333` filling it for the elapsed fraction) and the now arrow. The dot moves only that row's name, by its width and gap.
 
 ### Gaps
 
@@ -141,7 +141,7 @@ What each element shows comes from its own model (see Principles), built from th
 - **Rail:** a 2 pt **dotted** `#333` line, offset 6.5 pt from the left (the width of the row's left bar).
 - **The current gap** (now falls inside it):
   - at least 44 pt tall;
-  - a blue 6.5 pt left bar (track `#1c2f52`, fill `#5b9bff`, elapsed fraction);
+  - a blue 6.5 pt left bar (`#5b9bff` for what remains, `#1c2f52` filling it for the elapsed fraction);
   - the now arrow;
   - a centred countdown `−1 h 20` (15 bold blue);
   - counting down to a **Maybe** (the set listed under it is one), the countdown is 13 regular blue in a 1 pt **dashed** blue box (radius 4, 8 pt side padding): the Maybe's own outline. It tells the list's countdown to a Maybe apart from the now pill's, which always counts to the next Must-see.
@@ -271,10 +271,10 @@ New values this screen introduces, to add as tokens:
 
 | Use | Value |
 |---|---|
-| live progress track | `#4a3f17` |
+| live progress, passed part (`livePassed`) | `#4a3f17` |
 | break / future blue | `#5b9bff` |
-| break track | `#1c2f52` |
-| Maybe live fill (`maybeText`) | `#8a8a8a` |
+| break progress, passed part (`breakPassed`) | `#1c2f52` |
+| Maybe live progress, remaining part (`maybeText`) | `#8a8a8a` |
 | row background and border | the set's category, as timeline blocks (`categoryBlockColors`) |
 
 ---

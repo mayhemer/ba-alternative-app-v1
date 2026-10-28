@@ -4,7 +4,7 @@ import Svg, { Line } from 'react-native-svg';
 import { Text } from '../ui/Text';
 import { ConflictGroupTitle, NowArrow, RAIL_WIDTH, RAIL_X, RailEnd } from './PlanListItems';
 import { sameProps } from '../sameProps';
-import { BOLD, LIST_GUTTER, PROGRESS_BAR_WIDTH, TABULAR } from './planStyles';
+import { BOLD, LIST_GUTTER, PROGRESS_BAR_WIDTH, PROGRESS_COLORS, TABULAR } from './planStyles';
 import type { PlanGapModel } from './PlanGap.model';
 import type { DbEvent } from '../../types/backend';
 import { colors } from '../../styling/tokens';
@@ -54,9 +54,9 @@ function PlanGapBase({ item, onPressConflict = NO_OP }: Props) {
         <View
           testID="plan-gap-progress"
           pointerEvents="none"
-          style={{ position: 'absolute', left: LIST_GUTTER, top: item.barTop, bottom: 0, width: PROGRESS_BAR_WIDTH, borderRadius: 3, overflow: 'hidden', backgroundColor: colors.breakTrack }}
+          style={{ position: 'absolute', left: LIST_GUTTER, top: item.barTop, bottom: 0, width: PROGRESS_BAR_WIDTH, borderRadius: 3, overflow: 'hidden', backgroundColor: PROGRESS_COLORS.break.remaining }}
         >
-          <View testID="plan-gap-fill" style={{ width: PROGRESS_BAR_WIDTH, height: `${item.progress * 100}%`, backgroundColor: colors.breakBlue }} />
+          <View testID="plan-gap-fill" style={{ width: PROGRESS_BAR_WIDTH, height: `${item.progress * 100}%`, backgroundColor: PROGRESS_COLORS.break.passed }} />
         </View>
       )}
       <GapLabel item={item} />

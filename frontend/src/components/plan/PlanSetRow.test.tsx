@@ -68,6 +68,19 @@ it('shows a live set as LIVE with its time left', async () => {
   expect(screen.getByTestId('plan-live-progress')).toBeTruthy();
 });
 
+// Every progress bar: the passed part dark, what remains light.
+it('fills a live Must-see\'s bar dark for the time passed, over the accent for what remains', async () => {
+  await renderRow(item('Gojira', '19:23'));
+  expect(StyleSheet.flatten(screen.getByTestId('plan-live-progress').props.style).backgroundColor).toBe(colors.accent);
+  expect(StyleSheet.flatten(screen.getByTestId('plan-live-fill').props.style).backgroundColor).toBe(colors.livePassed);
+});
+
+it('fills a live Maybe\'s bar dark grey for the time passed, over the light grey for what remains', async () => {
+  await renderRow(item('Paysage', '20:20'));
+  expect(StyleSheet.flatten(screen.getByTestId('plan-live-progress').props.style).backgroundColor).toBe(colors.maybeText);
+  expect(StyleSheet.flatten(screen.getByTestId('plan-live-fill').props.style).backgroundColor).toBe(colors.borderMid);
+});
+
 it('counts down to a set that clashes with one live now', async () => {
   await renderRow(item('Batushka', '19:23'));
   expect(screen.getByText('START')).toBeTruthy();

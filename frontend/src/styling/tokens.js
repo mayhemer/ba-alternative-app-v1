@@ -32,9 +32,9 @@ const colors = {
   dangerSecondary:'#7e2222',   // now-line, errors, warnings
   dangerMuted:    '#111111',   // now-line, errors, warnings
   // ── My plan ─────────────────────────────────────────────────────────────────
-  liveTrack:      '#4a3f17',   // track under a live set's accent progress
+  livePassed:     '#4a3f17',   // the passed part of a live set's progress, over the accent
   breakBlue:      '#5b9bff',   // current gap / break: progress, countdown
-  breakTrack:     '#1c2f52',   // track under the break's progress
+  breakPassed:    '#1c2f52',   // the passed part of the break's progress, over the break blue
   maybeText:      '#8a8a8a',   // Maybe rows, and a live Maybe's progress
   black:          '#000000',
   white:          '#ffffff',

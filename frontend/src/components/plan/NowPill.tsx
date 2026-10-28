@@ -10,7 +10,7 @@ import { usePlanStore } from '../../context/PlanContext';
 import { useMinuteNow } from '../../hooks/useMinuteNow';
 import { navigationRef } from '../../navigation/navigationRef';
 import { nowPillModel, type NowPillModel } from './NowPill.model';
-import { BOLD, TABULAR } from './planStyles';
+import { BOLD, PROGRESS_COLORS, TABULAR } from './planStyles';
 import { colors } from '../../styling/tokens';
 
 // ── Now pill: the TopBar centre ───────────────────────────────────────────────
@@ -60,7 +60,7 @@ const NAME_STYLE = { ...BOLD, flexShrink: 1, fontSize: PILL_FONT_SIZE, color: co
 // The live time sits at the right end; the clash glyph, if any, after it.
 const LIVE_TIME_STYLE = { ...BOLD, ...TABULAR, marginLeft: 'auto' as const, paddingLeft: 4, fontSize: PILL_FONT_SIZE, color: colors.accent };
 const BREAK_TIME_STYLE = { ...BOLD, ...TABULAR, fontSize: PILL_FONT_SIZE, color: colors.breakBlue };
-const PROGRESS_TRACK_STYLE = { position: 'absolute' as const, left: 0, right: 0, bottom: 0, height: PROGRESS_HEIGHT, backgroundColor: colors.liveTrack };
+const PROGRESS_TRACK_STYLE = { position: 'absolute' as const, left: 0, right: 0, bottom: 0, height: PROGRESS_HEIGHT, backgroundColor: PROGRESS_COLORS.live.remaining };
 
 function Logo() {
   return (
@@ -105,7 +105,7 @@ function NowPillViewBase({ state, onPress }: ViewProps) {
           </View>
         )}
         <View testID="now-pill-progress" pointerEvents="none" style={PROGRESS_TRACK_STYLE}>
-          <View style={{ height: PROGRESS_HEIGHT, width: `${Math.round(state.progress * 100)}%`, backgroundColor: colors.accent }} />
+          <View testID="now-pill-fill" style={{ height: PROGRESS_HEIGHT, width: `${Math.round(state.progress * 100)}%`, backgroundColor: PROGRESS_COLORS.live.passed }} />
         </View>
       </Pressable>
     );

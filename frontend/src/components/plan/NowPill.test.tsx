@@ -51,6 +51,12 @@ it('shows the progress bar only while a set is live', async () => {
   expect(screen.queryByTestId('now-pill-progress')).toBeNull();
 });
 
+it('fills the live bar dark for the time passed, over the accent for what remains', async () => {
+  await render(<NowPillView state={GOJIRA_LIVE} onPress={jest.fn()} />);
+  expect(StyleSheet.flatten(screen.getByTestId('now-pill-progress').props.style).backgroundColor).toBe(colors.accent);
+  expect(StyleSheet.flatten(screen.getByTestId('now-pill-fill').props.style).backgroundColor).toBe(colors.livePassed);
+});
+
 it('counts down to the next Must-see during a break', async () => {
   await render(<NowPillView state={START_EMPEROR} onPress={jest.fn()} />);
   expect(screen.getByText('Emperor')).toBeTruthy();
