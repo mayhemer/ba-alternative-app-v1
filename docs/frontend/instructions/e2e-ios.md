@@ -11,7 +11,7 @@ It covers the working tree's JS, and its native code as of the last `npm run pre
 first after changing `app.json`, a config plugin or a native dependency. The first build takes about
 7 minutes, later ones about one.
 
-`npm run test:e2e:ios:eas` tests the newest EAS `e2e-ios-sim` build instead (`npm run build:e2e:ios`)
+`npm run test:e2e:ios:eas` tests the newest EAS `e2e-ios-sim` build instead (`npm run eas-build:e2e:ios`)
 and prints how far behind HEAD it is; `--app path/to/App.app` tests any other simulator app.
 
 `npm run clean:e2e:ios` frees what the suite leaves on disk, about 3.5 GB plus the local build. It

@@ -5,7 +5,7 @@ because neither Node nor a browser can see what makes the app slow there: Hermes
 native view creation, and a CPU that idles with three of its four cores switched off.
 
 ```bash
-npm run build:perf:android      # once per app change; EAS cloud
+npm run eas-build:perf:android  # once per app change; EAS cloud
 npm run install:perf:android    # newest perf build onto the phone (cached by build id)
 npm run test:perf:device        # --runs N, --warmup N, --scenarios a,b, --baseline
 ```

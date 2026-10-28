@@ -4,7 +4,8 @@ The project is **managed / CNG** — `ios/` and `android/` are gitignored and re
 `expo prebuild`. Never edit them by hand; the changes are thrown away. Native config lives in
 `app.json` (bundle id, package, entitlements, intent filters) and `eas.json` (build profiles).
 
-Builds run **remotely on EAS**, so no local Xcode / Android SDK / fastlane setup is needed.
+Builds run **remotely on EAS**, so no local Xcode / Android SDK / fastlane setup is needed — except
+for the local iOS builds (`test:e2e:ios`, `install:preview:ios`), which need Xcode.
 
 ## One-time setup
 
@@ -31,11 +32,11 @@ eas config --profile preview --platform ios
 | `e2e-ios-sim` | Release **simulator** build + fixture API, ba2025 | `test:e2e:ios:eas` (`test:e2e:ios` builds the same locally) |
 
 ```bash
-npm run build:preview:ios       # eas build -p ios --profile preview
-npm run build:preview:android   # eas build -p android --profile preview
-npm run build:perf:android      # eas build -p android --profile perf
-npm run build:e2e:ios           # eas build -p ios --profile e2e-ios-sim
-npm run test:doctor             # expo-doctor; run before every build
+npm run eas-build:preview:ios       # eas build -p ios --profile preview
+npm run eas-build:preview:android   # eas build -p android --profile preview
+npm run eas-build:perf:android      # eas build -p android --profile perf
+npm run eas-build:e2e:ios           # eas build -p ios --profile e2e-ios-sim
+npm run test:doctor                 # expo-doctor; run before every build
 ```
 
 An Android `preview` or `perf` build goes onto the USB-connected phone with its install command; both
@@ -52,6 +53,27 @@ npm run install:preview:android -- --force       # reinstall even if that versio
 `install:perf:android` is the same for the `perf` profile. Both profiles share one package name, so
 each replaces the other; installing a lower versionCode than the one on the phone uninstalls the app
 first, which clears its data.
+
+An iOS `preview` build for your own USB-connected iPhone is made **locally**, no EAS involved:
+
+```bash
+npm run install:preview:ios                      # build Release on this Mac, install, launch
+npm run install:preview:ios -- "iPhone Honza"    # pick a device by name or UDID when several are connected
+```
+
+It is `expo run:ios --configuration Release`: JS and assets bundled in, no dev launcher, no Metro, the
+same as an EAS `preview` build (which sets no env) except that:
+
+- it builds the **working tree**, uncommitted changes included — the opposite of `eas build`;
+- it builds from the prebuilt `ios/` and only generates it when missing, so after a change to
+  `app.json`, a config plugin, a native dependency or the Expo SDK run `npm run prebuild:ios` first;
+- it is signed with your **development** certificate (Xcode's automatic signing, the team Expo asks for
+  once), not the ad-hoc distribution profile, so it runs only on devices registered to your team —
+  for testers' phones use `eas-build:preview:ios`;
+- the build number is whatever the Xcode project holds, not EAS's remote counter.
+
+Metro's cache is reset on every build, so values inlined into a `perf` or `e2e-ios-sim` bundle cannot
+slip into it.
 
 `appVersionSource` is `remote`, so EAS owns the build counter — do **not** put `ios.buildNumber` or
 `android.versionCode` in `app.json`, they would be ignored. Inspect with `eas build:version:get`.

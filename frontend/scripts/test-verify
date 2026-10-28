@@ -22,7 +22,7 @@ cat <<'NEXT'
 
 Not covered above — these test an EAS build, so rebuild after app changes:
 
-  npm run build:perf:android       then, with the phone connected over USB:
+  npm run eas-build:perf:android   then, with the phone connected over USB:
   npm run install:perf:android     latest `perf` build onto the phone
   npm run test:perf:device         frame, start-up and memory measurements
 

@@ -11,7 +11,7 @@
  *   favicon.png                   web favicon
  *
  * After running this, regenerate the native projects so the asset catalogues
- * pick the new files up:  npm run build:ios
+ * pick the new files up:  npm run prebuild:ios
  *
  * Depends on jimp-compact, which is present as a transitive dependency of the
  * Expo CLI tooling rather than a direct one — if a future dependency bump drops

@@ -42,7 +42,7 @@ if (args.list === true) {
     skip((e as Error).message, 'Run `eas login`.');
   }
   if (builds.length === 0) {
-    skip(`no finished EAS build for the "${profile}" profile yet`, `Run \`npm run build:${profile}:android\`.`);
+    skip(`no finished EAS build for the "${profile}" profile yet`, `Run \`npm run eas-build:${profile}:android\`.`);
   }
   for (const b of builds) {
     const at = b.completedAt === null
@@ -87,7 +87,7 @@ if (wanted !== null) {
     skip((e as Error).message, 'Run `eas login`.');
   }
   if (build === null) {
-    skip(`no finished EAS build for the "${profile}" profile yet`, `Run \`npm run build:${profile}:android\`.`);
+    skip(`no finished EAS build for the "${profile}" profile yet`, `Run \`npm run eas-build:${profile}:android\`.`);
   }
 }
 

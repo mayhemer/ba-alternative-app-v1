@@ -16,7 +16,7 @@
 // the working tree's JS, and its native code as of the last
 // `npm run prebuild:ios`. `--eas` takes the newest EAS `e2e-ios-sim` build
 // instead and prints how far behind HEAD it is — rebuild with
-// `npm run build:e2e:ios` after app changes. `--app` swaps in any other
+// `npm run eas-build:e2e:ios` after app changes. `--app` swaps in any other
 // simulator app without touching the rest of this script.
 //
 // Exit codes: 0 pass, 1 fail, 4 skipped (a prerequisite is missing; the reason
@@ -103,7 +103,7 @@ async function resolveApp(): Promise<string> {
     skip((e as Error).message, 'Run `eas login`.');
   }
   if (build === null) {
-    skip(`no finished EAS build for the "${PROFILE}" profile yet`, 'Run `npm run build:e2e:ios`.');
+    skip(`no finished EAS build for the "${PROFILE}" profile yet`, 'Run `npm run eas-build:e2e:ios`.');
   }
 
   const { note, behind } = staleness(build.commit);
