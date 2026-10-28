@@ -38,6 +38,18 @@ jest.mock('expo-secure-store', () => {
   };
 });
 
+// jest-expo 58 mocks react-native/asset-registry, but expo-asset ≥58.0.16 reads
+// RN 0.88's `AssetRegistry` export, which goes to this private module and so
+// bypasses that mock: every font load fails with 'Module "1" is missing from the
+// asset registry'. Point it at jest-expo's mock. Remove once
+// https://github.com/expo/expo/issues/51834 ships in a jest-expo release.
+jest.doMock(
+  require.resolve('react-native/src/private/assets/AssetRegistry', {
+    paths: [require('path').dirname(require.resolve('react-native/package.json'))],
+  }),
+  () => ({ AssetRegistry: jest.requireMock('react-native/asset-registry') }),
+);
+
 // The app loads its fonts behind the splash (StartupGate), so every component
 // mounts with them in. Without this, the first icon of a test file finds its font
 // missing, loads it and re-renders — an extra commit that exists only here, and
