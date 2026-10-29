@@ -6,6 +6,7 @@ import {
   itemOffsets,
   itemsToFill,
   nowScrollOffset,
+  planNowView,
   PLAN_LAYOUT,
   type PlanInputs,
   type PlanItem,
@@ -533,6 +534,53 @@ describe('nowScrollOffset', () => {
 
   it('is null outside the festival', () => {
     expect(nowScrollOffset(build(DAY, { now: at(12, '12:00'), festival: false }), 600)).toBeNull();
+  });
+});
+
+// ── Where now is on the scrolled list ─────────────────────────────────────────
+//
+// What today's day button needs to decide between scrolling to now and
+// switching screens (DayButton.model's nowSettled), in content y.
+//
+// One Must-see on Thursday, 14:00–15:00: the start cap at 12 (30 tall), the set
+// at 48 (58), the end cap at 112 (30); each cell adds 6 of spacing and the list
+// 24 of bottom padding, so the content is 172 tall, plus the floating bottom
+// bar's clearance. A scroll to now puts the arrow's item a third of the screen
+// from the top, as far as the list can scroll.
+//
+// Dimensions: the arrow on a live set, on the end cap after the last set, none
+// (before 08:00, an empty day); a list that can or cannot scroll that far; with
+// and without the floating bottom bar.
+
+const SOLO: Spec[] = [['1', 'Solo', 's1', at(7, '14:00'), at(7, '15:00'), 'will_go']];
+
+describe('planNowView', () => {
+  it('a live set: the arrow halfway down the row', () => {
+    // 48 + 58 / 2; to now: 48 − 90 / 3.
+    expect(planNowView(build(SOLO, { now: at(7, '14:30') }), { scrollY: 50, viewportHeight: 90, bottomInset: 0 }))
+      .toEqual({ now: 77, scroll: 50, size: 90, nowScroll: 18 });
+  });
+
+  it('after the last set: the arrow on the end cap, as far as the list scrolls', () => {
+    // 112 + 30 − 10 / 2; to now would be 112 − 150 / 3 = 62, but the list ends at 172 − 150.
+    expect(planNowView(build(SOLO, { now: at(7, '16:00') }), { scrollY: 0, viewportHeight: 150, bottomInset: 0 }))
+      .toEqual({ now: 137, scroll: 0, size: 150, nowScroll: 22 });
+  });
+
+  it('under the floating bottom bar: the visible part ends above it, the list scrolls further', () => {
+    // Visible 150 − 60; the content 172 + 60 scrolls to 82, so 62 is reachable.
+    expect(planNowView(build(SOLO, { now: at(7, '16:00') }), { scrollY: 0, viewportHeight: 150, bottomInset: 60 }))
+      .toEqual({ now: 137, scroll: 0, size: 90, nowScroll: 62 });
+  });
+
+  it('before 08:00: no arrow, and a scroll to now goes to the top', () => {
+    expect(planNowView(build(SOLO, { now: at(7, '07:00') }), { scrollY: 40, viewportHeight: 90, bottomInset: 0 }))
+      .toEqual({ now: null, scroll: 40, size: 90, nowScroll: 0 });
+  });
+
+  it('an empty day: no arrow, and a scroll to now goes to the top', () => {
+    expect(planNowView(build([], { now: at(7, '14:30') }), { scrollY: 0, viewportHeight: 600, bottomInset: 0 }))
+      .toEqual({ now: null, scroll: 0, size: 600, nowScroll: 0 });
   });
 });
 

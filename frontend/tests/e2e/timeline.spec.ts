@@ -156,6 +156,10 @@ test('the today button scrolls to now', async ({ appPage }) => {
   await openSection(appPage, 'Program');
   const scroller = scrollerX(appPage);
   await expectScrolledTo(scroller, await reachable(scroller, defaultScrollX(FIRST_WED_SET.dateFrom, WED)));
+  // Away from now: with now in view, the tap would switch to My plan instead.
+  const end = await reachable(scroller, Number.MAX_SAFE_INTEGER);
+  await scroller.evaluate((el, x) => { el.scrollLeft = x; }, end);
+  await expectScrolledTo(scroller, end);
 
   // Wednesday is both today and the selected day, so pressing it again jumps
   // to the current time instead of switching day.
@@ -286,4 +290,27 @@ test('a lane stacks only the sets the lens shows @layout', async ({ appPage }) =
     expect(title.bottom).toBeLessThanOrEqual(blockTop + 1);
     expect(title.top).toBeGreaterThanOrEqual(blockTop - 32 - 1);
   }
+});
+
+test('the today button tapped again with now in view switches to My plan', async ({ appPage }) => {
+  await ready(appPage);
+  await openSection(appPage, 'Program');
+  const scroller = scrollerX(appPage);
+  const end = await reachable(scroller, Number.MAX_SAFE_INTEGER);
+  await scroller.evaluate((el, x) => { el.scrollLeft = x; }, end);
+  await expectScrolledTo(scroller, end);
+  const wed = appPage.getByText('Wed', { exact: true }).filter({ visible: true });
+
+  // Now is off screen: the first tap scrolls to it and stays on the timeline.
+  await wed.click();
+  const viewportWidth = await scroller.evaluate((el) => el.clientWidth);
+  const { x } = eventScrollTarget({
+    fromMs: NOW, toMs: NOW, dayStartMs: WED, viewportWidth, lane: undefined, areaHeight: 0, bottomClearance: 0,
+  });
+  await expectScrolledTo(scroller, await reachable(scroller, x));
+
+  // Now is in view: the next tap switches to My plan.
+  await wed.click();
+  await expect(appPage.getByTestId('plan-screen')).toBeVisible();
+  await expect(scrollerX(appPage)).toHaveCount(0);
 });

@@ -1,5 +1,6 @@
 import type { DbEvent } from '../../types/backend';
 import { DAY_DURATION_MS } from '../../utils/festivalTime';
+import type { NowView } from './DayButton.model';
 
 // ── Scale & geometry ──────────────────────────────────────────────────────────
 
@@ -227,4 +228,25 @@ export function eventScrollTarget(input: EventScrollInput): EventScrollTarget {
   const visibleHeight = Math.max(0, areaHeight - RULER_HEIGHT - bottomClearance);
   const y = lane === undefined ? undefined : Math.max(0, lane.top + lane.span / 2 - visibleHeight / 2);
   return { x, y, visibleHeight };
+}
+
+// ── Where now is on the scrolled timeline ─────────────────────────────────────
+
+/**
+ * Now on a day's timeline scrolled to `scrollX` in a viewport `viewportWidth`
+ * wide, in content x: where the now line is, and where a scroll to now goes
+ * (centred, as eventScrollTarget puts it), held within the scrollable window.
+ * Today's day button reads it (DayButton.model's nowSettled).
+ */
+export function timelineNowView(nowMs: number, dayStartMs: number, scrollX: number, viewportWidth: number): NowView {
+  const { x } = eventScrollTarget({
+    fromMs: nowMs, toMs: nowMs, dayStartMs, viewportWidth, lane: undefined, areaHeight: 0, bottomClearance: 0,
+  });
+  const maxScroll = Math.max(0, VIEW_WIDTH - viewportWidth);
+  return {
+    now: timeToX(nowMs, dayStartMs) - VIEW_OFFSET_X,
+    scroll: scrollX,
+    size: viewportWidth,
+    nowScroll: Math.min(x, maxScroll),
+  };
 }

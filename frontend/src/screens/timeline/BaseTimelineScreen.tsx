@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { LoadingScreen } from '../../ui/LoadingScreen';
 import type { DbArtist, DbEvent } from '../../types/backend';
 import { useTopBar, useBottomBar } from '../../shell/ScreenUIContext';
@@ -9,6 +10,7 @@ import { LensChip } from '../../features/social/LensChip';
 import { useTimelineData } from './useTimelineData';
 import { setSelectedDay } from '../../store/uiStatePersistence';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
+import { noteTimelineShown } from '../../navigation/viewSwitch';
 
 // ── Shared TopBar / BottomBar slot components ─────────────────────────────────
 
@@ -61,6 +63,11 @@ export function BaseTimelineScreen({ title, screenKey, BottomBarComponent, filte
       setSelectedDay(screenKey, dayToShow);
     }
   }, [dayToShow, screenKey]);
+
+  // The timeline My plan's day buttons switch to: the one shown last.
+  useFocusEffect(useCallback(() => {
+    noteTimelineShown(screenKey === 'support');
+  }, [screenKey]));
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 

@@ -144,3 +144,38 @@ test('in a break, the now pill on My plan goes to the next band, not to now', as
   await expect(timeline).toBeVisible();
   await expect(timeline.getByText('MINISTRY', { exact: true }).first()).toBeInViewport();
 });
+
+test('the shown day tapped again switches between My plan and the timeline, on that day', async ({ appPage }) => {
+  await ready(appPage);
+  // Picks on Wednesday (today), none on Thursday: "Nothing planned" is Thursday.
+  await pickClashingPair(appPage);
+  await appPage.getByText('My plan', { exact: false }).first().click();
+  const thu = appPage.getByText('Thu', { exact: true }).filter({ visible: true });
+  await thu.click();
+  await expect(appPage.getByText('Nothing planned for this day')).toBeVisible();
+
+  // Thursday is not today: tapped again, the Program on Thursday, which opens
+  // at its first set (MAMMOTH GRINDER, Thursday only).
+  await thu.click();
+  const timeline = appPage.getByTestId('timeline-scroll-x').filter({ visible: true });
+  await expect(timeline.getByText('MAMMOTH GRINDER', { exact: true }).first()).toBeVisible();
+
+  // And again: back to My plan, still on Thursday.
+  await thu.click();
+  await expect(appPage.getByTestId('plan-screen')).toBeVisible();
+  await expect(appPage.getByText('Nothing planned for this day')).toBeVisible();
+  await expect(timeline).toHaveCount(0);
+});
+
+test('My plan switches to the timeline shown last: the Support Program', async ({ appPage }) => {
+  await ready(appPage);
+  await appPage.getByText('Support Program', { exact: true }).filter({ visible: true }).first().click();
+  await expect(appPage.getByText('Museum', { exact: true }).filter({ visible: true }).first()).toBeVisible();
+  await appPage.getByText('My plan', { exact: false }).first().click();
+  await expect(appPage.getByTestId('plan-screen')).toBeVisible();
+
+  // Today with nothing planned: no now to scroll to, so the tap switches.
+  await appPage.getByText('Wed', { exact: true }).filter({ visible: true }).click();
+  await expect(appPage.getByText('Museum', { exact: true }).filter({ visible: true }).first()).toBeVisible();
+  await expect(appPage.getByTestId('plan-screen').filter({ visible: true })).toHaveCount(0);
+});

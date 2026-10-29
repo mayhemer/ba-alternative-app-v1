@@ -12,7 +12,9 @@ import { usePlanFilters, usePlanPanel, usePlanShownDay, usePlanStore, usePlanSto
 import { useMinuteNow } from '../../hooks/useMinuteNow';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
 import { getScroll, setScroll } from '../../store/uiStatePersistence';
-import { buildPlanDay, itemAtOffset, itemOffsets, itemsToFill, nowScrollOffset, PLAN_LAYOUT, type PlanItem } from './planUtils';
+import { buildPlanDay, itemAtOffset, itemOffsets, itemsToFill, nowScrollOffset, PLAN_LAYOUT, PLAN_SCREEN_KEY, planNowView, type PlanItem } from './planUtils';
+import { registerNowProbe } from '../../features/timeline/nowInView';
+import { nowSettled } from '../../features/timeline/DayButton.model';
 import { festivalToday } from '../../utils/festivalTime';
 import { PlanSetRow } from './PlanSetRow';
 import { PlanCap } from './PlanCap';
@@ -48,9 +50,8 @@ import { colors } from '../../styling/tokens';
 // (uiStatePersistence, under PLAN_SCREEN_KEY, as y offsets); a day without one
 // lands with "now" a third from the top if it is today, else at the top; and a
 // "now" request (the pill, or today's day button tapped again) scrolls to now.
-
-const PLAN_SCREEN_KEY = 'plan';
-
+// Once now is settled in view, today's button switches to the timeline instead,
+// so the screen answers where it is scrolled (registerNowProbe).
 const keyOf = (item: PlanItem): string => item.key;
 
 /** Cells per batch before the screen is measured: FlatList's own default. */
@@ -120,6 +121,9 @@ export function MyPlanScreen() {
   // the user never scrolled to the "now" of an earlier visit. A non-animated
   // scrollToOffset reports exactly one scroll event, which this skips.
   const skipNextScrollRef = useRef(false);
+  // Where the list is scrolled, for the now probe: every scroll event, and the
+  // landing offsets, which native may apply without one.
+  const scrollYRef = useRef(0);
 
   useEffect(() => {
     if (viewportHeight === 0 || day === 0) {
@@ -135,6 +139,9 @@ export function MyPlanScreen() {
     landedDayRef.current = day;
     // An animated scroll to now is the user's own request; that position may be kept.
     skipNextScrollRef.current = !animated;
+    if (!animated) {
+      scrollYRef.current = target;
+    }
     listRef.current?.scrollToOffset({ offset: target, animated });
   }, [day, viewportHeight, storeVersion, store]);
 
@@ -152,6 +159,7 @@ export function MyPlanScreen() {
     if (viewportHeight > 0) {
       const offset = getScroll(PLAN_SCREEN_KEY, day) ?? nowScrollOffset(items, viewportHeight) ?? 0;
       landingRef.current = { offset, index: itemAtOffset(items, offset), count: itemsToFill(items, offset, viewportHeight) };
+      scrollYRef.current = offset;
     } else {
       landingRef.current = null;
     }
@@ -171,12 +179,26 @@ export function MyPlanScreen() {
 
   // Saved while scrolling too: web wheel scrolling fires no drag/momentum events.
   const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>): void => {
+    scrollYRef.current = e.nativeEvent.contentOffset.y;
     if (skipNextScrollRef.current) {
       skipNextScrollRef.current = false;
       return;
     }
     persistScroll(e);
   }, [persistScroll]);
+
+  // ── Is now settled here? ───────────────────────────────────────────────────
+  // Asked by today's day button at the tap: it switches to the timeline when the
+  // now arrow is in the central band of the list above the floating bottom bar,
+  // or when a scroll to now would not move the list. Read from refs at that
+  // moment, so scrolling re-renders nothing.
+  const probeInputsRef = useRef({ viewportHeight, bottomClearance });
+  probeInputsRef.current = { viewportHeight, bottomClearance };
+  useEffect(() => registerNowProbe(PLAN_SCREEN_KEY, () => nowSettled(planNowView(itemsRef.current, {
+    scrollY: scrollYRef.current,
+    viewportHeight: probeInputsRef.current.viewportHeight,
+    bottomInset: probeInputsRef.current.bottomClearance,
+  }))), []);
 
   // ── Rows ────────────────────────────────────────────────────────────────────
 
@@ -233,7 +255,7 @@ export function MyPlanScreen() {
         onScrollEndDrag={persistScroll}
         onMomentumScrollEnd={persistScroll}
         scrollEventThrottle={100}
-        contentContainerStyle={{ paddingTop: PLAN_LAYOUT.paddingTop, paddingBottom: 24 + bottomClearance }}
+        contentContainerStyle={{ paddingTop: PLAN_LAYOUT.paddingTop, paddingBottom: PLAN_LAYOUT.paddingBottom + bottomClearance }}
       />
     </View>
   );

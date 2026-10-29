@@ -5,6 +5,7 @@ import { planEmptyModel, type PlanEmptyModel } from './PlanEmpty.model';
 import { planGapModel, type PlanGapModel } from './PlanGap.model';
 import { planSetModel, type PlanSetModel } from './PlanSetRow.model';
 import { ITEM_SPACING } from './planStyles';
+import type { NowView } from '../../features/timeline/DayButton.model';
 import type { DbArtist, DbEvent } from '../../types/backend';
 
 // ── My plan: one festival day of the user's picks ─────────────────────────────
@@ -32,8 +33,13 @@ export type PlanSpacerItem = { kind: 'spacer'; key: string; height: number; conf
 
 export type PlanItem = PlanSetModel | PlanGapModel | PlanCapModel | PlanSpacerItem | PlanEmptyModel;
 
+/** My plan's key for its remembered scroll (uiStatePersistence) and its now probe (features/timeline/nowInView). */
+export const PLAN_SCREEN_KEY = 'plan';
+
 export const PLAN_LAYOUT = {
   paddingTop: 12,
+  /** Below the last item, before the floating bottom bar's clearance. */
+  paddingBottom: 24,
   itemSpacing: ITEM_SPACING,
   spacer: 24,
 } as const;
@@ -218,6 +224,39 @@ export function nowScrollOffset(items: PlanItem[], viewportHeight: number): numb
     return null;
   }
   return Math.max(0, itemOffsets(items)[index] - viewportHeight / 3);
+}
+
+/**
+ * Now on a day's list scrolled to `scrollY`, in content y: where the first now
+ * arrow is (null when none is drawn), how much is visible above the floating
+ * bottom bar (`bottomInset`, its clearance, also added below the content), and
+ * where a scroll to now goes (nowScrollOffset, the top when there is no arrow),
+ * held within what the list can scroll. Today's day button reads it
+ * (DayButton.model's nowSettled).
+ */
+export function planNowView(
+  items: PlanItem[],
+  { scrollY, viewportHeight, bottomInset }: { scrollY: number; viewportHeight: number; bottomInset: number },
+): NowView {
+  const offsets = itemOffsets(items);
+  const index = items.findIndex(hostsNow);
+  let now: number | null = null;
+  if (index !== -1) {
+    const host = items[index];
+    if (host.kind === 'set' || host.kind === 'gap' || host.kind === 'cap') {
+      now = offsets[index] + (host.nowY ?? 0);
+    }
+  }
+  const last = items.length - 1;
+  const contentEnd = last === -1 ? PLAN_LAYOUT.paddingTop : offsets[last] + items[last].height + PLAN_LAYOUT.itemSpacing;
+  const contentHeight = contentEnd + PLAN_LAYOUT.paddingBottom + bottomInset;
+  const maxScroll = Math.max(0, contentHeight - viewportHeight);
+  return {
+    now,
+    scroll: scrollY,
+    size: viewportHeight - bottomInset,
+    nowScroll: Math.min(nowScrollOffset(items, viewportHeight) ?? 0, maxScroll),
+  };
 }
 
 /** The festival days (06:00 starts) with at least one Must-see clash. */

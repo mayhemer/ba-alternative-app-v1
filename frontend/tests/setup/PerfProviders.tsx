@@ -10,6 +10,7 @@ import { ArtistDetailProvider } from '../../src/features/artist-detail/ArtistDet
 import { ConflictDetailProvider } from '../../src/features/conflicts/ConflictDetailContext';
 import { ArtistListFilterProvider } from '../../src/screens/artist-list/ArtistListFilterContext';
 import { TimelineFilterProvider } from '../../src/screens/timeline/TimelineFilterContext';
+import { PlanProvider } from '../../src/screens/my-plan/PlanContext';
 
 // ── Provider tree for render measurements ─────────────────────────────────────
 //
@@ -47,7 +48,9 @@ export function FeatureProviders({ children }: { children: React.ReactNode }) {
                   <ConflictDetailProvider>
                     <ArtistListFilterProvider>
                       <TimelineFilterProvider>
-                        {children}
+                        <PlanProvider>
+                          {children}
+                        </PlanProvider>
                       </TimelineFilterProvider>
                     </ArtistListFilterProvider>
                   </ConflictDetailProvider>

@@ -219,8 +219,26 @@ What each element shows comes from its own model (see Principles), built from th
 - **Scroll position:** remembered **per day**, like the timeline (`uiStatePersistence`, a My plan screen key, y offsets).
   - Only the user's own scrolling is remembered. The screen's own landing scroll is not saved: today's landing is "now", which moves, and a stored copy would pin a day you never scrolled to the "now" of an earlier visit.
   - First visit to a day: today lands with now about ⅓ from the top; other days land at the top.
-  - Tapping today's button while today is shown scrolls to now (`requestScrollToNow`).
+  - Tapping today's button while today is shown scrolls to now (`requestScrollToNow`), unless now is already settled in view; then it switches to the timeline (see [Tapping the shown day again](#tapping-the-shown-day-again)).
   - Tapping the now pill on any other screen goes to today at now; on My plan it goes to the pill's set on the timeline (see Top bar).
+### Tapping the shown day again
+
+Switches between My plan and the timeline, on the same day, the same way on both screens (`dayPickAction` in `DayButton.model.ts`, shared by both switchers). Back returns to the previous screen through the back history.
+
+- **The shown day, not today:** switches screens.
+- **Today's button, today shown:** scrolls to now while now is not settled in view; once it is, switches screens. So from anywhere on today, a first tap brings now into view and a second one switches.
+- **Now is settled** (`nowSettled`) when now is drawn inside the **central 80 %** of the visible area (10 % in from each edge, along the time axis), or when a scroll to now would not move the view (it cannot get closer).
+  - My plan: where the first now arrow is, on the list above the floating bottom bar (`planNowView`). With no arrow (before 08:00, an empty day, conflicts only with nothing live) a scroll to now goes to the top, so the list is settled at the top.
+  - Timeline: where the now line is, across the horizontal scroll (`timelineNowView`). Before 08:30 and after 04:00 now is outside the scrollable window; the view is settled at the window's end nearest to it.
+  - Asked only at the tap: each screen registers a probe under its screen key (`features/timeline/nowInView`), so scrolling re-renders nothing.
+- **Where it goes** (`navigation/viewSwitch`):
+  - From My plan: the timeline shown last, Program or Support Program; the Program until either has been shown (in memory only, so after a cold start it is the Program).
+  - From a timeline: My plan.
+  - The destination shows the same day and lands where it would for that day: its remembered scroll, else its own default (no scroll to now, no scroll to a set).
+- No double-tap guard: two quick taps on another day pick it and then switch.
+
+### Mounting a day
+
 - **Switching days** mounts the new day the way the timeline does: once the screen's height is known, each day gets a list of its own that starts at its landing spot (saved position, else now, else the top) and draws about one screen of rows from there, the rest following one screenful per batch. Mounting the whole day at once, or its top first and then scrolling, made the switch visibly slow on phones. The very first list, before the screen is measured, starts from the top and is scrolled into place.
 
 ---

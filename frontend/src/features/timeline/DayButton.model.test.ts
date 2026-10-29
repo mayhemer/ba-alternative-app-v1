@@ -1,4 +1,4 @@
-import { dayButtonModels, dayPickAction } from './DayButton.model';
+import { dayButtonModels, dayPickAction, nowSettled } from './DayButton.model';
 
 // ── The festival day buttons, as models ───────────────────────────────────────
 //
@@ -54,7 +54,84 @@ describe('dayPickAction', () => {
     expect(dayPickAction(FRI, { selected: THU, today: THU })).toBe('day');
   });
 
-  it('picks the shown day again outside the festival: there is no now to scroll to', () => {
-    expect(dayPickAction(WED, { selected: WED, today: null })).toBe('day');
+  it('switches screens on a tap of the shown day outside the festival: there is no now to scroll to', () => {
+    expect(dayPickAction(WED, { selected: WED, today: null })).toBe('switch');
+  });
+});
+
+// ── Tapping the shown day again ───────────────────────────────────────────────
+//
+// Dimensions: the button tapped (the shown day, another day) × whether it is
+// today × whether now is settled on the screen (nowSettled, asked only for
+// today's button while today is shown).
+
+describe('dayPickAction, tapping the shown day again', () => {
+  const settled = (): boolean => true;
+  const notSettled = (): boolean => false;
+
+  it('switches screens on a tap of the shown day that is not today', () => {
+    expect(dayPickAction(FRI, { selected: FRI, today: THU }, notSettled)).toBe('switch');
+  });
+
+  it("scrolls to now on a tap of today's button while today is shown and now is not settled", () => {
+    expect(dayPickAction(THU, { selected: THU, today: THU }, notSettled)).toBe('now');
+  });
+
+  it("switches screens on a tap of today's button while today is shown and now is settled", () => {
+    expect(dayPickAction(THU, { selected: THU, today: THU }, settled)).toBe('switch');
+  });
+
+  it('picks another day whether or not now is settled', () => {
+    expect(dayPickAction(FRI, { selected: THU, today: THU }, settled)).toBe('day');
+    expect(dayPickAction(THU, { selected: FRI, today: THU }, settled)).toBe('day');
+  });
+
+  it("asks whether now is settled only for today's button while today is shown", () => {
+    const probe = jest.fn((): boolean => true);
+    dayPickAction(FRI, { selected: THU, today: THU }, probe);
+    dayPickAction(FRI, { selected: FRI, today: THU }, probe);
+    expect(probe).not.toHaveBeenCalled();
+    dayPickAction(THU, { selected: THU, today: THU }, probe);
+    expect(probe).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ── Whether now is settled on a screen ────────────────────────────────────────
+//
+// Positions along the screen's time axis, in content coordinates: a view 400
+// long scrolled to 1000 shows 1000–1400; its central 80 % is 1040–1360.
+// Dimensions: where now is drawn (inside the band, at each edge, just outside,
+// not drawn at all) × whether a scroll to now would move the view.
+
+describe('nowSettled', () => {
+  const view = { scroll: 1000, size: 400 };
+  const far = 3000;
+
+  it('now in the middle of the view', () => {
+    expect(nowSettled({ ...view, now: 1200, nowScroll: far })).toBe(true);
+  });
+
+  it('now at the band edges, 10 % and 90 % in', () => {
+    expect(nowSettled({ ...view, now: 1040, nowScroll: far })).toBe(true);
+    expect(nowSettled({ ...view, now: 1360, nowScroll: far })).toBe(true);
+  });
+
+  it('now just outside the band, though still on screen', () => {
+    expect(nowSettled({ ...view, now: 1039, nowScroll: far })).toBe(false);
+    expect(nowSettled({ ...view, now: 1361, nowScroll: far })).toBe(false);
+  });
+
+  it('now off screen, but a scroll to now would not move the view: the view cannot get closer', () => {
+    expect(nowSettled({ ...view, now: 1395, nowScroll: 1000 })).toBe(true);
+    expect(nowSettled({ ...view, now: 1395, nowScroll: 1000.5 })).toBe(true);
+  });
+
+  it('now off screen and a scroll to now would move the view', () => {
+    expect(nowSettled({ ...view, now: 1395, nowScroll: 1002 })).toBe(false);
+  });
+
+  it('no now drawn: settled only where a scroll to now goes', () => {
+    expect(nowSettled({ ...view, now: null, nowScroll: 1000 })).toBe(true);
+    expect(nowSettled({ ...view, now: null, nowScroll: 0 })).toBe(false);
   });
 });
