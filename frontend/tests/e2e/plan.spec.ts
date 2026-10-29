@@ -1,5 +1,6 @@
-import { expect, test } from './fixtures';
-import type { Page } from '@playwright/test';
+import { expect, PINNED_NOW, test } from './fixtures';
+import type { Locator, Page } from '@playwright/test';
+import { eventScrollTarget } from '../../src/features/timeline/timelineLayout';
 
 // ── My plan ───────────────────────────────────────────────────────────────────
 //
@@ -109,18 +110,31 @@ test('switches days and filters to conflicts only', async ({ appPage }) => {
   await expect(appPage.getByTestId('plan-gap')).toHaveCount(0);
 });
 
-test('on My plan the now pill goes to its set on the timeline, and back', async ({ appPage }) => {
+const WED = Date.parse('2025-08-06T06:00:00+02:00');
+
+/** Waits until the visible timeline is scrolled to now, as the today button puts it. */
+async function expectTimelineAtNow(page: Page): Promise<Locator> {
+  const scroller = page.getByTestId('timeline-scroll-x').filter({ visible: true });
+  await expect(scroller).toBeVisible();
+  const { width, max } = await scroller.evaluate((el) => ({ width: el.clientWidth, max: el.scrollWidth - el.clientWidth }));
+  const now = PINNED_NOW.getTime();
+  const { x } = eventScrollTarget({ fromMs: now, toMs: now, dayStartMs: WED, viewportWidth: width, lane: undefined, areaHeight: 0, bottomClearance: 0 });
+  const target = Math.min(Math.max(0, x), max);
+  await expect.poll(async () => Math.abs((await scroller.evaluate((el) => el.scrollLeft)) - target), { timeout: 5_000 })
+    .toBeLessThanOrEqual(2);
+  return scroller;
+}
+
+test('on My plan the now pill goes to its timeline at now, and back', async ({ appPage }) => {
   await ready(appPage);
   await pickClashingPair(appPage);
   const pill = appPage.getByTestId('now-pill');
   await pill.click();
   await expect(appPage.getByTestId('plan-clash-bar').first()).toBeVisible({ timeout: 20_000 });
 
-  // On My plan: the Program, scrolled to the live set the pill names.
+  // On My plan: the Program, scrolled to now.
   await pill.click();
-  const timeline = appPage.getByTestId('timeline-scroll-x').filter({ visible: true });
-  await expect(timeline).toBeVisible();
-  await expect(timeline.getByText('CRYSTAL LAKE', { exact: true }).first()).toBeInViewport();
+  const timeline = await expectTimelineAtNow(appPage);
 
   // On the timeline: back to My plan.
   await pill.click();
@@ -128,7 +142,7 @@ test('on My plan the now pill goes to its set on the timeline, and back', async 
   await expect(timeline).toHaveCount(0);
 });
 
-test('in a break, the now pill on My plan goes to the next band, not to now', async ({ appPage }) => {
+test('in a break, the now pill on My plan goes to the timeline at now, not to the next band', async ({ appPage }) => {
   await ready(appPage);
   // At 14:00 MINISTRY (22:20) is hours away: the pill counts down to it.
   await mustSee(appPage, 'ministry');
@@ -138,11 +152,10 @@ test('in a break, the now pill on My plan goes to the next band, not to now', as
   await pill.click();
   await expect(appPage.getByText('MINISTRY', { exact: true }).filter({ visible: true }).first()).toBeVisible({ timeout: 20_000 });
 
-  // On My plan: the Program, scrolled eight hours on from now to the band.
+  // On My plan: the Program at now, eight hours short of the band.
   await pill.click();
-  const timeline = appPage.getByTestId('timeline-scroll-x').filter({ visible: true });
-  await expect(timeline).toBeVisible();
-  await expect(timeline.getByText('MINISTRY', { exact: true }).first()).toBeInViewport();
+  const timeline = await expectTimelineAtNow(appPage);
+  await expect(timeline.getByText('MINISTRY', { exact: true }).first()).not.toBeInViewport();
 });
 
 test('the shown day tapped again switches between My plan and the timeline, on that day', async ({ appPage }) => {

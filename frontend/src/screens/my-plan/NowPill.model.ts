@@ -17,7 +17,7 @@ import type { DbArtist, DbEvent } from '../../types/backend';
 //   logo  — nothing to say: outside the festival, before 08:00, after the day's
 //           last Must-see, or no Must-see today at all.
 // One selection (pillSet) picks the set the pill names; nowPillTarget hands the
-// same set to a tap on My plan (see nowPillTap), so the two never disagree.
+// same set to a tap on My plan, which opens its timeline (see nowPillTap).
 
 const strings = planStrings();
 
@@ -137,7 +137,7 @@ export function nowPillTarget(
 // ── What a tap does ───────────────────────────────────────────────────────────
 //
 // The pill toggles between My plan and the timeline: on My plan showing today a
-// tap shows the pill's set on its timeline (My plan's own "now" is a tap on
+// tap shows the pill's set's timeline at now (My plan's own "now" is a tap on
 // today's day button); anywhere else, My plan on another day included, it opens
 // My plan on today at now. The logo has no set and is not a button.
 

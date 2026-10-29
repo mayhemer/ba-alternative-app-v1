@@ -99,39 +99,51 @@ describe('dayPickAction, tapping the shown day again', () => {
 // ── Whether now is settled on a screen ────────────────────────────────────────
 //
 // Positions along the screen's time axis, in content coordinates: a view 400
-// long scrolled to 1000 shows 1000–1400; its central 80 % is 1040–1360.
-// Dimensions: where now is drawn (inside the band, at each edge, just outside,
-// not drawn at all) × whether a scroll to now would move the view.
+// long scrolled to 1000 shows 1000–1400. Each screen sets how central now must
+// be: My plan's band is 80 % (1040–1360), the timeline's 20 % (1160–1240).
+// Dimensions: the band (80 %, 20 %) × where now is drawn (inside it, at each
+// edge, just outside, not drawn at all) × whether a scroll to now would move
+// the view.
 
 describe('nowSettled', () => {
   const view = { scroll: 1000, size: 400 };
   const far = 3000;
 
   it('now in the middle of the view', () => {
-    expect(nowSettled({ ...view, now: 1200, nowScroll: far })).toBe(true);
+    expect(nowSettled({ ...view, now: 1200, nowScroll: far }, 0.8)).toBe(true);
+    expect(nowSettled({ ...view, now: 1200, nowScroll: far }, 0.2)).toBe(true);
   });
 
-  it('now at the band edges, 10 % and 90 % in', () => {
-    expect(nowSettled({ ...view, now: 1040, nowScroll: far })).toBe(true);
-    expect(nowSettled({ ...view, now: 1360, nowScroll: far })).toBe(true);
+  it('now at the band edges: 10 % and 90 % in for 80 %, 40 % and 60 % for 20 %', () => {
+    expect(nowSettled({ ...view, now: 1040, nowScroll: far }, 0.8)).toBe(true);
+    expect(nowSettled({ ...view, now: 1360, nowScroll: far }, 0.8)).toBe(true);
+    expect(nowSettled({ ...view, now: 1160, nowScroll: far }, 0.2)).toBe(true);
+    expect(nowSettled({ ...view, now: 1240, nowScroll: far }, 0.2)).toBe(true);
   });
 
   it('now just outside the band, though still on screen', () => {
-    expect(nowSettled({ ...view, now: 1039, nowScroll: far })).toBe(false);
-    expect(nowSettled({ ...view, now: 1361, nowScroll: far })).toBe(false);
+    expect(nowSettled({ ...view, now: 1039, nowScroll: far }, 0.8)).toBe(false);
+    expect(nowSettled({ ...view, now: 1361, nowScroll: far }, 0.8)).toBe(false);
+    expect(nowSettled({ ...view, now: 1159, nowScroll: far }, 0.2)).toBe(false);
+    expect(nowSettled({ ...view, now: 1241, nowScroll: far }, 0.2)).toBe(false);
+  });
+
+  it('inside the 80 % band but outside the 20 % one: settled only with the wider band', () => {
+    expect(nowSettled({ ...view, now: 1100, nowScroll: far }, 0.8)).toBe(true);
+    expect(nowSettled({ ...view, now: 1100, nowScroll: far }, 0.2)).toBe(false);
   });
 
   it('now off screen, but a scroll to now would not move the view: the view cannot get closer', () => {
-    expect(nowSettled({ ...view, now: 1395, nowScroll: 1000 })).toBe(true);
-    expect(nowSettled({ ...view, now: 1395, nowScroll: 1000.5 })).toBe(true);
+    expect(nowSettled({ ...view, now: 1395, nowScroll: 1000 }, 0.8)).toBe(true);
+    expect(nowSettled({ ...view, now: 1395, nowScroll: 1000.5 }, 0.8)).toBe(true);
   });
 
   it('now off screen and a scroll to now would move the view', () => {
-    expect(nowSettled({ ...view, now: 1395, nowScroll: 1002 })).toBe(false);
+    expect(nowSettled({ ...view, now: 1395, nowScroll: 1002 }, 0.8)).toBe(false);
   });
 
   it('no now drawn: settled only where a scroll to now goes', () => {
-    expect(nowSettled({ ...view, now: null, nowScroll: 1000 })).toBe(true);
-    expect(nowSettled({ ...view, now: null, nowScroll: 0 })).toBe(false);
+    expect(nowSettled({ ...view, now: null, nowScroll: 1000 }, 0.8)).toBe(true);
+    expect(nowSettled({ ...view, now: null, nowScroll: 0 }, 0.8)).toBe(false);
   });
 });

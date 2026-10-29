@@ -10,7 +10,7 @@ import { shownPlanDay, usePlanStore } from './PlanContext';
 import { minuteNow, useMinuteNow } from '../../hooks/useMinuteNow';
 import { festivalToday } from '../../utils/festivalTime';
 import { navigationRef } from '../../navigation/navigationRef';
-import { useJumpToTimeline } from '../../navigation/useJumpToTimeline';
+import { useJumpToTimelineNow } from '../../navigation/useJumpToTimeline';
 import { nowPillModel, nowPillTap, nowPillTarget, type NowPillModel, type NowPillTarget } from './NowPill.model';
 import { BOLD, PROGRESS_COLORS, TABULAR } from './planStyles';
 import { colors } from '../../styling/tokens';
@@ -138,14 +138,14 @@ function NowPillViewBase({ state, onPress }: ViewProps) {
 export const NowPillView = memo(NowPillViewBase);
 
 /**
- * What a tap does (nowPillTap): on My plan showing today, shows the pill's set
- * on its timeline; elsewhere, My plan on another day included, opens My plan on
+ * What a tap does (nowPillTap): on My plan showing today, shows the pill's
+ * set's timeline at now; elsewhere, My plan on another day included, opens My plan on
  * today, scrolled to now. The screen and My plan's day are read at tap time, so
  * changing either does not re-render the pill.
  */
 function useNowPillPress(target: NowPillTarget | null, festivalDays: number[]): () => void {
   const store = usePlanStore();
-  const jumpToTimeline = useJumpToTimeline();
+  const jumpToTimelineNow = useJumpToTimelineNow();
   return useCallback((): void => {
     if (!navigationRef.isReady()) {
       return;
@@ -155,7 +155,7 @@ function useNowPillPress(target: NowPillTarget | null, festivalDays: number[]): 
     const tap = nowPillTap(navigationRef.getCurrentRoute()?.name, target, planShowsToday);
     switch (tap.kind) {
       case 'timeline':
-        jumpToTimeline(tap.target.event, tap.target.jump);
+        jumpToTimelineNow(tap.target.jump);
         break;
       case 'plan':
         store.requestNow();
@@ -164,7 +164,7 @@ function useNowPillPress(target: NowPillTarget | null, festivalDays: number[]): 
       case 'none':
         break;
     }
-  }, [target, festivalDays, store, jumpToTimeline]);
+  }, [target, festivalDays, store, jumpToTimelineNow]);
 }
 
 export function NowPill() {

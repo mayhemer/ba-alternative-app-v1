@@ -12,7 +12,7 @@ import { usePlanFilters, usePlanPanel, usePlanShownDay, usePlanStore, usePlanSto
 import { useMinuteNow } from '../../hooks/useMinuteNow';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
 import { getScroll, setScroll } from '../../store/uiStatePersistence';
-import { buildPlanDay, itemAtOffset, itemOffsets, itemsToFill, nowScrollOffset, PLAN_LAYOUT, PLAN_SCREEN_KEY, planNowView, type PlanItem } from './planUtils';
+import { buildPlanDay, itemAtOffset, itemOffsets, itemsToFill, nowScrollOffset, PLAN_LAYOUT, PLAN_NOW_BAND, PLAN_SCREEN_KEY, planNowView, type PlanItem } from './planUtils';
 import { registerNowProbe } from '../../features/timeline/nowInView';
 import { nowSettled } from '../../features/timeline/DayButton.model';
 import { festivalToday } from '../../utils/festivalTime';
@@ -189,7 +189,7 @@ export function MyPlanScreen() {
 
   // ── Is now settled here? ───────────────────────────────────────────────────
   // Asked by today's day button at the tap: it switches to the timeline when the
-  // now arrow is in the central band of the list above the floating bottom bar,
+  // now arrow is in the central 80 % of the list above the floating bottom bar,
   // or when a scroll to now would not move the list. Read from refs at that
   // moment, so scrolling re-renders nothing.
   const probeInputsRef = useRef({ viewportHeight, bottomClearance });
@@ -198,7 +198,7 @@ export function MyPlanScreen() {
     scrollY: scrollYRef.current,
     viewportHeight: probeInputsRef.current.viewportHeight,
     bottomInset: probeInputsRef.current.bottomClearance,
-  }))), []);
+  }), PLAN_NOW_BAND)), []);
 
   // ── Rows ────────────────────────────────────────────────────────────────────
 

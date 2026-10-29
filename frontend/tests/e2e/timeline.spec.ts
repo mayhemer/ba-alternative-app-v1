@@ -314,3 +314,21 @@ test('the today button tapped again with now in view switches to My plan', async
   await expect(appPage.getByTestId('plan-screen')).toBeVisible();
   await expect(scrollerX(appPage)).toHaveCount(0);
 });
+
+test('the today button scrolls to now while now is off the central fifth of the view', async ({ appPage }) => {
+  await ready(appPage);
+  await openSection(appPage, 'Program');
+  const scroller = scrollerX(appPage);
+  const viewportWidth = await scroller.evaluate((el) => el.clientWidth);
+  const { x: centred } = eventScrollTarget({
+    fromMs: NOW, toMs: NOW, dayStartMs: WED, viewportWidth, lane: undefined, areaHeight: 0, bottomClearance: 0,
+  });
+  // Now a quarter of the way across: in view, but outside the central 20 %.
+  const quarter = await reachable(scroller, centred + viewportWidth / 4);
+  await scroller.evaluate((el, x) => { el.scrollLeft = x; }, quarter);
+  await expectScrolledTo(scroller, quarter);
+
+  await appPage.getByText('Wed', { exact: true }).filter({ visible: true }).click();
+  await expectScrolledTo(scroller, await reachable(scroller, centred));
+  await expect(appPage.getByTestId('plan-screen').filter({ visible: true })).toHaveCount(0);
+});

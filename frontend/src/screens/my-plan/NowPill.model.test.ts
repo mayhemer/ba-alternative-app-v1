@@ -123,9 +123,9 @@ describe('nowPillModel', () => {
 
 // ── Where a tap goes ──────────────────────────────────────────────────────────
 //
-// The pill's set is the set a tap on My plan jumps to on the timeline: the one
-// it names, on the festival day the timeline draws it on, on the main or the
-// support timeline. Dimensions: live, live in a clash (the one ending first,
+// The pill's set decides which timeline a tap on My plan opens, at now: the
+// set it names, on the festival day the timeline draws it on, on the main or
+// the support timeline. Dimensions: live, live in a clash (the one ending first,
 // not the other), the day-start break, a break, a set after midnight (the
 // festival day, not the calendar date), a support set; the logo (no set).
 
@@ -140,7 +140,7 @@ function target(data: Spec[], now: number, supportIds: string[] = []): [string, 
   return [set.event.eventId, set.jump.support, set.jump.day];
 }
 
-describe('the set a tap goes to', () => {
+describe("the pill's set, whose timeline a tap opens", () => {
   it('a live set: that set, on the main timeline, today', () => {
     expect(target(DAY, at(7, '19:23'))).toEqual(['e5', false, THU]);
   });
@@ -174,7 +174,7 @@ describe('the set a tap goes to', () => {
 //
 // Dimensions: the screen shown (My plan, each other screen, none known yet) ×
 // the day My plan shows (today, another day) × the pill (live, break, logo).
-// On My plan showing today a tap goes to the pill's set on the timeline;
+// On My plan showing today a tap goes to the pill's set's timeline, at now;
 // anywhere else, My plan on another day included, to My plan today at now. The
 // logo has no set: no tap.
 
@@ -193,12 +193,12 @@ describe('nowPillTap', () => {
     },
   );
 
-  it('on My plan showing today, live: the live set on its timeline', () => {
+  it("on My plan showing today, live: the live set's timeline", () => {
     const tap = nowPillTap('MyPlan', gojiraLive, true);
     expect(tap.kind === 'timeline' && tap.target.event.eventId).toBe('e5');
   });
 
-  it('on My plan showing today, in a break: the next set on its timeline', () => {
+  it("on My plan showing today, in a break: the next set's timeline", () => {
     const tap = nowPillTap('MyPlan', emperorNext, true);
     expect(tap.kind === 'timeline' && tap.target.event.eventId).toBe('e8');
   });

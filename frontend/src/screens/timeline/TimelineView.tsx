@@ -27,6 +27,7 @@ import {
   defaultScrollX,
   eventScrollTarget,
   timelineNowView,
+  TIMELINE_NOW_BAND,
 } from '../../features/timeline/timelineLayout';
 import { colors } from '../../styling/tokens';
 import { perfMark, perfMarksEnabled } from '../../utils/perfMarks';
@@ -329,11 +330,12 @@ export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress }:
 
   // ── Is now settled here? ─────────────────────────────────────────────────────
   // Asked by today's day button at the tap (features/timeline/nowInView): it
-  // switches to My plan when now is in the central band of the view, or when a
+  // switches to My plan when now is in the central 20 % of the view, or when a
   // scroll to now would not move it. Read from the scroll and the measured width
   // at that moment, so scrolling re-renders nothing.
   useEffect(() => registerNowProbe(screenKey, () => nowSettled(
     timelineNowView(currentTimeMs(), selectedDayStartRef.current, scrollX.value, scrollViewWidthRef.current),
+    TIMELINE_NOW_BAND,
   )), [screenKey, scrollX]);
 
   // Save scroll position when the screen loses focus (navigating away).

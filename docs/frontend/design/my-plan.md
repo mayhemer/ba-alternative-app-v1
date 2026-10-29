@@ -78,7 +78,7 @@ On every screen that has a top bar. On festival days it replaces the logo while 
 - **Conflicts:** the pill never cycles or animates. Motion at the top of every screen is distracting, a mid-glance switch is unreadable, and it ignores the reduce-motion setting.
 - **Tap:** switches between My plan and the timeline (`nowPillTap`). Back returns to the previous screen through the existing back history.
   - On any other screen, and on My plan showing another day: opens My plan on **today, scrolled to now**.
-  - On My plan showing today: shows **the pill's set on its timeline**, the way the artist sheet's set line does (`useJumpToTimeline`): the Program or the Support Program, the festival day it is drawn on, scrolled to the set and its lane. In a clash that is the set the pill names, the one ending soonest. My plan's own "now" is a tap on today's day button.
+  - On My plan showing today: shows **the pill's set's timeline at now** (`useJumpToTimelineNow`): the Program or the Support Program, whichever the set the pill names is on, scrolled to now in time only, as today's day button does; the lane stays where it was. My plan's own "now" is a tap on today's day button.
   - The set comes from the same selection as the pill's text (`nowPillTarget` and `nowPillModel` share `pillSet`), so the tap always goes to the set the pill names.
   - The logo is not a button.
 
@@ -220,16 +220,16 @@ What each element shows comes from its own model (see Principles), built from th
   - Only the user's own scrolling is remembered. The screen's own landing scroll is not saved: today's landing is "now", which moves, and a stored copy would pin a day you never scrolled to the "now" of an earlier visit.
   - First visit to a day: today lands with now about ⅓ from the top; other days land at the top.
   - Tapping today's button while today is shown scrolls to now (`requestScrollToNow`), unless now is already settled in view; then it switches to the timeline (see [Tapping the shown day again](#tapping-the-shown-day-again)).
-  - Tapping the now pill goes to today at now, except on My plan showing today, where it goes to the pill's set on the timeline (see Top bar).
+  - Tapping the now pill goes to today at now, except on My plan showing today, where it goes to the pill's set's timeline at now (see Top bar).
 ### Tapping the shown day again
 
 Switches between My plan and the timeline, on the same day, the same way on both screens (`dayPickAction` in `DayButton.model.ts`, shared by both switchers). Back returns to the previous screen through the back history.
 
 - **The shown day, not today:** switches screens.
 - **Today's button, today shown:** scrolls to now while now is not settled in view; once it is, switches screens. So from anywhere on today, a first tap brings now into view and a second one switches.
-- **Now is settled** (`nowSettled`) when now is drawn inside the **central 80 %** of the visible area (10 % in from each edge, along the time axis), or when a scroll to now would not move the view (it cannot get closer).
-  - My plan: where the first now arrow is, on the list above the floating bottom bar (`planNowView`). With no arrow (before 08:00, an empty day, conflicts only with nothing live) a scroll to now goes to the top, so the list is settled at the top.
-  - Timeline: where the now line is, across the horizontal scroll (`timelineNowView`). Before 08:30 and after 04:00 now is outside the scrollable window; the view is settled at the window's end nearest to it.
+- **Now is settled** (`nowSettled`) when now is drawn inside the central band of the visible area, along the time axis, or when a scroll to now would not move the view (it cannot get closer). The band is set per screen:
+  - My plan: the **central 80 %** (`PLAN_NOW_BAND`, 10 % in from each edge), around where the first now arrow is, on the list above the floating bottom bar (`planNowView`). With no arrow (before 08:00, an empty day, conflicts only with nothing live) a scroll to now goes to the top, so the list is settled at the top.
+  - Timeline: the **central 20 %** (`TIMELINE_NOW_BAND`, 40–60 % across), around where the now line is, across the horizontal scroll (`timelineNowView`). A scroll to now centres it, so after one tap the next one switches. Before 08:30 and after 04:00 now is outside the scrollable window; the view is settled at the window's end nearest to it.
   - Asked only at the tap: each screen registers a probe under its screen key (`features/timeline/nowInView`), so scrolling re-renders nothing.
 - **Where it goes** (`navigation/viewSwitch`):
   - From My plan: the timeline shown last, Program or Support Program; the Program until either has been shown (in memory only, so after a cold start it is the Program).
@@ -310,7 +310,7 @@ New values this screen introduces, to add as tokens:
 | Clash bar (right edge) | Nothing separate: it's too thin, so a tap there counts as a row tap. |
 | Gap | Nothing. |
 | Long-press on a row | Nothing. Changing a pick inline would make the row vanish under your finger. |
-| Now pill | On My plan showing today: the pill's set on its timeline. Elsewhere, My plan on another day included: My plan, today, scrolled to now (see Top bar). |
+| Now pill | On My plan showing today: the pill's set's timeline at now. Elsewhere, My plan on another day included: My plan, today, scrolled to now (see Top bar). |
 
 ---
 

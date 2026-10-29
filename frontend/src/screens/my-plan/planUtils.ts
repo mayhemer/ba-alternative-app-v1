@@ -227,6 +227,13 @@ export function nowScrollOffset(items: PlanItem[], viewportHeight: number): numb
 }
 
 /**
+ * How central the now arrow must be for today's day button to switch to the
+ * timeline rather than scroll to now: the middle 80 % of the list above the
+ * floating bottom bar (DayButton.model's nowSettled).
+ */
+export const PLAN_NOW_BAND = 0.8;
+
+/**
  * Now on a day's list scrolled to `scrollY`, in content y: where the first now
  * arrow is (null when none is drawn), how much is visible above the floating
  * bottom bar (`bottomInset`, its clearance, also added below the content), and

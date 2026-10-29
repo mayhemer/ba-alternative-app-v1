@@ -70,9 +70,6 @@ export function dayPickAction(
 
 // ── Whether now is settled on a screen ────────────────────────────────────────
 
-/** The central part of the view that counts as "now is in view": 80 %, 10 % in from each edge. */
-export const NOW_BAND = 0.8;
-
 /**
  * Where now is on a scrolled screen, along its time axis in content
  * coordinates (the timeline's x, My plan's y).
@@ -90,11 +87,12 @@ export type NowView = {
 
 /**
  * Whether today's button should switch screens rather than scroll to now: now
- * is drawn inside the view's central band, or a scroll to now would not move
- * the view (it cannot get any closer).
+ * is drawn inside the view's central `band` (a fraction of the visible size,
+ * set per screen: TIMELINE_NOW_BAND, PLAN_NOW_BAND), or a scroll to now would
+ * not move the view (it cannot get any closer).
  */
-export function nowSettled({ now, scroll, size, nowScroll }: NowView): boolean {
-  const margin = (size * (1 - NOW_BAND)) / 2;
+export function nowSettled({ now, scroll, size, nowScroll }: NowView, band: number): boolean {
+  const margin = (size * (1 - band)) / 2;
   if (now !== null && now >= scroll + margin && now <= scroll + size - margin) {
     return true;
   }

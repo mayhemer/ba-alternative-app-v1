@@ -83,7 +83,7 @@ press and said nothing the block itself could not show.
   today's red ▼ notch is the festival day that holds now (`festivalToday`), following the same minute
   clock (`useFestivalToday`), so it moves to the next day at 06:00.
 - Tapping the shown day again switches to My plan on that day; today's button first scrolls to now
-  until now is settled in view (the now line in the central 80 % of the view, or as close as the
+  until now is settled in view (the now line in the central 20 % of the view, or as close as the
   window allows). Same rule on both screens: see *Tapping the shown day again* in [my-plan.md](my-plan.md).
 
 ## Progressive mount
