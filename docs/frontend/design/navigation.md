@@ -3,12 +3,14 @@
 ## Side Drawer
 
 - Swipe from left edge of screen opens the side drawer — edge-only, not a general left swipe.
-- Hamburger button also opens it. It sits in the TopBar's left slot normally, and in the
-  BottomBar's left slot on short viewports where the TopBar is not rendered; on wide screens it
-  is not rendered at all, because the drawer is permanent there (`DrawerButton`).
+- Hamburger button also opens it, and closes it when it is already open (both bars render
+  above the drawer, so the button stays reachable); its label follows, "Open menu" or
+  "Close menu". It sits in the TopBar's left slot normally, and in the BottomBar's left slot
+  on short viewports where the TopBar is not rendered; on wide screens it is not rendered at
+  all, because the drawer is permanent there (`DrawerButton`).
 - Contains navigation between the main sections: Artists, Program, Support Program, Conflicts,
   Settings.
-- Dismissed by tapping outside or swiping left.
+- Dismissed by tapping outside, swiping left, or the hamburger.
 - Exception: when ArtistDetailScreen is fully expanded, swipe-from-left closes the detail view
   instead of opening the drawer. There is **no in-app back button** — backward movement is the
   platform's own (Android hardware back, web popstate), handled by `BackHistoryTracker`, plus a

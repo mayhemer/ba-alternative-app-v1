@@ -79,8 +79,10 @@ mean either pinning the bar to a fixed height (risking a clipped `DaySwitcher`) 
 
 `DrawerButton` (`src/components/layout/DrawerButton.tsx`) is shared between the two bars rather
 than duplicated: it carries the coupling that opening the drawer dismisses the lens panel — the
-counterpart to the same rule in `LensChip`. It renders nothing when `isWide`, where the drawer is
-permanent.
+counterpart to the same rule in `LensChip`. It closes the drawer when it is open, and its label
+("Open menu" / "Close menu") follows the drawer through `useIsDrawerOpen`, which re-renders it only
+when the drawer opens or closes, not on every navigation change. It renders nothing when `isWide`,
+where the drawer is permanent.
 
 `LeftComponent` exists in `TopBarConfig` but no screen sets it; the BottomBar ignores it.
 
