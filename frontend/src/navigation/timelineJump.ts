@@ -1,4 +1,4 @@
-import { getFestivalDayStart } from '../components/timeline/timelineLayout';
+import { getFestivalDayStart } from '../utils/festivalTime';
 import type { DbArtist, DbEvent } from '../types/backend';
 
 // ── Where a set is on the timelines ───────────────────────────────────────────

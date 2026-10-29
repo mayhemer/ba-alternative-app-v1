@@ -49,7 +49,7 @@ Related: [overview.md](../../general/design/overview.md) (app-wide design), [lay
 ```
 
 - **Same sets as the conflict calculation.** My plan lists exactly the sets the conflict calculation considers, through one shared rule (`conflictUtils.isConflictEligible`). Sets longer than 2 hours (all-day exhibitions, say) are out of both: not listed, not in the now pill, never clashing. The plan and the conflict logic must stay on one source feed and one rule. A change to either goes through the shared logic, never a plan-only or conflict-only filter or count.
-- **One model per element.** Every element (set row, gap, cap, spacer, empty day, now pill) has a pure model next to its component (`components/plan/<Element>.model.ts`). The model computes everything the element shows: height, texts, progress, where the now arrow sits. It works from the raw inputs that element depends on, and the component draws only the model. `buildPlanDay` decides only which elements a day lists, and in what order. Height and label can't disagree because they come from the same inputs: a gap drawn as 2 h says `2 h`.
+- **One model per element.** Every element (set row, gap, cap, spacer, empty day, now pill) has a pure model next to its component (`screens/my-plan/<Element>.model.ts`). The model computes everything the element shows: height, texts, progress, where the now arrow sits. It works from the raw inputs that element depends on, and the component draws only the model. `buildPlanDay` decides only which elements a day lists, and in what order. Height and label can't disagree because they come from the same inputs: a gap drawn as 2 h says `2 h`.
 - **One festival day per view.**
 - Festival days run **06:00 → 06:00** (`DAY_BOUNDARY_HOUR`), so a 00:30 set belongs to the previous day.
 - All times are in festival time (`festivalTime.ts`).
@@ -191,7 +191,7 @@ What each element shows comes from its own model (see Principles), built from th
 - **Clash bar:** on the row's **right edge**, 9.75 pt wide.
   - Each overlap interval is drawn at its place along the row's start → end, top to bottom.
   - Same stripes as the timeline's conflict bar: `danger` / `dangerMuted`, 2 pt each, at 45°.
-  - In the app, reuse `stripePath` from `ArtistBlock.tsx` (SVG). `patternTransform` is ignored on iOS.
+  - In the app, reuse `stripePath` from `src/ui/stripes.ts` (SVG). `patternTransform` is ignored on iOS.
 - **Group title:** `⚠ Conflict` (13 regular, `danger`, right-aligned) sits just above the first row of each clash group.
   - Groups follow `computeConflictEntries`' leader rule.
   - It's drawn at the bottom edge of the cell above the group (the gap or the reserved spacer), absolutely positioned, so it doesn't change the layout. Drawing it from the row itself would put it outside the row's list cell, and on Android a cell takes no touches outside its own bounds.

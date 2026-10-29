@@ -19,9 +19,9 @@ Each element computes what it shows in a pure model next to its component:
 
 | Element | Model | Source |
 |---|---|---|
-| The list | `screens/ArtistList.model.ts` | the cached artists (bands only), the search, the lens: which artists, grouped and sorted; "loading" while nothing is cached, "No artists found" when the filters leave nothing |
-| A row | `components/ArtistRow.model.ts` | the artist, my pick and the friends who picked them: name, genre and country only when known, thumbnail or placeholder, facepile, star |
-| A letter header | `components/SectionSeparator.model.ts` | the first character of the name: diacritics folded, a digit → "#"; the list groups by the same rule |
+| The list | `screens/artist-list/ArtistList.model.ts` | the cached artists (bands only), the search, the lens: which artists, grouped and sorted; "loading" while nothing is cached, "No artists found" when the filters leave nothing |
+| A row | `screens/artist-list/ArtistRow.model.ts` | the artist, my pick and the friends who picked them: name, genre and country only when known, thumbnail or placeholder, facepile, star |
+| A letter header | `screens/artist-list/SectionSeparator.model.ts` | the first character of the name: diacritics folded, a digit → "#"; the list groups by the same rule |
 
 - Search: case-insensitive, part of the name; blank or spaces only lists everything.
 - Lens: "My picks" lists my Maybes and Must-sees (a "don't go" is not a pick); a friend's lens lists

@@ -3,7 +3,7 @@ import type {
   DbArtist, DbArtistBioLocalized, DbArtistBios, DbArtistLocalized, DbCategory,
   DbEvent, DbStage, DbUserInterest,
 } from '../types/backend';
-import { deriveFestivalDays } from '../components/timeline/timelineLayout';
+import { deriveFestivalDays } from '../utils/festivalTime';
 import { currentTimeMs } from '../utils/clock';
 
 // ── Public festival data types ────────────────────────────────────────────────

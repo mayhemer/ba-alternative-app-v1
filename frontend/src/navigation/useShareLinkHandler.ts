@@ -2,8 +2,8 @@ import { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 import * as Linking from 'expo-linking';
 import { navigationRef } from './navigationRef';
-import { useFeedback } from '../context/ScreenUIContext';
-import { useOpenSharedSchedule } from '../hooks/useOpenSharedSchedule';
+import { useFeedback } from '../shell/ScreenUIContext';
+import { useOpenSharedSchedule } from '../features/social/useOpenSharedSchedule';
 import { extractShareToken, SHARE_LINK_PATH } from '../adapters/baShareApiAdapter';
 
 // Listens for incoming `…/add-friend/<token>` links (universal/app link or the

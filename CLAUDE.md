@@ -25,6 +25,9 @@ You are a senior engineer with experience in writing expo/react native/aws fulls
 - When two elements show related information (e.g. the now pill and the plan list), the spec states which source each one follows. Never copy one element's rule into the other silently.
 - A constant with one meaning is defined once and imported.
 
+### Where files go
+- Place frontend files by the rules in docs/frontend/design/architecture/overview.md (*Where a file goes*): screens/, features/, shell/, ui/, hooks/, utils/; an element's component, model and tests stay side by side.
+
 ## Tests
 - Write or update tests before the code, and show that they fail for the expected reason.
 - Unit tests for each element's model function, boundaries included.

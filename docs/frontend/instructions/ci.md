@@ -13,7 +13,7 @@ the two noise sources, and why the suite samples 30 runs after 3 warmups and rep
 fill a ~20 ms window.
 
 Two metrics are sturdier than timing and are the ones worth gating: **render counts**
-(`measureRenders`, deterministic) and **element budgets** (`src/**/elementBudgets.test.tsx`, exact,
+(`measureRenders`, deterministic) and **element budgets** (`src/**/*.elementBudget.test.tsx` per row or block, `src/screens/screenBudgets.test.tsx` per screen; exact,
 and in the normal suite rather than the performance one).
 
 Native E2E is deliberately absent from CI: it needs a built binary, and those come from EAS cloud

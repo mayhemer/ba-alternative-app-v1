@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { hydrateInterests } from '../cache/cacheService';
 import { hydrateSocial } from '../cache/socialCache';
 import { migrateLocalStorage } from './storageMigration';
-import { DEFAULT_SCOPE, type LensScope } from '../utils/interestUtils';
+import { DEFAULT_SCOPE, type LensScope } from '../features/interests/interestUtils';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Single owner of all persisted timeline UI state. Holds an in-memory snapshot

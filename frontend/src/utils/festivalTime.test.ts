@@ -1,4 +1,17 @@
-import { FESTIVAL_TIME_ZONE, festivalUtcOffsetMs, fromFestivalClock, toFestivalClock } from './festivalTime';
+import {
+  deriveFestivalDays,
+  FESTIVAL_TIME_ZONE,
+  festivalToday,
+  festivalUtcOffsetMs,
+  formatDayLabel,
+  formatDayMonth,
+  formatTime,
+  formatWeekday,
+  fromFestivalClock,
+  getFestivalDayStart,
+  toFestivalClock,
+} from './festivalTime';
+import type { DbEvent } from '../types/backend';
 
 // ── Festival time against the time-zone database ──────────────────────────────
 //
@@ -59,4 +72,79 @@ it('turns a wall-clock time back into the instant', () => {
     const t = Date.parse(iso);
     expect(fromFestivalClock(toFestivalClock(t).getTime())).toBe(t);
   }
+});
+
+// ── Festival days and their labels ────────────────────────────────────────────
+//
+// Festival days start at 06:00 festival time (Europe/Prague), whatever zone the
+// device is in; the suite runs in New York (tests/setup/globalTz.ts).
+
+const at = (iso: string): number => Date.parse(iso);
+const WED = at('2025-08-06T06:00:00+02:00');
+const THU = at('2025-08-07T06:00:00+02:00');
+const FRI = at('2025-08-08T06:00:00+02:00');
+const SAT = at('2025-08-09T06:00:00+02:00');
+const DAYS = [WED, THU, FRI, SAT];
+
+const event = (dateFrom: number, dateTo = dateFrom + HOUR): DbEvent =>
+  ({ dateFrom, dateTo } as unknown as DbEvent);
+
+describe('formatting', () => {
+  it('shows festival time, not the device\'s', () => {
+    expect(formatTime(at('2025-08-07T00:30:00+02:00'))).toBe('00:30');
+    expect(formatDayLabel(WED)).toBe('Wed 6');
+    expect(formatWeekday(WED)).toBe('Wed');
+    expect(formatDayMonth(WED)).toBe('6.8.');
+  });
+});
+
+describe('getFestivalDayStart', () => {
+  it('starts a festival day at 06:00', () => {
+    expect(getFestivalDayStart(at('2025-08-06T06:00:00+02:00'))).toBe(WED);
+    expect(getFestivalDayStart(at('2025-08-06T23:59:00+02:00'))).toBe(WED);
+  });
+
+  it('counts a set after midnight as the previous day', () => {
+    expect(getFestivalDayStart(at('2025-08-07T00:30:00+02:00'))).toBe(WED);
+    expect(getFestivalDayStart(at('2025-08-07T05:59:00+02:00'))).toBe(WED);
+  });
+});
+
+describe('deriveFestivalDays', () => {
+  it('gives each festival day once, in order', () => {
+    const days = deriveFestivalDays([
+      event(at('2025-08-07T14:00:00+02:00')),
+      event(at('2025-08-06T18:00:00+02:00')),
+      event(at('2025-08-07T02:00:00+02:00')), // Wednesday night
+      event(at('2025-08-06T20:00:00+02:00')),
+    ]);
+    expect(days).toEqual([WED, THU]);
+  });
+});
+
+describe('festivalToday', () => {
+  it('is the festival day that holds now', () => {
+    expect(festivalToday(DAYS, at('2025-08-07T15:00:00+02:00'))).toBe(THU);
+  });
+
+  it('starts at 06:00', () => {
+    expect(festivalToday(DAYS, at('2025-08-07T06:00:00+02:00'))).toBe(THU);
+  });
+
+  it('keeps the night before 06:00 on the day before', () => {
+    expect(festivalToday(DAYS, at('2025-08-08T05:59:00+02:00'))).toBe(THU);
+  });
+
+  it('is null before the festival, the night before its first 06:00 included', () => {
+    expect(festivalToday(DAYS, at('2025-08-06T05:59:00+02:00'))).toBeNull();
+  });
+
+  it('holds the last day until 06:00 after it, and is null from then on', () => {
+    expect(festivalToday(DAYS, at('2025-08-10T05:59:00+02:00'))).toBe(SAT);
+    expect(festivalToday(DAYS, at('2025-08-10T06:00:00+02:00'))).toBeNull();
+  });
+
+  it('is null for an edition with no days', () => {
+    expect(festivalToday([], at('2025-08-07T15:00:00+02:00'))).toBeNull();
+  });
 });

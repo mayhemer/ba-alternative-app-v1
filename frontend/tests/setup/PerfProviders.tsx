@@ -1,15 +1,15 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { ScreenUIProvider } from '../../src/context/ScreenUIContext';
-import { InterestProvider } from '../../src/context/InterestContext';
-import { SocialProvider } from '../../src/context/SocialContext';
-import { LensProvider } from '../../src/context/LensContext';
-import { ConflictProvider } from '../../src/context/ConflictContext';
-import { ArtistDetailProvider } from '../../src/context/ArtistDetailContext';
-import { ConflictDetailProvider } from '../../src/context/ConflictDetailContext';
-import { ArtistListFilterProvider } from '../../src/context/ArtistListFilterContext';
-import { TimelineFilterProvider } from '../../src/context/TimelineFilterContext';
+import { ScreenUIProvider } from '../../src/shell/ScreenUIContext';
+import { InterestProvider } from '../../src/features/interests/InterestContext';
+import { SocialProvider } from '../../src/features/social/SocialContext';
+import { LensProvider } from '../../src/features/social/LensContext';
+import { ConflictProvider } from '../../src/features/conflicts/ConflictContext';
+import { ArtistDetailProvider } from '../../src/features/artist-detail/ArtistDetailContext';
+import { ConflictDetailProvider } from '../../src/features/conflicts/ConflictDetailContext';
+import { ArtistListFilterProvider } from '../../src/screens/artist-list/ArtistListFilterContext';
+import { TimelineFilterProvider } from '../../src/screens/timeline/TimelineFilterContext';
 
 // ── Provider tree for render measurements ─────────────────────────────────────
 //

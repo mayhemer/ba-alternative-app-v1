@@ -33,7 +33,6 @@
 - `ArtistListScreen`
 - `ArtistRow` — photo, name, genre, country, StarButton.
 - `SectionSeparator` — alphabetical first-letter divider.
-- `InterestFilterControl` — filter by star state. Lives in TopBar.
 - `SearchBar` — artist name text search. Lives in TopBar.
 
 ## Artist Detail

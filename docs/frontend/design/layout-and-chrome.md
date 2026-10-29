@@ -46,7 +46,7 @@ to know about this** — `useTopBar({ RightComponent })` keeps working unchanged
 normally renders `null` when a screen contributes no content, also renders when `isShort` so that
 Settings still gets a hamburger.
 
-The TopBar's centre holds the **now pill** (`components/plan/NowPill`, spec in
+The TopBar's centre holds the **now pill** (`screens/my-plan/NowPill`, spec in
 [my-plan.md](my-plan.md)), which falls back to the logo. It is not moved
 anywhere on short viewports: there is no pill in landscape.
 
@@ -77,7 +77,7 @@ height, and a few extra px at the end of a scroll are invisible, whereas couplin
 mean either pinning the bar to a fixed height (risking a clipped `DaySwitcher`) or plumbing an
 `onLayout` measurement through a context.
 
-`DrawerButton` (`src/components/layout/DrawerButton.tsx`) is shared between the two bars rather
+`DrawerButton` (`src/shell/DrawerButton.tsx`) is shared between the two bars rather
 than duplicated: it carries the coupling that opening the drawer dismisses the lens panel — the
 counterpart to the same rule in `LensChip`. It closes the drawer when it is open, and its label
 ("Open menu" / "Close menu") follows the drawer through `useIsDrawerOpen`, which re-renders it only
@@ -116,10 +116,10 @@ index lands on the wrong stop.
 
 ## Chrome elements and their sources
 
-- **Bottom bar** (`layout/BottomBar.model.ts`): a row under a screen with content for it, nothing
+- **Bottom bar** (`shell/BottomBar.model.ts`): a row under a screen with content for it, nothing
   under one without; on a short viewport it floats over the content, carrying the TopBar's controls.
-- **Feedback toast** (`layout/FeedbackToast.model.ts`): the band clear of the star column
+- **Feedback toast** (`shell/FeedbackToast.model.ts`): the band clear of the star column
   (`toastBand`), and its content — the interest strip after a star tap, else the message — and
   whether a tap dismisses it.
-- **Friend avatar and facepile** (`social/FriendAvatar.model.ts`, `FriendFacepile.model.ts`): the
+- **Friend avatar and facepile** (`features/social/FriendAvatar.model.ts`, `FriendFacepile.model.ts`): the
   photo or the initial, the pick's badge, sized from the avatar; three faces and "+N".

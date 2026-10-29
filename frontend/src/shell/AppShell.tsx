@@ -1,0 +1,114 @@
+import React, { useCallback, useEffect, useState } from 'react';
+import { View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { NavigationContainer } from '@react-navigation/native';
+import type { NavigationState } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { TopBar } from './TopBar';
+import { BottomBar } from './BottomBar';
+import { ArtistDetailSheet } from '../features/artist-detail/ArtistDetailSheet';
+import { ConflictDetailSheet } from '../features/conflicts/ConflictDetailSheet';
+import { FeedbackToast } from './FeedbackToast';
+import { LensPanel } from '../features/social/LensPanel';
+import { PlanFilterPanel } from '../screens/my-plan/filter/PlanFilterPanel';
+import { useShareLinkHandler } from '../navigation/useShareLinkHandler';
+import { AppNavigator, DRAWER_ROUTE_NAMES } from '../navigation/AppNavigator';
+import { sanitizeNavState } from '../navigation/navState';
+import { BackHistoryTracker } from '../navigation/BackHistoryTracker';
+import { observe, type ScreenName } from '../navigation/backHistory';
+import { navigationRef } from '../navigation/navigationRef';
+import { useLayoutMode } from '../hooks/useLayoutMode';
+import { colors } from '../styling/tokens';
+
+const NAV_STATE_KEY = 'navigation:state';
+
+export function AppShell() {
+  const [initialState, setInitialState] = useState<NavigationState | undefined>(undefined);
+  const [isReady, setIsReady] = useState(false);
+  const { isShort } = useLayoutMode();
+
+  // Handle incoming add-friend share links (cold start + while running).
+  useShareLinkHandler();
+
+  useEffect(() => {
+    async function restoreState(): Promise<void> {
+      const stored = await AsyncStorage.getItem(NAV_STATE_KEY);
+      if (stored !== null) {
+        // A state saved by an older release may name a screen that is gone
+        // (Conflicts became My plan): start from the default then.
+        setInitialState(sanitizeNavState(JSON.parse(stored) as NavigationState, DRAWER_ROUTE_NAMES));
+      }
+      setIsReady(true);
+    }
+    void restoreState();
+  }, []);
+
+  const handleStateChange = useCallback((state: NavigationState | undefined): void => {
+    if (state !== undefined) {
+      void AsyncStorage.setItem(NAV_STATE_KEY, JSON.stringify(state));
+      // The back history's only source for the current screen — the navigator's
+      // own state never reaches the contexts BackHistoryTracker watches. The
+      // drawer's open/closed entry in `state.history` is deliberately ignored.
+      const route = state.routes[state.index];
+      if (route !== undefined) {
+        observe({ screen: route.name as ScreenName });
+      }
+    }
+  }, []);
+
+  if (!isReady) { 
+    return <View style={{ flex: 1, backgroundColor: colors.background }} />; 
+  }
+
+  return (
+    <GestureHandlerRootView className="flex-1">
+
+      {/* Main app layout — TopBar, screen content, BottomBar.
+          left/right edges matter in landscape: without them content sits under
+          a notched phone's sensor housing. */}
+      <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom', 'left', 'right']}>
+        {/* Dropped on short viewports to give the timeline back its 56 px — the
+            hamburger and the lens chip move into the BottomBar there. */}
+        {!isShort && <TopBar />}
+        <View className="flex-1">
+          <NavigationContainer
+            ref={navigationRef}
+            initialState={initialState}
+            onStateChange={handleStateChange}
+          >
+            <AppNavigator />
+          </NavigationContainer>
+          {/* Back-button history. Its position here is load-bearing: a sibling
+              immediately after NavigationContainer is what registers its back
+              handler *after* the navigator's, and so ahead of it in RN's
+              last-registered-first queue. See navigation/BackHistoryTracker. */}
+          <BackHistoryTracker />
+          {/* View/share lens panel — drops from under the TopBar over the content */}
+          <LensPanel />
+          {/* My plan's filter panel — the same kind of drop-down, in the same place */}
+          <PlanFilterPanel />
+          {/* Short viewports: the bar floats over the content, reclaiming its
+              height for the timeline. Screens add BOTTOM_OVERLAY_CLEARANCE so
+              their last row scrolls clear of it. */}
+          {isShort && <BottomBar />}
+        </View>
+        {/* Otherwise in-flow, and kept a sibling of the content view rather than
+            nested inside it — LensPanel is `inset: 0` within that view, so
+            nesting would newly draw the lens backdrop over the DaySwitcher. */}
+        {!isShort && <BottomBar />}
+      </SafeAreaView>
+
+      {/* Artist detail bottom sheet — in the tree only while it has an artist to
+          show, see hooks/useBottomSheetMount */}
+      <ArtistDetailSheet />
+
+      {/* Conflict detail sheet — likewise only while it has a conflict to show */}
+      <ConflictDetailSheet />
+
+      {/* Feedback toast — rendered last so it's always above backdrop and sheet */}
+      <FeedbackToast />
+
+    </GestureHandlerRootView>
+  );
+}

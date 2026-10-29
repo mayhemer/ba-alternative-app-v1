@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import * as NativeSplash from 'expo-splash-screen';
 import { useAppContext } from './AppContext';
-import { SplashScreen } from '../screens/SplashScreen';
+import { SplashScreen } from '../screens/splash/SplashScreen';
 import { startSync, stop as stopSync } from '../sync/backgroundSyncService';
 import { hydrateLocalState } from './uiStatePersistence';
 import { loadFonts } from '../styling/fonts';

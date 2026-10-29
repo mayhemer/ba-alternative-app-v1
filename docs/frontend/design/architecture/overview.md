@@ -24,22 +24,54 @@ deployment, deep links).
 
 ## Folder Structure
 
+UI code is grouped by what it is for, not by file kind:
+
 ```
 src/
+  screens/        # One folder per navigation route: the screen and everything only it uses
+    artist-list/    #   list, rows, letter headers, the list's filter context
+    timeline/       #   Timeline + Support timeline, TimelineView, the day filter context
+    my-plan/        #   the plan list, its elements, PlanContext, now pill; filter/ = filter chip + panel
+    settings/
+    splash/
+  features/       # Functionality several screens use: its context, logic and elements
+    timeline/       #   the drawn timeline (lanes, blocks, ruler, now line, day buttons) + its geometry
+    artist-detail/  #   the artist detail sheet, opened from every screen
+    conflicts/      #   clash computation, the conflict sheet, conflict copy
+    interests/      #   picks (Must-see / Maybe / …), the star
+    social/         #   friends, the lens, share links
+  shell/          # The frame around screens: AppShell, top/bottom bar, drawer, toast, ScreenUIContext
+  ui/             # Reusable pieces with no festival knowledge (Text, chip frame, stripes, sameProps)
+  hooks/          # General React hooks (layout mode, minute clock, overlays, bottom sheets)
+  utils/          # General helpers, no React (festival time and days, colour, text fit, perf marks)
+
   adapters/       # API-specific fetchers (swappable)
-  auth/           # Cognito config, token storage, sign-in/out
+  auth/           # Cognito config, token storage, sign-in/out, AuthContext
   cache/          # Cache service (UI's only data source) + social cache
-  context/        # Feature-level React contexts (interests, lens, conflicts, social, UI)
-  hooks/          # Derived-data and UI hooks
   navigation/     # Navigator, back-history tracking, share-link handling
-  screens/        # Screen components
-  components/     # Reusable UI components
   store/          # App context + cache store binding + startup gate + UI-state persistence
   styling/        # Design tokens
   sync/           # Background sync service + festival date config
   types/          # Backend type re-exports
-  utils/          # Helpers, constants, config
 ```
+
+### Where a file goes
+
+1. **An element stays with its model.** `X.tsx`, `X.model.ts`, `X.test.tsx` and `X.model.test.ts`
+   sit side by side, never in a folder of their own; there are no `index.ts` barrels or
+   re-exporting modules — import from the file that defines the thing.
+2. **One user → that user's folder.** A file or function used by one screen or feature lives
+   there. When a second one starts using it, it moves out: to `features/`, or to `ui/` / `utils/`
+   if it has no festival knowledge (e.g. `getFestivalDayStart` lives in `utils/festivalTime.ts`,
+   not in the timeline's geometry).
+3. **Imports point downward** — `shell` → `screens` → `features` → `ui` / `hooks` / `utils` —
+   except calls into the app's two APIs, which any layer may use: `shell/ScreenUIContext` (set the
+   bars, show feedback) and `navigation/`'s helpers (`navigationRef`, jumping to the timeline).
+   `shell/`, `navigation/AppNavigator` and `store/StartupGate` assemble the app and may import
+   any screen.
+4. **A context sits with its feature** (`PlanContext` in `screens/my-plan/`, `LensContext` in
+   `features/social/`); there is no global `context/` folder.
+5. **A folder past ~30 files splits by sub-function**, as `screens/my-plan/filter/`.
 
 ---
 
@@ -66,5 +98,6 @@ type AppState = {
 `cacheService` owns it and persists it alongside the datasets. Holding it in React state also
 re-rendered every context consumer on each poll, for a value nothing rendered.
 
-Feature state lives in its own context under `src/context/` rather than in `AppState` —
-interests, lens/scope, conflicts, social/friends, and transient screen UI.
+Feature state lives in its own context next to its feature rather than in `AppState` —
+interests, lens/scope, conflicts, social/friends (under `src/features/`), and transient screen UI
+(`src/shell/ScreenUIContext`).

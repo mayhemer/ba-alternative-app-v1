@@ -13,6 +13,8 @@
 // against the ICU time-zone database over a decade of instants; should the EU
 // ever stop changing clocks, that test is what fails.
 
+import type { DbEvent } from '../types/backend';
+
 export const FESTIVAL_TIME_ZONE = 'Europe/Prague';
 
 const HOUR_MS = 60 * 60 * 1000;
@@ -73,4 +75,72 @@ export function fromFestivalClock(wallMs: number): number {
   // local), where no festival time is ever built.
   const guess = wallMs - festivalUtcOffsetMs(wallMs);
   return wallMs - festivalUtcOffsetMs(guess);
+}
+
+// ── Festival days ─────────────────────────────────────────────────────────────
+
+export const DAY_DURATION_MS  = 24 * 60 * 60 * 1000;
+
+// A festival "day" begins at 06:00, not midnight.
+export const DAY_BOUNDARY_HOUR = 6;
+
+/**
+ * Return the festival-day start (06:00 festival time, Europe/Prague) that
+ * contains the given timestamp. Events before 06:00 belong to the previous
+ * calendar day. Independent of the device's time zone (see above).
+ */
+export function getFestivalDayStart(timestampMs: number): number {
+  const wall = toFestivalClock(timestampMs);
+  if (wall.getUTCHours() < DAY_BOUNDARY_HOUR) {
+    wall.setUTCDate(wall.getUTCDate() - 1);
+  }
+  wall.setUTCHours(DAY_BOUNDARY_HOUR, 0, 0, 0);
+  return fromFestivalClock(wall.getTime());
+}
+
+/** Collect unique festival-day starts (sorted asc) from a set of events. */
+export function deriveFestivalDays(events: DbEvent[]): number[] {
+  const daySet = new Set<number>();
+  for (const event of events) {
+    daySet.add(getFestivalDayStart(event.dateFrom));
+  }
+  return Array.from(daySet).sort((a, b) => a - b);
+}
+
+/**
+ * The festival day that holds `now` — a day runs from its 06:00 to the next —
+ * or null outside the festival. The one rule for "today" in both switchers and
+ * in My plan's list.
+ */
+export function festivalToday(festivalDays: readonly number[], now: number): number | null {
+  const day = getFestivalDayStart(now);
+  return festivalDays.includes(day) ? day : null;
+}
+
+// ── Display helpers ───────────────────────────────────────────────────────────
+
+// All in festival time (Europe/Prague), read through toFestivalClock's UTC
+// fields — never the device's zone.
+
+/** Format a Unix-ms timestamp as HH:MM for display inside event blocks. */
+export function formatTime(timestampMs: number): string {
+  const wall = toFestivalClock(timestampMs);
+  return `${String(wall.getUTCHours()).padStart(2, '0')}:${String(wall.getUTCMinutes()).padStart(2, '0')}`;
+}
+
+const WEEKDAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+/** Short weekday of a timestamp, e.g. "Wed". */
+export function formatWeekday(timestampMs: number): string {
+  return WEEKDAY_NAMES[toFestivalClock(timestampMs).getUTCDay()];
+}
+
+/** Day and month of a timestamp, e.g. "6.8.". */
+export function formatDayMonth(timestampMs: number): string {
+  const wall = toFestivalClock(timestampMs);
+  return `${wall.getUTCDate()}.${wall.getUTCMonth() + 1}.`;
+}
+
+export function formatDayLabel(dayStartMs: number): string {
+  return `${formatWeekday(dayStartMs)} ${toFestivalClock(dayStartMs).getUTCDate()}`;
 }

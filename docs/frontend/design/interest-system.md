@@ -14,7 +14,7 @@ with no conversion layer:
 - `dont_go` records "I listened and decided not to go", so a band once checked is never re-checked
   by mistake (and it can be counted). After it, "status ≠ none" means "I have checked this band".
 - `dont_go` shows **only on the StarButton** (artist row, artist detail). Everywhere else it is the
-  same as `none`: `isInterested()` (utils/interestUtils) is the one definition of "is a pick", used by
+  same as `none`: `isInterested()` (features/interests/interestUtils) is the one definition of "is a pick", used by
   the "my picks" lens, `StarIndicator` (timeline, conflicts, sheets), the timeline block's star width,
   and friends' schedules.
 - It is stored on the server like any decision (PUT; only `none` is a DELETE) and returned in share
@@ -30,6 +30,6 @@ with no conversion layer:
 ## The star's one table
 
 Every place a pick is drawn — the star button, the indicator beside names, the toast's cycle strip,
-the lens chip — reads one table, `components/StarButton.model.ts`: each status's icon, colour,
+the lens chip — reads one table, `features/interests/StarButton.model.ts`: each status's icon, colour,
 strike-through and label, and the star button's size and reach (`STAR_COLUMN_RESERVE`, which the
 toast keeps clear of). The toast's strip has its own model (`InterestCycleStrip.model.ts`).

@@ -17,7 +17,7 @@ jest.mock('../../src/store/AppContext', () => {
   };
 });
 
-jest.mock('../../src/context/AuthContext', () => ({
+jest.mock('../../src/auth/AuthContext', () => ({
   useAuth: () => ({
     isLoggedIn: false,
     isRestoringSession: false,

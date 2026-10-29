@@ -13,14 +13,14 @@ import {
   type ScreenName,
 } from './backHistory';
 import { useSelectedSlug } from '../store/AppContext';
-import { useSelectedDay, useTimelineFilter } from '../context/TimelineFilterContext';
-import { useLens, useLensPanel } from '../context/LensContext';
-import { useArtistDetail } from '../context/ArtistDetailContext';
-import { useConflictDetail } from '../context/ConflictDetailContext';
-import { useConflicts } from '../context/ConflictContext';
-import { useSocialData } from '../context/SocialContext';
+import { useSelectedDay, useTimelineFilter } from '../screens/timeline/TimelineFilterContext';
+import { useLens, useLensPanel } from '../features/social/LensContext';
+import { useArtistDetail } from '../features/artist-detail/ArtistDetailContext';
+import { useConflictDetail } from '../features/conflicts/ConflictDetailContext';
+import { useConflicts } from '../features/conflicts/ConflictContext';
+import { useSocialData } from '../features/social/SocialContext';
 import { getArtists } from '../cache/cacheService';
-import type { LensScope } from '../utils/interestUtils';
+import type { LensScope } from '../features/interests/interestUtils';
 
 // The React end of navigation/backHistory: feeds it the current position, tells
 // it how to restore one, and owns the back trigger for each platform.

@@ -35,7 +35,7 @@ jest.mock('expo-splash-screen', () => ({
   preventAutoHideAsync: jest.fn(async () => undefined),
 }));
 
-jest.mock('../screens/SplashScreen', () => {
+jest.mock('../screens/splash/SplashScreen', () => {
   const { Text: RNText } = jest.requireActual('react-native');
   const ReactActual = jest.requireActual('react');
   return {

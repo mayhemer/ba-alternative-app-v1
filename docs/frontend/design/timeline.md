@@ -29,7 +29,7 @@
 
 ## Elements and their sources
 
-Each element computes what it shows in a pure model next to its component (`components/timeline/`):
+Each element computes what it shows in a pure model next to its component, in `src/features/timeline/` (shared with the conflict sheet and My plan), except `TimelineDay.model.ts`, which only the Timeline screen uses and so lives in `src/screens/timeline/`, and the conflict sheet's models, in `src/features/conflicts/`:
 
 | Element | Model | Source |
 |---|---|---|
@@ -74,7 +74,7 @@ press and said nothing the block itself could not show.
   gesture gives up once a move goes 10 pt sideways (`failOffsetX`) and starts only after 10 pt up
   or down (`activeOffsetY`), or on Android it would take the touch from the scroller.
 - **ConflictsScreen** is a dedicated list of the current conflicts.
-- Overlap computation lives in `src/utils/conflictUtils.ts`; `ConflictContext` holds the result.
+- Overlap computation lives in `src/features/conflicts/conflictUtils.ts`; `ConflictContext` holds the result.
   Only `must_see` counts today — including `maybe` is an open option (TODO in `conflictUtils`).
 
 ## Bottom Bar

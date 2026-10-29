@@ -1,10 +1,11 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, PINNED_NOW, test } from './fixtures';
-import { defaultScrollX, eventScrollTarget, formatTime } from '../../src/components/timeline/timelineLayout';
+import { defaultScrollX, eventScrollTarget } from '../../src/features/timeline/timelineLayout';
 import type { DbArtist, DbEvent } from '../../src/types/backend';
 
 import artistsFixture from '../fixtures/generated/ba2025/artists.json';
 import scheduleFixture from '../fixtures/generated/ba2025/schedule.json';
+import { formatTime } from '../../src/utils/festivalTime';
 
 // ── Where the timeline is scrolled to ─────────────────────────────────────────
 //

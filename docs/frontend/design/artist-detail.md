@@ -20,7 +20,7 @@
 
 ## Elements and their sources
 
-Each element computes what it shows in a pure model next to its component (`components/artist/`):
+Each element computes what it shows in a pure model next to its component (`src/features/artist-detail/`):
 
 | Element | Model | Source |
 |---|---|---|
@@ -28,7 +28,7 @@ Each element computes what it shows in a pure model next to its component (`comp
 | A set | `ArtistSetRow.model.ts` | the set, its stage and category, its conflict entry: stage, **calendar** date (a set at 00:35 on Wednesday night reads "Thu 7"), time, "Overlaps with N other event(s)"; a tap goes to the festival day the timeline draws it on |
 | Links | `ArtistLinks.model.ts` | the artist: streaming searches for a band, the web page's domain |
 | Hero | `ArtistHero.model.ts` | the content width and the viewport height: 3:2, capped |
-| Friends who picked it | `social/FriendPickList.model.ts` | the friends' picks: summary and rows |
+| Friends who picked it | `features/social/FriendPickList.model.ts` | the friends' picks: summary and rows |
 
 The ⚠ and each set's overlap line come from the shared conflict calculation (`useConflicts`), the one
 My plan, the timeline's bars and the drawer's count follow.

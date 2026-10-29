@@ -22,3 +22,8 @@ export function dimColor(rgbString: string, accent: number): string {
   const b = Math.round(parseInt(match[3], 10) / 255 * accent) + FLOOR;
   return `rgb(${r}, ${g}, ${b})`;
 }
+
+/** A set's background and its brighter border from its category's colour; the timeline's blocks and My plan's rows use them. */
+export function categoryBlockColors(categoryColor: string): { bg: string; border: string } {
+  return { bg: dimColor(categoryColor, 48), border: dimColor(categoryColor, 128) };
+}

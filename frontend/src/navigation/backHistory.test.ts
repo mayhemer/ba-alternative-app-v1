@@ -1,5 +1,5 @@
 import type { Appliers, Position } from './backHistory';
-import type { LensScope } from '../utils/interestUtils';
+import type { LensScope } from '../features/interests/interestUtils';
 
 // ── Back-button history ───────────────────────────────────────────────────────
 //

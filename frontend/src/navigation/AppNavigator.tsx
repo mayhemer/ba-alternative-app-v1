@@ -1,11 +1,11 @@
 import React from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
-import { ArtistListScreen } from '../screens/ArtistListScreen';
-import { TimelineScreen } from '../screens/TimelineScreen';
-import { SupportTimelineScreen } from '../screens/SupportTimelineScreen';
-import { SettingsScreen } from '../screens/SettingsScreen';
-import { MyPlanScreen } from '../screens/MyPlanScreen';
-import { SideDrawerContent } from '../components/layout/SideDrawerContent';
+import { ArtistListScreen } from '../screens/artist-list/ArtistListScreen';
+import { TimelineScreen } from '../screens/timeline/TimelineScreen';
+import { SupportTimelineScreen } from '../screens/timeline/SupportTimelineScreen';
+import { SettingsScreen } from '../screens/settings/SettingsScreen';
+import { MyPlanScreen } from '../screens/my-plan/MyPlanScreen';
+import { SideDrawerContent } from '../shell/SideDrawerContent';
 import { useLayoutMode } from '../hooks/useLayoutMode';
 
 export type DrawerParamList = {

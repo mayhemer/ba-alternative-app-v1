@@ -1,7 +1,7 @@
 import { useCallback, useSyncExternalStore } from 'react';
 import { AppState, type NativeEventSubscription } from 'react-native';
 import { currentTimeMs } from '../utils/clock';
-import { festivalToday } from '../components/timeline/DayButton.model';
+import { festivalToday } from '../utils/festivalTime';
 
 // ── A shared minute clock ─────────────────────────────────────────────────────
 //

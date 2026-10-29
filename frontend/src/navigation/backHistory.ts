@@ -1,6 +1,6 @@
 import type { DrawerParamList } from './AppNavigator';
-import type { LensScope } from '../utils/interestUtils';
-import type { DetailPresentationState } from '../context/ArtistDetailContext';
+import type { LensScope } from '../features/interests/interestUtils';
+import type { DetailPresentationState } from '../features/artist-detail/ArtistDetailContext';
 
 // Back-button history — the positions the hardware (or browser) back button
 // returns to.
