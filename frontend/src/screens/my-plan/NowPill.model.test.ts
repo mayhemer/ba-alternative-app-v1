@@ -173,8 +173,10 @@ describe('the set a tap goes to', () => {
 // ── What a tap does ───────────────────────────────────────────────────────────
 //
 // Dimensions: the screen shown (My plan, each other screen, none known yet) ×
-// the pill (live, break, logo). On My plan a tap goes to the pill's set on the
-// timeline; anywhere else to My plan at now. The logo has no set: no tap.
+// the day My plan shows (today, another day) × the pill (live, break, logo).
+// On My plan showing today a tap goes to the pill's set on the timeline;
+// anywhere else, My plan on another day included, to My plan today at now. The
+// logo has no set: no tap.
 
 describe('nowPillTap', () => {
   const { inputs, interests } = setup(DAY);
@@ -182,25 +184,33 @@ describe('nowPillTap', () => {
   const emperorNext = nowPillTarget(interests, inputs, DAYS, at(7, '21:10'));
 
   it.each([['ArtistList'], ['Timeline'], ['SupportTimeline'], ['Settings'], [undefined]])(
-    'on %s: My plan at now',
+    'on %s: My plan at now, whichever day My plan shows',
     (route) => {
-      expect(nowPillTap(route, gojiraLive)).toEqual({ kind: 'plan' });
-      expect(nowPillTap(route, emperorNext)).toEqual({ kind: 'plan' });
+      for (const planShowsToday of [true, false]) {
+        expect(nowPillTap(route, gojiraLive, planShowsToday)).toEqual({ kind: 'plan' });
+        expect(nowPillTap(route, emperorNext, planShowsToday)).toEqual({ kind: 'plan' });
+      }
     },
   );
 
-  it('on My plan, live: the live set on its timeline', () => {
-    const tap = nowPillTap('MyPlan', gojiraLive);
+  it('on My plan showing today, live: the live set on its timeline', () => {
+    const tap = nowPillTap('MyPlan', gojiraLive, true);
     expect(tap.kind === 'timeline' && tap.target.event.eventId).toBe('e5');
   });
 
-  it('on My plan, in a break: the next set on its timeline', () => {
-    const tap = nowPillTap('MyPlan', emperorNext);
+  it('on My plan showing today, in a break: the next set on its timeline', () => {
+    const tap = nowPillTap('MyPlan', emperorNext, true);
     expect(tap.kind === 'timeline' && tap.target.event.eventId).toBe('e8');
   });
 
+  it('on My plan showing another day: My plan today at now, live or in a break', () => {
+    expect(nowPillTap('MyPlan', gojiraLive, false)).toEqual({ kind: 'plan' });
+    expect(nowPillTap('MyPlan', emperorNext, false)).toEqual({ kind: 'plan' });
+  });
+
   it('the logo does nothing, on My plan or elsewhere', () => {
-    expect(nowPillTap('MyPlan', null)).toEqual({ kind: 'none' });
-    expect(nowPillTap('ArtistList', null)).toEqual({ kind: 'none' });
+    expect(nowPillTap('MyPlan', null, true)).toEqual({ kind: 'none' });
+    expect(nowPillTap('MyPlan', null, false)).toEqual({ kind: 'none' });
+    expect(nowPillTap('ArtistList', null, true)).toEqual({ kind: 'none' });
   });
 });

@@ -6,8 +6,9 @@ import { Text } from '../../ui/Text';
 import { useSelectedSlug } from '../../store/AppContext';
 import { useArtistEventMap, useArtists, useFestivalDays, useStages } from '../../store/cacheStore';
 import { useInterest } from '../../features/interests/InterestContext';
-import { usePlanStore } from './PlanContext';
-import { useMinuteNow } from '../../hooks/useMinuteNow';
+import { shownPlanDay, usePlanStore } from './PlanContext';
+import { minuteNow, useMinuteNow } from '../../hooks/useMinuteNow';
+import { festivalToday } from '../../utils/festivalTime';
 import { navigationRef } from '../../navigation/navigationRef';
 import { useJumpToTimeline } from '../../navigation/useJumpToTimeline';
 import { nowPillModel, nowPillTap, nowPillTarget, type NowPillModel, type NowPillTarget } from './NowPill.model';
@@ -137,18 +138,21 @@ function NowPillViewBase({ state, onPress }: ViewProps) {
 export const NowPillView = memo(NowPillViewBase);
 
 /**
- * What a tap does (nowPillTap): on My plan, shows the pill's set on its
- * timeline; elsewhere, opens My plan on today, scrolled to now. The screen is
- * read at tap time, so changing screens does not re-render the pill.
+ * What a tap does (nowPillTap): on My plan showing today, shows the pill's set
+ * on its timeline; elsewhere, My plan on another day included, opens My plan on
+ * today, scrolled to now. The screen and My plan's day are read at tap time, so
+ * changing either does not re-render the pill.
  */
-function useNowPillPress(target: NowPillTarget | null): () => void {
+function useNowPillPress(target: NowPillTarget | null, festivalDays: number[]): () => void {
   const store = usePlanStore();
   const jumpToTimeline = useJumpToTimeline();
   return useCallback((): void => {
     if (!navigationRef.isReady()) {
       return;
     }
-    const tap = nowPillTap(navigationRef.getCurrentRoute()?.name, target);
+    const now = minuteNow();
+    const planShowsToday = shownPlanDay(store.getSelection(), festivalDays, now) === festivalToday(festivalDays, now);
+    const tap = nowPillTap(navigationRef.getCurrentRoute()?.name, target, planShowsToday);
     switch (tap.kind) {
       case 'timeline':
         jumpToTimeline(tap.target.event, tap.target.jump);
@@ -160,7 +164,7 @@ function useNowPillPress(target: NowPillTarget | null): () => void {
       case 'none':
         break;
     }
-  }, [target, store, jumpToTimeline]);
+  }, [target, festivalDays, store, jumpToTimeline]);
 }
 
 export function NowPill() {
@@ -181,7 +185,7 @@ export function NowPill() {
     () => nowPillTarget(interests, { artists, stages, artistEvents }, festivalDays, now),
     [interests, artists, stages, artistEvents, festivalDays, now],
   );
-  const onPress = useNowPillPress(target);
+  const onPress = useNowPillPress(target, festivalDays);
 
   return <NowPillView state={state} onPress={onPress} />;
 }

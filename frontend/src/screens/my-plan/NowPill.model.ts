@@ -136,22 +136,25 @@ export function nowPillTarget(
 
 // ── What a tap does ───────────────────────────────────────────────────────────
 //
-// The pill toggles between My plan and the timeline: on My plan a tap shows the
-// pill's set on its timeline (My plan's own "now" is a tap on today's day
-// button); on any other screen it opens My plan on today at now. The logo has
-// no set and is not a button.
+// The pill toggles between My plan and the timeline: on My plan showing today a
+// tap shows the pill's set on its timeline (My plan's own "now" is a tap on
+// today's day button); anywhere else, My plan on another day included, it opens
+// My plan on today at now. The logo has no set and is not a button.
 
 export type NowPillTap =
   | { kind: 'none' }
   | { kind: 'plan' }
   | { kind: 'timeline'; target: NowPillTarget };
 
-/** `activeRoute` is the drawer screen shown, undefined before navigation is ready. */
-export function nowPillTap(activeRoute: string | undefined, target: NowPillTarget | null): NowPillTap {
+/**
+ * `activeRoute` is the drawer screen shown, undefined before navigation is
+ * ready; `planShowsToday`, whether My plan's shown day is today.
+ */
+export function nowPillTap(activeRoute: string | undefined, target: NowPillTarget | null, planShowsToday: boolean): NowPillTap {
   if (target === null) {
     return { kind: 'none' };
   }
-  if (activeRoute === 'MyPlan') {
+  if (activeRoute === 'MyPlan' && planShowsToday) {
     return { kind: 'timeline', target };
   }
   return { kind: 'plan' };

@@ -179,3 +179,19 @@ test('My plan switches to the timeline shown last: the Support Program', async (
   await expect(appPage.getByText('Museum', { exact: true }).filter({ visible: true }).first()).toBeVisible();
   await expect(appPage.getByTestId('plan-screen').filter({ visible: true })).toHaveCount(0);
 });
+
+test('on My plan showing another day, the now pill goes to today at now, not the timeline', async ({ appPage }) => {
+  await ready(appPage);
+  await pickClashingPair(appPage);
+  const pill = appPage.getByTestId('now-pill');
+  await pill.click();
+  await expect(appPage.getByTestId('plan-clash-bar').first()).toBeVisible({ timeout: 20_000 });
+  await appPage.getByText('Thu', { exact: true }).filter({ visible: true }).click();
+  await expect(appPage.getByText('Nothing planned for this day')).toBeVisible();
+
+  // Thursday is not today: My plan again, back on Wednesday with the live set.
+  await pill.click();
+  await expect(appPage.getByTestId('plan-clash-bar').first()).toBeVisible();
+  await expect(appPage.getByText('Nothing planned for this day')).toHaveCount(0);
+  await expect(appPage.getByTestId('timeline-scroll-x').filter({ visible: true })).toHaveCount(0);
+});
