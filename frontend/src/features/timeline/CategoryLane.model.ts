@@ -13,12 +13,14 @@ import { assignSubRows, LANE_HEIGHT, STRIP_HEIGHT, stripHeightFor } from './time
 // from these sets only, never from ones the lens or a filter hides. Its title
 // comes from the same model, so the title can never sit off its lane.
 
-/** A set the lane shows, with what its block needs: my pick and its overlaps. */
+/** A set the lane shows, with what its block needs: my pick, its overlaps, and whether the lens mutes it. */
 export type LaneSetInput = {
   event: DbEvent;
   artist: DbArtist;
   status: InterestStatus;
   overlaps: ConflictOverlap[] | undefined;
+  /** Not the lens's pick under My picks or a friend's lens: drawn outlined. */
+  muted: boolean;
 };
 
 export type LaneSet = LaneSetInput & { subRow: number };

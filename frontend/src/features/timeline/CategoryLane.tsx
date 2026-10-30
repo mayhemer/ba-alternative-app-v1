@@ -75,6 +75,7 @@ function CategoryLaneBase({ item, dayStart, nowX, onBlockPress, labelRepeat, mou
               labelRepeat,
               subRow: set.subRow,
               overlaps: set.overlaps,
+              muted: set.muted,
             })}
             onPress={onBlockPress}
           />

@@ -192,18 +192,43 @@ it('remembers where a day with events was left (control for the guard below)', a
 });
 
 it('renders an empty day when the lens has nothing to show, and does not remember its position', async () => {
-  const view = await mount('edge-empty-lens');
-  expect(screen.getByText(LANE_TITLE)).toBeTruthy();
+  // "My picks" keeps every set but the "don't go" ones: a day of only those is empty.
+  const wednesday = [...new Set((scheduleFixture as unknown as DbEvent[])
+    .filter((e) => e.dateFrom >= WED && e.dateFrom < WED + 24 * 60 * 60 * 1000)
+    .map((e) => e.artistId))];
+  for (const artistId of wednesday) {
+    await setInterest('ba2025', artistId, 'dont_go');
+  }
+  await hydrateInterests('ba2025');
+  try {
+    const view = await mount('edge-empty-lens');
+    expect(screen.getByText(LANE_TITLE)).toBeTruthy();
 
-  // "My picks" with nothing starred.
+    await act(async () => { setScope({ kind: 'me', level: null }); });
+    await settle();
+    expect(screen.queryByText(LANE_TITLE)).toBeNull();
+
+    // Leaving the screen persists the position — except for a day with nothing on it.
+    await view.unmount();
+
+    expect(getScroll('edge-empty-lens', WED)).toBeUndefined();
+  } finally {
+    for (const artistId of wednesday) {
+      await setInterest('ba2025', artistId, 'none');
+    }
+    await hydrateInterests('ba2025');
+  }
+});
+
+it('remembers the position under "My picks" with nothing picked: its sets are still there, muted', async () => {
+  const view = await mount('edge-lens-unpicked');
   await act(async () => { setScope({ kind: 'me', level: null }); });
   await settle();
-  expect(screen.queryByText(LANE_TITLE)).toBeNull();
+  expect(screen.getByText(LANE_TITLE)).toBeTruthy();
 
-  // Leaving the screen persists the position — except for a day with nothing on it.
   await view.unmount();
 
-  expect(getScroll('edge-empty-lens', WED)).toBeUndefined();
+  expect(getScroll('edge-lens-unpicked', WED)).toBeDefined();
 });
 
 it('renders with every lane hidden', async () => {
@@ -408,6 +433,11 @@ function blockOf(name: string): Style {
   return styleOf(viewAbove(screen.getAllByText(name)[0], isBlockBox));
 }
 
+/** A block's tappable box, inside its positioned view: its fill and borders (a left bar, or a muted block's dotted frame). */
+function blockFillOf(name: string): Style {
+  return styleOf(viewAbove(screen.getAllByText(name)[0], (s) => s.borderLeftWidth === 3 || s.borderStyle === 'dotted'));
+}
+
 /** A block's events row: the lane's own view, with the 2 px bottom border. */
 function laneOf(name: string): Style {
   return styleOf(viewAbove(screen.getAllByText(name)[0], (s) => s.borderBottomWidth === 2 && typeof s.height === 'number'));
@@ -538,26 +568,32 @@ describe('what the timeline draws', () => {
 
 // ── Rows from the sets shown ──────────────────────────────────────────────────
 //
-// A lane stacks only the sets it shows: one hidden by the lens takes no row.
+// A lane stacks only the sets it shows: one the lens removes takes no row.
 // On Tuesday the exhibitions KUNDY CREW and ART-BRUT-ALL (both 13:00–01:00)
-// need two rows; with only ART-BRUT-ALL picked and the lens on "My picks", the
+// need two rows. With ART-BRUT-ALL picked and the lens on "My picks", KUNDY
+// CREW stays, muted, in its own row; marked "don't go", it is removed and the
 // lane shows one set, in one row.
 
 describe('rows from the sets shown', () => {
-  it('lays a lane out for the sets the lens shows, not for all of them', async () => {
-    await setInterest('ba2025', '219', 'maybe');
-    await hydrateInterests('ba2025');
-    try {
+  it('stacks a muted set as any other', async () => {
+    await withPicks({ '219': 'maybe' }, async () => {
+      await mountScreen('rows-muted', TUE, (a) => !a.isPlayable, true);
+      await act(async () => { setScope({ kind: 'me', level: null }); });
+      await settleWholeDay();
+      expect(screen.getAllByText('KUNDY CREW').length).toBeGreaterThan(0);
+      expect(laneOf('ART-BRUT-ALL').height).toBe(140);
+    });
+  });
+
+  it('lays a lane out without the "don\'t go" sets the lens removes', async () => {
+    await withPicks({ '219': 'maybe', '221': 'dont_go' }, async () => {
       await mountScreen('rows-shown', TUE, (a) => !a.isPlayable, true);
       await act(async () => { setScope({ kind: 'me', level: null }); });
       await settleWholeDay();
       expect(screen.queryByText('KUNDY CREW')).toBeNull();
       expect(laneOf('ART-BRUT-ALL').height).toBe(70);
       expect(blockOf('ART-BRUT-ALL').top).toBe(0);
-    } finally {
-      await setInterest('ba2025', '219', 'none');
-      await hydrateInterests('ba2025');
-    }
+    });
   });
 });
 
@@ -668,14 +704,16 @@ async function withPicks(picks: Record<string, string>, run: () => Promise<void>
 describe('the timeline reacts', () => {
   afterEach(() => { syncWith((events) => events); });
 
-  it('narrows to my picks when the lens changes', async () => {
-    await withPicks({ '35': 'maybe' }, async () => {
+  it('mutes the sets I haven\'t picked and removes my "don\'t go" when the lens changes to my picks', async () => {
+    await withPicks({ '35': 'maybe', '216': 'dont_go' }, async () => {
       await mountScreen('react-lens', WED, playable);
       await act(async () => { setScope({ kind: 'me', level: null }); });
       await settleWholeDay();
-      expect(screen.getAllByText('CRYSTAL LAKE').length).toBeGreaterThan(0);
+      expect(blockFillOf('CRYSTAL LAKE').backgroundColor).toMatch(/^rgb\(/);
+      expect(blockFillOf('NE OBLIVISCARIS').backgroundColor).toBe('transparent');
       expect(screen.queryByText('EXORCIZPHOBIA')).toBeNull();
-      expect(titleOf('Sea Shepherd').top).toBe(0);
+      // Every lane still has sets: none moves.
+      expect(titleOf('Marshall').top).toBe(0);
     });
   });
 
@@ -753,12 +791,17 @@ describe('the timeline reacts', () => {
       expect(rendersSinceReset()).toEqual({ 'title-2': 1, 'title-3': 1, 'title-4': 1, 'title-5': 1 });
     });
 
-    it('the lens on my picks renders the lanes that lost sets and the titles that moved, no block', async () => {
+    it('the lens on my picks renders the blocks it mutes, not my picks, and moves no title', async () => {
       await withPicks({ '35': 'maybe', '216': 'maybe' }, async () => {
         await mountSettled('count-lens');
         await act(async () => { setScope({ kind: 'me', level: null }); });
         await settle();
-        expect(rendersSinceReset()).toEqual({ '2': 1, '3': 1, 'title-2': 1, 'title-3': 1 });
+        const rendered = Object.keys(rendersSinceReset());
+        // Crystal Lake (7020) and Exorcizphobia (7022), my picks, stay as they were.
+        expect(rendered).not.toContain('7020');
+        expect(rendered).not.toContain('7022');
+        expect(rendered.filter((key) => key.startsWith('title-'))).toEqual([]);
+        expect(rendered.length).toBeGreaterThan(0);
       });
     });
   });

@@ -263,27 +263,56 @@ test('the now line stands at the current time', async ({ appPage }) => {
     .toBeLessThanOrEqual(1);
 });
 
-test('a lane stacks only the sets the lens shows @layout', async ({ appPage }) => {
+/** Sets a pick from the artist sheet: one star press is Maybe, two Must-see, three "don't go". */
+async function pickFromSheet(page: Page, name: string, presses: number): Promise<void> {
+  await visible(page, name).click();
+  for (let i = 0; i < presses; i++) {
+    await page.getByLabel('Toggle interest').filter({ visible: true }).first().click();
+  }
+  await page.getByText('✕', { exact: true }).filter({ visible: true }).first().click();
+}
+
+async function lensToMyPicks(page: Page): Promise<void> {
+  await page.getByLabel('View and share schedules').filter({ visible: true }).first().click();
+  await page.getByText('My picks', { exact: true }).filter({ visible: true }).first().click();
+}
+
+/** The fill of the block a name is drawn in: the box with the 3 px left bar, or a muted block's dotted frame. */
+function blockFill(page: Page, name: string): Promise<string> {
+  return visible(page, name).evaluate((el) => {
+    for (let n: Element | null = el; n !== null; n = n.parentElement) {
+      const style = getComputedStyle(n);
+      if (style.borderLeftWidth === '3px' || style.borderLeftStyle === 'dotted') {
+        return style.backgroundColor;
+      }
+    }
+    return 'none';
+  });
+}
+
+test('"My picks" keeps the sets I have not picked, without their fill', async ({ appPage }) => {
+  await ready(appPage);
+  await openSection(appPage, 'Support Program');
+  await pickFromSheet(appPage, 'ART-BRUT-ALL', 1);
+  await lensToMyPicks(appPage);
+  await expect(visible(appPage, 'KUNDY CREW')).toBeVisible();
+  expect(await blockFill(appPage, 'KUNDY CREW')).toBe('rgba(0, 0, 0, 0)');
+  expect(await blockFill(appPage, 'ART-BRUT-ALL')).not.toBe('rgba(0, 0, 0, 0)');
+});
+
+test('a lane stacks only the sets the lens shows: "My picks" frees a "don\'t go"\'s row @layout', async ({ appPage }) => {
   await ready(appPage);
   await openSection(appPage, 'Support Program');
   // Wednesday's exhibitions all open at 10:00 and overlap, so the lane stacks
-  // them; ART-BRUT-ALL is below KUNDY CREW. Picked alone, under "My picks" it
-  // is the lane's only set, in its first row, right under the title strip.
-  await visible(appPage, 'ART-BRUT-ALL').click();
-  await appPage.getByLabel('Toggle interest').filter({ visible: true }).first().click();
-  await appPage.getByText('✕', { exact: true }).filter({ visible: true }).first().click();
-  await appPage.getByLabel('View and share schedules').filter({ visible: true }).first().click();
-  await appPage.getByText('My picks', { exact: true }).filter({ visible: true }).first().click();
+  // them, a row each; ART-BRUT-ALL is below KUNDY CREW. "My picks" keeps the
+  // ones I haven't picked (muted) but removes a "don't go": with KUNDY CREW one,
+  // ART-BRUT-ALL moves up exactly one row within its lane.
+  await pickFromSheet(appPage, 'ART-BRUT-ALL', 1);
+  await pickFromSheet(appPage, 'KUNDY CREW', 3);
+  const inLane = async (): Promise<number> =>
+    (await boxOf(visible(appPage, 'ART-BRUT-ALL'))).top - (await boxOf(visible(appPage, 'Exhibition'))).top;
+  const before = await inLane();
+  await lensToMyPicks(appPage);
   await expect(appPage.getByText('KUNDY CREW', { exact: true }).filter({ visible: true })).toHaveCount(0);
-
-  const blockTop = (await boxOf(visible(appPage, 'ART-BRUT-ALL'))).top - 8;
-  const title = await boxOf(visible(appPage, 'Exhibition'));
-  if (appPage.viewportSize()!.height < 500) {
-    // Landscape: the title is drawn over the lane's first row.
-    expect(title.top).toBeGreaterThanOrEqual(blockTop - 2);
-    expect(title.bottom).toBeLessThanOrEqual(blockTop + 70);
-  } else {
-    expect(title.bottom).toBeLessThanOrEqual(blockTop + 1);
-    expect(title.top).toBeGreaterThanOrEqual(blockTop - 32 - 1);
-  }
+  await expect.poll(async () => Math.round(before - (await inLane())), { timeout: 5_000 }).toBe(70);
 });

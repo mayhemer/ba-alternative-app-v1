@@ -5,8 +5,10 @@ import type { ConflictOverlap } from '../../features/conflicts/conflictUtils';
 // ── One festival day of a timeline, configured ────────────────────────────────
 //
 // Dimensions, and the corner cases tested for each:
-//   lens     — Everything; My picks (any level, Maybe and up, Must-see only);
-//              a friend's picks (theirs, not mine)
+//   lens     — Everything (all listed, none muted); My picks (any level,
+//              Must-see only): everything listed but my "don't go", the
+//              rest muted; a friend's picks (theirs, not mine): nothing
+//              removed, the rest muted
 //   filter   — the screen's own: bands (Program) or the rest (Support Program)
 //   hidden   — a hidden lane: gone, the lanes below move up; its sets still
 //              set where the day lands
@@ -71,24 +73,26 @@ function day(overrides: Partial<TimelineDayInputs> = {}) {
   });
 }
 
-/** Each lane as `categoryId: artists in it`. */
-const listed = (d: ReturnType<typeof day>): string[] => d.lanes.map((l) => `${l.key}: ${l.sets.map((s) => s.artist.artistId).join(' ')}`);
+/** Each lane as `categoryId: artists in it`, a muted one marked `~`. */
+const listed = (d: ReturnType<typeof day>): string[] =>
+  d.lanes.map((l) => `${l.key}: ${l.sets.map((s) => `${s.artist.artistId}${s.muted ? '~' : ''}`).join(' ')}`);
 
 describe('which sets are listed', () => {
   it('lists every band of the day with Everything, in category order, the night set included', () => {
     expect(listed(day())).toEqual(['1: must dont night', '9: maybe none']);
   });
 
-  it('lists my Maybes and Must-sees with "My picks"', () => {
-    expect(listed(day({ scope: { kind: 'me', level: null } }))).toEqual(['1: must', '9: maybe']);
+  it('keeps every set but my "don\'t go" with "My picks", the ones I haven\'t picked muted', () => {
+    expect(listed(day({ scope: { kind: 'me', level: null } }))).toEqual(['1: must night~', '9: maybe none~']);
   });
 
-  it('lists only my Must-sees at the Must-see level', () => {
-    expect(listed(day({ scope: { kind: 'me', level: 'will_go' } }))).toEqual(['1: must']);
+  it('mutes my Maybes too at the Must-see level', () => {
+    expect(listed(day({ scope: { kind: 'me', level: 'will_go' } }))).toEqual(['1: must night~', '9: maybe~ none~']);
   });
 
-  it("lists the friend's picks, not mine, with a friend's lens", () => {
-    expect(listed(day({ scope: { kind: 'friend', token: 'f', level: null }, friendInterests: { none: 'will_go' } }))).toEqual(['9: none']);
+  it("mutes all but the friend's picks with a friend's lens, and removes nothing, my \"don't go\" included", () => {
+    expect(listed(day({ scope: { kind: 'friend', token: 'f', level: null }, friendInterests: { none: 'will_go' } })))
+      .toEqual(['1: must~ dont~ night~', '9: maybe~ none']);
   });
 
   it("lists the support programme's sets only on the Support Program", () => {
@@ -121,8 +125,14 @@ describe('where the lanes are', () => {
     expect(d.canvasHeight).toBe(32 + 172);
   });
 
-  it('stacks only the shown sets: one picked of two overlapping takes one row', () => {
+  it('stacks the muted sets too: a picked and an unpicked overlapping set take two rows', () => {
     const d = day({ filterArtist: support, stack: true, scope: { kind: 'me', level: null } });
+    expect(listed(d)).toEqual(['10: ex1 ex2~']);
+    expect(d.lanes[0].height).toBe(140);
+  });
+
+  it('stacks only the listed sets: a "don\'t go" overlapping set takes no row under My picks', () => {
+    const d = day({ filterArtist: support, stack: true, scope: { kind: 'me', level: null }, interests: { ...MINE, ex2: 'dont_go' } });
     expect(listed(d)).toEqual(['10: ex1']);
     expect(d.lanes[0].height).toBe(70);
   });
@@ -139,8 +149,17 @@ describe('where the day lands', () => {
     expect(day().firstEventMs).toBe(at('2025-08-06T12:00:00+02:00'));
   });
 
-  it('follows the lens', () => {
+  it('follows the lens: at its first pick, not at a muted set before it', () => {
     expect(day({ scope: { kind: 'me', level: 'will_go' } }).firstEventMs).toBe(at('2025-08-06T14:00:00+02:00'));
+  });
+
+  it('lands at the first set, muted, under a lens with no picks on the day', () => {
+    expect(day({ scope: { kind: 'me', level: null }, interests: {} }).firstEventMs).toBe(at('2025-08-06T12:00:00+02:00'));
+  });
+
+  it('has nowhere to land on a day the lens leaves empty: all "don\'t go"', () => {
+    const allDont = Object.fromEntries(ARTISTS.map((a) => [a.artistId, 'dont_go']));
+    expect(day({ scope: { kind: 'me', level: null }, interests: allDont }).firstEventMs).toBeUndefined();
   });
 
   it('counts a hidden lane\'s sets too', () => {
@@ -161,6 +180,6 @@ describe('what each block is given', () => {
   });
 
   it('carries none for a set without a pick or a clash', () => {
-    expect(day().lanes[1].sets[1]).toMatchObject({ status: 'none', overlaps: undefined });
+    expect(day().lanes[1].sets[1]).toMatchObject({ status: 'none', overlaps: undefined, muted: false });
   });
 });

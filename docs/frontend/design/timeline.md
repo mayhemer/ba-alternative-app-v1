@@ -7,7 +7,7 @@
 - Each category is a horizontal swim lane.
 - On the Support Program, overlapping sets of one lane stack in rows. The rows are counted from the
   sets the lane **shows** (after the lens): a lane is as tall as the most of its shown sets that
-  overlap at once, and a set the lens hides takes no row. The conflict sheet stacks its sets the
+  overlap at once. A set the lens mutes takes its row as any other; one it removes takes none. The conflict sheet stacks its sets the
   same way. The Program draws its lanes one row tall.
 - Fixed scale — no zoom. Default scale tuned empirically for a typical festival day (12–16 hours).
 - **Festival time.** Days (06:00 → 06:00), set times and day labels are always Europe/Prague time,
@@ -41,17 +41,31 @@ Each element computes what it shows in a pure model next to its component, in `s
 | Day buttons | `DayButton.model.ts` | the shown day and the minute clock (shared with My plan) |
 | Conflict sheet | `ConflictTimeline.model.ts`, `ConflictDetailHeader.model.ts` | the clash group and the sheet's measured width; the header's calendar date |
 
-Under every lens a block's star and conflict bars follow **your** picks; the lens decides only which
-sets are listed.
+### The lens on the timeline
+
+- **Everything:** every set, filled, as always. This is the default view.
+- **My picks / a friend's picks:** the lens hides nothing. Every set stays on the timeline; the
+  ones the lens doesn't pick are **muted**: no fill and no stage colour, only a **dotted** grey 1 pt
+  frame (`#4d4d4d`) all round, the left edge included, and the text at 60%. The frame is the same
+  width on every side because Android draws a dotted border only then. The lens's picks look as
+  under Everything.
+- **Removed:** only "don't go" sets, and only under My picks (my own). A friend's "don't go" isn't
+  shared, so a friend's lens removes nothing.
+- **Where a day lands:** at the lens's first pick; with none picked that day, at its first set.
+  A day the lens leaves empty (only "don't go" sets) lands nowhere and keeps no scroll position.
+- The artist list still filters to the lens's picks (see [artist-list.md](artist-list.md)).
+
+Under every lens a block's star and conflict bars follow **your** picks.
 
 ## Block Visual States
 
+Every block is filled in its stage's colour, with a 3 pt left bar in the brighter version of it
+(`categoryBlockColors`, shared with My plan's rows).
+
 | State | Appearance |
 |---|---|
-| Default | Neutral dark block |
-| Maybe | Amber border + background tint |
-| Must See | Bright accent border + background tint |
-| Selected (tray open) | White border highlight |
+| Default (any pick) | The fill and the left bar; a Maybe or Must-see adds its star |
+| Muted (not the lens's pick under My picks or a friend's lens) | No fill, no stage colour: a dotted grey 1 pt frame all round, the text at 60% |
 
 ## Conflict Detection
 

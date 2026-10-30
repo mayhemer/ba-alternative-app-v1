@@ -15,7 +15,7 @@ const CATEGORY: DbCategory = { slug: 't', categoryId: '7', color: 0xff00ff00, lo
 function set(id: string, from: string, to: string): LaneSetInput {
   const event: DbEvent = { slug: 't', eventId: id, artistId: id, stageId: 's', categoryId: '7', dateFrom: at(from), dateTo: at(to) };
   const artist: DbArtist = { slug: 't', artistId: id, name: id, isPlayable: false, imageUrl: '', thumbUrl: '', url: '', localized: [] };
-  return { event, artist, status: 'none', overlaps: undefined };
+  return { event, artist, status: 'none', overlaps: undefined, muted: false };
 }
 
 const rows = (sets: LaneSetInput[], stack = true) =>

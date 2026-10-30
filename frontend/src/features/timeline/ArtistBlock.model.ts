@@ -11,13 +11,19 @@ import { formatTime } from '../../utils/festivalTime';
 //
 // Everything a block shows comes from its set, its day and its row: where it
 // sits and how wide it is (its times), the label and how large it can be (that
-// width), the star (the pick), and one striped bar per overlap interval, each
-// over just the overlapping part. ArtistBlock draws only this.
+// width), the star (the pick), one striped bar per overlap interval, each over
+// just the overlapping part, and whether the lens mutes it: outlined, not filled.
+// ArtistBlock draws only this.
 
 export const BLOCK_LAYOUT = {
   /** Inner padding; the label width maths below subtracts it. */
   padding: 8,
   borderLeft: 3,
+  /** A muted block: a dotted grey frame all round, no stage colour, and its text dimmed. */
+  mutedEdge: '#4d4d4d',
+  mutedEdgeWidth: 1,
+  mutedEdgeStyle: 'dotted',
+  mutedTextOpacity: 0.6,
   starSize: 11,
   /** Narrower blocks show no label at all. */
   labelMinBlockWidth: 40,
@@ -60,8 +66,14 @@ export type ArtistBlockModel = {
   top: number;
   width: number;
   height: number;
+  /** The fill; 'transparent' on a muted block. */
   bg: string;
+  /** The left bar's colour, the stage's; a muted block draws its frame instead. */
   border: string;
+  /** A muted block's frame colour, all round; null otherwise. */
+  edge: string | null;
+  /** The label's opacity: dimmed on a muted block. */
+  textOpacity: number;
   /** Null on a block too narrow to show one. */
   label: BlockLabelModel | null;
   /** My pick: the star shows for Maybe and Must-see only. */
@@ -80,6 +92,8 @@ export type ArtistBlockInputs = {
   labelRepeat: number;
   subRow: number;
   overlaps: ConflictOverlap[] | undefined;
+  /** Not the lens's pick under My picks or a friend's lens. */
+  muted: boolean;
 };
 
 function labelOf(artist: DbArtist, event: DbEvent, width: number, status: InterestStatus, labelRepeat: number): BlockLabelModel | null {
@@ -110,7 +124,7 @@ function labelOf(artist: DbArtist, event: DbEvent, width: number, status: Intere
   };
 }
 
-export function artistBlockModel({ event, artist, dayStart, status, categoryColor, labelRepeat, subRow, overlaps }: ArtistBlockInputs): ArtistBlockModel {
+export function artistBlockModel({ event, artist, dayStart, status, categoryColor, labelRepeat, subRow, overlaps, muted }: ArtistBlockInputs): ArtistBlockModel {
   const { left, width } = blockSpan(event, dayStart);
   const { bg, border } = categoryBlockColors(categoryColor);
   const bars = (overlaps ?? []).map((interval) => {
@@ -128,8 +142,10 @@ export function artistBlockModel({ event, artist, dayStart, status, categoryColo
     top: subRow * LANE_HEIGHT,
     width,
     height: LANE_HEIGHT - LANE_BORDER_WIDTH,
-    bg,
+    bg: muted ? 'transparent' : bg,
     border,
+    edge: muted ? BLOCK_LAYOUT.mutedEdge : null,
+    textOpacity: muted ? BLOCK_LAYOUT.mutedTextOpacity : 1,
     label: labelOf(artist, event, width, status, labelRepeat),
     status,
     bars,

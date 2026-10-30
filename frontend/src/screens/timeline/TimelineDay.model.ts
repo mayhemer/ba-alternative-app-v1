@@ -14,8 +14,11 @@ import { DAY_DURATION_MS } from '../../utils/festivalTime';
 // strip starts, and the canvas height — so the titles (drawn outside the
 // scroller) and the lanes cannot drift apart.
 //
-// The lens and the screen's filter decide which sets are listed. A block's star
-// and its conflict bars follow my own picks under every lens.
+// The screen's filter decides which sets a timeline can list. The lens doesn't
+// hide sets: under My picks or a friend's lens every set stays, those the lens
+// doesn't pick muted (drawn outlined), and only "don't go" sets are removed —
+// mine, under My picks; a friend's aren't shared, so their lens removes none.
+// A block's star and its conflict bars follow my own picks under every lens.
 
 export type TimelineDayInputs = {
   events: DbEvent[];
@@ -45,7 +48,11 @@ export type TimelineDayModel = {
   tops: Record<string, number>;
   /** The ruler plus every lane. */
   canvasHeight: number;
-  /** The earliest set the lens and the filter let through, hidden lanes included: where the day lands. */
+  /**
+   * Where the day lands, hidden lanes included: the earliest set the lens picks,
+   * or with none picked, the earliest set listed. Undefined on a day with nothing
+   * listed, which then has no position worth remembering.
+   */
   firstEventMs: number | undefined;
 };
 
@@ -53,7 +60,8 @@ export function timelineDayModel(inputs: TimelineDayInputs): TimelineDayModel {
   const { events, artists, categories, dayStart, filterArtist, scope, interests, friendInterests, hiddenCategories, conflictOverlaps, stack, overlayTitles } = inputs;
   const artistById = new Map(artists.map((a) => [a.artistId, a]));
   const byCategory = new Map<string, LaneSetInput[]>();
-  let firstEventMs: number | undefined;
+  let firstPickMs: number | undefined;
+  let firstListedMs: number | undefined;
 
   if (dayStart !== 0) {
     const dayEnd = dayStart + DAY_DURATION_MS;
@@ -66,14 +74,18 @@ export function timelineDayModel(inputs: TimelineDayInputs): TimelineDayModel {
         continue;
       }
       const status = (interests[artist.artistId] ?? 'none') as InterestStatus;
-      if (!matchesScope(scope, status, friendInterests?.[artist.artistId])) {
+      if (scope.kind === 'me' && status === 'dont_go') {
         continue;
       }
-      if (firstEventMs === undefined || event.dateFrom < firstEventMs) {
-        firstEventMs = event.dateFrom;
+      const muted = !matchesScope(scope, status, friendInterests?.[artist.artistId]);
+      if (firstListedMs === undefined || event.dateFrom < firstListedMs) {
+        firstListedMs = event.dateFrom;
+      }
+      if (!muted && (firstPickMs === undefined || event.dateFrom < firstPickMs)) {
+        firstPickMs = event.dateFrom;
       }
       const lane = byCategory.get(event.categoryId) ?? [];
-      lane.push({ event, artist, status, overlaps: conflictOverlaps.get(event.eventId) });
+      lane.push({ event, artist, status, overlaps: conflictOverlaps.get(event.eventId), muted });
       byCategory.set(event.categoryId, lane);
     }
   }
@@ -95,5 +107,5 @@ export function timelineDayModel(inputs: TimelineDayInputs): TimelineDayModel {
     y += lane.stripHeight + lane.height;
   }
 
-  return { lanes, titles, tops, canvasHeight: RULER_HEIGHT + y, firstEventMs };
+  return { lanes, titles, tops, canvasHeight: RULER_HEIGHT + y, firstEventMs: firstPickMs ?? firstListedMs };
 }

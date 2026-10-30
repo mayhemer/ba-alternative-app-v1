@@ -55,19 +55,30 @@ function ArtistBlockBase({ item, onPress }: Props) {
       }}
     >
       <TouchableOpacity
+        testID="block-box"
         onPress={handlePress}
         style={{
           flex: 1,
           backgroundColor: item.bg,
-          borderColor: item.border,
+          borderLeftColor: item.border,
           borderLeftWidth: BLOCK_LAYOUT.borderLeft,
+          // A muted block is only outlined: a dotted grey frame, the same width
+          // on every side (Android draws a dotted border only then), so its left
+          // edge loses the stage colour too.
+          ...(item.edge !== null && {
+            borderWidth: BLOCK_LAYOUT.mutedEdgeWidth,
+            borderLeftWidth: BLOCK_LAYOUT.mutedEdgeWidth,
+            borderStyle: BLOCK_LAYOUT.mutedEdgeStyle,
+            borderColor: item.edge,
+            borderLeftColor: item.edge,
+          }),
           overflow: 'hidden',
           justifyContent: 'flex-start',
           padding: BLOCK_LAYOUT.padding,
         }}
       >
         {label !== null ? (
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start', flex: 1 }}>
+          <View testID="block-label" style={{ flexDirection: 'row', alignItems: 'flex-start', flex: 1, opacity: item.textOpacity }}>
             {/* Label area. Repeats are positioned against this box, so their
                 offsets are measured from the first label rather than from the
                 block's border — no padding arithmetic. The block already clips,

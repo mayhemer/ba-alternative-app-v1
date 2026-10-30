@@ -9,6 +9,9 @@ import type { DbArtist, DbEvent } from '../../types/backend';
 //   row    — the first row or a stacked one
 //   name   — one word or several; short or long for the block
 //   pick   — none, or Maybe/Must-see (the star takes label width)
+//   muted  — not the lens's pick under My picks or a friend's lens: no fill, a
+//            dotted grey 1 pt frame all round (no stage-coloured left bar),
+//            its text at 60 %
 //   length — a block longer than the label repeat gap (repeated labels)
 //   clash  — none, an overlap inside the block, one reaching past its start
 // Expected values are worked out by hand.
@@ -35,6 +38,7 @@ function model(overrides: Partial<ArtistBlockInputs> & { from?: string; to?: str
     labelRepeat: 400,
     subRow: 0,
     overlaps: undefined,
+    muted: false,
     ...rest,
   });
 }
@@ -113,7 +117,7 @@ describe('its label', () => {
     // padding). One a pixel wider keeps it, 91 wide; one a pixel narrower not.
     const blockOf = (px: number) => artistBlockModel({
       event: { ...event('10:00', '10:00'), dateTo: at('10:00') + (px / 170) * 60 * MIN },
-      artist: artist('KUNDY CREW'), dayStart: WED, status: 'none', categoryColor: 'rgb(0, 0, 0)', labelRepeat: 400, subRow: 0, overlaps: undefined,
+      artist: artist('KUNDY CREW'), dayStart: WED, status: 'none', categoryColor: 'rgb(0, 0, 0)', labelRepeat: 400, subRow: 0, overlaps: undefined, muted: false,
     });
     expect(blockOf(510).label?.repeats.map((r) => [r.left, Math.round(r.width)])).toEqual([[400, 91]]);
     expect(blockOf(508).label?.repeats).toEqual([]);
@@ -144,5 +148,15 @@ describe('its conflict bars', () => {
 
   it('draws one bar per overlap interval', () => {
     expect(model({ overlaps: [{ from: at('14:30'), to: at('14:35') }, { from: at('14:55'), to: at('15:05') }] }).bars).toHaveLength(2);
+  });
+});
+
+describe('a muted block (not the lens\'s pick)', () => {
+  it('has no fill and no stage colour: a dotted grey 1 pt frame all round, and its text at 60 %', () => {
+    expect(model({ muted: true })).toMatchObject({ bg: 'transparent', edge: '#4d4d4d', textOpacity: 0.6 });
+  });
+
+  it('is drawn as before when not muted', () => {
+    expect(model()).toMatchObject({ bg: 'rgb(78, 30, 30)', border: 'rgb(158, 30, 30)', edge: null, textOpacity: 1 });
   });
 });

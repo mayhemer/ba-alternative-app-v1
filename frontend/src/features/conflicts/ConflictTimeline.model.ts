@@ -53,7 +53,7 @@ export function conflictTimelineModel({ group, artists, categories, interests, c
       const artist = artistById.get(event.artistId);
       if (event.categoryId === category.categoryId && artist !== undefined) {
         const status = (interests[artist.artistId] ?? 'none') as InterestStatus;
-        sets.push({ event, artist, status, overlaps: conflictOverlaps.get(event.eventId) });
+        sets.push({ event, artist, status, overlaps: conflictOverlaps.get(event.eventId), muted: false });
       }
     }
     if (sets.length === 0) {

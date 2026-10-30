@@ -79,6 +79,7 @@ describe('one timeline block', () => {
             labelRepeat: 400,
             subRow: 0,
             overlaps: undefined,
+            muted: false,
           })}
           onPress={() => undefined}
         />
@@ -92,6 +93,18 @@ describe('one timeline block', () => {
     expect(formatCensus(census)).toContain('elements');
   });
 
+  it('costs no extra view when muted', async () => {
+    const block = (muted: boolean) => render(
+      <FeatureProviders>
+        <ArtistBlock
+          item={artistBlockModel({ event: EVENT, artist: ARTIST, dayStart: EVENT.dateFrom, status: 'none', categoryColor: '#888888', labelRepeat: 400, subRow: 0, overlaps: undefined, muted })}
+          onPress={() => undefined}
+        />
+      </FeatureProviders>,
+    );
+    expect(countElements((await block(true)).toJSON()).total).toBe(countElements((await block(false)).toJSON()).total);
+  });
+
   it('adds views for a conflict only when there is one', async () => {
     const common: ArtistBlockInputs = {
       event: EVENT,
@@ -102,6 +115,7 @@ describe('one timeline block', () => {
       labelRepeat: 400,
       subRow: 0,
       overlaps: undefined,
+      muted: false,
     };
     const clean = await render(<FeatureProviders><ArtistBlock item={artistBlockModel(common)} onPress={() => undefined} /></FeatureProviders>);
     const clashing = await render(
