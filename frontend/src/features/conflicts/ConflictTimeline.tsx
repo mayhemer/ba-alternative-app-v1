@@ -9,6 +9,7 @@ import { useNowX } from '../timeline/useNowX';
 import { CategoryLane } from '../timeline/CategoryLane';
 import { conflictTimelineModel } from './ConflictTimeline.model';
 import { HourTicks } from '../timeline/TimeRuler';
+import { NowLine } from '../timeline/NowLine';
 import { LaneLabelOverlay } from '../timeline/LaneLabelOverlay';
 import { CANVAS_WIDTH, RULER_HEIGHT } from '../timeline/timelineLayout';
 import { colors, MAX_CONTENT_WIDTH } from '../../styling/tokens';
@@ -86,6 +87,7 @@ export function ConflictTimeline({ events, onBlockPress }: Props) {
                 borderBottomColor: colors.timeline.rulerBorder,
               }}
             >
+              <NowLine testID="conflict-now-line" nowX={nowX} canvasHeight={RULER_HEIGHT} showArrow />
               <HourTicks />
             </View>
             {model.lanes.map((lane) => (

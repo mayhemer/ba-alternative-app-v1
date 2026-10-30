@@ -160,7 +160,7 @@ describe('what it draws', () => {
 // ── Its now line follows the minute clock ─────────────────────────────────────
 
 describe('now', () => {
-  /** Where the lanes' now lines are drawn: their live animated left. */
+  /** Where the now lines are drawn, the ruler's first, then the lanes': their live animated left. */
   function nowLinesX(): number[] {
     const lines: number[] = [];
     const walk = (node: TestInstance): void => {
@@ -183,10 +183,21 @@ describe('now', () => {
     jest.useFakeTimers({ doNotFake: ['nextTick', 'queueMicrotask', 'performance', 'hrtime', 'Date'] });
     setCurrentTimeMs(Date.parse('2025-08-06T14:20:00+02:00'));
     await render(<FeatureProviders><ConflictTimeline events={[byId('7020'), byId('7022')]} onBlockPress={jest.fn()} /></FeatureProviders>);
-    // 14:20 is 8 h 20 after 06:00; one line per lane, two lanes.
-    expect(nowLinesX().map((x) => Math.round(x * 100) / 100)).toEqual([1416.67, 1416.67]);
+    // 14:20 is 8 h 20 after 06:00; the ruler's line and one per lane, two lanes.
+    expect(nowLinesX().map((x) => Math.round(x * 100) / 100)).toEqual([1416.67, 1416.67, 1416.67]);
     setCurrentTimeMs(Date.parse('2025-08-06T14:21:00+02:00'));
     await act(async () => { await jest.advanceTimersByTimeAsync(60 * 1000); });
-    expect(nowLinesX().map((x) => Math.round(x * 100) / 100)).toEqual([1419.5, 1419.5]);
+    expect(nowLinesX().map((x) => Math.round(x * 100) / 100)).toEqual([1419.5, 1419.5, 1419.5]);
+  });
+
+  it('marks now on the ruler with the red arrow, as the timeline does', async () => {
+    setCurrentTimeMs(Date.parse('2025-08-06T14:20:00+02:00'));
+    await render(<FeatureProviders><ConflictTimeline events={[byId('7020'), byId('7022')]} onBlockPress={jest.fn()} /></FeatureProviders>);
+    const line = screen.getByTestId('conflict-now-line');
+    // As tall as the ruler row, 32.
+    expect(styleOf(line).height).toBe(32);
+    const arrow = line.children.find((c): c is TestInstance => typeof c !== 'string' && styleOf(c).borderTopColor === '#ff4444');
+    expect(arrow).toBeDefined();
+    expect(styleOf(arrow!).borderTopWidth).toBe(7);
   });
 });
