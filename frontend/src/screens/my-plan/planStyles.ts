@@ -45,3 +45,16 @@ export const ITEM_SPACING = 6;
 
 /** Size of the rail's end glyphs: the day's start ring and end square. */
 export const CAP_GLYPH = 10;
+
+/**
+ * A past row: only slightly dimmed, to stay readable in sunlight, with faint
+ * grey stripes behind its text, falling ("\"), the other way from the red clash
+ * stripes. Lines 2 pt wide, 8 pt apart across.
+ */
+export const PAST_ROW = {
+  opacity: 0.75,
+  stripeColor: 'rgba(255, 255, 255, 0.08)',
+  stripeWidth: 2,
+  /** Horizontal step for an 8 pt perpendicular period at 45°. */
+  stripeStep: 8 * Math.SQRT2,
+} as const;

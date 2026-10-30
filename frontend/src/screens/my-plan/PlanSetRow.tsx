@@ -3,13 +3,13 @@ import { Pressable, View } from 'react-native';
 import Svg, { ClipPath, Defs, Path, Rect } from 'react-native-svg';
 import { Text } from '../../ui/Text';
 import { stripePath, CONFLICT_STRIPE } from '../../ui/stripes';
-import { BOLD, CLASH_BAR_WIDTH, LIST_GUTTER, LIVE_BORDER, PROGRESS_BAR_WIDTH, PROGRESS_COLORS, STATUS_LABEL, TABULAR, type ProgressColors } from './planStyles';
+import { BOLD, CLASH_BAR_WIDTH, LIST_GUTTER, LIVE_BORDER, PAST_ROW, PROGRESS_BAR_WIDTH, PROGRESS_COLORS, STATUS_LABEL, TABULAR, type ProgressColors } from './planStyles';
 import { NowArrow } from './PlanListItems';
 import { StarIndicator } from '../../features/interests/StarButton';
 import { sameProps } from '../../ui/sameProps';
 import type { ClashBar, PlanSetModel, SetStatus } from './PlanSetRow.model';
 import type { DbArtist } from '../../types/backend';
-import { colors } from '../../styling/tokens';
+import { colors, MAX_CONTENT_WIDTH } from '../../styling/tokens';
 
 // ── One set in My plan ────────────────────────────────────────────────────────
 //
@@ -17,7 +17,8 @@ import { colors } from '../../styling/tokens';
 // picked (All sets): the same card, outlined only. Maybe: one line in a dashed
 // box, its text muted but bright enough for sunlight; while live, a solid accent
 // border and a red dot before the name. A pick's star follows its name; a long
-// name cuts off and the star stays at the end of the line.
+// name cuts off and the star stays at the end of the line. A past row is only
+// slightly dimmed, with faint grey stripes behind its text.
 // Both share one fixed inset, so the time, name and stage columns line up in
 // every state, clear of the progress bar on the left edge and the clash bar on
 // the right. Tapping anywhere opens the artist's detail sheet. Draws its model
@@ -28,9 +29,27 @@ import { colors } from '../../styling/tokens';
 const INSET_LEFT = 17;
 const INSET_RIGHT = 22;
 
-const PAST_OPACITY = 0.45;
 
 const STAR_SIZE = { will_go: 15, maybe: 12 } as const;
+
+/**
+ * A past row's stripes, behind everything it shows. Drawn as wide as the content
+ * can be, so one path per row height serves every width; the row clips it.
+ */
+const pastStripePaths = new Map<number, string>();
+
+function PastStripes({ height }: { height: number }) {
+  let d = pastStripePaths.get(height);
+  if (d === undefined) {
+    d = stripePath(MAX_CONTENT_WIDTH, height, { step: PAST_ROW.stripeStep, falling: true });
+    pastStripePaths.set(height, d);
+  }
+  return (
+    <Svg testID="plan-past-stripes" pointerEvents="none" width={MAX_CONTENT_WIDTH} height={height} style={{ position: 'absolute', left: 0, top: 0 }}>
+      <Path d={d} stroke={PAST_ROW.stripeColor} strokeWidth={PAST_ROW.stripeWidth} />
+    </Svg>
+  );
+}
 
 /** The pick's star, right after the name; it never shrinks, the name does. */
 function RowStar({ star }: { star: PlanSetModel['star'] }) {
@@ -139,9 +158,11 @@ function SetCard({ item, onPressArtist, background = colors.surface, border = co
           borderWidth: 1,
           borderStyle: live ? 'solid' : 'dashed',
           borderColor: live ? LIVE_BORDER : border,
-          opacity: item.state === 'past' ? PAST_OPACITY : 1,
+          overflow: 'hidden',
+          opacity: item.state === 'past' ? PAST_ROW.opacity : 1,
         }}
       >
+        {item.state === 'past' && <PastStripes height={item.height} />}
         {live && <LeftProgress progress={item.progress} palette={PROGRESS_COLORS.maybeLive} />}
         <Text style={[TABULAR, { fontSize: 13, color: colors.textMuted }]}>{item.timeText}</Text>
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -170,9 +191,10 @@ function SetCard({ item, onPressArtist, background = colors.surface, border = co
         // Filled = picked, outlined = not.
         backgroundColor: item.level === 'none' ? undefined : background,
         overflow: 'hidden',
-        opacity: item.state === 'past' ? PAST_OPACITY : 1,
+        opacity: item.state === 'past' ? PAST_ROW.opacity : 1,
       }}
     >
+      {item.state === 'past' && <PastStripes height={item.height} />}
       {item.clashBars.map((bar, i) => (
         <ClashStripes key={`${item.key}-${i}`} bar={bar} rowHeight={item.height} clipId={`planClash-${item.key}-${i}`} />
       ))}

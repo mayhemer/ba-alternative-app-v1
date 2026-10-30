@@ -128,7 +128,7 @@ What each element shows comes from its own model (see Principles), built from th
 - **Line 2:** the status on the left, the stage right-aligned (13, `textSecondary`, ellipsis). Statuses:
   - *live*: `● LIVE` (red dot, 11 bold caps), then `−37 min` (14 bold accent).
   - *upcoming, clashing with a Must-see that is live now*: `START` (11 bold caps), then `−17 min` (14 bold **red**). It tells you how long you can stay at the live band.
-  - *past*: `done` (12, `textMuted`); the whole row at 45% opacity. Only during the festival: outside it (before or after) every set reads as upcoming, with no live bars, current gaps or arrows.
+  - *past*: `done` (12, `textMuted`); the whole row only slightly dimmed, to 75% opacity, so it stays readable in sunlight, with **faint grey stripes** behind its text (`PAST_ROW`: white at 8%, 2 pt lines 8 pt apart, falling "\", the other way from the red clash stripes, so they never read as a clash). Every row type, past, gets them: Must-see, Maybe and unpicked. Only during the festival: outside it (before or after) every set reads as upcoming, with no live bars, current gaps or arrows.
   - *upcoming otherwise*: empty. The countdown lives in the gap and the pill.
 - **Live progress:** a 6.5 pt bar on the left edge: accent for what remains, dark `#4a3f17` growing top → bottom with the elapsed fraction. Every progress bar (now pill, live rows, current gap) reads the same way: passed dark, remaining light (`PROGRESS_COLORS`).
 - **Tap behaviour:** see [Taps](#taps).
@@ -137,7 +137,7 @@ What each element shows comes from its own model (see Principles), built from th
 
 - Only under **All sets**: a set you haven't picked (no interest, never "don't go").
 - **Look:** a Must-see row without the fill: the same 58 pt, two lines, insets and texts, with a 1 px border in its category's border colour and **no background**. Filled = picked, outlined = not; no star.
-- **Status line:** `● LIVE −37 min` while it plays and `done` once it's over (the row at 45%), as a Must-see's. Never `START`, and never clash bars or a `⚠ Conflict` title: clashes are Must-see × Must-see only.
+- **Status line:** `● LIVE −37 min` while it plays and `done` once it's over (dimmed and striped as any past row), as a Must-see's. Never `START`, and never clash bars or a `⚠ Conflict` title: clashes are Must-see × Must-see only.
 - **Live:** the full accent border, the yellow left bar and the now arrow, as a live Must-see.
 
 ### Maybe row
@@ -295,6 +295,7 @@ New values this screen introduces, to add as tokens:
 | break progress, passed part (`breakPassed`) | `#1c2f52` |
 | Maybe live progress, remaining part (`maybeText`) | `#8a8a8a` |
 | row background and border | the set's category, as timeline blocks (`categoryBlockColors`) |
+| past row stripes (`PAST_ROW`) | white at 8 % |
 
 ---
 

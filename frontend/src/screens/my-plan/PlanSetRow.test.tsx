@@ -229,6 +229,37 @@ it('cuts a long name off before the star, which never shrinks', async () => {
   expect(StyleSheet.flatten(screen.getByTestId('plan-star-will_go').props.style).flexShrink).toBe(0);
 });
 
+// ── A past row: slightly dimmed, with faint grey stripes ──────────────────────
+//
+// Readable in sunlight: 75 % rather than 45 %, the stripes falling ("\"), the
+// other way from the red clash stripes, behind the text. Every row type; only
+// past ones.
+
+const rowOpacity = (): unknown => StyleSheet.flatten(screen.getByRole('button').props.style).opacity;
+
+it.each([
+  ['a Must-see', 'Mgła', '19:23'],
+  ['a Maybe', 'Paysage', '21:30'],
+  ['an unpicked set', 'Ulcerate', '22:00'],
+])('dims a past row, %s, only slightly and stripes it', async (_kind, name, now) => {
+  const row = item(name, now);
+  expect(row.state).toBe('past');
+  await renderRow(row);
+  expect(rowOpacity()).toBe(0.75);
+  expect(within(screen.getByRole('button')).getByTestId('plan-past-stripes')).toBeTruthy();
+});
+
+it.each([
+  ['live', 'Gojira'],
+  ['upcoming', 'Batushka'],
+])('leaves a %s row at full strength, without stripes', async (state, name) => {
+  const row = item(name, '19:23');
+  expect(row.state).toBe(state);
+  await renderRow(row);
+  expect(rowOpacity()).toBe(1);
+  expect(screen.queryByTestId('plan-past-stripes')).toBeNull();
+});
+
 it('opens the artist detail when the row is tapped', async () => {
   const row = item('Gojira', '19:23');
   const { onPressArtist } = await renderRow(row);
