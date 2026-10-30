@@ -1,4 +1,4 @@
-import { assignSubRows, conflictWindow, defaultScrollX, eventScrollTarget, labelRepeatPx, PIXELS_PER_HOUR, RULER_HEIGHT, timelineNowView, timeToX, VIEW_OFFSET_X } from './timelineLayout';
+import { assignSubRows, conflictWindow, defaultScrollX, eventScrollTarget, labelRepeatPx, PIXELS_PER_HOUR, RULER_HEIGHT, timeToX, VIEW_OFFSET_X } from './timelineLayout';
 import type { DbEvent } from '../../types/backend';
 
 // ── Timeline geometry ─────────────────────────────────────────────────────────
@@ -165,31 +165,3 @@ describe('eventScrollTarget', () => {
   });
 });
 
-// ── Where now is on the scrolled timeline ─────────────────────────────────────
-//
-// What today's day button needs to decide between scrolling to now and
-// switching screens (DayButton.model's nowSettled). In content x: the window
-// starts at 08:30 (425 px into the canvas at 170 px/h) and is 19.5 h = 3315 px
-// wide, so a 400 px viewport scrolls 0–2915. A scroll to now centres it.
-// Dimensions: now inside the scrollable window, before it (06:00–08:30), after
-// it (04:00–06:00).
-
-describe('timelineNowView', () => {
-  it('now inside the window: drawn at its x, and a scroll to now centres it', () => {
-    // 14:00 is 8 h in: 1360 − 425 = 935; centred, 935 − 200.
-    expect(timelineNowView(at('2025-08-06T14:00:00+02:00'), WED, 300, 400))
-      .toEqual({ now: 935, scroll: 300, size: 400, nowScroll: 735 });
-  });
-
-  it('now before 08:30: left of the window, and a scroll to now stops at its start', () => {
-    // 07:00 is 1 h in: 170 − 425 = −255.
-    expect(timelineNowView(at('2025-08-06T07:00:00+02:00'), WED, 300, 400))
-      .toEqual({ now: -255, scroll: 300, size: 400, nowScroll: 0 });
-  });
-
-  it('now after 04:00: right of the window, and a scroll to now stops at its end', () => {
-    // 05:00 is 23 h in: 3910 − 425 = 3485; centred would be 3285, the end is 2915.
-    expect(timelineNowView(at('2025-08-07T05:00:00+02:00'), WED, 300, 400))
-      .toEqual({ now: 3485, scroll: 300, size: 400, nowScroll: 2915 });
-  });
-});

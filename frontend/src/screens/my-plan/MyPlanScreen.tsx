@@ -12,9 +12,8 @@ import { usePlanFilters, usePlanPanel, usePlanShownDay, usePlanStore, usePlanSto
 import { useMinuteNow } from '../../hooks/useMinuteNow';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
 import { getScroll, setScroll } from '../../store/uiStatePersistence';
-import { buildPlanDay, itemAtOffset, itemOffsets, itemsToFill, nowScrollOffset, PLAN_LAYOUT, PLAN_NOW_BAND, PLAN_SCREEN_KEY, planNowView, type PlanItem } from './planUtils';
-import { registerNowProbe } from '../../features/timeline/nowInView';
-import { nowSettled } from '../../features/timeline/DayButton.model';
+import { buildPlanDay, itemAtOffset, itemOffsets, itemsToFill, nowScrollOffset, PLAN_LAYOUT, planNowInView, planNowView, type PlanItem } from './planUtils';
+import { registerPlanNowProbe } from './planNowProbe';
 import { festivalToday } from '../../utils/festivalTime';
 import { PlanSetRow } from './PlanSetRow';
 import { PlanCap } from './PlanCap';
@@ -50,8 +49,11 @@ import { colors } from '../../styling/tokens';
 // (uiStatePersistence, under PLAN_SCREEN_KEY, as y offsets); a day without one
 // lands with "now" a third from the top if it is today, else at the top; and a
 // "now" request (the pill, or today's day button tapped again) scrolls to now.
-// Once now is settled in view, today's button switches to the timeline instead,
-// so the screen answers where it is scrolled (registerNowProbe).
+// Once now is in view, the pill switches to the timeline instead, so the screen
+// answers where it is scrolled (registerPlanNowProbe).
+
+const PLAN_SCREEN_KEY = 'plan';
+
 const keyOf = (item: PlanItem): string => item.key;
 
 /** Cells per batch before the screen is measured: FlatList's own default. */
@@ -187,18 +189,18 @@ export function MyPlanScreen() {
     persistScroll(e);
   }, [persistScroll]);
 
-  // ── Is now settled here? ───────────────────────────────────────────────────
-  // Asked by today's day button at the tap: it switches to the timeline when the
-  // now arrow is in the central 80 % of the list above the floating bottom bar,
-  // or when a scroll to now would not move the list. Read from refs at that
+  // ── Is now in view here? ───────────────────────────────────────────────────
+  // Asked by the now pill at the tap: it switches to the timeline when the now
+  // arrow is in the central 80 % of the list above the floating bottom bar, or
+  // when a scroll to now would not move the list. Read from refs at that
   // moment, so scrolling re-renders nothing.
   const probeInputsRef = useRef({ viewportHeight, bottomClearance });
   probeInputsRef.current = { viewportHeight, bottomClearance };
-  useEffect(() => registerNowProbe(PLAN_SCREEN_KEY, () => nowSettled(planNowView(itemsRef.current, {
+  useEffect(() => registerPlanNowProbe(() => planNowInView(planNowView(itemsRef.current, {
     scrollY: scrollYRef.current,
     viewportHeight: probeInputsRef.current.viewportHeight,
     bottomInset: probeInputsRef.current.bottomClearance,
-  }), PLAN_NOW_BAND)), []);
+  }))), []);
 
   // ── Rows ────────────────────────────────────────────────────────────────────
 

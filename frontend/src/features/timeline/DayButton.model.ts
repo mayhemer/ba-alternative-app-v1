@@ -46,55 +46,9 @@ export function dayButtonModels(days: readonly number[], { selected, today, clas
 }
 
 /**
- * What a tap on a day's button asks for (shared by the timeline's switcher and
- * My plan's):
- *   - another day than the shown one: pick it ('day');
- *   - the shown day, not today: switch between My plan and the timeline ('switch');
- *   - today's button while today is shown: scroll to now ('now'), or switch once
- *     now is settled on the screen (`nowSettled`, asked only then; none given
- *     counts as not settled).
+ * What a tap on a day's button asks for: tapping today's button while today is
+ * shown scrolls to now; any other tap picks that day.
  */
-export function dayPickAction(
-  day: number,
-  { selected, today }: Omit<DayButtonState, 'clashDays'>,
-  nowSettled: () => boolean = () => false,
-): 'day' | 'now' | 'switch' {
-  if (day !== selected) {
-    return 'day';
-  }
-  if (day !== today) {
-    return 'switch';
-  }
-  return nowSettled() ? 'switch' : 'now';
-}
-
-// ── Whether now is settled on a screen ────────────────────────────────────────
-
-/**
- * Where now is on a scrolled screen, along its time axis in content
- * coordinates (the timeline's x, My plan's y).
- */
-export type NowView = {
-  /** Where now is drawn; null when the screen draws no now mark. */
-  now: number | null;
-  /** The scroll offset. */
-  scroll: number;
-  /** How much of the axis is visible. */
-  size: number;
-  /** Where a scroll to now goes, as far as the view can scroll. */
-  nowScroll: number;
-};
-
-/**
- * Whether today's button should switch screens rather than scroll to now: now
- * is drawn inside the view's central `band` (a fraction of the visible size,
- * set per screen: TIMELINE_NOW_BAND, PLAN_NOW_BAND), or a scroll to now would
- * not move the view (it cannot get any closer).
- */
-export function nowSettled({ now, scroll, size, nowScroll }: NowView, band: number): boolean {
-  const margin = (size * (1 - band)) / 2;
-  if (now !== null && now >= scroll + margin && now <= scroll + size - margin) {
-    return true;
-  }
-  return Math.abs(nowScroll - scroll) < 1;
+export function dayPickAction(day: number, { selected, today }: Omit<DayButtonState, 'clashDays'>): 'now' | 'day' {
+  return day === selected && day === today ? 'now' : 'day';
 }

@@ -5,7 +5,6 @@ import { planEmptyModel, type PlanEmptyModel } from './PlanEmpty.model';
 import { planGapModel, type PlanGapModel } from './PlanGap.model';
 import { planSetModel, type PlanSetModel } from './PlanSetRow.model';
 import { ITEM_SPACING } from './planStyles';
-import type { NowView } from '../../features/timeline/DayButton.model';
 import type { DbArtist, DbEvent } from '../../types/backend';
 
 // ── My plan: one festival day of the user's picks ─────────────────────────────
@@ -32,9 +31,6 @@ type PlanOptions = {
 export type PlanSpacerItem = { kind: 'spacer'; key: string; height: number; conflictTitle: DbEvent };
 
 export type PlanItem = PlanSetModel | PlanGapModel | PlanCapModel | PlanSpacerItem | PlanEmptyModel;
-
-/** My plan's key for its remembered scroll (uiStatePersistence) and its now probe (features/timeline/nowInView). */
-export const PLAN_SCREEN_KEY = 'plan';
 
 export const PLAN_LAYOUT = {
   paddingTop: 12,
@@ -227,24 +223,48 @@ export function nowScrollOffset(items: PlanItem[], viewportHeight: number): numb
 }
 
 /**
- * How central the now arrow must be for today's day button to switch to the
+ * How central the now arrow must be for the now pill on My plan to go to the
  * timeline rather than scroll to now: the middle 80 % of the list above the
- * floating bottom bar (DayButton.model's nowSettled).
+ * floating bottom bar (planNowInView).
  */
 export const PLAN_NOW_BAND = 0.8;
+
+/** Where now is on the scrolled list, in content y. */
+export type PlanNowView = {
+  /** Where the first now arrow is drawn; null when none is. */
+  now: number | null;
+  /** The scroll offset. */
+  scroll: number;
+  /** How much of the list is visible above the floating bottom bar. */
+  size: number;
+  /** Where a scroll to now goes, as far as the list can scroll. */
+  nowScroll: number;
+};
+
+/**
+ * Whether now is in My plan's view: the arrow is drawn inside the central
+ * PLAN_NOW_BAND of the visible list, or a scroll to now would not move the list
+ * (it cannot get any closer: an arrow near the top or the end, or none).
+ */
+export function planNowInView({ now, scroll, size, nowScroll }: PlanNowView): boolean {
+  const margin = (size * (1 - PLAN_NOW_BAND)) / 2;
+  if (now !== null && now >= scroll + margin && now <= scroll + size - margin) {
+    return true;
+  }
+  return Math.abs(nowScroll - scroll) < 1;
+}
 
 /**
  * Now on a day's list scrolled to `scrollY`, in content y: where the first now
  * arrow is (null when none is drawn), how much is visible above the floating
  * bottom bar (`bottomInset`, its clearance, also added below the content), and
  * where a scroll to now goes (nowScrollOffset, the top when there is no arrow),
- * held within what the list can scroll. Today's day button reads it
- * (DayButton.model's nowSettled).
+ * held within what the list can scroll. The now pill reads it (planNowInView).
  */
 export function planNowView(
   items: PlanItem[],
   { scrollY, viewportHeight, bottomInset }: { scrollY: number; viewportHeight: number; bottomInset: number },
-): NowView {
+): PlanNowView {
   const offsets = itemOffsets(items);
   const index = items.findIndex(hostsNow);
   let now: number | null = null;

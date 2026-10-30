@@ -66,8 +66,7 @@ src/
    not in the timeline's geometry).
 3. **Imports point downward** — `shell` → `screens` → `features` → `ui` / `hooks` / `utils` —
    except calls into the app's two APIs, which any layer may use: `shell/ScreenUIContext` (set the
-   bars, show feedback) and `navigation/`'s helpers (`navigationRef`, jumping to the timeline,
-   switching between My plan and the timeline).
+   bars, show feedback) and `navigation/`'s helpers (`navigationRef`, jumping to the timeline).
    `shell/`, `navigation/AppNavigator` and `store/StartupGate` assemble the app and may import
    any screen.
 4. **A context sits with its feature** (`PlanContext` in `screens/my-plan/`, `LensContext` in

@@ -11,9 +11,6 @@ import { useTimelineFilter } from './TimelineFilterContext';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
 import { useNowX } from '../../features/timeline/useNowX';
 import { getScroll, setScroll } from '../../store/uiStatePersistence';
-import { registerNowProbe } from '../../features/timeline/nowInView';
-import { nowSettled } from '../../features/timeline/DayButton.model';
-import { currentTimeMs } from '../../utils/clock';
 import { CategoryLane } from '../../features/timeline/CategoryLane';
 import type { TimelineDayModel } from './TimelineDay.model';
 import { TimeRuler } from '../../features/timeline/TimeRuler';
@@ -26,8 +23,6 @@ import {
   labelRepeatPx,
   defaultScrollX,
   eventScrollTarget,
-  timelineNowView,
-  TIMELINE_NOW_BAND,
 } from '../../features/timeline/timelineLayout';
 import { colors } from '../../styling/tokens';
 import { perfMark, perfMarksEnabled } from '../../utils/perfMarks';
@@ -327,16 +322,6 @@ export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress }:
   // the signal carries everything else it needs
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scrollToTimeSignal]);
-
-  // ── Is now settled here? ─────────────────────────────────────────────────────
-  // Asked by today's day button at the tap (features/timeline/nowInView): it
-  // switches to My plan when now is in the central 20 % of the view, or when a
-  // scroll to now would not move it. Read from the scroll and the measured width
-  // at that moment, so scrolling re-renders nothing.
-  useEffect(() => registerNowProbe(screenKey, () => nowSettled(
-    timelineNowView(currentTimeMs(), selectedDayStartRef.current, scrollX.value, scrollViewWidthRef.current),
-    TIMELINE_NOW_BAND,
-  )), [screenKey, scrollX]);
 
   // Save scroll position when the screen loses focus (navigating away).
   useFocusEffect(

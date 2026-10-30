@@ -112,6 +112,15 @@ test('switches days and filters to conflicts only', async ({ appPage }) => {
 
 const WED = Date.parse('2025-08-06T06:00:00+02:00');
 
+/**
+ * My plan measures its height (onLayout) and lands about 100 ms after it
+ * shows; until then it cannot tell whether now is in view. A tap or scroll
+ * faster than any person's would come before that.
+ */
+async function letPlanLand(page: Page): Promise<void> {
+  await page.waitForTimeout(300);
+}
+
 /** Waits until the visible timeline is scrolled to now, as the today button puts it. */
 async function expectTimelineAtNow(page: Page): Promise<Locator> {
   const scroller = page.getByTestId('timeline-scroll-x').filter({ visible: true });
@@ -131,8 +140,9 @@ test('on My plan the now pill goes to its timeline at now, and back', async ({ a
   const pill = appPage.getByTestId('now-pill');
   await pill.click();
   await expect(appPage.getByTestId('plan-clash-bar').first()).toBeVisible({ timeout: 20_000 });
+  await letPlanLand(appPage);
 
-  // On My plan: the Program, scrolled to now.
+  // On My plan, now in view: the Program, scrolled to now.
   await pill.click();
   const timeline = await expectTimelineAtNow(appPage);
 
@@ -151,46 +161,49 @@ test('in a break, the now pill on My plan goes to the timeline at now, not to th
   await expect(pill).toHaveAccessibleName(/MINISTRY START/);
   await pill.click();
   await expect(appPage.getByText('MINISTRY', { exact: true }).filter({ visible: true }).first()).toBeVisible({ timeout: 20_000 });
+  await letPlanLand(appPage);
 
-  // On My plan: the Program at now, eight hours short of the band.
+  // On My plan, now in view: the Program at now, eight hours short of the band.
   await pill.click();
   const timeline = await expectTimelineAtNow(appPage);
   await expect(timeline.getByText('MINISTRY', { exact: true }).first()).not.toBeInViewport();
 });
 
-test('the shown day tapped again switches between My plan and the timeline, on that day', async ({ appPage }) => {
+test('on My plan scrolled away from now, the now pill scrolls to now, then goes to the timeline', async ({ appPage }) => {
   await ready(appPage);
-  // Picks on Wednesday (today), none on Thursday: "Nothing planned" is Thursday.
+  // Wednesday's evening on top of the live clash: a day taller than the
+  // screen, so the now arrow can scroll out of view.
+  for (const query of ['dope', 'thrown', 'dark angel', 'dying fetus', 'zemial', 'ministry']) {
+    await mustSee(appPage, query);
+  }
   await pickClashingPair(appPage);
-  await appPage.getByText('My plan', { exact: false }).first().click();
-  const thu = appPage.getByText('Thu', { exact: true }).filter({ visible: true });
-  await thu.click();
-  await expect(appPage.getByText('Nothing planned for this day')).toBeVisible();
+  const pill = appPage.getByTestId('now-pill');
+  await pill.click();
+  await expect(appPage.getByTestId('plan-clash-bar').first()).toBeVisible({ timeout: 20_000 });
+  await letPlanLand(appPage);
 
-  // Thursday is not today: tapped again, the Program on Thursday, which opens
-  // at its first set (MAMMOTH GRINDER, Thursday only).
-  await thu.click();
-  const timeline = appPage.getByTestId('timeline-scroll-x').filter({ visible: true });
-  await expect(timeline.getByText('MAMMOTH GRINDER', { exact: true }).first()).toBeVisible();
+  const list = appPage.getByTestId('plan-list').filter({ visible: true });
+  const end = await list.evaluate((el) => el.scrollHeight - el.clientHeight);
+  await list.evaluate((el, y) => { el.scrollTop = y; }, end);
+  await expect.poll(() => list.evaluate((el) => el.scrollTop)).toBe(end);
+  await expect(appPage.getByTestId('plan-clash-bar').first()).not.toBeInViewport();
 
-  // And again: back to My plan, still on Thursday.
-  await thu.click();
-  await expect(appPage.getByTestId('plan-screen')).toBeVisible();
-  await expect(appPage.getByText('Nothing planned for this day')).toBeVisible();
-  await expect(timeline).toHaveCount(0);
-});
+  // Now is out of view: the pill scrolls My plan back to it.
+  await pill.click();
+  await expect(appPage.getByTestId('plan-clash-bar').first()).toBeInViewport();
+  await expect(appPage.getByTestId('timeline-scroll-x').filter({ visible: true })).toHaveCount(0);
+  // Wait for the scroll to settle before the next tap.
+  let last = -1;
+  await expect.poll(async () => {
+    const y = await list.evaluate((el) => el.scrollTop);
+    const still = y === last;
+    last = y;
+    return still;
+  }, { intervals: [200] }).toBe(true);
 
-test('My plan switches to the timeline shown last: the Support Program', async ({ appPage }) => {
-  await ready(appPage);
-  await appPage.getByText('Support Program', { exact: true }).filter({ visible: true }).first().click();
-  await expect(appPage.getByText('Museum', { exact: true }).filter({ visible: true }).first()).toBeVisible();
-  await appPage.getByText('My plan', { exact: false }).first().click();
-  await expect(appPage.getByTestId('plan-screen')).toBeVisible();
-
-  // Today with nothing planned: no now to scroll to, so the tap switches.
-  await appPage.getByText('Wed', { exact: true }).filter({ visible: true }).click();
-  await expect(appPage.getByText('Museum', { exact: true }).filter({ visible: true }).first()).toBeVisible();
-  await expect(appPage.getByTestId('plan-screen').filter({ visible: true })).toHaveCount(0);
+  // Now is in view: the next tap goes to the timeline at now.
+  await pill.click();
+  await expectTimelineAtNow(appPage);
 });
 
 test('on My plan showing another day, the now pill goes to today at now, not the timeline', async ({ appPage }) => {

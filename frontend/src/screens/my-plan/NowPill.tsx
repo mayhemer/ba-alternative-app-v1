@@ -11,6 +11,7 @@ import { minuteNow, useMinuteNow } from '../../hooks/useMinuteNow';
 import { festivalToday } from '../../utils/festivalTime';
 import { navigationRef } from '../../navigation/navigationRef';
 import { useJumpToTimelineNow } from '../../navigation/useJumpToTimeline';
+import { isPlanNowInView } from './planNowProbe';
 import { nowPillModel, nowPillTap, nowPillTarget, type NowPillModel, type NowPillTarget } from './NowPill.model';
 import { BOLD, PROGRESS_COLORS, TABULAR } from './planStyles';
 import { colors } from '../../styling/tokens';
@@ -138,10 +139,11 @@ function NowPillViewBase({ state, onPress }: ViewProps) {
 export const NowPillView = memo(NowPillViewBase);
 
 /**
- * What a tap does (nowPillTap): on My plan showing today, shows the pill's
- * set's timeline at now; elsewhere, My plan on another day included, opens My plan on
- * today, scrolled to now. The screen and My plan's day are read at tap time, so
- * changing either does not re-render the pill.
+ * What a tap does (nowPillTap): on My plan showing today with now in view,
+ * shows the pill's set's timeline at now; elsewhere, My plan scrolled away from
+ * now or on another day included, opens My plan on today, scrolled to now. The
+ * screen, My plan's day and its scroll are read at tap time, so changing any of
+ * them does not re-render the pill.
  */
 function useNowPillPress(target: NowPillTarget | null, festivalDays: number[]): () => void {
   const store = usePlanStore();
@@ -151,8 +153,8 @@ function useNowPillPress(target: NowPillTarget | null, festivalDays: number[]): 
       return;
     }
     const now = minuteNow();
-    const planShowsToday = shownPlanDay(store.getSelection(), festivalDays, now) === festivalToday(festivalDays, now);
-    const tap = nowPillTap(navigationRef.getCurrentRoute()?.name, target, planShowsToday);
+    const showsToday = shownPlanDay(store.getSelection(), festivalDays, now) === festivalToday(festivalDays, now);
+    const tap = nowPillTap(navigationRef.getCurrentRoute()?.name, target, { showsToday, nowInView: isPlanNowInView() });
     switch (tap.kind) {
       case 'timeline':
         jumpToTimelineNow(tap.target.jump);

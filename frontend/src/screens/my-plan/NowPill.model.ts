@@ -17,7 +17,7 @@ import type { DbArtist, DbEvent } from '../../types/backend';
 //   logo  — nothing to say: outside the festival, before 08:00, after the day's
 //           last Must-see, or no Must-see today at all.
 // One selection (pillSet) picks the set the pill names; nowPillTarget hands the
-// same set to a tap on My plan, which opens its timeline (see nowPillTap).
+// same set to a tap on My plan, which opens its timeline at now (see nowPillTap).
 
 const strings = planStrings();
 
@@ -136,25 +136,27 @@ export function nowPillTarget(
 
 // ── What a tap does ───────────────────────────────────────────────────────────
 //
-// The pill toggles between My plan and the timeline: on My plan showing today a
-// tap shows the pill's set's timeline at now (My plan's own "now" is a tap on
-// today's day button); anywhere else, My plan on another day included, it opens
-// My plan on today at now. The logo has no set and is not a button.
+// The pill toggles between My plan and the timeline: on My plan showing today
+// with now in view (planNowInView) a tap shows the pill's set's timeline at now;
+// anywhere else, My plan scrolled away from now or showing another day
+// included, it opens My plan on today at now. So on My plan a first tap brings
+// now into view and the next one switches. The logo has no set and is not a
+// button.
 
 export type NowPillTap =
   | { kind: 'none' }
   | { kind: 'plan' }
   | { kind: 'timeline'; target: NowPillTarget };
 
-/**
- * `activeRoute` is the drawer screen shown, undefined before navigation is
- * ready; `planShowsToday`, whether My plan's shown day is today.
- */
-export function nowPillTap(activeRoute: string | undefined, target: NowPillTarget | null, planShowsToday: boolean): NowPillTap {
+/** Where My plan is: whether it shows today, and whether now is in its view (planNowInView). */
+export type PlanAtTap = { showsToday: boolean; nowInView: boolean };
+
+/** `activeRoute` is the drawer screen shown, undefined before navigation is ready. */
+export function nowPillTap(activeRoute: string | undefined, target: NowPillTarget | null, plan: PlanAtTap): NowPillTap {
   if (target === null) {
     return { kind: 'none' };
   }
-  if (activeRoute === 'MyPlan' && planShowsToday) {
+  if (activeRoute === 'MyPlan' && plan.showsToday && plan.nowInView) {
     return { kind: 'timeline', target };
   }
   return { kind: 'plan' };

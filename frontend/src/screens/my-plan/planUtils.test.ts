@@ -6,6 +6,7 @@ import {
   itemOffsets,
   itemsToFill,
   nowScrollOffset,
+  planNowInView,
   planNowView,
   PLAN_LAYOUT,
   type PlanInputs,
@@ -539,8 +540,8 @@ describe('nowScrollOffset', () => {
 
 // ── Where now is on the scrolled list ─────────────────────────────────────────
 //
-// What today's day button needs to decide between scrolling to now and
-// switching screens (DayButton.model's nowSettled), in content y.
+// What the now pill on My plan needs to decide between scrolling to now and
+// switching to the timeline (planNowInView), in content y.
 //
 // One Must-see on Thursday, 14:00–15:00: the start cap at 12 (30 tall), the set
 // at 48 (58), the end cap at 112 (30); each cell adds 6 of spacing and the list
@@ -581,6 +582,46 @@ describe('planNowView', () => {
   it('an empty day: no arrow, and a scroll to now goes to the top', () => {
     expect(planNowView(build([], { now: at(7, '14:30') }), { scrollY: 0, viewportHeight: 600, bottomInset: 0 }))
       .toEqual({ now: null, scroll: 0, size: 600, nowScroll: 0 });
+  });
+});
+
+// ── Whether now is in My plan's view ──────────────────────────────────────────
+//
+// In content y: a view 400 tall scrolled to 1000 shows 1000–1400; its central
+// 80 % is 1040–1360. Dimensions: where now is drawn (inside the band, at each
+// edge, just outside, not drawn at all) × whether a scroll to now would move
+// the view.
+
+describe('planNowInView', () => {
+  const view = { scroll: 1000, size: 400 };
+  const far = 3000;
+
+  it('now in the middle of the view', () => {
+    expect(planNowInView({ ...view, now: 1200, nowScroll: far })).toBe(true);
+  });
+
+  it('now at the band edges, 10 % and 90 % down', () => {
+    expect(planNowInView({ ...view, now: 1040, nowScroll: far })).toBe(true);
+    expect(planNowInView({ ...view, now: 1360, nowScroll: far })).toBe(true);
+  });
+
+  it('now just outside the band, though still on screen', () => {
+    expect(planNowInView({ ...view, now: 1039, nowScroll: far })).toBe(false);
+    expect(planNowInView({ ...view, now: 1361, nowScroll: far })).toBe(false);
+  });
+
+  it('now outside the band, but a scroll to now would not move the view: it cannot get closer', () => {
+    expect(planNowInView({ ...view, now: 1395, nowScroll: 1000 })).toBe(true);
+    expect(planNowInView({ ...view, now: 1395, nowScroll: 1000.5 })).toBe(true);
+  });
+
+  it('now outside the band and a scroll to now would move the view', () => {
+    expect(planNowInView({ ...view, now: 1395, nowScroll: 1002 })).toBe(false);
+  });
+
+  it('no now drawn: in view only where a scroll to now goes', () => {
+    expect(planNowInView({ ...view, now: null, nowScroll: 1000 })).toBe(true);
+    expect(planNowInView({ ...view, now: null, nowScroll: 0 })).toBe(false);
   });
 });
 

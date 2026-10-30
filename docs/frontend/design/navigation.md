@@ -39,8 +39,7 @@ selected festival day, the lens scope, and which sheet is open (artist / conflic
 - **What is a position**: switching section from the drawer nav, jumping to an event
   from the artist detail view, switching the day on a timeline, opening the artist or
   conflict sheet, changing the lens filter. The now pill's switch from My plan to a timeline at
-  now, and a day button's switch between My plan and a timeline (screen and day), are one
-  position each.
+  now is one position.
 - **What is not**: opening the drawer or the lens panel, hidden categories, the artist
   list's search query, and expanding the artist sheet from collapsed. The drawer is
   left to React Navigation, which already closes it on back; the lens panel is closed
