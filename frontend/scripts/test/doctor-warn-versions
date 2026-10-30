@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# ── expo-doctor for `npm run verify`: outdated dependency versions only warn ──
+#
+#   npm run test:doctor:warn-versions
+#
+# expo-doctor checks installed versions against the newest patch releases listed
+# on api.expo.dev, so a fresh Expo release turns it red with no change here.
+# This runs the full doctor; when that fails, it re-runs with only that check
+# skipped (EXPO_DOCTOR_SKIP_DEPENDENCY_VERSION_CHECK). If the re-run passes,
+# the version check was the only failure: warn and pass. Any other check still
+# fails the unit. `npm run test:doctor` stays strict.
+
+set -uo pipefail
+cd "$(dirname "$0")/../.."
+
+# expo-doctor reads `npm explain` errors, which the batch's --silent would hide.
+export npm_config_loglevel=notice
+
+expo-doctor && exit 0
+
+printf '\nRe-running without the dependency version check…\n\n'
+EXPO_DOCTOR_SKIP_DEPENDENCY_VERSION_CHECK=1 expo-doctor || exit 1
+
+printf '\n\033[33m⚠ Expo doctor: only the dependency version check failed — newer patch\033[0m\n'
+printf '\033[33m  releases exist for this SDK. Not failing verify for it; update when ready\033[0m\n'
+printf '\033[33m  with `npx expo install --check`, then `npm run test:doctor`.\033[0m\n'

@@ -12,7 +12,7 @@ source "$(dirname "$0")/lib/batch.sh"
 unit "Types" test:types
 unit "Lint" test:lint
 unit "Unit + integration" test:unit
-unit "Expo doctor" test:doctor
+unit "Expo doctor" test:doctor:warn-versions
 unit "Web end-to-end" test:e2e:web
 unit "Performance regressions" test:perf
 unit "iOS simulator end-to-end" test:e2e:ios
