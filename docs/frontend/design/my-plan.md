@@ -21,12 +21,12 @@ Related: [overview.md](../../general/design/overview.md) (app-wide design), [lay
 
 ```
 ┌──────────────────────────────────────────┐
-│ ☰  ( ● GOJIRA           −37 min )  ½⋮    │  top bar: drawer, now pill, filter chip
+│ ☰  ( ● GOJIRA           −37 min )  ★⋮    │  top bar: drawer, now pill, filter chip
 ├──────────────────────────────────────────┤
 │ ○                                        │  start cap: ring, then 20 min of bare rail
 │ ┊                                        │
 │ ┌──────────────────────────────────────┐ │
-│ │ 14:00–14:40  Hooded Menace           │ │  past → dimmed, "done"
+│ │ 14:00–14:40  Hooded Menace ★         │ │  past → dimmed, "done"; the star after the name
 │ │ done                          Octagon│ │
 │ └──────────────────────────────────────┘ │
 │ ┊             2 h 25                     │  gap: height ∝ duration, label
@@ -48,7 +48,7 @@ Related: [overview.md](../../general/design/overview.md) (app-wide design), [lay
 └──────────────────────────────────────────┘
 ```
 
-- **Same sets as the conflict calculation.** My plan lists exactly the sets the conflict calculation considers, through one shared rule (`conflictUtils.isConflictEligible`). Sets longer than 2 hours (all-day exhibitions, say) are out of both: not listed, not in the now pill, never clashing. The plan and the conflict logic must stay on one source feed and one rule. A change to either goes through the shared logic, never a plan-only or conflict-only filter or count.
+- **Same sets as the conflict calculation.** My plan lists exactly the sets the conflict calculation considers, through one shared rule (`conflictUtils.isConflictEligible`). Sets longer than 2 hours (all-day exhibitions, say) are out of both: not listed, not in the now pill, never clashing. The plan and the conflict logic must stay on one source feed and one rule. A change to either goes through the shared logic, never a plan-only or conflict-only filter or count. Under the **All sets** filter the list also shows sets you haven't picked; the same rule decides which of them can be listed.
 - **One model per element.** Every element (set row, gap, cap, spacer, empty day, now pill) has a pure model next to its component (`screens/my-plan/<Element>.model.ts`). The model computes everything the element shows: height, texts, progress, where the now arrow sits. It works from the raw inputs that element depends on, and the component draws only the model. `buildPlanDay` decides only which elements a day lists, and in what order. Height and label can't disagree because they come from the same inputs: a gap drawn as 2 h says `2 h`.
 - **One festival day per view.**
 - Festival days run **06:00 → 06:00** (`DAY_BOUNDARY_HOUR`), so a 00:30 set belongs to the previous day.
@@ -70,7 +70,7 @@ On every screen that has a top bar. On festival days it replaces the logo while 
 | **Otherwise** | the logo | — |
 
 - **Break window:** from the end of today's last finished Must-see (or **08:00** if none has finished yet) to the next Must-see today. Between 06:00 and 08:00, and after the day's last Must-see, the pill shows the logo.
-- **Source:** today's Must-sees only. The pill ignores both plan filters. With Maybes shown, the list's break or gap can count down to a Maybe while the pill counts down to the next Must-see. That's intended: the list draws a countdown to a Maybe in a dashed box (see [Gaps](#gaps)), so the two read apart.
+- **Source:** today's Must-sees only. The pill ignores the plan's filter. With Maybes or all sets shown, the list's break or gap can count down to a Maybe or an unpicked set while the pill counts down to the next Must-see. That's intended: the list draws such a countdown in a box (see [Gaps](#gaps)), so the two read apart.
 - **No words:** the dot, the colours and the arrow carry the state, so nothing needs translating. The accessibility label still says it: `GOJIRA LIVE −37 min`, `NAPALM DEATH START −1 h 30`.
 - **Text:** 12.6 pt bold (10 % under the plan rows' 14 pt), to fit more of the band name, which the festival feed sends in capitals. Times join their numbers and units with narrow no-break spaces (U+202F): about half a space each, without running `37min` together.
 - **Size:** the whole centre between the side slots (56 pt each; the lens and filter chips are 38 pt, right-aligned), 8 pt in from each, so 26 pt clear of the right chip. 36 pt tall (tap area extended to 44 pt with `hitSlop`), radius 18, 1 px `borderMid` border, `surfaceRaised` background, 12 pt padding, 7 pt gaps.
@@ -87,14 +87,18 @@ On every screen that has a top bar. On festival days it replaces the logo while 
 ### Filter chip (right, My plan only)
 
 - **Shape:** the same "state + ⋮" frame as the lens chip on Artists and Program (`TopBarChip`): a 24 pt state slot right against a 14 pt slot for the dots, 38 pt in all. The dots slot is narrower than the 20 pt glyph, whose dots are a thin column in its middle; 14 pt keeps them clear of a friend avatar's star badge.
-- **State slot:**
-  - the ½ star, accent and half-filled when Maybe picks are shown, a grey outline when they're hidden;
-  - or a **red ⚠** while "Show only conflicts" is on.
+- **One filter, four states.** The state slot shows the current one, with the same glyph as its button in the panel:
+
+  | Filter | Glyph | Lists |
+  |---|---|---|
+  | **All sets** | ☆ grey outline star (`muted`) | every set of the day by a Program band, plus any support-programme set you picked; never a "don't go" pick |
+  | **Must-see and Maybe** | ½ star, accent | your Must-see and Maybe picks |
+  | **Must-see only** (default) | ★ full star, accent | your Must-see picks |
+  | **Only conflicts** | ⚠ red | your clashing Must-sees (see [Conflicts](#conflicts)) |
 - **⋮** turns accent while the panel is open.
-- **Panel:** tapping drops a panel from under the top bar, like the lens panel, with a dimmed backdrop. It holds two switches:
-  - **Show Maybe picks** (½ star, accent switch). Default **off**.
-  - **Show only conflicts** (⚠, red switch). Default **off**. The Maybe switch dims to 40% while this is on.
-- **Persistence:** both filters are saved through `uiStatePersistence`.
+- **Panel:** tapping drops a panel from under the top bar, like the lens panel, with a dimmed backdrop. It holds one row of four buttons, glyphs only, in the order above; the current one has an accent border on a raised background. Each button's accessibility label names its filter.
+  - **Tapping a button applies its filter and closes the panel**, back to the list, the current one too.
+- **Persistence:** the filter is saved through `uiStatePersistence`. A filter saved by an older build (two switches) loads as: only conflicts → **Only conflicts**; Maybe picks shown → **Must-see and Maybe**; else **Must-see only**.
 
 ---
 
@@ -106,8 +110,8 @@ What each element shows comes from its own model (see Principles), built from th
 
 | Element | Built from | Shows |
 |---|---|---|
-| Set row | the set, its artist and stage, now, its overlaps with other Must-sees, the Must-sees live now, whether it heads a clash group | time range, stage, status (`LIVE −x`, `START −x`, `done`), progress, now arrow, clash bars |
-| Gap | where it starts (the end of everything listed above) and the set listed right under it with its pick level, now | length or countdown (boxed when it counts to a Maybe), height, fill, now arrow, the conflict title of the group under it |
+| Set row | the set, its artist and stage, its pick level (Must-see, Maybe, none), now, its overlaps with other Must-sees, the Must-sees live now, whether it heads a clash group | time range, stage, status (`LIVE −x`, `START −x`, `done`), star, progress, now arrow, clash bars |
+| Gap | where it starts (the end of everything listed above) and the set listed right under it with its pick level, now | length or countdown (boxed when it counts to a set that isn't a Must-see), height, fill, now arrow, the conflict title of the group under it |
 | Day-start break | a gap from 08:00 to the first **listed** set | as a gap, with the start ring |
 | Cap / spacer | its edge, or the clash group under it; the end cap also the end of everything listed, the shown day, now | the rail end, the conflict title of the group under it; the end cap the now arrow once the day's listed sets are over |
 | Empty day | whether only conflicts are shown | its sentence |
@@ -120,7 +124,7 @@ What each element shows comes from its own model (see Principles), built from th
 
 - **Box:** 58 pt tall, square corners, in its **category's colours, as on the timeline** (`categoryBlockColors`): the block's background, and a 1 px border in the brighter colour of the block's left edge. A live row's border is the full accent (`LIVE_BORDER`), as a live Maybe's, to hold up in sunlight.
 - **Fixed inset for every row type and state:** content starts 18 pt from the left edge (1 + 17) and ends 23 pt from the right (1 + 22). The time, name and stage columns always line up, clear of the left progress bar and the right clash bar.
-- **Line 1:** `HH:MM–HH:MM` (13, `textMuted`, tabular figures), then the band name (15 bold, ellipsis).
+- **Line 1:** `HH:MM–HH:MM` (13, `textMuted`, tabular figures), then the band name (15 bold, ellipsis), then a full accent **star** (15) right after the name. A name too long for the line cuts off, and the star stays at the line's end.
 - **Line 2:** the status on the left, the stage right-aligned (13, `textSecondary`, ellipsis). Statuses:
   - *live*: `● LIVE` (red dot, 11 bold caps), then `−37 min` (14 bold accent).
   - *upcoming, clashing with a Must-see that is live now*: `START` (11 bold caps), then `−17 min` (14 bold **red**). It tells you how long you can stay at the live band.
@@ -129,10 +133,17 @@ What each element shows comes from its own model (see Principles), built from th
 - **Live progress:** a 6.5 pt bar on the left edge: accent for what remains, dark `#4a3f17` growing top → bottom with the elapsed fraction. Every progress bar (now pill, live rows, current gap) reads the same way: passed dark, remaining light (`PROGRESS_COLORS`).
 - **Tap behaviour:** see [Taps](#taps).
 
+### Unpicked row
+
+- Only under **All sets**: a set you haven't picked (no interest, never "don't go").
+- **Look:** a Must-see row without the fill: the same 58 pt, two lines, insets and texts, with a 1 px border in its category's border colour and **no background**. Filled = picked, outlined = not; no star.
+- **Status line:** `● LIVE −37 min` while it plays and `done` once it's over (the row at 45%), as a Must-see's. Never `START`, and never clash bars or a `⚠ Conflict` title: clashes are Must-see × Must-see only.
+- **Live:** the full accent border, the yellow left bar and the now arrow, as a live Must-see.
+
 ### Maybe row
 
-- Hidden unless "Show Maybe picks" is on.
-- **Look:** 26 pt tall, one line: `time · name · stage` (13, `textMuted`). Muted, but bright enough to read in sunlight.
+- Shown under **Must-see and Maybe** and **All sets**.
+- **Look:** 26 pt tall, one line: `time · name ½ · stage` (13, `textMuted`), with an accent **half star** (12) right after the name; a long name cuts off and the star stays at the end of the name's room. Muted, but bright enough to read in sunlight.
 - **Box:** a **1 px dashed** border in the category's border colour (as Must-see rows) and no background, with the same fixed insets as Must-see rows.
 - Never marked as a clash, and never part of conflict logic.
 - **Live:** a solid border in the full accent (`LIVE_BORDER`) instead of the dashed one, a red dot (7 pt) right before the name, a grey 6.5 pt left bar (`#8a8a8a` for what remains, `#333` filling it for the elapsed fraction) and the now arrow. The dot moves only that row's name, by its width and gap.
@@ -150,7 +161,7 @@ What each element shows comes from its own model (see Principles), built from th
   - a blue 6.5 pt left bar (`#5b9bff` for what remains, `#1c2f52` filling it for the elapsed fraction);
   - the now arrow;
   - a centred countdown `−1 h 20` (15 bold blue);
-  - counting down to a **Maybe** (the set listed under it is one), the countdown is 13 regular blue in a 1 pt **dashed** blue box (radius 4, 8 pt side padding): the Maybe's own outline. It tells the list's countdown to a Maybe apart from the now pill's, which always counts to the next Must-see.
+  - counting down to a set that **isn't a Must-see**, the countdown is 13 regular blue in a 1 pt blue box (radius 4, 8 pt side padding) shaped like that set's own outline: **dashed** for a Maybe, **solid** for an unpicked set. It tells the list's countdown apart from the now pill's, which always counts to the next Must-see.
 
 ### Day caps
 
@@ -161,13 +172,13 @@ What each element shows comes from its own model (see Principles), built from th
 - While the day-start break runs, the break opens the list instead of the start cap, with the ring at its top.
 - The first set's `⚠ Conflict` title floats in the start cap like in any gap, so no spacer is needed.
 - The start cap never carries the now arrow. The end cap carries it, centred on its square, from the minute the last **listed** set ends until the 06:00 day change.
-- None in conflicts-only mode, or on an empty day.
+- None under **Only conflicts**, or on an empty day.
 
 ### Day-start break
 
-- On today, from **08:00** until the first listed set starts, the list opens with a break. With Maybes shown, that set can be a Maybe; the now pill still counts down to the first Must-see.
+- On today, from **08:00** until the first listed set starts, the list opens with a break. With Maybes shown, that set can be a Maybe, and under All sets an unpicked set; the now pill still counts down to the first Must-see.
 - It looks like a current gap: blue bar from 08:00, the arrow, `−3 h`. It takes the start cap's place, with the cap's ring at its top; the blue bar starts below the ring, as far clear of it as two back-to-back sets are apart (6 pt item spacing; 16 pt down), so its fill and the arrow measure the break from there.
-- None outside that window, on a day with no Must-see, or in conflicts-only mode.
+- None outside that window, on a day with no Must-see, or under **Only conflicts**.
 
 ### Now arrow
 
@@ -183,7 +194,7 @@ What each element shows comes from its own model (see Principles), built from th
 - The list ends with the end cap below the day's last set; there is no text marker.
 - **Empty day:** centred text:
   - "Nothing planned for this day" / "Na tento den nic v plánu";
-  - in conflicts-only mode: "No conflicts on this day" / "V tento den žádné konflikty".
+  - under **Only conflicts**: "No conflicts on this day" / "V tento den žádné konflikty".
 
 ---
 
@@ -198,10 +209,10 @@ What each element shows comes from its own model (see Principles), built from th
   - Groups follow `computeConflictEntries`' leader rule.
   - It's drawn at the bottom edge of the cell above the group (the gap or the reserved spacer), absolutely positioned, so it doesn't change the layout. Drawing it from the row itself would put it outside the row's list cell, and on Android a cell takes no touches outside its own bounds.
   - When the group has no gap above it (back to back), a 24 pt spacer is reserved so the title never overlaps the row above.
-- **Show only conflicts:**
-  - Only clashing Must-sees are listed. No gaps, no day-start break, no Maybe rows.
+- **Only conflicts** (the ⚠ filter):
+  - Only clashing Must-sees are listed. No gaps, no day-start break, no Maybe or unpicked rows.
   - Every clash group gets the 24 pt spacer.
-- **Day buttons:** while "Show only conflicts" is on, a day with at least one Must-see clash gets a 6 pt striped strip on the button's right edge, in the same pattern. It's a different shape from today's red ▼ notch, so the two red marks can't be confused.
+- **Day buttons:** while **Only conflicts** is on, a day with at least one Must-see clash gets a 6 pt striped strip on the button's right edge, in the same pattern. It's a different shape from today's red ▼ notch, so the two red marks can't be confused.
 
 ---
 
@@ -210,7 +221,7 @@ What each element shows comes from its own model (see Principles), built from th
 - **Bottom bar:** the timeline's day buttons (`DayButtons`), always visible. The selected day is filled accent, and today has a red ▼ notch.
 - **Sources** (`PlanDaySwitcher.model.ts`, each button's own model in `DayButton.model.ts`):
   - **today** is the festival day that holds now (`festivalToday`: 06:00 to 06:00). The list's "during the festival" follows the same rule.
-  - **the clash stripes** come from `daysWithClash`, the conflict calculation the conflicts-only list follows, so a striped day is exactly a day that list has sets on. A clash across 06:00 stripes both days its sets start on.
+  - **the clash stripes** come from `daysWithClash`, the conflict calculation the Only conflicts list follows, so a striped day is exactly a day that list has sets on. A clash across 06:00 stripes both days its sets start on.
 - **Default day:**
   - today;
   - before the festival, day 1;
@@ -244,8 +255,10 @@ All My plan strings live in one module, so a later i18n pass is a drop-in. Curre
 | done | done | odehráno |
 | start | START | ZAČÍNÁ |
 | conflict | Conflict | Konflikt |
-| showMaybe | Show Maybe picks | Zobrazit výběry Možná |
-| conflictsOnly | Show only conflicts | Zobrazit jen konflikty |
+| filterAll (a11y) | All sets | Všechna vystoupení |
+| filterMaybe (a11y) | Must-see and Maybe | Musím vidět a Možná |
+| filterMust (a11y) | Must-see only | Jen Musím vidět |
+| filterConflicts (a11y) | Only conflicts | Jen konflikty |
 | empty | Nothing planned for this day | Na tento den nic v plánu |
 | emptyConflicts | No conflicts on this day | V tento den žádné konflikty |
 | filterMenu (a11y) | Filters | Filtry |
@@ -264,7 +277,7 @@ All My plan strings live in one module, so a later i18n pass is a drop-in. Curre
 - The drawer entry **"My plan"** replaces "Conflicts", at the top of the list.
   - It shows a **clash marker**: `⚠ 2`, a red warning triangle followed by the number of clashing Must-see sets (`useConflicts().count`). Red text with no badge background, shown only when the count is above 0.
     - The triangle says what's being counted, because a bare red number badge next to "My plan" would be ambiguous.
-    - It's the same symbol as the `⚠ Conflict` group titles and the conflicts-only chip state.
+    - It's the same symbol as the `⚠ Conflict` group titles and the Only conflicts chip state.
     - A number *inside* a triangle was rejected as unreadable at badge size.
   - Nothing else: no status line, since the now pill already shows it on every screen.
 - The Conflicts screen is removed. `ConflictContext` and `ConflictDetailSheet` stay.

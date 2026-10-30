@@ -8,7 +8,7 @@ import React, {
   useSyncExternalStore,
 } from 'react';
 import { useExclusiveOverlay } from '../../hooks/useExclusiveOverlay';
-import { getUiState, setPlanFilters, type PlanFilters } from '../../store/uiStatePersistence';
+import { getUiState, setPlanFilters, type PlanFilters, type PlanLevel } from '../../store/uiStatePersistence';
 import { defaultPlanDay } from './planUtils';
 import { getFestivalDayStart } from '../../utils/festivalTime';
 
@@ -19,7 +19,8 @@ import { getFestivalDayStart } from '../../utils/festivalTime';
 // outside the navigator's tree. Three parts, so each consumer re-renders only
 // for what it reads:
 //
-//   - filters (persisted): Show Maybe picks, Show only conflicts;
+//   - the filter (persisted): All sets, Must-see and Maybe, Must-see only, Only
+//     conflicts;
 //   - the filter panel's open state, in the screen-exclusivity hub with the
 //     drawer and the lens panel;
 //   - a small store for the shown day and "go to now" requests.
@@ -93,8 +94,7 @@ export function shownPlanDay(selection: DaySelection | null, festivalDays: numbe
 // ── Contexts ──────────────────────────────────────────────────────────────────
 
 type PlanFilterContextValue = PlanFilters & {
-  toggleMaybe: () => void;
-  toggleConflictsOnly: () => void;
+  setLevel: (level: PlanLevel) => void;
 };
 
 type PlanPanelContextValue = {
@@ -113,19 +113,15 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [store] = useState(createPlanStore);
 
-  // Written only when the user flips a switch: a default stored at startup
-  // would be indistinguishable from a choice. (The write is idempotent, so a
-  // double-invoked updater is harmless.)
-  const toggleMaybe = useCallback((): void => {
+  // Written only when the user picks a filter: a default stored at startup
+  // would be indistinguishable from a choice. The same filter again keeps the
+  // value, so nothing that reads it renders.
+  const setLevel = useCallback((level: PlanLevel): void => {
     setFilters((prev) => {
-      const next = { ...prev, showMaybe: !prev.showMaybe };
-      setPlanFilters(next);
-      return next;
-    });
-  }, []);
-  const toggleConflictsOnly = useCallback((): void => {
-    setFilters((prev) => {
-      const next = { ...prev, conflictsOnly: !prev.conflictsOnly };
+      if (prev.level === level) {
+        return prev;
+      }
+      const next = { level };
       setPlanFilters(next);
       return next;
     });
@@ -141,10 +137,7 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
     if (isOpen) { notifyOpening(); }
   }, [isOpen, notifyOpening]);
 
-  const filterValue = useMemo(
-    () => ({ ...filters, toggleMaybe, toggleConflictsOnly }),
-    [filters, toggleMaybe, toggleConflictsOnly],
-  );
+  const filterValue = useMemo(() => ({ ...filters, setLevel }), [filters, setLevel]);
   const panelValue = useMemo(() => ({ isOpen, toggle, close }), [isOpen, toggle, close]);
 
   return (

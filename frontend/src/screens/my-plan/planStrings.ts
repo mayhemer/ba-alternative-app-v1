@@ -13,8 +13,10 @@ type PlanStrings = {
   live: string;
   done: string;
   start: string;
-  showMaybe: string;
-  conflictsOnly: string;
+  filterAll: string;
+  filterMaybe: string;
+  filterMust: string;
+  filterConflicts: string;
   empty: string;
   emptyConflicts: string;
   filters: string;
@@ -26,8 +28,10 @@ const EN: PlanStrings = {
   live: 'LIVE',
   done: 'done',
   start: 'START',
-  showMaybe: 'Show Maybe picks',
-  conflictsOnly: 'Show only conflicts',
+  filterAll: 'All sets',
+  filterMaybe: 'Must-see and Maybe',
+  filterMust: 'Must-see only',
+  filterConflicts: 'Only conflicts',
   empty: 'Nothing planned for this day',
   emptyConflicts: 'No conflicts on this day',
   filters: 'Filters',
@@ -39,8 +43,10 @@ const CS: PlanStrings = {
   live: 'HRAJE',
   done: 'odehráno',
   start: 'ZAČÍNÁ',
-  showMaybe: 'Zobrazit výběry Možná',
-  conflictsOnly: 'Zobrazit jen konflikty',
+  filterAll: 'Všechna vystoupení',
+  filterMaybe: 'Musím vidět a Možná',
+  filterMust: 'Jen Musím vidět',
+  filterConflicts: 'Jen konflikty',
   empty: 'Na tento den nic v plánu',
   emptyConflicts: 'V tento den žádné konflikty',
   filters: 'Filtry',

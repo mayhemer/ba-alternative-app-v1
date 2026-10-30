@@ -9,8 +9,8 @@ import { PlanFilterChipView } from './PlanFilterChipView';
 // the chip itself is PlanFilterChipView. A tap opens or closes the panel.
 
 export function PlanFilterChip() {
-  const { showMaybe, conflictsOnly } = usePlanFilters();
+  const { level } = usePlanFilters();
   const { isOpen, toggle } = usePlanPanel();
-  const item = useMemo(() => planFilterChipModel({ showMaybe, conflictsOnly, isOpen }), [showMaybe, conflictsOnly, isOpen]);
+  const item = useMemo(() => planFilterChipModel({ level, isOpen }), [level, isOpen]);
   return <PlanFilterChipView item={item} onPress={toggle} />;
 }

@@ -22,7 +22,7 @@ export function PlanDaySwitcher() {
   const now = useMinuteNow();
   const store = usePlanStore();
   const shownDay = usePlanShownDay(festivalDays, now);
-  const { conflictsOnly } = usePlanFilters();
+  const conflictsOnly = usePlanFilters().level === 'conflicts';
   const { interests } = useInterest();
   const artists = useArtists(slug);
   const stages = useStages(slug);

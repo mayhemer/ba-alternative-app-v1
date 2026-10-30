@@ -3,9 +3,9 @@ import { Pressable, View } from 'react-native';
 import { usePlanFilters, usePlanPanel } from '../PlanContext';
 import { useLayoutMode } from '../../../hooks/useLayoutMode';
 import { planStrings } from '../planStrings';
-import { PlanFilterSwitch } from './PlanFilterSwitch';
-import { planFilterSwitchModels, type PlanFilterSwitchModel } from './PlanFilterSwitch.model';
-import type { PlanFilters } from '../../../store/uiStatePersistence';
+import { PlanFilterLevel } from './PlanFilterLevel';
+import { planFilterLevelModels, type PlanFilterLevelModel } from './PlanFilterLevel.model';
+import type { PlanLevel } from '../../../store/uiStatePersistence';
 import {
   colors,
   OVERLAY_PANEL_MARGIN,
@@ -16,18 +16,19 @@ import {
 // ── My plan's filter panel ────────────────────────────────────────────────────
 //
 // Drops from under the TopBar like the lens panel, with the same backdrop and
-// card, and the same place in AppShell. Two switches, each drawn from its model
-// (PlanFilterSwitch.model.ts).
+// card, and the same place in AppShell. One row of four buttons, one per
+// filter, each drawn from its model (PlanFilterLevel.model.ts). A tap applies
+// that filter and closes the panel, back to the list.
 
 const strings = planStrings();
 
 type ViewProps = {
-  switches: PlanFilterSwitchModel[];
-  onToggle: (filter: keyof PlanFilters) => void;
+  levels: PlanFilterLevelModel[];
+  onPick: (level: PlanLevel) => void;
   onClose: () => void;
 };
 
-export function PlanFilterPanelView({ switches, onToggle, onClose }: ViewProps) {
+export function PlanFilterPanelView({ levels, onPick, onClose }: ViewProps) {
   const { isWide } = useLayoutMode();
   return (
     <>
@@ -49,8 +50,9 @@ export function PlanFilterPanelView({ switches, onToggle, onClose }: ViewProps) 
           borderWidth: 1,
           borderColor: colors.border,
           borderRadius: OVERLAY_PANEL_RADIUS,
-          paddingHorizontal: 16,
-          paddingVertical: 8,
+          flexDirection: 'row',
+          gap: 8,
+          padding: 12,
           shadowColor: colors.black,
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.4,
@@ -58,25 +60,23 @@ export function PlanFilterPanelView({ switches, onToggle, onClose }: ViewProps) 
           elevation: 12,
         }}
       >
-        {switches.map((item) => <PlanFilterSwitch key={item.key} item={item} onToggle={onToggle} />)}
+        {levels.map((item) => <PlanFilterLevel key={item.key} item={item} onPick={onPick} />)}
       </View>
     </>
   );
 }
 
 export function PlanFilterPanel() {
-  const { showMaybe, conflictsOnly, toggleMaybe, toggleConflictsOnly } = usePlanFilters();
+  const { level, setLevel } = usePlanFilters();
   const { isOpen, close } = usePlanPanel();
-  const switches = useMemo(() => planFilterSwitchModels({ showMaybe, conflictsOnly }), [showMaybe, conflictsOnly]);
-  const handleToggle = useCallback((filter: keyof PlanFilters): void => {
-    if (filter === 'showMaybe') {
-      toggleMaybe();
-    } else {
-      toggleConflictsOnly();
-    }
-  }, [toggleMaybe, toggleConflictsOnly]);
+  const levels = useMemo(() => planFilterLevelModels(level), [level]);
+  // Applies the filter and goes back to the list, the current filter too.
+  const handlePick = useCallback((picked: PlanLevel): void => {
+    setLevel(picked);
+    close();
+  }, [setLevel, close]);
   if (!isOpen) {
     return null;
   }
-  return <PlanFilterPanelView switches={switches} onToggle={handleToggle} onClose={close} />;
+  return <PlanFilterPanelView levels={levels} onPick={handlePick} onClose={close} />;
 }

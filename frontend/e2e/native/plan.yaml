@@ -32,9 +32,8 @@ name: two clashing must-sees show up as a conflict in My plan
 - assertVisible: ".*EXORCIZPHOBIA.*"
 - assertVisible: ".*CRYSTAL LAKE.*"
 - assertVisible: "Conflict"
-# Only conflicts: the clashing pair stays.
+# Only conflicts: the clashing pair stays. The filter button closes the panel itself.
 - tapOn: "Filters"
-- tapOn: "Show only conflicts"
-- tapOn: "Close"
+- tapOn: "Only conflicts"
 - assertVisible: ".*EXORCIZPHOBIA.*"
 - assertVisible: ".*CRYSTAL LAKE.*"

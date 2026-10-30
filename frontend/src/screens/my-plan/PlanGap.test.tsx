@@ -45,7 +45,7 @@ it('fills the current gap\'s bar dark blue for the time passed, over the break b
 it('draws a countdown to a Maybe at regular size, in a dashed box in the break blue', async () => {
   const gap = planGapModel('g', at('20:30'), setAt('22:30'), at('21:10'), false, 'maybe');
   await render(<PlanGap item={gap} />);
-  const box = StyleSheet.flatten(screen.getByTestId('plan-gap-maybe-box').props.style);
+  const box = StyleSheet.flatten(screen.getByTestId('plan-gap-countdown-box').props.style);
   expect(box.borderStyle).toBe('dashed');
   expect(box.borderWidth).toBe(1);
   expect(box.borderColor).toBe(colors.breakBlue);
@@ -54,10 +54,19 @@ it('draws a countdown to a Maybe at regular size, in a dashed box in the break b
   expect(text.color).toBe(colors.breakBlue);
 });
 
+it('draws a countdown to an unpicked set at regular size, in a solid box in the break blue', async () => {
+  const gap = planGapModel('g', at('20:30'), setAt('22:30'), at('21:10'), false, 'none');
+  await render(<PlanGap item={gap} />);
+  const box = StyleSheet.flatten(screen.getByTestId('plan-gap-countdown-box').props.style);
+  expect(box.borderStyle).toBe('solid');
+  expect(box.borderColor).toBe(colors.breakBlue);
+  expect(StyleSheet.flatten(screen.getByText('−1 h 20').props.style).fontSize).toBe(13);
+});
+
 it('draws a countdown to a Must-see bold and larger, with no box', async () => {
   const gap = planGapModel('g', at('20:30'), setAt('22:30'), at('21:10'), false, 'will_go');
   await render(<PlanGap item={gap} />);
-  expect(screen.queryByTestId('plan-gap-maybe-box')).toBeNull();
+  expect(screen.queryByTestId('plan-gap-countdown-box')).toBeNull();
   expect(StyleSheet.flatten(screen.getByText('−1 h 20').props.style).fontSize).toBe(15);
 });
 

@@ -32,9 +32,13 @@ export type ScrollPositions = Record<string, Record<string, number>>; // screenK
 export type SelectedDayMap  = Record<string, number>;                  // screenKey → dayStart
 
 /** My plan's filter panel. Both off by default. */
-export type PlanFilters = { showMaybe: boolean; conflictsOnly: boolean };
+/** My plan's filter: All sets, Must-see and Maybe, Must-see only, Only conflicts. */
+export type PlanLevel = 'all' | 'maybe' | 'must' | 'conflicts';
+export type PlanFilters = { level: PlanLevel };
 
-const DEFAULT_PLAN_FILTERS: PlanFilters = { showMaybe: false, conflictsOnly: false };
+const PLAN_LEVELS: readonly PlanLevel[] = ['all', 'maybe', 'must', 'conflicts'];
+
+const DEFAULT_PLAN_FILTERS: PlanFilters = { level: 'must' };
 
 type Snapshot = {
   hiddenCategories: string[];
@@ -83,16 +87,22 @@ const ENTRIES: { [K in UiStateKey]: Entry<K> } = {
     serialize: (value) => JSON.stringify(value),
     fallback: () => DEFAULT_SCOPE,
   },
-  // Read field by field over the defaults, so a value saved by an older build
-  // (fewer filters) still loads.
+  // An older build saved two switches; they load as the filter that shows the
+  // same list. Anything unknown falls back to the default.
   planFilters: {
     storageKey: KEY_PLAN_FILTERS,
     parse: (raw) => {
-      const stored = JSON.parse(raw) as Partial<PlanFilters>;
-      return {
-        showMaybe: stored.showMaybe === true,
-        conflictsOnly: stored.conflictsOnly === true,
-      };
+      const stored = JSON.parse(raw) as { level?: unknown; showMaybe?: unknown; conflictsOnly?: unknown };
+      if (PLAN_LEVELS.includes(stored.level as PlanLevel)) {
+        return { level: stored.level as PlanLevel };
+      }
+      if (stored.conflictsOnly === true) {
+        return { level: 'conflicts' };
+      }
+      if (stored.showMaybe === true) {
+        return { level: 'maybe' };
+      }
+      return DEFAULT_PLAN_FILTERS;
     },
     serialize: (value) => JSON.stringify(value),
     fallback: () => DEFAULT_PLAN_FILTERS,

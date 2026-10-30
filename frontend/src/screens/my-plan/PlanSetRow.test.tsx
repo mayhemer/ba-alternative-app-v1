@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, within } from '@testing-library/react-native';
 import { PlanSetRow } from './PlanSetRow';
 import { ConflictGroupTitle, NowArrow } from './PlanListItems';
 import { buildPlanDay, type PlanInputs } from './planUtils';
@@ -26,6 +26,7 @@ function setup(): { inputs: PlanInputs; interests: Record<string, string> } {
     ['5', 'Gojira', at('19:00'), at('20:00'), 'will_go'],
     ['6', 'Batushka', at('19:40'), at('20:30'), 'will_go'],
     ['7', 'Paysage', at('20:10'), at('21:00'), 'maybe'],
+    ['8', 'Ulcerate', at('21:00'), at('21:45'), 'none'],
   ];
   const artists: DbArtist[] = [];
   const artistEvents: Record<string, DbEvent[]> = {};
@@ -41,7 +42,7 @@ function setup(): { inputs: PlanInputs; interests: Record<string, string> } {
 
 function item(name: string, now: string): PlanSetModel {
   const { inputs, interests } = setup();
-  const items = buildPlanDay(interests, inputs, { dayStart: THU, now: at(now), duringFestival: true, showMaybe: true, conflictsOnly: false });
+  const items = buildPlanDay(interests, inputs, { dayStart: THU, now: at(now), duringFestival: true, level: 'all' });
   const found = items.find((i): i is PlanSetModel => i.kind === 'set' && i.artist.name === name);
   if (found === undefined) {
     throw new Error(`no ${name}`);
@@ -190,6 +191,42 @@ it('falls back to the surface and a grey border without category colours', async
   const style = await rowStyle(item('Batushka', '19:23'), {});
   expect(style.backgroundColor).toBe(colors.surface);
   expect(style.borderColor).toBe(colors.borderMid);
+});
+
+it('gives an unpicked row its category\'s border and no background', async () => {
+  await render(<PlanSetRow item={item('Ulcerate', '19:23')} onPressArtist={jest.fn()} background="rgb(10, 20, 30)" border="rgb(40, 50, 60)" />);
+  const style = StyleSheet.flatten(screen.getByRole('button').props.style);
+  expect(style.borderColor).toBe('rgb(40, 50, 60)');
+  expect(style.borderStyle ?? 'solid').toBe('solid');
+  expect(style.backgroundColor).toBeUndefined();
+  expect(style.height).toBe(58);
+});
+
+it('puts a full star right after a Must-see\'s name, in the name\'s line', async () => {
+  await renderRow(item('Gojira', '19:23'));
+  const line = screen.getByText('Gojira').parent!;
+  expect(within(line).getByTestId('plan-star-will_go')).toBeTruthy();
+  expect(screen.queryByTestId('plan-star-maybe')).toBeNull();
+});
+
+it('puts a half star right after a Maybe\'s name, in the name\'s line', async () => {
+  await renderRow(item('Paysage', '19:23'));
+  const line = screen.getByText('Paysage').parent!;
+  expect(within(line).getByTestId('plan-star-maybe')).toBeTruthy();
+});
+
+it('puts no star on an unpicked set', async () => {
+  await renderRow(item('Ulcerate', '19:23'));
+  expect(screen.queryByTestId('plan-star-will_go')).toBeNull();
+  expect(screen.queryByTestId('plan-star-maybe')).toBeNull();
+});
+
+it('cuts a long name off before the star, which never shrinks', async () => {
+  await renderRow(item('Gojira', '19:23'));
+  const name = screen.getByText('Gojira');
+  expect(name.props.numberOfLines).toBe(1);
+  expect(StyleSheet.flatten(name.props.style).flexShrink).toBe(1);
+  expect(StyleSheet.flatten(screen.getByTestId('plan-star-will_go').props.style).flexShrink).toBe(0);
 });
 
 it('opens the artist detail when the row is tapped', async () => {

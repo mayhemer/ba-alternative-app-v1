@@ -1,5 +1,6 @@
 import { formatDuration, formatRemaining } from './planStrings';
 import { CAP_GLYPH, ITEM_SPACING } from './planStyles';
+import type { PlanSetLevel } from './PlanSetRow.model';
 import type { DbEvent } from '../../types/backend';
 
 // ── A gap between sets: what it shows ─────────────────────────────────────────
@@ -37,8 +38,12 @@ export type PlanGapModel = {
   current: boolean;
   /** Its length, or while current the time left: "2 h", "−1 h 20". */
   label: string;
-  /** Current, and a Maybe is listed under it: the countdown is drawn smaller, in a dashed box. */
-  countdownToMaybe: boolean;
+  /**
+   * Current, and the set listed under it isn't a Must-see: the countdown is drawn
+   * smaller, in a box shaped like that set's outline — dashed for a Maybe, solid
+   * for an unpicked set. Else null.
+   */
+  countdownBox: 'dashed' | 'solid' | null;
   height: number;
   /** Where the blue bar starts, from the gap's top: on the day-start break below the start ring, an item spacing clear of it; else 0. */
   barTop: number;
@@ -50,6 +55,14 @@ export type PlanGapModel = {
   conflictTitle: DbEvent | null;
 };
 
+function countdownBoxOf(level: PlanSetLevel): PlanGapModel['countdownBox'] {
+  switch (level) {
+    case 'maybe': return 'dashed';
+    case 'none': return 'solid';
+    default: return null;
+  }
+}
+
 /** The gap from `from` to the start of `next`, the set listed right under it, picked at `nextLevel`. */
 export function planGapModel(
   key: string,
@@ -57,12 +70,12 @@ export function planGapModel(
   next: DbEvent,
   now: number,
   opening: boolean,
-  nextLevel: 'will_go' | 'maybe' = 'will_go',
+  nextLevel: PlanSetLevel = 'will_go',
 ): PlanGapModel {
   const to = next.dateFrom;
   const minutes = Math.round((to - from) / MINUTE_MS);
   if (now < from || now >= to) {
-    return { kind: 'gap', key, opening, current: false, label: formatDuration(to - from), countdownToMaybe: false, height: gapHeight(minutes), barTop: 0, progress: 0, nowY: null, conflictTitle: null };
+    return { kind: 'gap', key, opening, current: false, label: formatDuration(to - from), countdownBox: null, height: gapHeight(minutes), barTop: 0, progress: 0, nowY: null, conflictTitle: null };
   }
   const height = Math.max(GAP_LAYOUT.currentMinHeight, gapHeight(minutes));
   const progress = (now - from) / (to - from);
@@ -73,7 +86,7 @@ export function planGapModel(
     opening,
     current: true,
     label: formatRemaining(to - now),
-    countdownToMaybe: nextLevel === 'maybe',
+    countdownBox: countdownBoxOf(nextLevel),
     height,
     barTop,
     progress,

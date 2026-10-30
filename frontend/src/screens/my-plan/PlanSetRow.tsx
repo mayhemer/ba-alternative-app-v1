@@ -5,6 +5,7 @@ import { Text } from '../../ui/Text';
 import { stripePath, CONFLICT_STRIPE } from '../../ui/stripes';
 import { BOLD, CLASH_BAR_WIDTH, LIST_GUTTER, LIVE_BORDER, PROGRESS_BAR_WIDTH, PROGRESS_COLORS, STATUS_LABEL, TABULAR, type ProgressColors } from './planStyles';
 import { NowArrow } from './PlanListItems';
+import { StarIndicator } from '../../features/interests/StarButton';
 import { sameProps } from '../../ui/sameProps';
 import type { ClashBar, PlanSetModel, SetStatus } from './PlanSetRow.model';
 import type { DbArtist } from '../../types/backend';
@@ -12,9 +13,11 @@ import { colors } from '../../styling/tokens';
 
 // ── One set in My plan ────────────────────────────────────────────────────────
 //
-// Must-see: a bordered two-line card. Maybe: one line in a dashed box, its
-// text muted but bright enough for sunlight; while live, a solid accent border
-// and a red dot before the name.
+// Must-see: a filled two-line card in its category's colours. A set you haven't
+// picked (All sets): the same card, outlined only. Maybe: one line in a dashed
+// box, its text muted but bright enough for sunlight; while live, a solid accent
+// border and a red dot before the name. A pick's star follows its name; a long
+// name cuts off and the star stays at the end of the line.
 // Both share one fixed inset, so the time, name and stage columns line up in
 // every state, clear of the progress bar on the left edge and the clash bar on
 // the right. Tapping anywhere opens the artist's detail sheet. Draws its model
@@ -26,6 +29,20 @@ const INSET_LEFT = 17;
 const INSET_RIGHT = 22;
 
 const PAST_OPACITY = 0.45;
+
+const STAR_SIZE = { will_go: 15, maybe: 12 } as const;
+
+/** The pick's star, right after the name; it never shrinks, the name does. */
+function RowStar({ star }: { star: PlanSetModel['star'] }) {
+  if (star === null) {
+    return null;
+  }
+  return (
+    <View testID={`plan-star-${star}`} style={{ flexShrink: 0 }}>
+      <StarIndicator status={star} size={STAR_SIZE[star]} />
+    </View>
+  );
+}
 
 /** The red dot that marks a live set, in a Must-see's status and before a live Maybe's name. */
 const LIVE_DOT = { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.danger };
@@ -98,7 +115,7 @@ function Status({ status }: { status: SetStatus }) {
 type Props = {
   item: PlanSetModel;
   onPressArtist: (artist: DbArtist) => void;
-  /** A Must-see row's background, and any row's border; the surface colour and a grey border when not given. */
+  /** A Must-see row's background (an unpicked row has none), and any row's border; the surface colour and a grey border when not given. */
   background?: string;
   border?: string;
 };
@@ -130,6 +147,7 @@ function SetCard({ item, onPressArtist, background = colors.surface, border = co
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           {live && <View testID="plan-maybe-live-dot" style={LIVE_DOT} />}
           <Text numberOfLines={1} style={{ flexShrink: 1, fontSize: 13, color: colors.textMuted }}>{item.artist.name}</Text>
+          <RowStar star={item.star} />
         </View>
         <Text numberOfLines={1} style={{ maxWidth: '35%', fontSize: 13, color: colors.textMuted }}>{item.stageName}</Text>
       </Pressable>
@@ -149,7 +167,8 @@ function SetCard({ item, onPressArtist, background = colors.surface, border = co
         paddingRight: INSET_RIGHT,
         borderWidth: 1,
         borderColor: live ? LIVE_BORDER : border,
-        backgroundColor: background,
+        // Filled = picked, outlined = not.
+        backgroundColor: item.level === 'none' ? undefined : background,
         overflow: 'hidden',
         opacity: item.state === 'past' ? PAST_OPACITY : 1,
       }}
@@ -160,7 +179,10 @@ function SetCard({ item, onPressArtist, background = colors.surface, border = co
       {live && <LeftProgress progress={item.progress} palette={PROGRESS_COLORS.live} />}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <Text style={[TABULAR, { fontSize: 13, color: colors.textMuted }]}>{item.timeText}</Text>
-        <Text numberOfLines={1} style={[BOLD, { flex: 1, fontSize: 15, color: colors.textPrimary }]}>{item.artist.name}</Text>
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Text numberOfLines={1} style={[BOLD, { flexShrink: 1, fontSize: 15, color: colors.textPrimary }]}>{item.artist.name}</Text>
+          <RowStar star={item.star} />
+        </View>
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <Status status={item.status} />

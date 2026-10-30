@@ -100,9 +100,10 @@ test('switches days and filters to conflicts only', async ({ appPage }) => {
   await expect(appPage.getByText('Nothing planned for this day')).toBeVisible();
   await appPage.getByText('Wed', { exact: true }).click();
 
+  // A filter button applies and closes the panel itself.
   await appPage.getByLabel('Filters').click();
-  await appPage.getByRole('switch', { name: 'Show only conflicts' }).click();
-  await appPage.getByLabel('Close').click();
+  await appPage.getByRole('button', { name: 'Only conflicts' }).click();
+  await expect(appPage.getByRole('button', { name: 'Only conflicts' })).toHaveCount(0);
 
   await expect(appPage.getByText('CRYSTAL LAKE', { exact: false }).filter({ visible: true }).first()).toBeVisible();
   await expect(appPage.getByText('EXORCIZPHOBIA', { exact: false }).filter({ visible: true }).first()).toBeVisible();

@@ -42,7 +42,7 @@ describe('planGapModel', () => {
 
   it('has no fill and no arrow while now is outside it', () => {
     expect(planGapModel('g', at('18:40'), setAt('19:00'), at('12:00'), false)).toEqual({
-      kind: 'gap', key: 'g', opening: false, current: false, label: '20 min', countdownToMaybe: false, height: 30, barTop: 0, progress: 0, nowY: null, conflictTitle: null,
+      kind: 'gap', key: 'g', opening: false, current: false, label: '20 min', countdownBox: null, height: 30, barTop: 0, progress: 0, nowY: null, conflictTitle: null,
     });
   });
 
@@ -75,15 +75,20 @@ describe('planGapModel', () => {
     expect(gap.label).toBe('20 min');
   });
 
-  it('marks its countdown as one to a Maybe when a Maybe is listed under it', () => {
+  it('boxes its countdown, dashed like the Maybe\'s outline, when a Maybe is listed under it', () => {
     const gap = planGapModel('g', at('20:30'), setAt('22:30'), at('21:10'), false, 'maybe');
     expect(gap.label).toBe('−1 h 20');
-    expect(gap.countdownToMaybe).toBe(true);
+    expect(gap.countdownBox).toBe('dashed');
   });
 
-  it('marks no countdown to a Maybe under a Must-see, or while now is outside it', () => {
-    expect(planGapModel('g', at('20:30'), setAt('22:30'), at('21:10'), false, 'will_go').countdownToMaybe).toBe(false);
-    expect(planGapModel('g', at('20:30'), setAt('22:30'), at('12:00'), false, 'maybe').countdownToMaybe).toBe(false);
+  it('boxes its countdown, solid like the row\'s outline, when an unpicked set is listed under it', () => {
+    expect(planGapModel('g', at('20:30'), setAt('22:30'), at('21:10'), false, 'none').countdownBox).toBe('solid');
+  });
+
+  it('boxes no countdown under a Must-see, and none while now is outside it', () => {
+    expect(planGapModel('g', at('20:30'), setAt('22:30'), at('21:10'), false, 'will_go').countdownBox).toBeNull();
+    expect(planGapModel('g', at('20:30'), setAt('22:30'), at('12:00'), false, 'maybe').countdownBox).toBeNull();
+    expect(planGapModel('g', at('20:30'), setAt('22:30'), at('12:00'), false, 'none').countdownBox).toBeNull();
   });
 
   it('carries the day-start flag it was built with', () => {

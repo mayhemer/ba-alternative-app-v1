@@ -60,7 +60,7 @@ Status added after the fact — this was the V1 brief, and most of the list has 
 
 | Feature | Status |
 |---|---|
-| Conflict detection — flag overlapping "Will Go" slots | **Shipped** — `conflictUtils` + `ConflictContext`, striped bars on timeline blocks and on My plan's rows, a detail sheet; the Conflicts screen was replaced by My plan's "Show only conflicts" filter |
+| Conflict detection — flag overlapping "Will Go" slots | **Shipped** — `conflictUtils` + `ConflictContext`, striped bars on timeline blocks and on My plan's rows, a detail sheet; the Conflicts screen was replaced by My plan's "Only conflicts" filter |
 | My plan — today / now / next of your picks | **Shipped** — the `MyPlan` screen, the now pill in the TopBar centre, per-day view with the day switcher; see [my-plan.md](../../frontend/design/my-plan.md) |
 | Push notifications / reminders before a set starts | Not built |
 | Friends' schedules — follow another user's personal schedule | **Shipped** — share tokens, `SocialContext`, friend facepile in the artist list |

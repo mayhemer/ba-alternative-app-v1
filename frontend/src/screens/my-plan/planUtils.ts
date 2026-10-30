@@ -3,8 +3,9 @@ import { getFestivalDayStart } from '../../utils/festivalTime';
 import { planCapModel, type PlanCapModel } from './PlanCap.model';
 import { planEmptyModel, type PlanEmptyModel } from './PlanEmpty.model';
 import { planGapModel, type PlanGapModel } from './PlanGap.model';
-import { planSetModel, type PlanSetModel } from './PlanSetRow.model';
+import { planSetModel, type PlanSetLevel, type PlanSetModel } from './PlanSetRow.model';
 import { ITEM_SPACING } from './planStyles';
+import type { PlanLevel } from '../../store/uiStatePersistence';
 import type { DbArtist, DbEvent } from '../../types/backend';
 
 // ── My plan: one festival day of the user's picks ─────────────────────────────
@@ -23,8 +24,8 @@ type PlanOptions = {
   now: number;
   /** Whether today is a festival day. Outside the festival nothing is past, live or current. */
   duringFestival: boolean;
-  showMaybe: boolean;
-  conflictsOnly: boolean;
+  /** The filter: All sets, Must-see and Maybe, Must-see only, Only conflicts. */
+  level: PlanLevel;
 };
 
 /** Room above a clash group for its "Conflict" title, when no gap or cap gives it. */
@@ -63,19 +64,29 @@ export function defaultPlanDay(festivalDays: number[], now: number): number {
 
 // ── Picks ─────────────────────────────────────────────────────────────────────
 
-type Pick = { event: DbEvent; artist: DbArtist; level: 'will_go' | 'maybe' };
+type Pick = { event: DbEvent; artist: DbArtist; level: PlanSetLevel };
 
-function picksOf(interests: Record<string, string>, { artists, artistEvents }: PlanInputs): Pick[] {
+/**
+ * The sets My plan can list, by start: your Must-see and Maybe picks, and with
+ * `unpicked` also every Program band's set you haven't picked (All sets). Never
+ * a "don't go" pick, and never an unpicked support-programme item.
+ */
+function picksOf(interests: Record<string, string>, { artists, artistEvents }: PlanInputs, unpicked: boolean): Pick[] {
   const picks: Pick[] = [];
   for (const artist of artists) {
     const status = interests[artist.artistId];
-    if (status !== 'will_go' && status !== 'maybe') {
+    let level: PlanSetLevel;
+    if (status === 'will_go' || status === 'maybe') {
+      level = status;
+    } else if (unpicked && status !== 'dont_go' && artist.isPlayable) {
+      level = 'none';
+    } else {
       continue;
     }
     // Only the sets the conflict calculation considers: one shared rule, so the
     // plan never lists a set that cannot clash (or hides one that can).
     for (const event of (artistEvents[artist.artistId] ?? []).filter(isConflictEligible)) {
-      picks.push({ event, artist, level: status });
+      picks.push({ event, artist, level });
     }
   }
   return picks.sort((a, b) => a.event.dateFrom - b.event.dateFrom);
@@ -87,7 +98,7 @@ function picksOf(interests: Record<string, string>, { artists, artistEvents }: P
 export function buildPlanDay(
   interests: Record<string, string>,
   inputs: PlanInputs,
-  { dayStart, now: wallNow, duringFestival, showMaybe, conflictsOnly }: PlanOptions,
+  { dayStart, now: wallNow, duringFestival, level }: PlanOptions,
 ): PlanItem[] {
   // Outside the festival the list reads as it does before it: every set is ahead.
   const now = duringFestival ? wallNow : Number.NEGATIVE_INFINITY;
@@ -95,7 +106,8 @@ export function buildPlanDay(
   const entries = computeConflictEntries(interests, inputs);
   const leaders = new Set(entries.filter((e) => e.leader).map((e) => e.event.eventId));
 
-  const allPicks = picksOf(interests, inputs);
+  const conflictsOnly = level === 'conflicts';
+  const allPicks = picksOf(interests, inputs, level === 'all');
   const dayPicks = allPicks.filter((p) => getFestivalDayStart(p.event.dateFrom) === dayStart);
   const liveMusts = allPicks
     .filter((p) => p.level === 'will_go' && p.event.dateFrom <= now && now < p.event.dateTo)
@@ -104,7 +116,10 @@ export function buildPlanDay(
     if (conflictsOnly) {
       return p.level === 'will_go' && overlaps.has(p.event.eventId);
     }
-    return p.level === 'will_go' || showMaybe;
+    if (p.level === 'maybe') {
+      return level === 'maybe' || level === 'all';
+    }
+    return p.level === 'will_go' || level === 'all';
   });
 
   // No day title: the day switcher names the shown day.
@@ -128,16 +143,16 @@ export function buildPlanDay(
 
   // The end of everything listed so far: a gap runs from it to the next set.
   let groupEnd: number | null = null;
-  for (const { event, artist, level } of visible) {
+  for (const { event, artist, level: pickLevel } of visible) {
     if (!conflictsOnly && groupEnd !== null && event.dateFrom > groupEnd) {
-      items.push(planGapModel(`gap-${event.eventId}`, groupEnd, event, now, false, level));
+      items.push(planGapModel(`gap-${event.eventId}`, groupEnd, event, now, false, pickLevel));
     }
 
     const set = planSetModel({
       event,
       artist,
       stage: inputs.stages.find((s) => s.stageId === event.stageId),
-      level,
+      level: pickLevel,
       now,
       overlaps: overlaps.get(event.eventId) ?? [],
       liveMusts,

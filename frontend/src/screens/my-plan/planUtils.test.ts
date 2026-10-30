@@ -25,14 +25,16 @@ import type { DbArtist, DbEvent, DbStage } from '../../types/backend';
 // its size and texts. These cases check the whole list.
 //
 // Dimensions, and the corner cases tested for each:
-//   filters  — Maybe picks shown / hidden; only conflicts on / off
+//   filter   — All sets; Must-see and Maybe; Must-see only (the default); Only
+//              conflicts
 //   data     — Must-sees only; a Maybe between Must-sees; a Maybe overlapping a
 //              Must-see; a Maybe ending after a clash group (shortens the gap
 //              after it); a Maybe before the first Must-see; a day of Maybes
 //              only; a clash group under a gap, back to back with the set above
 //              (no gap), and right under the start cap; sets over 2 h and of
 //              exactly 2 h; a set after midnight; unpicked and "don't go" sets;
-//              an empty day
+//              a support-programme set, picked or not; a day whose first set is
+//              unpicked; a day with unpicked sets only; an empty day
 //   time     — another day (future, past); today before 08:00; in the
 //              day-start break; exactly at a set's start; exactly at a set's
 //              end; mid-set; two clashing sets live; in a gap; after the last set
@@ -41,7 +43,8 @@ import type { DbArtist, DbEvent, DbStage } from '../../types/backend';
 // Each expected list is written out by hand from the fixture times. Read a line
 // as: element, name, ⚠ when it heads a clash group, its state, and in quotes the
 // text it shows. "gap now" is the gap "now" falls in; "to Maybe" marks its
-// countdown to a Maybe, drawn in a dashed box. "cap end now" is the end cap
+// countdown to a Maybe, drawn in a dashed box, "to unpicked" one to an unpicked
+// set, in a solid box. "unpicked" is a set listed only under All sets. "cap end now" is the end cap
 // carrying the now arrow, after the last listed set.
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -63,18 +66,19 @@ function stage(stageId: string, name: string): DbStage {
   return { slug: 'test', stageId, imageUrl: '', thumbUrl: '', localized: [{ language: 'en', name }] };
 }
 
-function artist(artistId: string, name: string): DbArtist {
-  return { slug: 'test', artistId, name, isPlayable: true, imageUrl: '', thumbUrl: '', url: '', localized: [] };
+function artist(artistId: string, name: string, isPlayable = true): DbArtist {
+  return { slug: 'test', artistId, name, isPlayable, imageUrl: '', thumbUrl: '', url: '', localized: [] };
 }
 
-type Spec = [id: string, name: string, stageId: string, from: number, to: number, status: string];
+/** `support`: an item of the support programme (films, talks), not a band of the Program. */
+type Spec = [id: string, name: string, stageId: string, from: number, to: number, status: string, support?: 'support'];
 
 function inputsOf(specs: Spec[]): { inputs: PlanInputs; interests: Record<string, string> } {
   const artists: DbArtist[] = [];
   const artistEvents: Record<string, DbEvent[]> = {};
   const interests: Record<string, string> = {};
-  for (const [id, name, stageId, from, to, status] of specs) {
-    artists.push(artist(id, name));
+  for (const [id, name, stageId, from, to, status, support] of specs) {
+    artists.push(artist(id, name, support !== 'support'));
     artistEvents[id] = [{ slug: 'test', eventId: `e${id}`, dateFrom: from, dateTo: to, artistId: id, stageId, categoryId: 'c' }];
     if (status !== 'none') {
       interests[id] = status;
@@ -129,14 +133,32 @@ const LONG: Spec[] = [
   ['23', 'Early maybe', 's3', at(7, '13:00'), at(7, '13:40'), 'maybe'],
 ];
 
-type Options = { day: number; now: number; maybe: boolean; conflictsOnly: boolean; festival: boolean };
+/**
+ * Thursday's day plus sets you haven't picked: a band between Blood Incantation
+ * and Dark Funeral, and one over 2 h; Friday's support programme (a picked
+ * signing, an unpicked film) and an unpicked band; Saturday a day opening with
+ * an unpicked band; Sunday a day of unpicked sets only.
+ */
+const ALL: Spec[] = [
+  ...DAY,
+  ['30', 'Afternoon band', 's3', at(7, '16:30'), at(7, '16:50'), 'none'],
+  ['31', 'Unpicked marathon', 's3', at(7, '12:00'), at(7, '20:00'), 'none'],
+  ['32', 'Signing session', 's2', at(8, '15:00'), at(8, '15:30'), 'will_go', 'support'],
+  ['33', 'Film screening', 's3', at(8, '14:00'), at(8, '14:40'), 'none', 'support'],
+  ['34', 'Late band', 's1', at(8, '16:00'), at(8, '16:40'), 'none'],
+  ['35', 'Saturday opener', 's1', at(9, '12:00'), at(9, '12:40'), 'none'],
+  ['36', 'Saturday must', 's2', at(9, '14:00'), at(9, '14:40'), 'will_go'],
+  ['37', 'Sunday band', 's1', at(10, '14:00'), at(10, '14:40'), 'none'],
+];
 
-const TODAY: Options = { day: THU, now: at(7, '12:00'), maybe: false, conflictsOnly: false, festival: true };
+type Options = { day: number; now: number; filter: 'all' | 'maybe' | 'must' | 'conflicts'; festival: boolean };
+
+const TODAY: Options = { day: THU, now: at(7, '12:00'), filter: 'must', festival: true };
 
 function build(data: Spec[], opts: Partial<Options>): PlanItem[] {
-  const { day, now, maybe, conflictsOnly, festival } = { ...TODAY, ...opts };
+  const { day, now, filter, festival } = { ...TODAY, ...opts };
   const { inputs, interests } = inputsOf(data);
-  return buildPlanDay(interests, inputs, { dayStart: day, now, duringFestival: festival, showMaybe: maybe, conflictsOnly });
+  return buildPlanDay(interests, inputs, { dayStart: day, now, duringFestival: festival, level: filter });
 }
 
 function statusText(status: SetStatus): string {
@@ -151,6 +173,14 @@ function statusText(status: SetStatus): string {
   }
 }
 
+function countdownTo(gap: PlanGapModel): string {
+  switch (gap.countdownBox) {
+    case 'dashed': return ' to Maybe';
+    case 'solid': return ' to unpicked';
+    default: return '';
+  }
+}
+
 /** Each item as one readable line; see the header for how to read it. */
 function shape(items: PlanItem[]): string[] {
   return items.map((item) => {
@@ -158,9 +188,9 @@ function shape(items: PlanItem[]): string[] {
       case 'cap': return `cap ${item.edge}${item.nowY !== null ? ' now' : ''}`;
       case 'spacer': return 'spacer';
       case 'empty': return `empty "${item.text}"`;
-      case 'gap': return `gap${item.current ? ' now' : ''} "${item.label}"${item.opening ? ' opening' : ''}${item.countdownToMaybe ? ' to Maybe' : ''}`;
+      case 'gap': return `gap${item.current ? ' now' : ''} "${item.label}"${item.opening ? ' opening' : ''}${countdownTo(item)}`;
       case 'set': {
-        const level = item.level === 'will_go' ? 'must' : 'maybe';
+        const level = { will_go: 'must', maybe: 'maybe', none: 'unpicked' }[item.level];
         return `${level} ${item.artist.name}${item.conflictHead ? ' ⚠' : ''} — ${item.state}${statusText(item.status)}`;
       }
       // Anything else the list should not hold shows up by its kind.
@@ -292,7 +322,7 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
   ]],
 
   // Maybes shown
-  ['Maybes shown: they split the gaps, and never clash or count down', DAY, { now: at(7, '19:23'), maybe: true }, [
+  ['Maybes shown: they split the gaps, and never clash or count down', DAY, { now: at(7, '19:23'), filter: 'maybe' }, [
     'cap start',
     ...WITH_MAYBES_TO_MGLA_DONE,
     'must Gojira ⚠ — live "LIVE −37 min"',
@@ -301,7 +331,7 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
     ...WITH_MAYBES_AHEAD.slice(11),
     'cap end',
   ]],
-  ['Maybes shown: a gap ending at a Maybe counts down to it, marked as a countdown to a Maybe', DAY, { now: at(7, '15:00'), maybe: true }, [
+  ['Maybes shown: a gap ending at a Maybe counts down to it, marked as a countdown to a Maybe', DAY, { now: at(7, '15:00'), filter: 'maybe' }, [
     'cap start',
     'must Hooded Menace — past "done"',
     'gap now "−30 min" to Maybe',
@@ -309,7 +339,7 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
     ...WITH_MAYBES_AHEAD.slice(3),
     'cap end',
   ]],
-  ['Maybes shown: a Maybe overlapping a live Must-see is live too, with no status', DAY, { now: at(7, '20:20'), maybe: true }, [
+  ['Maybes shown: a Maybe overlapping a live Must-see is live too, with no status', DAY, { now: at(7, '20:20'), filter: 'maybe' }, [
     'cap start',
     ...WITH_MAYBES_TO_MGLA_DONE,
     'must Gojira ⚠ — past "done"',
@@ -318,7 +348,7 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
     ...WITH_MAYBES_AHEAD.slice(11),
     'cap end',
   ]],
-  ['Maybes shown: a Maybe ending after a clash group starts the gap after it', DAY, { now: at(7, '21:10'), maybe: true }, [
+  ['Maybes shown: a Maybe ending after a clash group starts the gap after it', DAY, { now: at(7, '21:10'), filter: 'maybe' }, [
     'cap start',
     ...WITH_MAYBES_TO_MGLA_DONE,
     'must Gojira ⚠ — past "done"',
@@ -330,42 +360,150 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
   ]],
 
   // A Maybe before the first Must-see
-  ['Maybes shown: the day-start break ends at the Maybe', EARLY, { now: at(7, '11:00'), maybe: true }, [
+  ['Maybes shown: the day-start break ends at the Maybe', EARLY, { now: at(7, '11:00'), filter: 'maybe' }, [
     'gap now "−1 h" opening to Maybe', 'maybe Early maybe — upcoming', 'gap "1 h 20"', 'must First must — upcoming', 'cap end',
   ]],
   ['Maybes hidden: the day-start break ends at the first Must-see', EARLY, { now: at(7, '11:00') }, [
     'gap now "−3 h" opening', 'must First must — upcoming', 'cap end',
   ]],
-  ['Maybes shown, the early Maybe live: no break any more', EARLY, { now: at(7, '12:10'), maybe: true }, [
+  ['Maybes shown, the early Maybe live: no break any more', EARLY, { now: at(7, '12:10'), filter: 'maybe' }, [
     'cap start', 'maybe Early maybe — live', 'gap "1 h 20"', 'must First must — upcoming', 'cap end',
   ]],
-  ['Maybes shown, after the early Maybe: the gap to the Must-see is current', EARLY, { now: at(7, '13:00'), maybe: true }, [
+  ['Maybes shown, after the early Maybe: the gap to the Must-see is current', EARLY, { now: at(7, '13:00'), filter: 'maybe' }, [
     'cap start', 'maybe Early maybe — past', 'gap now "−1 h"', 'must First must — upcoming', 'cap end',
   ]],
 
   // A day of Maybes only
-  ['only Maybes, shown: listed, but no day-start break without a Must-see', MAYBE_ONLY, { now: at(7, '11:00'), maybe: true }, [
+  ['only Maybes, shown: listed, but no day-start break without a Must-see', MAYBE_ONLY, { now: at(7, '11:00'), filter: 'maybe' }, [
     'cap start', 'maybe Only maybe — upcoming', 'cap end',
   ]],
   ['only Maybes, hidden: an empty day', MAYBE_ONLY, { now: at(7, '11:00') }, [
     'empty "Nothing planned for this day"',
   ]],
-  ['only Maybes, shown, after the last one: the end cap takes the arrow without a Must-see', MAYBE_ONLY, { now: at(7, '16:00'), maybe: true }, [
+  ['only Maybes, shown, after the last one: the end cap takes the arrow without a Must-see', MAYBE_ONLY, { now: at(7, '16:00'), filter: 'maybe' }, [
     'cap start', 'maybe Only maybe — past', 'cap end now',
   ]],
 
   // Only conflicts
-  ['only conflicts: just the clashing Must-sees, with room for the group title', DAY, { now: at(7, '19:23'), conflictsOnly: true }, [
+  ['only conflicts: just the clashing Must-sees, with room for the group title', DAY, { now: at(7, '19:23'), filter: 'conflicts' }, [
     'spacer', 'must Gojira ⚠ — live "LIVE −37 min"', 'must Batushka — upcoming "START −17 min"',
   ]],
-  ['only conflicts: no Maybes and no day-start break, whatever the Maybe switch', DAY, { now: at(7, '11:00'), conflictsOnly: true, maybe: true }, [
+  ['only conflicts: no Maybes and no day-start break', DAY, { now: at(7, '11:00'), filter: 'conflicts' }, [
     'spacer', 'must Gojira ⚠ — upcoming', 'must Batushka — upcoming',
   ]],
-  ['only conflicts, after the last set: no end cap, so no arrow', DAY, { now: at(8, '02:00'), conflictsOnly: true }, [
+  ['only conflicts, after the last set: no end cap, so no arrow', DAY, { now: at(8, '02:00'), filter: 'conflicts' }, [
     'spacer', 'must Gojira ⚠ — past "done"', 'must Batushka — past "done"',
   ]],
-  ['only conflicts, on a day without a clash', DAY, { day: FRI, now: at(7, '11:00'), conflictsOnly: true }, [
+  ['only conflicts, on a day without a clash', DAY, { day: FRI, now: at(7, '11:00'), filter: 'conflicts' }, [
     'empty "No conflicts on this day"',
+  ]],
+
+  // All sets
+  ['All sets: unpicked sets listed too, never a "don\'t go" pick or a set over 2 h', ALL, { now: at(7, '19:23'), filter: 'all' }, [
+    'cap start',
+    'must Hooded Menace — past "done"',
+    'gap "50 min"',
+    'maybe Blood Incantation — past',
+    'gap "15 min"',
+    'unpicked Afternoon band — past "done"',
+    'gap "15 min"',
+    'must Dark Funeral — past "done"',
+    'gap "5 min"',
+    'must Mgła — past "done"',
+    'unpicked Not picked — past "done"',
+    'gap "20 min"',
+    'must Gojira ⚠ — live "LIVE −37 min"',
+    'must Batushka — upcoming "START −17 min"',
+    "maybe Paysage d'Hiver — upcoming",
+    'gap "1 h 30"',
+    'must Emperor — upcoming',
+    'gap "45 min"',
+    'must Wolves in the Throne Room — upcoming',
+    'cap end',
+  ]],
+  ['All sets: a gap ending at an unpicked set counts down to it, marked as a countdown to an unpicked set', ALL, { now: at(7, '16:20'), filter: 'all' }, [
+    'cap start',
+    'must Hooded Menace — past "done"',
+    'gap "50 min"',
+    'maybe Blood Incantation — past',
+    'gap now "−10 min" to unpicked',
+    'unpicked Afternoon band — upcoming',
+    'gap "15 min"',
+    'must Dark Funeral — upcoming',
+    'gap "5 min"',
+    'must Mgła — upcoming',
+    'unpicked Not picked — upcoming',
+    'gap "20 min"',
+    'must Gojira ⚠ — upcoming',
+    'must Batushka — upcoming',
+    "maybe Paysage d'Hiver — upcoming",
+    'gap "1 h 30"',
+    'must Emperor — upcoming',
+    'gap "45 min"',
+    'must Wolves in the Throne Room — upcoming',
+    'cap end',
+  ]],
+  ['All sets: an unpicked set about to start beside a live Must-see has no START countdown', ALL, { now: at(7, '17:57'), filter: 'all' }, [
+    'cap start',
+    'must Hooded Menace — past "done"',
+    'gap "50 min"',
+    'maybe Blood Incantation — past',
+    'gap "15 min"',
+    'unpicked Afternoon band — past "done"',
+    'gap "15 min"',
+    'must Dark Funeral — past "done"',
+    'gap "5 min"',
+    'must Mgła — live "LIVE −43 min"',
+    'unpicked Not picked — upcoming',
+    'gap "20 min"',
+    'must Gojira ⚠ — upcoming',
+    'must Batushka — upcoming',
+    "maybe Paysage d'Hiver — upcoming",
+    'gap "1 h 30"',
+    'must Emperor — upcoming',
+    'gap "45 min"',
+    'must Wolves in the Throne Room — upcoming',
+    'cap end',
+  ]],
+  ['All sets: a playing unpicked set is live, as a Must-see is', ALL, { now: at(7, '18:10'), filter: 'all' }, [
+    'cap start',
+    'must Hooded Menace — past "done"',
+    'gap "50 min"',
+    'maybe Blood Incantation — past',
+    'gap "15 min"',
+    'unpicked Afternoon band — past "done"',
+    'gap "15 min"',
+    'must Dark Funeral — past "done"',
+    'gap "5 min"',
+    'must Mgła — live "LIVE −30 min"',
+    'unpicked Not picked — live "LIVE −20 min"',
+    'gap "20 min"',
+    'must Gojira ⚠ — upcoming',
+    'must Batushka — upcoming',
+    "maybe Paysage d'Hiver — upcoming",
+    'gap "1 h 30"',
+    'must Emperor — upcoming',
+    'gap "45 min"',
+    'must Wolves in the Throne Room — upcoming',
+    'cap end',
+  ]],
+  ['All sets: a support-programme set is listed only when picked, a band also unpicked', ALL, { day: FRI, now: at(7, '11:00'), filter: 'all' }, [
+    'cap start',
+    'must Spectral Wound — upcoming',
+    'gap "1 h 50"',
+    'must Signing session — upcoming',
+    'gap "30 min"',
+    'unpicked Late band — upcoming',
+    'cap end',
+  ]],
+  ['All sets: the day-start break ends at an unpicked first set, marked as a countdown to it', ALL, { day: SAT, now: at(9, '11:00'), filter: 'all' }, [
+    'gap now "−1 h" opening to unpicked', 'unpicked Saturday opener — upcoming', 'gap "1 h 20"', 'must Saturday must — upcoming', 'cap end',
+  ]],
+  ['All sets: no day-start break on a day without a Must-see', ALL, { day: SUN, now: at(10, '11:00'), filter: 'all' }, [
+    'cap start', 'unpicked Sunday band — upcoming', 'cap end',
+  ]],
+  ['Must-see only: the unpicked sets are not listed', ALL, { day: SUN, now: at(10, '11:00') }, [
+    'empty "Nothing planned for this day"',
   ]],
 
   // Where a clash group sits
@@ -377,7 +515,7 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
   ]],
 
   // Sets over two hours
-  ['sets over 2 h: not listed, and the gaps and clashes stay as they are', LONG, { now: at(7, '19:23'), maybe: true }, [
+  ['sets over 2 h: not listed, and the gaps and clashes stay as they are', LONG, { now: at(7, '19:23'), filter: 'maybe' }, [
     'cap start',
     'maybe Early maybe — past',
     'gap "20 min"',
@@ -388,7 +526,7 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
     ...WITH_MAYBES_AHEAD.slice(11),
     'cap end',
   ]],
-  ['sets over 2 h do not start the day: the break counts to the first listed set', LONG, { now: at(7, '11:00'), maybe: true }, [
+  ['sets over 2 h do not start the day: the break counts to the first listed set', LONG, { now: at(7, '11:00'), filter: 'maybe' }, [
     'gap now "−2 h" opening to Maybe', 'maybe Early maybe — upcoming', 'gap "20 min"', ...WITH_MAYBES_AHEAD, 'cap end',
   ]],
   ['a set of exactly 2 h is listed', LONG, { day: FRI, now: at(7, '19:23') }, [
@@ -407,10 +545,10 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
   ]],
 
   // Outside the festival
-  ['before the festival: everything ahead, nothing current', DAY, { now: at(1, '12:00'), festival: false, maybe: true }, [
+  ['before the festival: everything ahead, nothing current', DAY, { now: at(1, '12:00'), festival: false, filter: 'maybe' }, [
     'cap start', ...WITH_MAYBES_AHEAD, 'cap end',
   ]],
-  ['after the festival: read as before it', DAY, { now: at(12, '12:00'), festival: false, maybe: true }, [
+  ['after the festival: read as before it', DAY, { now: at(12, '12:00'), festival: false, filter: 'maybe' }, [
     'cap start', ...WITH_MAYBES_AHEAD, 'cap end',
   ]],
 ];
@@ -421,7 +559,7 @@ describe('buildPlanDay', () => {
   });
 
   it('sizes the day-start break by the first listed set too: length, fill and countdown alike', () => {
-    const opening = build(EARLY, { now: at(7, '11:00'), maybe: true })[0] as PlanGapModel;
+    const opening = build(EARLY, { now: at(7, '11:00'), filter: 'maybe' })[0] as PlanGapModel;
     expect(opening.label).toBe('−1 h');
     expect(opening.height).toBe(gapHeight(240));
     expect(opening.progress).toBeCloseTo(3 / 4);
@@ -442,14 +580,14 @@ describe('buildPlanDay', () => {
       (i.kind === 'gap' || i.kind === 'cap' || i.kind === 'spacer') && i.conflictTitle !== null ? [`${i.key} → ${i.conflictTitle.eventId}`] : []
     ));
     expect(titles(build(DAY, { now: at(7, '19:23') }))).toEqual(['gap-e5 → e5']);
-    expect(titles(build(DAY, { now: at(7, '19:23'), conflictsOnly: true }))).toEqual(['spacer-e5 → e5']);
+    expect(titles(build(DAY, { now: at(7, '19:23'), filter: 'conflicts' }))).toEqual(['spacer-e5 → e5']);
     expect(titles(build(B2B, { day: SAT, now: at(9, '10:00') }))).toEqual(['spacer-e2 → e2']);
     expect(titles(build(B2B, { day: SUN, now: at(9, '10:00') }))).toEqual(['cap-start → e4']);
   });
 
   it('reads after the festival exactly as before it', () => {
-    expect(build(DAY, { now: at(12, '12:00'), festival: false, maybe: true }))
-      .toEqual(build(DAY, { now: at(1, '12:00'), festival: false, maybe: true }));
+    expect(build(DAY, { now: at(12, '12:00'), festival: false, filter: 'maybe' }))
+      .toEqual(build(DAY, { now: at(1, '12:00'), festival: false, filter: 'maybe' }));
   });
 });
 

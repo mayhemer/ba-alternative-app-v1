@@ -124,6 +124,37 @@ describe('a Maybe pick', () => {
   });
 });
 
+describe('an unpicked set (All sets)', () => {
+  const unpicked = (over: Partial<PlanSetInput> = {}) => model({ level: 'none', ...over });
+
+  it('is a tall row, live and done like a Must-see', () => {
+    expect(unpicked().height).toBe(SET_ROW_HEIGHT.must);
+    expect(unpicked({ now: at('19:23') })).toMatchObject({ state: 'live', status: { kind: 'live', label: 'LIVE', time: '−37 min' } });
+    expect(unpicked({ now: at('20:00') })).toMatchObject({ state: 'past', status: { kind: 'done', label: 'done' } });
+  });
+
+  it('never clashes: no bars, no title, and no countdown to its start beside a live Must-see', () => {
+    const set = unpicked({
+      event: BATUSHKA,
+      now: at('19:23'),
+      overlaps: [{ from: at('19:40'), to: at('20:00') }],
+      liveMusts: [GOJIRA],
+      conflictHead: true,
+    });
+    expect(set.clashBars).toEqual([]);
+    expect(set.conflictHead).toBe(false);
+    expect(set.status).toEqual({ kind: 'none' });
+  });
+});
+
+describe('the star after the name', () => {
+  it('is a full star on a Must-see, a half star on a Maybe, and none on an unpicked set', () => {
+    expect(model().star).toBe('will_go');
+    expect(model({ level: 'maybe' }).star).toBe('maybe');
+    expect(model({ level: 'none' }).star).toBeNull();
+  });
+});
+
 it('gives a Must-see the tall row', () => {
   expect(model().height).toBe(SET_ROW_HEIGHT.must);
 });

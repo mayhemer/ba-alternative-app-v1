@@ -10,7 +10,7 @@ import { PlanProvider, usePlanFilters, usePlanStore } from './PlanContext';
 import { useInterest } from '../../features/interests/InterestContext';
 import { createDataCollector, populateCache, setInterest } from '../../cache/cacheService';
 import { setCurrentTimeMs } from '../../utils/clock';
-import { setPlanFilters, setScroll } from '../../store/uiStatePersistence';
+import { setPlanFilters, setScroll, type PlanLevel } from '../../store/uiStatePersistence';
 import { getFestivalDayStart } from '../../utils/festivalTime';
 import { rendersSinceReset, resetRenders } from '../../../tests/setup/countRenders';
 import type { DbArtist, DbCategory, DbEvent, DbStage } from '../../types/backend';
@@ -19,7 +19,7 @@ import type { DbArtist, DbCategory, DbEvent, DbStage } from '../../types/backend
 //
 // The screen and the now pill, mounted with their real providers, while each
 // input changes in turn. The inputs:
-//   filters   — Show Maybe picks; Show only conflicts
+//   filter    — All sets; Must-see and Maybe; Must-see only; Only conflicts
 //   interests — a pick changed (Must-see → don't go)
 //   events    — a set moved, added or removed by a cache sync
 //   time      — the minute tick; a new minute that ends a set
@@ -68,7 +68,7 @@ jest.mock('./PlanEmpty', () => {
   const actual = jest.requireActual('./PlanEmpty');
   return { ...actual, PlanEmpty: counted(actual.PlanEmpty) };
 });
-// The chrome's elements: each day button, the filter chip, each filter switch.
+// The chrome's elements: each day button, the filter chip, each filter button.
 jest.mock('../../features/timeline/DayButton', () => {
   const { counted } = require('../../../tests/setup/countRenders');
   const actual = jest.requireActual('../../features/timeline/DayButton');
@@ -79,10 +79,10 @@ jest.mock('./filter/PlanFilterChipView', () => {
   const actual = jest.requireActual('./filter/PlanFilterChipView');
   return { ...actual, PlanFilterChipView: counted(actual.PlanFilterChipView) };
 });
-jest.mock('./filter/PlanFilterSwitch', () => {
+jest.mock('./filter/PlanFilterLevel', () => {
   const { counted } = require('../../../tests/setup/countRenders');
-  const actual = jest.requireActual('./filter/PlanFilterSwitch');
-  return { ...actual, PlanFilterSwitch: counted(actual.PlanFilterSwitch) };
+  const actual = jest.requireActual('./filter/PlanFilterLevel');
+  return { ...actual, PlanFilterLevel: counted(actual.PlanFilterLevel) };
 });
 
 const SLUG = 'plantest';
@@ -111,6 +111,7 @@ const ARTISTS = [
   artist('batushka', 'Batushka'),
   artist('spectral', 'Spectral Wound'),
   artist('late', 'Late Addition'),
+  artist('ulcerate', 'Ulcerate'),
 ];
 
 const EVENTS: DbEvent[] = [
@@ -119,6 +120,8 @@ const EVENTS: DbEvent[] = [
   event('gojira', at(7, '19:00'), at(7, '20:00')),
   event('batushka', at(7, '19:40'), at(7, '20:30')),
   event('spectral', at(8, '12:30'), at(8, '13:10')),
+  // Never picked: listed under All sets only.
+  event('ulcerate', at(7, '21:00'), at(7, '21:45')),
 ];
 
 const STAGES: DbStage[] = [{ slug: SLUG, stageId: 's1', imageUrl: '', thumbUrl: '', localized: [{ language: 'en', name: 'Octagon' }] }];
@@ -136,8 +139,7 @@ function sync(events: DbEvent[]): void {
 // ── Harness ───────────────────────────────────────────────────────────────────
 
 type ControlHandles = {
-  toggleMaybe: () => void;
-  toggleConflictsOnly: () => void;
+  setLevel: (level: PlanLevel) => void;
   cycle: (artistId: string) => void;
   pickDay: (day: number) => void;
 };
@@ -145,12 +147,11 @@ type ControlHandles = {
 let controls: ControlHandles;
 
 function Controls() {
-  const { toggleMaybe, toggleConflictsOnly } = usePlanFilters();
+  const { setLevel } = usePlanFilters();
   const { cycleStatus } = useInterest();
   const store = usePlanStore();
   controls = {
-    toggleMaybe,
-    toggleConflictsOnly,
+    setLevel,
     cycle: (artistId) => { cycleStatus(artistId); },
     pickDay: (day) => { store.pickDay(day, at(7, '19:23')); },
   };
@@ -209,7 +210,7 @@ beforeEach(async () => {
   jest.useFakeTimers({ doNotFake: ['nextTick', 'queueMicrotask', 'performance', 'hrtime', 'Date'] });
   setCurrentTimeMs(at(7, '19:23'));
   // The filters persist across mounts: every case starts from the defaults.
-  setPlanFilters({ showMaybe: false, conflictsOnly: false });
+  setPlanFilters({ level: 'must' });
   sync(EVENTS);
   await setInterest(SLUG, 'hooded', 'will_go');
   await setInterest(SLUG, 'blood', 'maybe');
@@ -234,17 +235,26 @@ it('shows today at mount: the live set, the clashing one about to start, Maybes 
   expect(pill()).toBe('Gojira LIVE −37\u202Fmin');
 });
 
-it('lists the Maybes when they are switched on, and drops them when switched off', async () => {
+it('lists the Maybes under Must-see and Maybe, and drops them back under Must-see only', async () => {
   await mount();
-  await act(async () => { controls.toggleMaybe(); });
+  await act(async () => { controls.setLevel('maybe'); });
   expect(listTexts()).toContain('Blood Incantation');
-  await act(async () => { controls.toggleMaybe(); });
+  expect(listTexts()).not.toContain('Ulcerate');
+  await act(async () => { controls.setLevel('must'); });
   expect(listTexts()).not.toContain('Blood Incantation');
 });
 
-it('keeps only the clashing sets with only conflicts on', async () => {
+it('lists the sets you have not picked under All sets, and drops them back under Must-see only', async () => {
   await mount();
-  await act(async () => { controls.toggleConflictsOnly(); });
+  await act(async () => { controls.setLevel('all'); });
+  expect(listTexts()).toEqual(expect.arrayContaining(['Ulcerate', 'Blood Incantation', 'Gojira']));
+  await act(async () => { controls.setLevel('must'); });
+  expect(listTexts()).not.toContain('Ulcerate');
+});
+
+it('keeps only the clashing sets under Only conflicts', async () => {
+  await mount();
+  await act(async () => { controls.setLevel('conflicts'); });
   const texts = listTexts();
   expect(texts).not.toContain('Hooded Menace');
   expect(texts).toEqual(expect.arrayContaining(['Gojira', 'Batushka', 'Conflict']));
@@ -381,7 +391,7 @@ describe('render counts', () => {
 
   it('showing the Maybes renders the new Maybe and its gap, and the gap it shortened', async () => {
     await mountSettled();
-    await act(async () => { controls.toggleMaybe(); });
+    await act(async () => { controls.setLevel('maybe'); });
     expect(rendersSinceReset()).toEqual({ eblood: 1, 'gap-eblood': 1, 'gap-egojira': 1 });
   });
 
@@ -429,7 +439,7 @@ describe('commits', () => {
 
   it('showing the Maybes commits twice: the change, then the cell-window check', async () => {
     await mountSettled();
-    await act(async () => { controls.toggleMaybe(); });
+    await act(async () => { controls.setLevel('maybe'); });
     await settle();
     expect(commits).toBe(2);
   });
@@ -448,9 +458,9 @@ describe('commits', () => {
 // Mounted beside the screen as AppShell places them: the chip in the TopBar,
 // the day switcher in the BottomBar, the panel over the screen. The inputs that
 // reach them:
-//   filters   — Show only conflicts (stripes the days with a Must-see clash,
-//               turns the chip's state slot red, disables the Maybe switch);
-//               Show Maybe (the chip's star, the Maybe switch)
+//   filter    — Only conflicts (stripes the days with a Must-see clash, turns
+//               the chip's state slot red); each filter (the chip's glyph, the
+//               selected button); a filter button applies and closes the panel
 //   interests — a pick that ends or makes a clash
 //   events    — a sync that moves a set out of a clash, or adds one into a clash
 //   time      — the minute tick; the minute a new festival day starts (06:00)
@@ -478,21 +488,21 @@ describe('the chrome', () => {
   const striped = (day: number): boolean => screen.queryByTestId(`day-clash-${day}`) !== null;
   const isToday = (day: number): boolean => screen.queryByTestId(`day-today-${day}`) !== null;
   const selected = (day: number): unknown => screen.getByTestId(`day-${day}`).props.accessibilityState?.selected;
-  const switchState = (name: string): unknown => screen.getByRole('switch', { name }).props.accessibilityState;
+  const buttonSelected = (name: string): unknown => screen.getByRole('button', { name }).props.accessibilityState?.selected;
 
   it('stripes the day with a Must-see clash only while only conflicts are shown', async () => {
     await mountChrome();
     expect(striped(THU)).toBe(false);
-    await act(async () => { controls.toggleConflictsOnly(); });
+    await act(async () => { controls.setLevel('conflicts'); });
     expect(striped(THU)).toBe(true);
     expect(striped(FRI)).toBe(false);
-    await act(async () => { controls.toggleConflictsOnly(); });
+    await act(async () => { controls.setLevel('must'); });
     expect(striped(THU)).toBe(false);
   });
 
   it('drops the stripe when a changed pick ends the clash', async () => {
     await mountChrome();
-    await act(async () => { controls.toggleConflictsOnly(); });
+    await act(async () => { controls.setLevel('conflicts'); });
     // Must-see → don't go.
     await act(async () => { controls.cycle('batushka'); });
     expect(striped(THU)).toBe(false);
@@ -500,7 +510,7 @@ describe('the chrome', () => {
 
   it('follows a sync: a set moved out of the clash, and one added into a new one', async () => {
     await mountChrome();
-    await act(async () => { controls.toggleConflictsOnly(); });
+    await act(async () => { controls.setLevel('conflicts'); });
     await act(async () => {
       sync([
         ...EVENTS.map((e) => (e.artistId === 'batushka' ? { ...e, dateFrom: at(7, '21:00'), dateTo: at(7, '21:45') } : e)),
@@ -534,22 +544,43 @@ describe('the chrome', () => {
   it('shows each filter in the chip and the panel', async () => {
     await mountChrome();
     await fireEvent.press(screen.getByLabelText('Filters'));
-    expect(screen.getByTestId('plan-filter-state-maybe-off')).toBeTruthy();
-    await act(async () => { controls.toggleMaybe(); });
-    expect(screen.getByTestId('plan-filter-state-maybe-on')).toBeTruthy();
-    expect(switchState('Show Maybe picks')).toMatchObject({ checked: true, disabled: false });
-    await act(async () => { controls.toggleConflictsOnly(); });
+    expect(screen.getByTestId('plan-filter-state-must')).toBeTruthy();
+    expect(buttonSelected('Must-see only')).toBe(true);
+    await act(async () => { controls.setLevel('maybe'); });
+    expect(screen.getByTestId('plan-filter-state-maybe')).toBeTruthy();
+    expect(buttonSelected('Must-see and Maybe')).toBe(true);
+    expect(buttonSelected('Must-see only')).toBe(false);
+    await act(async () => { controls.setLevel('all'); });
+    expect(screen.getByTestId('plan-filter-state-all')).toBeTruthy();
+    expect(buttonSelected('All sets')).toBe(true);
+    await act(async () => { controls.setLevel('conflicts'); });
     expect(screen.getByTestId('plan-filter-state-conflicts')).toBeTruthy();
-    expect(switchState('Show Maybe picks')).toMatchObject({ checked: true, disabled: true });
-    expect(switchState('Show only conflicts')).toMatchObject({ checked: true });
+    expect(buttonSelected('Only conflicts')).toBe(true);
+  });
+
+  it('applies the filter of the button tapped and closes the panel, back to the list', async () => {
+    await mountChrome();
+    await fireEvent.press(screen.getByLabelText('Filters'));
+    await fireEvent.press(screen.getByRole('button', { name: 'All sets' }));
+    expect(screen.queryByRole('button', { name: 'All sets' })).toBeNull();
+    expect(screen.getByTestId('plan-filter-state-all')).toBeTruthy();
+    expect(listTexts()).toContain('Ulcerate');
+  });
+
+  it('closes the panel on a tap of the current filter too, changing nothing', async () => {
+    await mountChrome();
+    await fireEvent.press(screen.getByLabelText('Filters'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Must-see only' }));
+    expect(screen.queryByRole('button', { name: 'Must-see only' })).toBeNull();
+    expect(screen.getByTestId('plan-filter-state-must')).toBeTruthy();
   });
 
   // Which chrome elements render again after one change, by key: `day-<day>`
-  // per day button, `plan-filter-chip`, `switch-maybe` and `switch-conflicts`.
+  // per day button, `plan-filter-chip`, and `level-<filter>` per filter button.
   // The list's own elements are counted too, so each case lists only the keys
   // it expects; everything else must be absent.
   describe('render counts', () => {
-    const CHROME = /^(day-|plan-filter-chip|switch-)/;
+    const CHROME = /^(day-|plan-filter-chip|level-)/;
     const chromeRenders = (): Record<string, number> =>
       Object.fromEntries(Object.entries(rendersSinceReset()).filter(([key]) => CHROME.test(key)));
 
@@ -581,27 +612,27 @@ describe('the chrome', () => {
       expect(chromeRenders()).toEqual({ [`day-${THU}`]: 1, [`day-${FRI}`]: 1 });
     });
 
-    it('opening the panel renders the chip, and mounts the two switches', async () => {
+    it('opening the panel renders the chip, and mounts the four filter buttons', async () => {
       await mountSettled();
       await fireEvent.press(screen.getByLabelText('Filters'));
-      expect(chromeRenders()).toEqual({ 'plan-filter-chip': 1, 'switch-maybe': 1, 'switch-conflicts': 1 });
+      expect(chromeRenders()).toEqual({ 'plan-filter-chip': 1, 'level-all': 1, 'level-maybe': 1, 'level-must': 1, 'level-conflicts': 1 });
     });
 
-    it('showing the Maybes renders the chip and the Maybe switch, and no day button', async () => {
+    it('showing the Maybes renders the chip and the two buttons whose selection changed, and no day button', async () => {
       await mountSettled(true);
-      await act(async () => { controls.toggleMaybe(); });
-      expect(chromeRenders()).toEqual({ 'plan-filter-chip': 1, 'switch-maybe': 1 });
+      await act(async () => { controls.setLevel('maybe'); });
+      expect(chromeRenders()).toEqual({ 'plan-filter-chip': 1, 'level-must': 1, 'level-maybe': 1 });
     });
 
-    it('showing only conflicts renders the striped day, the chip and both switches', async () => {
+    it('showing only conflicts renders the striped day, the chip and the two buttons whose selection changed', async () => {
       await mountSettled(true);
-      await act(async () => { controls.toggleConflictsOnly(); });
-      expect(chromeRenders()).toEqual({ [`day-${THU}`]: 1, 'plan-filter-chip': 1, 'switch-maybe': 1, 'switch-conflicts': 1 });
+      await act(async () => { controls.setLevel('conflicts'); });
+      expect(chromeRenders()).toEqual({ [`day-${THU}`]: 1, 'plan-filter-chip': 1, 'level-must': 1, 'level-conflicts': 1 });
     });
 
     it('a changed pick with only conflicts shown renders only the day whose stripe went', async () => {
       await mountSettled();
-      await act(async () => { controls.toggleConflictsOnly(); });
+      await act(async () => { controls.setLevel('conflicts'); });
       resetRenders();
       await act(async () => { controls.cycle('batushka'); });
       expect(chromeRenders()).toEqual({ [`day-${THU}`]: 1 });

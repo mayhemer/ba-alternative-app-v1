@@ -3,68 +3,63 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 import { PlanFilterChipView } from './PlanFilterChipView';
 import { PlanFilterPanelView } from './PlanFilterPanel';
 import { planFilterChipModel } from './PlanFilterChip.model';
-import { planFilterSwitchModels } from './PlanFilterSwitch.model';
+import { planFilterLevelModels } from './PlanFilterLevel.model';
+import type { PlanLevel } from '../../../store/uiStatePersistence';
 
 // ── The plan's filter chip and panel ──────────────────────────────────────────
 //
 // "State + menu", like the lens chip: the state slot tells which filter is on
-// without opening anything, the panel holds the two switches. Both draw their
-// models (PlanFilterChip.model.ts, PlanFilterSwitch.model.ts, tested there).
+// without opening anything; the panel holds one button per filter, glyphs
+// only. Both draw their models (PlanFilterChip.model.ts,
+// PlanFilterLevel.model.ts, tested there). That a tap also closes the panel is
+// the connected panel's job, tested with the screen (MyPlanScreen.test.tsx).
 
 describe('PlanFilterChipView', () => {
-  it('shows the half star, filled while Maybe picks are shown', async () => {
-    const { rerender } = await render(<PlanFilterChipView item={planFilterChipModel({ showMaybe: false, conflictsOnly: false, isOpen: false })} onPress={jest.fn()} />);
-    expect(screen.getByTestId('plan-filter-state-maybe-off')).toBeTruthy();
-
-    await rerender(<PlanFilterChipView item={planFilterChipModel({ showMaybe: true, conflictsOnly: false, isOpen: false })} onPress={jest.fn()} />);
-    expect(screen.getByTestId('plan-filter-state-maybe-on')).toBeTruthy();
-  });
-
-  it('shows the warning sign while only conflicts are shown', async () => {
-    await render(<PlanFilterChipView item={planFilterChipModel({ showMaybe: true, conflictsOnly: true, isOpen: false })} onPress={jest.fn()} />);
-    expect(screen.getByTestId('plan-filter-state-conflicts')).toBeTruthy();
-    expect(screen.queryByTestId('plan-filter-state-maybe-on')).toBeNull();
+  it.each([
+    ['all', 'plan-filter-state-all'],
+    ['maybe', 'plan-filter-state-maybe'],
+    ['must', 'plan-filter-state-must'],
+    ['conflicts', 'plan-filter-state-conflicts'],
+  ] as const)('shows the %s filter\'s glyph', async (level, testID) => {
+    await render(<PlanFilterChipView item={planFilterChipModel({ level, isOpen: false })} onPress={jest.fn()} />);
+    expect(screen.getByTestId(testID)).toBeTruthy();
   });
 
   it('says whether the panel is open', async () => {
-    await render(<PlanFilterChipView item={planFilterChipModel({ showMaybe: false, conflictsOnly: false, isOpen: true })} onPress={jest.fn()} />);
+    await render(<PlanFilterChipView item={planFilterChipModel({ level: 'must', isOpen: true })} onPress={jest.fn()} />);
     expect(screen.getByLabelText('Filters').props.accessibilityState).toMatchObject({ expanded: true });
   });
 
   it('opens the panel', async () => {
     const onPress = jest.fn();
-    await render(<PlanFilterChipView item={planFilterChipModel({ showMaybe: false, conflictsOnly: false, isOpen: false })} onPress={onPress} />);
+    await render(<PlanFilterChipView item={planFilterChipModel({ level: 'must', isOpen: false })} onPress={onPress} />);
     await fireEvent.press(screen.getByLabelText('Filters'));
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 });
 
 describe('PlanFilterPanelView', () => {
-  async function renderPanel(filters: { showMaybe: boolean; conflictsOnly: boolean } = { showMaybe: false, conflictsOnly: false }) {
-    const handlers = { onToggle: jest.fn(), onClose: jest.fn() };
-    await render(<PlanFilterPanelView switches={planFilterSwitchModels(filters)} {...handlers} />);
+  async function renderPanel(level: PlanLevel = 'must') {
+    const handlers = { onPick: jest.fn(), onClose: jest.fn() };
+    await render(<PlanFilterPanelView levels={planFilterLevelModels(level)} {...handlers} />);
     return handlers;
   }
 
-  it('has the two switches, reflecting their state', async () => {
-    await renderPanel({ showMaybe: true, conflictsOnly: false });
-    expect(screen.getByRole('switch', { name: 'Show Maybe picks' }).props.accessibilityState).toMatchObject({ checked: true });
-    expect(screen.getByRole('switch', { name: 'Show only conflicts' }).props.accessibilityState).toMatchObject({ checked: false });
+  it('has a button per filter, named for screen readers, the current one selected', async () => {
+    await renderPanel('maybe');
+    const selected = (name: string): unknown => screen.getByRole('button', { name }).props.accessibilityState?.selected;
+    expect(selected('All sets')).toBe(false);
+    expect(selected('Must-see and Maybe')).toBe(true);
+    expect(selected('Must-see only')).toBe(false);
+    expect(selected('Only conflicts')).toBe(false);
   });
 
-  it('toggles each filter', async () => {
-    const { onToggle } = await renderPanel();
-    await fireEvent.press(screen.getByRole('switch', { name: 'Show Maybe picks' }));
-    await fireEvent.press(screen.getByRole('switch', { name: 'Show only conflicts' }));
-    expect(onToggle.mock.calls).toEqual([['showMaybe'], ['conflictsOnly']]);
-  });
-
-  it('disables the Maybe switch while only conflicts are shown', async () => {
-    const { onToggle } = await renderPanel({ showMaybe: false, conflictsOnly: true });
-    const maybe = screen.getByRole('switch', { name: 'Show Maybe picks' });
-    expect(maybe.props.accessibilityState).toMatchObject({ disabled: true });
-    await fireEvent.press(maybe);
-    expect(onToggle).not.toHaveBeenCalled();
+  it('picks the filter of the button tapped, the current one too', async () => {
+    const { onPick } = await renderPanel('must');
+    await fireEvent.press(screen.getByRole('button', { name: 'All sets' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Only conflicts' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Must-see only' }));
+    expect(onPick.mock.calls).toEqual([['all'], ['conflicts'], ['must']]);
   });
 
   it('closes on a tap outside the card', async () => {

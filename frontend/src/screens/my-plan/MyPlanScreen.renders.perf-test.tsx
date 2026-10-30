@@ -11,7 +11,7 @@ import { MEASURE_OPTIONS } from '../../../tests/setup/perfOptions';
 import { PlanProvider, usePlanFilters, usePlanStore } from './PlanContext';
 import { useInterestCycle } from '../../features/interests/InterestContext';
 import { createDataCollector, getFestivalDays, hydrateInterests, populateCache, setInterest } from '../../cache/cacheService';
-import { setPlanFilters } from '../../store/uiStatePersistence';
+import { setPlanFilters, type PlanLevel } from '../../store/uiStatePersistence';
 import { isConflictEligible } from '../../features/conflicts/conflictUtils';
 import { setCurrentTimeMs } from '../../utils/clock';
 import { getFestivalDayStart } from '../../utils/festivalTime';
@@ -91,7 +91,7 @@ afterAll(() => {
 /** Every run starts from the same picks, filters and time: all of them persist. */
 async function startingState(): Promise<void> {
   setCurrentTimeMs(NOW);
-  setPlanFilters({ showMaybe: false, conflictsOnly: false });
+  setPlanFilters({ level: 'must' });
   for (const [artistId, status] of Object.entries(PICKS)) {
     await setInterest(SLUG, artistId, status);
   }
@@ -104,8 +104,7 @@ async function settle(): Promise<void> {
 
 // Reaches the filters, the picks and the shown day the way the UI does, without
 // mounting the chrome that is not under measurement.
-let toggleMaybe: () => void;
-let toggleConflictsOnly: () => void;
+let setLevel: (level: PlanLevel) => void;
 let cycle: (artistId: string) => void;
 let pickDay: (day: number) => void;
 
@@ -113,8 +112,7 @@ function Controls() {
   const filters = usePlanFilters();
   const { cycleStatus } = useInterestCycle();
   const store = usePlanStore();
-  toggleMaybe = filters.toggleMaybe;
-  toggleConflictsOnly = filters.toggleConflictsOnly;
+  setLevel = filters.setLevel;
   cycle = (artistId) => { cycleStatus(artistId); };
   pickDay = (day) => { store.pickDay(day, NOW); };
   return null;
@@ -173,7 +171,7 @@ test('My plan: a new minute', async () => {
 test('My plan: showing Maybe picks', async () => {
   await measure(async () => {
     await settle();
-    await act(async () => { toggleMaybe(); });
+    await act(async () => { setLevel('maybe'); });
     await settle();
   });
 });
@@ -226,7 +224,7 @@ test('My plan chrome: opening the filter panel', async () => {
 test('My plan chrome: showing only conflicts', async () => {
   await measureChrome(async () => {
     await settle();
-    await act(async () => { toggleConflictsOnly(); });
+    await act(async () => { setLevel('conflicts'); });
     await settle();
   });
 });

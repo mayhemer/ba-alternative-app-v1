@@ -77,7 +77,7 @@ export function MyPlanScreen() {
     [categories],
   );
   const now = useMinuteNow();
-  const { showMaybe, conflictsOnly } = usePlanFilters();
+  const { level } = usePlanFilters();
   const { close: closePanel } = usePlanPanel();
   const store = usePlanStore();
   const storeVersion = usePlanStoreVersion();
@@ -88,8 +88,8 @@ export function MyPlanScreen() {
 
   const duringFestival = festivalToday(festivalDays, now) !== null;
   const items = useMemo<PlanItem[]>(
-    () => (day === 0 ? [] : buildPlanDay(interests, { artists, stages, artistEvents }, { dayStart: day, now, duringFestival, showMaybe, conflictsOnly })),
-    [day, interests, artists, stages, artistEvents, now, duringFestival, showMaybe, conflictsOnly],
+    () => (day === 0 ? [] : buildPlanDay(interests, { artists, stages, artistEvents }, { dayStart: day, now, duringFestival, level })),
+    [day, interests, artists, stages, artistEvents, now, duringFestival, level],
   );
   const offsets = useMemo(() => itemOffsets(items), [items]);
 

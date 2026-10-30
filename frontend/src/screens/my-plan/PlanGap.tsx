@@ -12,16 +12,16 @@ import { colors } from '../../styling/tokens';
 // ── A gap between sets ────────────────────────────────────────────────────────
 //
 // A dotted rail and its label; the current one adds the blue fill and the now
-// arrow, and counts down in bold, or, to a Maybe, smaller in a dashed box (the
-// Maybe's own outline), so it reads apart from the pill's countdown to the next
+// arrow, and counts down in bold, or, to a set that isn't a Must-see, smaller in
+// a box shaped like that set's outline (dashed for a Maybe, solid for an
+// unpicked set), so it reads apart from the pill's countdown to the next
 // Must-see. The one above a clash group carries its "Conflict" title. Draws its
 // model (PlanGap.model.ts) and computes nothing itself.
 
 type Props = { item: PlanGapModel; onPressConflict?: (event: DbEvent) => void };
 
-const MAYBE_COUNTDOWN_BOX = {
+const COUNTDOWN_BOX = {
   borderWidth: 1,
-  borderStyle: 'dashed' as const,
   borderColor: colors.breakBlue,
   borderRadius: 4,
   paddingHorizontal: 8,
@@ -32,9 +32,9 @@ function GapLabel({ item }: { item: PlanGapModel }) {
   if (!item.current) {
     return <Text style={[TABULAR, { fontSize: 12, color: colors.muted }]}>{item.label}</Text>;
   }
-  if (item.countdownToMaybe) {
+  if (item.countdownBox !== null) {
     return (
-      <View testID="plan-gap-maybe-box" style={MAYBE_COUNTDOWN_BOX}>
+      <View testID="plan-gap-countdown-box" style={[COUNTDOWN_BOX, { borderStyle: item.countdownBox }]}>
         <Text style={[TABULAR, { fontSize: 13, lineHeight: 18, color: colors.breakBlue }]}>{item.label}</Text>
       </View>
     );

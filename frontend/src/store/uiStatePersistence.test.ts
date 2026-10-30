@@ -6,6 +6,7 @@ import {
   hydrateLocalState,
   setHiddenCategories,
   setLensScope,
+  setPlanFilters,
   setScroll,
   setSelectedDay,
 } from './uiStatePersistence';
@@ -24,6 +25,7 @@ const KEY_SCROLL = 'timeline:scrollPositions:v2';
 const KEY_DAY = 'timeline:selectedDayStart';
 const KEY_HIDDEN = 'timeline:hiddenCategories';
 const KEY_LENS = 'lens:scope:v2';
+const KEY_PLAN_FILTERS = 'plan:filters';
 const DEBOUNCE_MS = 300;
 
 const DAY = Date.parse('2026-08-05T00:00:00+02:00');
@@ -218,5 +220,40 @@ describe('the lens scope', () => {
     await flush();
 
     expect(setItem).toHaveBeenCalledWith(KEY_LENS, JSON.stringify({ kind: 'me', level: 'maybe' }));
+  });
+});
+
+describe('My plan\'s filter', () => {
+  afterEach(() => {
+    setPlanFilters({ level: 'must' });
+  });
+
+  it('is restored at startup', async () => {
+    await AsyncStorage.setItem(KEY_PLAN_FILTERS, JSON.stringify({ level: 'all' }));
+
+    await hydrateLocalState('ba2025');
+
+    expect(getUiState('planFilters')).toEqual({ level: 'all' });
+  });
+
+  it.each([
+    [{ showMaybe: false, conflictsOnly: true }, 'conflicts'],
+    [{ showMaybe: true, conflictsOnly: true }, 'conflicts'],
+    [{ showMaybe: true, conflictsOnly: false }, 'maybe'],
+    [{ showMaybe: false, conflictsOnly: false }, 'must'],
+  ])('loads the two switches an older build saved, %j, as %s', async (stored, level) => {
+    await AsyncStorage.setItem(KEY_PLAN_FILTERS, JSON.stringify(stored));
+
+    await hydrateLocalState('ba2025');
+
+    expect(getUiState('planFilters')).toEqual({ level });
+  });
+
+  it('falls back to Must-see only for a filter it does not know', async () => {
+    await AsyncStorage.setItem(KEY_PLAN_FILTERS, JSON.stringify({ level: 'everything' }));
+
+    await hydrateLocalState('ba2025');
+
+    expect(getUiState('planFilters')).toEqual({ level: 'must' });
   });
 });
