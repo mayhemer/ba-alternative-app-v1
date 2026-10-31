@@ -262,3 +262,69 @@ describe('computeConflictOverlaps', () => {
     }
   });
 });
+
+// ── Overlap bars: how a set's overlaps merge ──────────────────────────────────
+//
+// Dimensions, for one set clashing with two others:
+//   the two overlaps — apart (two bars); overlapping each other (one bar, the
+//                      later end); one inside the other (one bar, the outer);
+//                      meeting end to start (one bar)
+//   input order      — the later overlap listed first, so the bars must be sorted
+// Every set of each case is checked, so a bar merged for one set cannot change
+// another's. Times are hours after 18:00; every set is a Must-see.
+
+describe('computeConflictOverlaps: merging a set\'s overlaps', () => {
+  function overlapsOf(specs: [string, number, number][]): Record<string, [number, number][]> {
+    const artists = specs.map(([id]) => ({ artistId: `a${id}`, name: `A${id}` } as DbArtist));
+    const artistEvents = Object.fromEntries(specs.map(([id, from, to]) => [`a${id}`, [event(id, from, to)]]));
+    const interests = Object.fromEntries(specs.map(([id]) => [`a${id}`, 'will_go']));
+    const overlaps = computeConflictOverlaps(interests, { artists, stages: [], artistEvents });
+    return Object.fromEntries([...overlaps].map(([id, intervals]) =>
+      [id, intervals.map(({ from, to }): [number, number] => [(from - T0) / HOUR, (to - T0) / HOUR])]));
+  }
+
+  it('gives a set clashing on either side two bars with the gap left clear, in time order', () => {
+    // 1 (0–2) meets 2 at 1.5–2 and 3 at 0–0.5; 2 is listed first.
+    expect(overlapsOf([['1', 0, 2], ['2', 1.5, 2.5], ['3', -0.5, 0.5]])).toEqual({
+      '1': [[0, 0.5], [1.5, 2]],
+      '2': [[1.5, 2]],
+      '3': [[0, 0.5]],
+    });
+  });
+
+  it('merges two overlaps that overlap each other into one bar, to the later end', () => {
+    // 1 (0–2) meets 2 at 0.5–1.25 and 3 at 1–1.5; 2 and 3 clash at 1–1.25.
+    expect(overlapsOf([['1', 0, 2], ['2', 0.5, 1.25], ['3', 1, 1.5]])).toEqual({
+      '1': [[0.5, 1.5]],
+      '2': [[0.5, 1.25]],
+      '3': [[1, 1.5]],
+    });
+  });
+
+  it('adds nothing for an overlap inside another one', () => {
+    // 1 (0–2) meets 2 at 0.25–1.75 and 3 at 0.5–1, which lies inside it.
+    expect(overlapsOf([['1', 0, 2], ['2', 0.25, 1.75], ['3', 0.5, 1]])).toEqual({
+      '1': [[0.25, 1.75]],
+      '2': [[0.25, 1.75]],
+      '3': [[0.5, 1]],
+    });
+  });
+
+  it('joins two overlaps that meet end to start into one bar', () => {
+    // 1 (0–2) meets 2 at 0.5–1 and 3 at 1–1.5; 2 and 3 are back to back, no clash.
+    expect(overlapsOf([['1', 0, 2], ['2', 0.5, 1], ['3', 1, 1.5]])).toEqual({
+      '1': [[0.5, 1.5]],
+      '2': [[0.5, 1]],
+      '3': [[1, 1.5]],
+    });
+  });
+});
+
+describe('computeConflictEntries: back to back', () => {
+  it('finds no clash between two Must-sees where one ends as the other starts', () => {
+    const specs: [string, number, number][] = [['1', 0, 1], ['2', 1, 2]];
+    const artists = specs.map(([id]) => ({ artistId: `a${id}`, name: `A${id}` } as DbArtist));
+    const artistEvents = Object.fromEntries(specs.map(([id, from, to]) => [`a${id}`, [event(id, from, to)]]));
+    expect(computeConflictEntries({ a1: 'will_go', a2: 'will_go' }, { artists, stages: [], artistEvents })).toEqual([]);
+  });
+});
