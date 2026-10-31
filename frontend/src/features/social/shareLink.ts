@@ -1,4 +1,5 @@
 import { Platform, Share } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 
 export type ShareResult = 'shared' | 'copied' | 'dismissed';
 
@@ -28,14 +29,12 @@ export async function shareLink(url: string, message?: string): Promise<ShareRes
   return result.action === Share.dismissedAction ? 'dismissed' : 'shared';
 }
 
-// Copies text to the clipboard where supported (web). Returns true on success.
+// Copies text to the clipboard, on the phone as on the web (expo-clipboard).
+// Returns whether it got there; a failure is an answer, not an exception.
 export async function copyToClipboard(text: string): Promise<boolean> {
-  if (Platform.OS === 'web') {
-    const nav = globalThis.navigator as Navigator | undefined;
-    if (nav?.clipboard !== undefined) {
-      await nav.clipboard.writeText(text);
-      return true;
-    }
+  try {
+    return await Clipboard.setStringAsync(text);
+  } catch {
+    return false;
   }
-  return false;
 }
