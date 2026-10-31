@@ -98,6 +98,7 @@ On every screen that has a top bar. On festival days it replaces the logo while 
 - **⋮** turns accent while the panel is open.
 - **Panel:** tapping drops a panel from under the top bar, like the lens panel, with a dimmed backdrop. It holds one row of four buttons, glyphs only, in the order above; the current one has an accent border on a raised background. Each button's accessibility label names its filter.
   - **Tapping a button applies its filter and closes the panel**, back to the list, the current one too.
+  - **Below the buttons, the lens panel's "My schedule" section**, the same element (`features/social/MyScheduleShare`): signed out, *Sign in* (to Settings, closing the panel); signed in, *Share my schedule* (*Share again* once shared) with *Copy link* and *Revoke* while a share exists.
 - **Persistence:** the filter is saved through `uiStatePersistence`. A filter saved by an older build (two switches) loads as: only conflicts → **Only conflicts**; Maybe picks shown → **Must-see and Maybe**; else **Must-see only**.
 
 ---

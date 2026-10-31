@@ -41,7 +41,7 @@ src/
     interests/      #   picks (Must-see / Maybe / …), the star
     social/         #   friends, the lens, share links
   shell/          # The frame around screens: AppShell, top/bottom bar, drawer, toast, ScreenUIContext
-  ui/             # Reusable pieces with no festival knowledge (Text, chip frame, stripes, sameProps)
+  ui/             # Reusable pieces with no festival knowledge (Text, chip frame, panel section label, stripes, sameProps)
   hooks/          # General React hooks (layout mode, minute clock, overlays, bottom sheets)
   utils/          # General helpers, no React (festival time and days, colour, text fit, perf marks)
 

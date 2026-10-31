@@ -575,6 +575,17 @@ describe('the chrome', () => {
     expect(screen.getByTestId('plan-filter-state-must')).toBeTruthy();
   });
 
+  // The same section as the lens panel's (MyScheduleShare, tested there);
+  // signed out here, so it asks to sign in.
+  it('ends the panel with my schedule, whose Sign in closes the panel', async () => {
+    await mountChrome();
+    await fireEvent.press(screen.getByLabelText('Filters'));
+    expect(screen.getByText('My schedule')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('link', { name: 'Sign in' }));
+    expect(screen.queryByText('My schedule')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'All sets' })).toBeNull();
+  });
+
   // Which chrome elements render again after one change, by key: `day-<day>`
   // per day button, `plan-filter-chip`, and `level-<filter>` per filter button.
   // The list's own elements are counted too, so each case lists only the keys

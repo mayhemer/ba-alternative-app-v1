@@ -1,22 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  View,
-} from 'react-native';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { Text } from '../../ui/Text';
+import { Pressable, ScrollView, View } from 'react-native';
+import { PanelSectionLabel } from '../../ui/PanelSectionLabel';
 import { LensScopeRow } from './LensScopeRow';
 import { lensPanelModel, type LensScopeRowModel } from './LensPanel.model';
 import { useLens, useLensPanel } from './LensContext';
 import { useSocialData, useSocialActions } from './SocialContext';
-import { useAuth } from '../../auth/AuthContext';
-import { useFeedback } from '../../shell/ScreenUIContext';
+import { MyScheduleShare } from './MyScheduleShare';
 import { useInterestCycle } from '../interests/InterestContext';
 import { type LensScope } from '../interests/interestUtils';
-import { shareLink, copyToClipboard } from './shareLink';
-import { navigationRef } from '../../navigation/navigationRef';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
 import {
   colors,
@@ -25,37 +16,15 @@ import {
   OVERLAY_PANEL_MAX_WIDTH,
 } from '../../styling/tokens';
 
-// ── Section header ──────────────────────────────────────────────────────────────
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <Text
-      style={{
-        color: colors.textSecondary,
-        fontSize: 11,
-        letterSpacing: 1.5,
-        textTransform: 'uppercase',
-        marginBottom: 6,
-        marginTop: 4,
-      }}
-    >
-      {children}
-    </Text>
-  );
-}
-
 // ── Panel ─────────────────────────────────────────────────────────────────────
 
 export function LensPanel() {
   const { isOpen, close } = useLensPanel();
   const { scope, setScope } = useLens();
   const { isWide, height, bottomClearance } = useLayoutMode();
-  const { friends, myShare } = useSocialData();
-  const { shareMine, revokeMine, removeFriend, refreshFriend } = useSocialActions();
+  const { friends } = useSocialData();
+  const { removeFriend, refreshFriend } = useSocialActions();
   const { refreshFromServer } = useInterestCycle();
-  const { isLoggedIn } = useAuth();
-  const showFeedback = useFeedback();
-  const [busy, setBusy] = useState(false);
 
   // Removing a friend is destructive and was a single tap away, so the ✕ now
   // only arms the row; a second, differently-placed tap confirms. Held here
@@ -87,8 +56,8 @@ export function LensPanel() {
   );
 
   const model = useMemo(
-    () => lensPanelModel({ scope, friends, pendingRemove, isLoggedIn, hasShare: myShare !== null }),
-    [scope, friends, pendingRemove, isLoggedIn, myShare],
+    () => lensPanelModel({ scope, friends, pendingRemove }),
+    [scope, friends, pendingRemove],
   );
 
   // While armed, a friend's row is an escape hatch rather than a selector:
@@ -116,45 +85,6 @@ export function LensPanel() {
     },
     [removeFriend, setScope],
   );
-
-  // The panel renders above NavigationContainer, so it navigates through the
-  // module-level ref rather than useNavigation.
-  const goToSettings = useCallback(() => {
-    if (navigationRef.isReady()) {
-      navigationRef.navigate('Settings');
-    }
-    close();
-  }, [close]);
-
-  const handleShareMine = useCallback(async () => {
-    setBusy(true);
-    try {
-      const share = await shareMine();
-      const result = await shareLink(share.url, 'Check out my festival schedule');
-      if (result === 'copied') { showFeedback('Link copied', 'confirmation'); }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Could not create link';
-      showFeedback(message, 'warning');
-    } finally {
-      setBusy(false);
-    }
-  }, [shareMine, showFeedback]);
-
-  const handleCopyMine = useCallback(async () => {
-    if (myShare === null) { return; }
-    const ok = await copyToClipboard(myShare.url);
-    showFeedback(ok ? 'Link copied' : myShare.url, 'confirmation');
-  }, [myShare, showFeedback]);
-
-  const handleRevokeMine = useCallback(async () => {
-    setBusy(true);
-    try {
-      await revokeMine();
-      showFeedback('Share link revoked', 'confirmation');
-    } finally {
-      setBusy(false);
-    }
-  }, [revokeMine, showFeedback]);
 
   if (!isOpen) { return null; }
 
@@ -200,7 +130,7 @@ export function LensPanel() {
       >
         <ScrollView keyboardShouldPersistTaps="handled">
           {/* ── SHOW ─────────────────────────────────────────────── */}
-          <SectionLabel>Show</SectionLabel>
+          <PanelSectionLabel>Show</PanelSectionLabel>
 
           {model.rows.map((row) => (
             <LensScopeRow
@@ -214,59 +144,7 @@ export function LensPanel() {
           ))}
 
           {/* ── MY SCHEDULE ──────────────────────────────────────── */}
-          <View style={{ height: 1, backgroundColor: colors.border, marginVertical: 10 }} />
-          <SectionLabel>My schedule</SectionLabel>
-
-          {model.mySchedule.kind === 'signed-out' ? (
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                paddingHorizontal: 8,
-                paddingVertical: 8,
-              }}
-            >
-              <Pressable
-                onPress={goToSettings}
-                hitSlop={20}
-                accessibilityRole="link"
-                accessibilityLabel="Sign in"
-              >
-                <Text style={{ color: colors.accent, fontSize: 13, fontFamily: 'Bold-Default' }}>
-                  Sign in
-                </Text>
-              </Pressable>
-              <Text style={{ color: colors.notInterested, fontSize: 13 }}>
-                {' to share your schedule.'}
-              </Text>
-            </View>
-          ) : (
-            <>
-              <Pressable
-                onPress={handleShareMine}
-                disabled={busy}
-                style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 8 }}
-              >
-                <Ionicons name="share-outline" size={20} color={colors.accent} style={{ marginRight: 10 }} />
-                <Text style={{ color: colors.textPrimary, fontSize: 15, flex: 1 }}>
-                  {model.mySchedule.shareLabel}
-                </Text>
-                {busy && <ActivityIndicator size="small" color={colors.notInterested} />}
-              </Pressable>
-
-              {model.mySchedule.canCopyOrRevoke && (
-                <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8 }}>
-                  <Pressable onPress={handleCopyMine} style={{ paddingVertical: 8, paddingRight: 16 }}>
-                    <Text style={{ color: colors.accent, fontSize: 14 }}>Copy link</Text>
-                  </Pressable>
-                  <Pressable onPress={handleRevokeMine} style={{ paddingVertical: 8 }}>
-                    <Text style={{ color: colors.danger, fontSize: 14 }}>Revoke</Text>
-                  </Pressable>
-                </View>
-              )}
-            </>
-          )}
+          <MyScheduleShare onClose={close} />
         </ScrollView>
       </View>
     </>
