@@ -78,8 +78,9 @@ export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress }:
   // model), so the support timeline aims at its own first set, not the main
   // stage's.
 
-  // Read imperatively by the persist guard, which must keep a stable identity —
-  // it feeds useAnimatedScrollHandler's dependency list.
+  // Read imperatively by the persist guard, which must keep a stable identity:
+  // the scroll handler's worklets capture it, and Reanimated rebuilds the
+  // handler whenever a captured value changes.
   const firstEventMsRef = useRef(firstEventMs);
   firstEventMsRef.current = firstEventMs;
 
@@ -149,7 +150,7 @@ export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress }:
     onMomentumEnd: (event) => {
       scheduleOnRN(persistCurrentScroll, event.contentOffset.x);
     },
-  }, [persistCurrentScroll]);
+  });
 
   // Vertical offset of the lane stack. Only ever read at the moment of a day
   // switch, to know which lanes to mount first, so a coarsely-sampled ref is
