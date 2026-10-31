@@ -202,31 +202,31 @@ it('gives an unpicked row its category\'s border and no background', async () =>
   expect(style.height).toBe(58);
 });
 
-it('puts a full star right after a Must-see\'s name, in the name\'s line', async () => {
+it('puts no star on a Must-see', async () => {
   await renderRow(item('Gojira', '19:23'));
-  const line = screen.getByText('Gojira').parent!;
-  expect(within(line).getByTestId('plan-star-will_go')).toBeTruthy();
-  expect(screen.queryByTestId('plan-star-maybe')).toBeNull();
+  expect(screen.getByText('Gojira')).toBeTruthy();
+  expect(screen.queryByTestId(/^plan-star/)).toBeNull();
 });
 
-it('puts a half star right after a Maybe\'s name, in the name\'s line', async () => {
-  await renderRow(item('Paysage', '19:23'));
-  const line = screen.getByText('Paysage').parent!;
-  expect(within(line).getByTestId('plan-star-maybe')).toBeTruthy();
-});
-
-it('puts no star on an unpicked set', async () => {
+it('puts an empty star at the right end of an unpicked set\'s name line, the name taking the room before it', async () => {
   await renderRow(item('Ulcerate', '19:23'));
-  expect(screen.queryByTestId('plan-star-will_go')).toBeNull();
-  expect(screen.queryByTestId('plan-star-maybe')).toBeNull();
+  const name = screen.getByText('Ulcerate');
+  expect(within(name.parent!).getByTestId('plan-star-empty')).toBeTruthy();
+  expect(StyleSheet.flatten(name.props.style).flexGrow).toBe(1);
+});
+
+it('puts no star on a Maybe', async () => {
+  await renderRow(item('Paysage', '19:23'));
+  expect(screen.getByText('Paysage')).toBeTruthy();
+  expect(screen.queryByTestId(/^plan-star/)).toBeNull();
 });
 
 it('cuts a long name off before the star, which never shrinks', async () => {
-  await renderRow(item('Gojira', '19:23'));
-  const name = screen.getByText('Gojira');
+  await renderRow(item('Ulcerate', '19:23'));
+  const name = screen.getByText('Ulcerate');
   expect(name.props.numberOfLines).toBe(1);
   expect(StyleSheet.flatten(name.props.style).flexShrink).toBe(1);
-  expect(StyleSheet.flatten(screen.getByTestId('plan-star-will_go').props.style).flexShrink).toBe(0);
+  expect(StyleSheet.flatten(screen.getByTestId('plan-star-empty').props.style).flexShrink).toBe(0);
 });
 
 // ── A past row: slightly dimmed, with faint grey stripes ──────────────────────

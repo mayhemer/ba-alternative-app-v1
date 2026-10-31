@@ -147,11 +147,11 @@ describe('an unpicked set (All sets)', () => {
   });
 });
 
-describe('the star after the name', () => {
-  it('is a full star on a Must-see, a half star on a Maybe, and none on an unpicked set', () => {
-    expect(model().star).toBe('will_go');
-    expect(model({ level: 'maybe' }).star).toBe('maybe');
-    expect(model({ level: 'none' }).star).toBeNull();
+describe('the empty star at the end of the name line', () => {
+  it('is on an unpicked set only, not on a Must-see or a Maybe', () => {
+    expect(model({ level: 'none' }).emptyStar).toBe(true);
+    expect(model().emptyStar).toBe(false);
+    expect(model({ level: 'maybe' }).emptyStar).toBe(false);
   });
 });
 

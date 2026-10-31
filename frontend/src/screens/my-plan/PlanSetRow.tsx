@@ -5,7 +5,7 @@ import { Text } from '../../ui/Text';
 import { stripePath, CONFLICT_STRIPE } from '../../ui/stripes';
 import { BOLD, CLASH_BAR_WIDTH, LIST_GUTTER, LIVE_BORDER, PAST_ROW, PROGRESS_BAR_WIDTH, PROGRESS_COLORS, STATUS_LABEL, TABULAR, type ProgressColors } from './planStyles';
 import { NowArrow } from './PlanListItems';
-import { StarIndicator } from '../../features/interests/StarButton';
+import { StarGlyph } from '../../features/interests/StarButton';
 import { sameProps } from '../../ui/sameProps';
 import type { ClashBar, PlanSetModel, SetStatus } from './PlanSetRow.model';
 import type { DbArtist } from '../../types/backend';
@@ -16,8 +16,9 @@ import { colors, MAX_CONTENT_WIDTH } from '../../styling/tokens';
 // Must-see: a filled two-line card in its category's colours. A set you haven't
 // picked (All sets): the same card, outlined only. Maybe: one line in a dashed
 // box, its text muted but bright enough for sunlight; while live, a solid accent
-// border and a red dot before the name. A pick's star follows its name; a long
-// name cuts off and the star stays at the end of the line. A past row is only
+// border and a red dot before the name. Only an unpicked row has a star: an
+// empty one at the right end of the name's line, before which a long name cuts
+// off. A past row is only
 // slightly dimmed, with faint grey stripes behind its text.
 // Both share one fixed inset, so the time, name and stage columns line up in
 // every state, clear of the progress bar on the left edge and the clash bar on
@@ -29,8 +30,7 @@ import { colors, MAX_CONTENT_WIDTH } from '../../styling/tokens';
 const INSET_LEFT = 17;
 const INSET_RIGHT = 22;
 
-
-const STAR_SIZE = { will_go: 15, maybe: 12 } as const;
+const EMPTY_STAR_SIZE = 15;
 
 /**
  * A past row's stripes, behind everything it shows. Drawn as wide as the content
@@ -51,14 +51,11 @@ function PastStripes({ height }: { height: number }) {
   );
 }
 
-/** The pick's star, right after the name; it never shrinks, the name does. */
-function RowStar({ star }: { star: PlanSetModel['star'] }) {
-  if (star === null) {
-    return null;
-  }
+/** An unpicked set's empty star, at the line's right end; it never shrinks, the name does. */
+function EmptyStar() {
   return (
-    <View testID={`plan-star-${star}`} style={{ flexShrink: 0 }}>
-      <StarIndicator status={star} size={STAR_SIZE[star]} />
+    <View testID="plan-star-empty" style={{ flexShrink: 0 }}>
+      <StarGlyph status="none" size={EMPTY_STAR_SIZE} />
     </View>
   );
 }
@@ -168,7 +165,6 @@ function SetCard({ item, onPressArtist, background = colors.surface, border = co
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           {live && <View testID="plan-maybe-live-dot" style={LIVE_DOT} />}
           <Text numberOfLines={1} style={{ flexShrink: 1, fontSize: 13, color: colors.textMuted }}>{item.artist.name}</Text>
-          <RowStar star={item.star} />
         </View>
         <Text numberOfLines={1} style={{ maxWidth: '35%', fontSize: 13, color: colors.textMuted }}>{item.stageName}</Text>
       </Pressable>
@@ -202,8 +198,8 @@ function SetCard({ item, onPressArtist, background = colors.surface, border = co
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <Text style={[TABULAR, { fontSize: 13, color: colors.textMuted }]}>{item.timeText}</Text>
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <Text numberOfLines={1} style={[BOLD, { flexShrink: 1, fontSize: 15, color: colors.textPrimary }]}>{item.artist.name}</Text>
-          <RowStar star={item.star} />
+          <Text numberOfLines={1} style={[BOLD, { flexGrow: 1, flexShrink: 1, fontSize: 15, color: colors.textPrimary }]}>{item.artist.name}</Text>
+          {item.emptyStar && <EmptyStar />}
         </View>
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>

@@ -26,7 +26,7 @@ Related: [overview.md](../../general/design/overview.md) (app-wide design), [lay
 │ ○                                        │  start cap: ring, then 20 min of bare rail
 │ ┊                                        │
 │ ┌──────────────────────────────────────┐ │
-│ │ 14:00–14:40  Hooded Menace ★         │ │  past → dimmed, "done"; the star after the name
+│ │ 14:00–14:40  Hooded Menace           │ │  past → dimmed, "done"; a pick has no star
 │ │ done                          Octagon│ │
 │ └──────────────────────────────────────┘ │
 │ ┊             2 h 25                     │  gap: height ∝ duration, label
@@ -110,7 +110,7 @@ What each element shows comes from its own model (see Principles), built from th
 
 | Element | Built from | Shows |
 |---|---|---|
-| Set row | the set, its artist and stage, its pick level (Must-see, Maybe, none), now, its overlaps with other Must-sees, the Must-sees live now, whether it heads a clash group | time range, stage, status (`LIVE −x`, `START −x`, `done`), star, progress, now arrow, clash bars |
+| Set row | the set, its artist and stage, its pick level (Must-see, Maybe, none), now, its overlaps with other Must-sees, the Must-sees live now, whether it heads a clash group | time range, stage, status (`LIVE −x`, `START −x`, `done`), the empty star of an unpicked set, progress, now arrow, clash bars |
 | Gap | where it starts (the end of everything listed above) and the set listed right under it with its pick level, now | length or countdown (boxed when it counts to a set that isn't a Must-see), height, fill, now arrow, the conflict title of the group under it |
 | Day-start break | a gap from 08:00 to the first **listed** set | as a gap, with the start ring |
 | Cap / spacer | its edge, or the clash group under it; the end cap also the end of everything listed, the shown day, now | the rail end, the conflict title of the group under it; the end cap the now arrow once the day's listed sets are over |
@@ -124,7 +124,7 @@ What each element shows comes from its own model (see Principles), built from th
 
 - **Box:** 58 pt tall, square corners, in its **category's colours, as on the timeline** (`categoryBlockColors`): the block's background, and a 1 px border in the brighter colour of the block's left edge. A live row's border is the full accent (`LIVE_BORDER`), as a live Maybe's, to hold up in sunlight.
 - **Fixed inset for every row type and state:** content starts 18 pt from the left edge (1 + 17) and ends 23 pt from the right (1 + 22). The time, name and stage columns always line up, clear of the left progress bar and the right clash bar.
-- **Line 1:** `HH:MM–HH:MM` (13, `textMuted`, tabular figures), then the band name (15 bold, ellipsis), then a full accent **star** (15) right after the name. A name too long for the line cuts off, and the star stays at the line's end.
+- **Line 1:** `HH:MM–HH:MM` (13, `textMuted`, tabular figures), then the band name (15 bold, ellipsis). No star: the fill already says it is a pick.
 - **Line 2:** the status on the left, the stage right-aligned (13, `textSecondary`, ellipsis). Statuses:
   - *live*: `● LIVE` (red dot, 11 bold caps), then `−37 min` (14 bold accent).
   - *upcoming, clashing with a Must-see that is live now*: `START` (11 bold caps), then `−17 min` (14 bold **red**). It tells you how long you can stay at the live band.
@@ -136,14 +136,15 @@ What each element shows comes from its own model (see Principles), built from th
 ### Unpicked row
 
 - Only under **All sets**: a set you haven't picked (no interest, never "don't go").
-- **Look:** a Must-see row without the fill: the same 58 pt, two lines, insets and texts, with a 1 px border in its category's border colour and **no background**. Filled = picked, outlined = not; no star.
+- **Look:** a Must-see row without the fill: the same 58 pt, two lines, insets and texts, with a 1 px border in its category's border colour and **no background**. Filled = picked, outlined = not.
+- **Star:** an empty grey **star** (15, the "Not marked" outline star) at the right end of line 1, the same place whatever the name's length; a name too long for the line cuts off before it. The only star on any plan row.
 - **Status line:** `● LIVE −37 min` while it plays and `done` once it's over (dimmed and striped as any past row), as a Must-see's. Never `START`, and never clash bars or a `⚠ Conflict` title: clashes are Must-see × Must-see only.
 - **Live:** the full accent border, the yellow left bar and the now arrow, as a live Must-see.
 
 ### Maybe row
 
 - Shown under **Must-see and Maybe** and **All sets**.
-- **Look:** 26 pt tall, one line: `time · name ½ · stage` (13, `textMuted`), with an accent **half star** (12) right after the name; a long name cuts off and the star stays at the end of the name's room. Muted, but bright enough to read in sunlight.
+- **Look:** 26 pt tall, one line: `time · name · stage` (13, `textMuted`), no star; a long name cuts off. Muted, but bright enough to read in sunlight.
 - **Box:** a **1 px dashed** border in the category's border colour (as Must-see rows) and no background, with the same fixed insets as Must-see rows.
 - Never marked as a clash, and never part of conflict logic.
 - **Live:** a solid border in the full accent (`LIVE_BORDER`) instead of the dashed one, a red dot (7 pt) right before the name, a grey 6.5 pt left bar (`#8a8a8a` for what remains, `#333` filling it for the elapsed fraction) and the now arrow. The dot moves only that row's name, by its width and gap.

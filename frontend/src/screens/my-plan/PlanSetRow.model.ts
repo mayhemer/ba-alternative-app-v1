@@ -42,8 +42,8 @@ export type PlanSetModel = {
   timeText: string;
   stageName: string;
   status: SetStatus;
-  /** The star right after the name: full on a Must-see, half on a Maybe, none on an unpicked set. */
-  star: 'will_go' | 'maybe' | null;
+  /** An empty star at the right end of the name's line, on an unpicked set only (All sets). */
+  emptyStar: boolean;
   accessibilityLabel: string;
   /** Elapsed fraction while live, else 0: the left fill. */
   progress: number;
@@ -117,7 +117,7 @@ export function planSetModel(input: PlanSetInput): PlanSetModel {
     timeText,
     stageName,
     status: statusOf(input, state),
-    star: level === 'none' ? null : level,
+    emptyStar: level === 'none',
     accessibilityLabel: `${artist.name}, ${timeText}, ${stageName}`,
     progress,
     nowY: state === 'live' ? progress * height : null,
