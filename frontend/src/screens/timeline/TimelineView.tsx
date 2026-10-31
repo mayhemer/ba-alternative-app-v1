@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import type { NativeScrollEvent, NativeSyntheticEvent, ScrollViewInstance } from 'react-native';
 import Animated, {
@@ -15,6 +15,7 @@ import { CategoryLane } from '../../features/timeline/CategoryLane';
 import type { TimelineDayModel } from './TimelineDay.model';
 import { TimeRuler } from '../../features/timeline/TimeRuler';
 import { LaneLabelOverlay } from '../../features/timeline/LaneLabelOverlay';
+import { clampToViewWindow, growMountWindow, isMountComplete, laneInMountWindow, mountBlocks, type MountWindow } from '../../features/timeline/mountWindow';
 import {
   CANVAS_WIDTH,
   RULER_HEIGHT,
@@ -36,11 +37,14 @@ import type { DbArtist, DbEvent } from '../../types/backend';
 // that pinned the UI thread for well over a second on every day switch.
 //
 // The day is mounted in slices instead: first the span actually on screen, then
-// one further viewport in every direction per frame until the whole day is up.
-// The window only ever grows and stops once the day is complete, so a settled
-// day behaves exactly as before — scrolling and panning trigger no JS render.
-// The lanes themselves are always rendered at full height, so nothing reflows as
-// blocks appear.
+// one further viewport in every direction per frame until every set is up — as
+// many viewports at once as it takes to bring a new set in, so no frame renders
+// the lanes for nothing (features/timeline/mountWindow.ts). The window only ever
+// grows and stops once every set is in, so a settled day behaves exactly as
+// before — scrolling and panning trigger no JS render. A set that turns up
+// outside it later (a sync, a lane shown again) restarts the growth. The lanes
+// themselves are always rendered at full height, so nothing reflows as blocks
+// appear.
 
 // Viewport assumed for the first slice, before onLayout has measured anything,
 // and a floor under the growth step so a degenerate measurement cannot leave the
@@ -48,15 +52,6 @@ import type { DbArtist, DbEvent } from '../../types/backend';
 const MOUNT_FALLBACK_WIDTH = 420;
 const MOUNT_FALLBACK_HEIGHT = 640;
 const MOUNT_MIN_STEP = 200;
-
-/** Canvas-X span currently mounted, plus the day it was anchored for. */
-type MountWindow = { day: number; fromX: number; toX: number; fromY: number; toY: number };
-
-// Anything outside the scrollable window is permanently clipped, so the X span
-// is held within it — those blocks are then never mounted at all.
-function clampToViewWindow(x: number): number {
-  return Math.min(VIEW_OFFSET_X + VIEW_WIDTH, Math.max(VIEW_OFFSET_X, x));
-}
 
 type Props = {
   screenKey: string;
@@ -231,27 +226,21 @@ export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress }:
   // Lane tops are measured from the top of the lane stack; canvasHeight counts
   // the ruler, which sits outside both scrollers.
   const laneStackHeight = canvasHeight - RULER_HEIGHT;
-  const mountComplete =
-    mountWindow.fromX <= VIEW_OFFSET_X &&
-    mountWindow.toX   >= VIEW_OFFSET_X + VIEW_WIDTH &&
-    mountWindow.fromY <= 0 &&
-    mountWindow.toY   >= laneStackHeight;
+
+  // Every block the window can hold, from the same lanes and lane tops the
+  // render below draws, so "complete" means exactly "every set is on screen".
+  const blocks = useMemo(() => mountBlocks(lanes, tops, selectedDayStart), [lanes, tops, selectedDayStart]);
+  const mountComplete = isMountComplete(mountWindow, blocks);
 
   useEffect(() => {
     if (mountComplete) { return; }
     // One slice per frame: the JS thread hands this one over and the UI thread
     // gets to draw it and process touches before the next arrives.
     const frame = requestAnimationFrame(() => {
-      setMountWindow((w) => ({
-        day: w.day,
-        fromX: clampToViewWindow(w.fromX - mountWidth),
-        toX: clampToViewWindow(w.toX + mountWidth),
-        fromY: w.fromY - mountHeight,
-        toY: w.toY + mountHeight,
-      }));
+      setMountWindow((w) => growMountWindow(w, blocks, mountWidth, mountHeight));
     });
     return () => cancelAnimationFrame(frame);
-  }, [mountComplete, mountWindow, mountWidth, mountHeight]);
+  }, [mountComplete, mountWindow, blocks, mountWidth, mountHeight]);
 
   // The end of a day's mount, a frame after the last slice so the timestamp is
   // paint rather than the state change. Perf builds only: the device runner
@@ -402,7 +391,7 @@ export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress }:
                   // A lane below the window ignores the X span, so feed it a
                   // constant one — its props then stop changing per step and its
                   // memo skips it outright.
-                  const mountEvents = laneBottom >= mountWindow.fromY && laneTop <= mountWindow.toY;
+                  const mountEvents = laneInMountWindow(laneTop, laneBottom, mountWindow);
                   return (
                     <CategoryLane
                       key={lane.key}

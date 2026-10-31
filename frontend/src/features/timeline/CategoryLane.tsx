@@ -6,6 +6,7 @@ import { CANVAS_WIDTH, LANE_BORDER_WIDTH } from './timelineLayout';
 import { ArtistBlock } from './ArtistBlock';
 import { artistBlockModel, blockSpan } from './ArtistBlock.model';
 import type { CategoryLaneModel } from './CategoryLane.model';
+import { spanInMountWindow } from './mountWindow';
 import { NowLine } from './NowLine';
 import { sameProps } from '../../ui/sameProps';
 import { colors } from '../../styling/tokens';
@@ -35,10 +36,7 @@ function CategoryLaneBase({ item, dayStart, nowX, onBlockPress, labelRepeat, mou
   // full height either way — that comes from its model, not from the blocks —
   // so nothing reflows as the window grows.
   const blocks = mountEvents
-    ? item.sets.filter(({ event }) => {
-        const { left, width } = blockSpan(event, dayStart);
-        return left + width >= mountFromX && left <= mountToX;
-      })
+    ? item.sets.filter(({ event }) => spanInMountWindow(blockSpan(event, dayStart), mountFromX, mountToX))
     : [];
 
   return (

@@ -107,13 +107,19 @@ UI thread for well over a second on a low-end Android at every day switch.
 A day is therefore mounted in slices. `TimelineView` anchors a canvas window at
 the offsets the day is about to be shown at — the persisted horizontal scroll
 for that day, and the current vertical scroll — renders only the blocks inside
-it, then grows the window by one viewport in every direction per frame until the
-whole day is up. Lanes are always rendered at full height, so nothing reflows as
-blocks appear.
+it, then grows the window by one viewport in every direction per frame until
+every set is up. A frame takes as many viewports as it needs to bring at least
+one new set in, so no frame renders the lanes for nothing — a sparse day, such as
+the Support Program's warm-up Tuesday, does not spend frames crossing the empty
+canvas. Lanes are always rendered at full height, so nothing reflows as blocks
+appear. Which blocks a window holds, and when the mount is complete, come from
+one model (`features/timeline/mountWindow.ts`), read by both `TimelineView` and
+`CategoryLane`.
 
-The window only grows and stops once the day is complete, so a settled day
-behaves exactly as it did before: scrolling and panning drive no JS render at
-all. `CategoryLane` and `ArtistBlock` are memoised to make this work — without
+The window only grows and stops once every set is in, so a settled day behaves
+exactly as it did before: scrolling and panning drive no JS render at all. A set
+that turns up outside it later — a sync, a lane shown again — makes the day
+incomplete again, and the growth resumes. `CategoryLane` and `ArtistBlock` are memoised to make this work — without
 them each expansion step would re-render everything already on screen. That is
 also why a block takes `onPress(event, artist)` rather than a pre-bound closure:
 the closure would be a new function on every lane render.

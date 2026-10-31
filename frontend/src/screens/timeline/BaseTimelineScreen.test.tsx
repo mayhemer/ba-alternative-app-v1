@@ -479,7 +479,8 @@ const PX_PER_MIN = 170 / 60;
 const titleOfCategory = (categoryId: string): string =>
   getCategoryLocalized((categoriesFixture as unknown as DbCategory[]).find((c) => c.categoryId === categoryId)!.localized, 'title');
 
-async function mountScreen(screenKey: string, day: number, filterArtist: (a: DbArtist) => boolean, useSubRows = false) {
+/** Renders the screen on `day`; only the first slice of the day is mounted. */
+async function renderScreen(screenKey: string, day: number, filterArtist: (a: DbArtist) => boolean, useSubRows = false) {
   setSelectedDay(screenKey, day);
   await render(
     <PerfProviders>
@@ -495,6 +496,10 @@ async function mountScreen(screenKey: string, day: number, filterArtist: (a: DbA
       </>
     </PerfProviders>,
   );
+}
+
+async function mountScreen(screenKey: string, day: number, filterArtist: (a: DbArtist) => boolean, useSubRows = false) {
+  await renderScreen(screenKey, day, filterArtist, useSubRows);
   await settleWholeDay();
 }
 
@@ -804,5 +809,65 @@ describe('the timeline reacts', () => {
         expect(rendered.length).toBeGreaterThan(0);
       });
     });
+  });
+});
+
+// ── The progressive mount ─────────────────────────────────────────────────────
+//
+// A day mounts one slice per frame (TimelineView). Every frame must bring at
+// least one set in, and the mount ends with the day's last set: a frame that
+// brings none in renders the lanes for nothing.
+//
+// Dimensions:
+//   the day — a full one (Wednesday's Program, 35 sets) and a sparse one
+//             (Tuesday's Support Program, 6 sets, two of them hours after the rest)
+//   later   — a set synced in outside what is mounted; a lane shown again
+
+describe('the progressive mount', () => {
+  const support = (a: DbArtist): boolean => !a.isPlayable;
+  const blockCount = (): number => screen.queryAllByTestId('block-box').length;
+
+  afterEach(() => { syncWith((events) => events); });
+
+  it.each([
+    ['Wednesday\'s Program', 'mount-program', WED, playable, false, 35],
+    ['Tuesday\'s Support Program', 'mount-support', TUE, support, true, 6],
+  ])('%s: every frame mounts a new set until all are up, and the frame after renders nothing', async (_day, screenKey, day, filterArtist, useSubRows, total) => {
+    await renderScreen(screenKey, day, filterArtist, useSubRows);
+    for (let frame = 0; blockCount() < total; frame++) {
+      if (frame === 20) {
+        throw new Error('the day never finished mounting');
+      }
+      const before = blockCount();
+      await settle();
+      expect(blockCount()).toBeGreaterThan(before);
+    }
+    resetRenders();
+    await settle();
+    expect(blockCount()).toBe(total);
+    expect(rendersSinceReset()).toEqual({});
+  });
+
+  it('draws a set synced in hours after everything mounted', async () => {
+    await mountScreen('mount-synced', TUE, support, true);
+    await act(async () => {
+      // KUNDY CREW once more, in its own lane, 03:00–03:30 on Tuesday's night.
+      syncWith((events) => [...events, { ...events.find((e) => e.eventId === '6909')!, eventId: '9909', dateFrom: Date.parse('2025-08-06T03:00:00+02:00'), dateTo: Date.parse('2025-08-06T03:30:00+02:00') }]);
+    });
+    await settleWholeDay();
+    expect(blockCount()).toBe(7);
+    expect(screen.getByText('03:00–03:30')).toBeTruthy();
+  });
+
+  it('draws every set of a lane shown again', async () => {
+    // Meet & Greet holds Tuesday's two late sets, 17:50 and 19:50.
+    setHiddenCategories(['6']);
+    await mountScreen('mount-shown', TUE, support, true);
+    expect(screen.queryByText('M&G - FUNERAL')).toBeNull();
+    await act(async () => { toggleCategory('6'); });
+    await settleWholeDay();
+    expect(screen.getByText('M&G - CARNIVORE A.D.')).toBeTruthy();
+    expect(screen.getByText('M&G - FUNERAL')).toBeTruthy();
+    expect(blockCount()).toBe(6);
   });
 });
