@@ -135,16 +135,17 @@ export function computeConflictOverlaps(
     }
     if (intervals.length === 0) { continue; }
 
-    // Merge into disjoint intervals.
+    // Merge into disjoint intervals. In place, without copies: every interval
+    // was created just above for this event alone, and nothing else sees them.
     intervals.sort((a, b) => a.from - b.from);
-    const merged: ConflictOverlap[] = [{ ...intervals[0] }];
+    const merged: ConflictOverlap[] = [intervals[0]];
     for (let i = 1; i < intervals.length; i++) {
       const last = merged[merged.length - 1];
       const cur  = intervals[i];
       if (cur.from <= last.to) {
         last.to = Math.max(last.to, cur.to);
       } else {
-        merged.push({ ...cur });
+        merged.push(cur);
       }
     }
     map.set(entry.event.eventId, merged);
