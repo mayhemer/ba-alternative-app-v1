@@ -1,35 +1,38 @@
 appId: cz.janbambas.ba
-name: the lens narrows the Support Program to my picks
+name: under My picks the Support Program keeps every set but my don't-gos
 ---
 # The simulator's clock is outside the 2025 festival, so the Support Program
 # opens on its first day, the warm-up Tuesday. From 13:00 it has KUNDY CREW and
 # ART-BRUT-ALL (the exhibitions, both until 01:00) and PIT OF DOOM, all on
 # screen where the day opens (12:45).
+#
+# Under My picks the timeline keeps the sets I haven't picked, muted (which
+# Maestro can't see), and removes only my own "don't go" sets: that removal is
+# what proves the lens on this timeline, not just on the list.
 - runFlow: common/launch-fresh.yaml
 - runFlow:
     file: common/open-section.yaml
     env: { SECTION: "Support Program" }
+
+# KUNDY CREW: one press = "maybe", a pick.
 - tapOn: ".*KUNDY CREW.*"
 - waitForAnimationToEnd
-# The sheet's title is the bare name; one press = "maybe", which "My picks" includes.
+# The sheet's title is the bare name.
 - tapOn: { text: "Toggle interest", rightOf: "KUNDY CREW" }
 - assertVisible: "Maybe"
-# The star selector covers part of the row (or of the sheet's header), and a
-# touch on it is its own, until it closes by itself 1.8 s after the last tap.
-- extendedWaitUntil:
-    notVisible:
-      id: "star-selector"
-    timeout: 5000
-# Close the sheet: swipe it down by its handle. Its backdrop covers the top bar,
-# lens chip included, while it is open.
-- swipe:
-    start: "50%,62%"
-    end: "50%,99%"
+- runFlow: common/close-sheet-after-star.yaml
+
+# PIT OF DOOM: one press opens the star selector, where "Don't go" is chosen.
+- tapOn: ".*PIT OF DOOM.*"
 - waitForAnimationToEnd
+- tapOn: { text: "Toggle interest", rightOf: "PIT OF DOOM" }
+- tapOn: "Don't go"
+- runFlow: common/close-sheet-after-star.yaml
+
 - tapOn: "View and share schedules"
 - tapOn: ".*My picks.*"
 - waitForAnimationToEnd
+# The pick, and a set I haven't picked, both stay; my "don't go" is gone.
 - assertVisible: ".*KUNDY CREW.*"
-# Unpicked, so filtered out — proves the lens on this timeline, not just the list.
-- assertNotVisible: ".*ART-BRUT-ALL.*"
+- assertVisible: ".*ART-BRUT-ALL.*"
 - assertNotVisible: ".*PIT OF DOOM.*"
