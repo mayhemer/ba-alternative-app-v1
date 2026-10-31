@@ -234,6 +234,7 @@ What each element shows comes from its own model (see Principles), built from th
 - **Scroll position:** remembered **per day**, like the timeline (`uiStatePersistence`, a My plan screen key, y offsets).
   - Only the user's own scrolling is remembered. The screen's own landing scroll is not saved: today's landing is "now", which moves, and a stored copy would pin a day you never scrolled to the "now" of an earlier visit.
   - First visit to a day: today lands with now about ⅓ from the top; other days land at the top.
+  - A landing never goes past the end of the day's list (`maxScrollOffset`): a position saved under a longer filter, or now on the end cap after the last set, lands at the end. Started past its end, a list would draw only the rows it thinks are in view and leave the screen blank until touched.
   - Tapping today's button while today is shown scrolls to now (`requestScrollToNow`).
   - Tapping the now pill goes to today at now, except on My plan showing today with now in view, where it goes to the pill's set's timeline at now (see Top bar).
 - **Switching days** mounts the new day the way the timeline does: once the screen's height is known, each day gets a list of its own that starts at its landing spot (saved position, else now, else the top) and draws about one screen of rows from there, the rest following one screenful per batch. Mounting the whole day at once, or its top first and then scrolling, made the switch visibly slow on phones. The very first list, before the screen is measured, starts from the top and is scrolled into place.

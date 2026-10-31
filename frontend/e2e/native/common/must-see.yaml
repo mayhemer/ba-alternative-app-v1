@@ -1,0 +1,9 @@
+# Marks ${QUERY} a must-see from the artist list: two star presses. The search
+# narrows the list to one row, so its star is element 0.
+appId: cz.janbambas.ba
+---
+- runFlow:
+    file: search-artist.yaml
+    env: { QUERY: "${QUERY}" }
+- tapOn: { text: "Toggle interest", index: 0 }
+- tapOn: { text: "Toggle interest", index: 0 }

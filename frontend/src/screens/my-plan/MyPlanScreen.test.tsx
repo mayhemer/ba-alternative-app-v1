@@ -322,8 +322,10 @@ it('shows another day when it is picked', async () => {
 // at its landing spot and draws the cells there first, the way the timeline
 // mounts a day. At Thursday 19:23 (Maybes hidden) the list is: the start cap at
 // 12 (30 tall), Hooded Menace at 48 (58), the 4 h 20 gap at 112 (150), Gojira
-// (live) at 268, Batushka at 332, the end cap at 396. On a 300 pt screen "now"
-// lands at 268 − 300 / 3 = 168, inside the gap.
+// (live) at 268, Batushka at 332, the end cap at 396; 456 tall in all. On a
+// 240 pt screen "now" lands at 268 − 240 / 3 = 188, inside the gap.
+// A landing is held within what the list can scroll: started past its end, a
+// list would draw only the cells it thinks are in view.
 
 const THU = getFestivalDayStart(at(7, '12:00'));
 
@@ -337,7 +339,7 @@ function listOffset(): unknown {
 
 it('starts another day at its landing spot, drawing the cells from there down', async () => {
   await mount();
-  await measureScreen(300);
+  await measureScreen(240);
   await act(async () => { controls.pickDay(FRI); });
   // Not today, nothing saved: the top.
   expect(listOffset()).toEqual({ x: 0, y: 0 });
@@ -345,7 +347,7 @@ it('starts another day at its landing spot, drawing the cells from there down', 
 
   await act(async () => { controls.pickDay(THU); });
   // Today: "now" a third from the top.
-  expect(listOffset()).toEqual({ x: 0, y: 168 });
+  expect(listOffset()).toEqual({ x: 0, y: 188 });
   const texts = listTexts();
   expect(texts).toEqual(expect.arrayContaining(['4 h 20', 'Gojira', 'Batushka']));
   expect(texts).not.toContain('Hooded Menace');
@@ -355,9 +357,33 @@ it('starts another day at its landing spot, drawing the cells from there down', 
 it('starts a day the user scrolled where they left it', async () => {
   setScroll('plan', FRI, 60);
   await mount();
-  await measureScreen(300);
+  await measureScreen(100);
   await act(async () => { controls.pickDay(FRI); });
   expect(listOffset()).toEqual({ x: 0, y: 60 });
+});
+
+// A position saved under a longer filter can be past the end of the shorter
+// list: the day lands at its end, drawing the cells there. Friday under Must-see
+// only is 172 tall: the start cap, Spectral Wound, the end cap.
+it('starts a day saved past its end at the end, drawing the cells there', async () => {
+  setScroll('plan', FRI, 2000);
+  await mount();
+  await measureScreen(100);
+  await act(async () => { controls.pickDay(FRI); });
+  expect(listOffset()).toEqual({ x: 0, y: 72 });
+  expect(listTexts()).toContain('Spectral Wound');
+});
+
+// After today's last set the arrow is on the end cap, and now a third from the
+// top would be past the end: the list ends at 456 − 300.
+it('starts today after its last set at the end of the list', async () => {
+  setCurrentTimeMs(at(8, '02:00'));
+  await mount();
+  await measureScreen(300);
+  await act(async () => { controls.pickDay(FRI); });
+  await act(async () => { controls.pickDay(THU); });
+  expect(listOffset()).toEqual({ x: 0, y: 156 });
+  expect(listTexts()).toEqual(expect.arrayContaining(['4 h 20', 'Gojira', 'Batushka']));
 });
 
 // ── Render counts ─────────────────────────────────────────────────────────────

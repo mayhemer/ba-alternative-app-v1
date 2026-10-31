@@ -1,0 +1,56 @@
+appId: cz.janbambas.ba
+name: a day left scrolled to its end under All sets is drawn whole under Must-see only
+---
+# Wednesday's position, saved at the end of its long All sets list, is past the
+# end of its short Must-see only list. A list started there drew only the end
+# cap, the rest of the screen blank until touched; it now lands at its end.
+- runFlow: common/launch-fresh.yaml
+# Eight Wednesday must-sees, two in the afternoon and six after midnight: the
+# Must-see only list is taller than the screen (the bug needs a list that
+# scrolls), yet far shorter than the All sets one.
+- runFlow:
+    file: common/must-see.yaml
+    env: { QUERY: "crystal lake" }
+- runFlow:
+    file: common/must-see.yaml
+    env: { QUERY: "exorcizphobia" }
+- runFlow:
+    file: common/must-see.yaml
+    env: { QUERY: "kerry king" }
+- runFlow:
+    file: common/must-see.yaml
+    env: { QUERY: "thrash cobra" }
+- runFlow:
+    file: common/must-see.yaml
+    env: { QUERY: "rotting christ" }
+- runFlow:
+    file: common/must-see.yaml
+    env: { QUERY: "orange goblin" }
+- runFlow:
+    file: common/must-see.yaml
+    env: { QUERY: "computerboy" }
+- runFlow:
+    file: common/must-see.yaml
+    env: { QUERY: "heriot" }
+- runFlow:
+    file: common/open-section.yaml
+    env: { SECTION: "My plan.*" }
+# Wednesday under All sets, scrolled to its end: the user's scroll is saved.
+- tapOn: "WED.*"
+- tapOn: "Filters"
+- tapOn: "All sets"
+- scrollUntilVisible:
+    element: { id: "plan-rail-end" }
+    direction: DOWN
+    timeout: 120000
+- waitForAnimationToEnd
+# Another day, the filter narrowed there, then back to Wednesday.
+- tapOn: "THU.*"
+- tapOn: "Filters"
+- tapOn: "Must-see only"
+- tapOn: "WED.*"
+# No scroll or tap in between: the list lands at its end, drawn there, the
+# last sets with it (unfixed, only the end cap was drawn).
+- assertVisible: ".*HERIOT.*"
+- assertVisible: ".*COMPUTERBOY.*"
+- assertVisible: { id: "plan-rail-end" }

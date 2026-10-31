@@ -238,6 +238,19 @@ export function nowScrollOffset(items: PlanItem[], viewportHeight: number): numb
 }
 
 /**
+ * How far the list scrolls: its content, padding included and the floating
+ * bottom bar's clearance (`bottomInset`) added below, less a viewport of the
+ * given height; 0 when the whole day fits.
+ */
+export function maxScrollOffset(items: PlanItem[], viewportHeight: number, bottomInset: number): number {
+  const last = items.length - 1;
+  const contentEnd = last === -1
+    ? PLAN_LAYOUT.paddingTop
+    : itemOffsets(items)[last] + items[last].height + PLAN_LAYOUT.itemSpacing;
+  return Math.max(0, contentEnd + PLAN_LAYOUT.paddingBottom + bottomInset - viewportHeight);
+}
+
+/**
  * How central the now arrow must be for the now pill on My plan to go to the
  * timeline rather than scroll to now: the middle 80 % of the list above the
  * floating bottom bar (planNowInView).
@@ -289,15 +302,11 @@ export function planNowView(
       now = offsets[index] + (host.nowY ?? 0);
     }
   }
-  const last = items.length - 1;
-  const contentEnd = last === -1 ? PLAN_LAYOUT.paddingTop : offsets[last] + items[last].height + PLAN_LAYOUT.itemSpacing;
-  const contentHeight = contentEnd + PLAN_LAYOUT.paddingBottom + bottomInset;
-  const maxScroll = Math.max(0, contentHeight - viewportHeight);
   return {
     now,
     scroll: scrollY,
     size: viewportHeight - bottomInset,
-    nowScroll: Math.min(nowScrollOffset(items, viewportHeight) ?? 0, maxScroll),
+    nowScroll: Math.min(nowScrollOffset(items, viewportHeight) ?? 0, maxScrollOffset(items, viewportHeight, bottomInset)),
   };
 }
 

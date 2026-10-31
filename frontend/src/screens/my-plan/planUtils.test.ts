@@ -5,6 +5,7 @@ import {
   itemAtOffset,
   itemOffsets,
   itemsToFill,
+  maxScrollOffset,
   nowScrollOffset,
   planNowInView,
   planNowView,
@@ -692,6 +693,18 @@ describe('nowScrollOffset', () => {
 // and without the floating bottom bar.
 
 const SOLO: Spec[] = [['1', 'Solo', 's1', at(7, '14:00'), at(7, '15:00'), 'will_go']];
+
+describe('maxScrollOffset', () => {
+  it('is where the list ends: the content less the screen, the floating bar\'s clearance added below', () => {
+    // The content is 172 tall.
+    expect(maxScrollOffset(build(SOLO, { now: at(7, '14:30') }), 150, 0)).toBe(22);
+    expect(maxScrollOffset(build(SOLO, { now: at(7, '14:30') }), 150, 60)).toBe(82);
+  });
+
+  it('is the top when the whole day fits on the screen', () => {
+    expect(maxScrollOffset(build(SOLO, { now: at(7, '14:30') }), 600, 0)).toBe(0);
+  });
+});
 
 describe('planNowView', () => {
   it('a live set: the arrow halfway down the row', () => {

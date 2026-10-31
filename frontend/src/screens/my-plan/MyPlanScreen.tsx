@@ -12,7 +12,7 @@ import { usePlanFilters, usePlanPanel, usePlanShownDay, usePlanStore, usePlanSto
 import { useMinuteNow } from '../../hooks/useMinuteNow';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
 import { getScroll, setScroll } from '../../store/uiStatePersistence';
-import { buildPlanDay, itemAtOffset, itemOffsets, itemsToFill, nowScrollOffset, PLAN_LAYOUT, planNowInView, planNowView, type PlanItem } from './planUtils';
+import { buildPlanDay, itemAtOffset, itemOffsets, itemsToFill, maxScrollOffset, nowScrollOffset, PLAN_LAYOUT, planNowInView, planNowView, type PlanItem } from './planUtils';
 import { registerPlanNowProbe } from './planNowProbe';
 import { festivalToday } from '../../utils/festivalTime';
 import { PlanSetRow } from './PlanSetRow';
@@ -49,12 +49,31 @@ import { colors } from '../../styling/tokens';
 // (uiStatePersistence, under PLAN_SCREEN_KEY, as y offsets); a day without one
 // lands with "now" a third from the top if it is today, else at the top; and a
 // "now" request (the pill, or today's day button tapped again) scrolls to now.
+// Every landing is held within what the list can scroll (landingOffset): a
+// position saved under a longer filter, or now on the end cap, can be past the
+// end, and a list started there draws only the cells it thinks are in view.
 // Once now is in view, the pill switches to the timeline instead, so the screen
 // answers where it is scrolled (registerPlanNowProbe).
 
 const PLAN_SCREEN_KEY = 'plan';
 
 const keyOf = (item: PlanItem): string => item.key;
+
+/**
+ * Where a day lands: now when asked for, else its saved position, else now,
+ * else the top; held within what the list can scroll.
+ */
+function landingOffset(
+  items: PlanItem[],
+  day: number,
+  nowRequested: boolean,
+  viewportHeight: number,
+  bottomClearance: number,
+): number {
+  const nowOffset = nowScrollOffset(items, viewportHeight);
+  const wanted = nowRequested ? (nowOffset ?? 0) : (getScroll(PLAN_SCREEN_KEY, day) ?? nowOffset ?? 0);
+  return Math.min(wanted, maxScrollOffset(items, viewportHeight, bottomClearance));
+}
 
 /** Cells per batch before the screen is measured: FlatList's own default. */
 const DEFAULT_CELL_BATCH = 10;
@@ -112,6 +131,8 @@ export function MyPlanScreen() {
   // change must not move a list the user has scrolled.
   const itemsRef = useRef(items);
   itemsRef.current = items;
+  const bottomClearanceRef = useRef(bottomClearance);
+  bottomClearanceRef.current = bottomClearance;
   // The day the list has been positioned for. Scroll events are saved only for
   // it: while a day switch swaps the content, the list still reports offsets of
   // the old day's content, clamped to the new one's.
@@ -135,8 +156,7 @@ export function MyPlanScreen() {
     if (!nowRequested && landedDayRef.current === day) {
       return;
     }
-    const nowOffset = nowScrollOffset(itemsRef.current, viewportHeight);
-    const target = nowRequested ? (nowOffset ?? 0) : (getScroll(PLAN_SCREEN_KEY, day) ?? nowOffset ?? 0);
+    const target = landingOffset(itemsRef.current, day, nowRequested, viewportHeight, bottomClearanceRef.current);
     const animated = nowRequested && landedDayRef.current === day;
     landedDayRef.current = day;
     // An animated scroll to now is the user's own request; that position may be kept.
@@ -159,7 +179,7 @@ export function MyPlanScreen() {
   if (listDayRef.current !== day) {
     listDayRef.current = day;
     if (viewportHeight > 0) {
-      const offset = getScroll(PLAN_SCREEN_KEY, day) ?? nowScrollOffset(items, viewportHeight) ?? 0;
+      const offset = landingOffset(items, day, false, viewportHeight, bottomClearance);
       landingRef.current = { offset, index: itemAtOffset(items, offset), count: itemsToFill(items, offset, viewportHeight) };
       scrollYRef.current = offset;
     } else {
