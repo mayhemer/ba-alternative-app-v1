@@ -10,8 +10,8 @@ import type { DbArtist, DbEvent } from '../../types/backend';
 // Only today's Must-sees count, of the sets My plan lists (the conflict
 // calculation's eligibility rule); Maybe picks never reach the pill, so unlike
 // the plan list it ignores the Maybe switch.
-//   live  — the live Must-see that ends soonest (its time left is the deadline
-//           for deciding whether to switch), plus how many others play now;
+//   live  — the live Must-see that started last (the soonest-ending one when
+//           they started together), plus how many others play now;
 //   break — counting down to the next Must-see today, from the end of the last
 //           finished one, or from 08:00 when none has finished yet;
 //   logo  — nothing to say: outside the festival, before 08:00, after the day's
@@ -48,7 +48,7 @@ function todaysMusts(interests: Record<string, string>, { artists, artistEvents 
   return musts;
 }
 
-/** The set the pill names: live (the one ending soonest) or next, or none for the logo. */
+/** The set the pill names: live (the one started last) or next, or none for the logo. */
 type PillSet =
   | { kind: 'live'; must: Must; others: number }
   | { kind: 'break'; must: Must }
@@ -68,7 +68,7 @@ function pillSet(
 
   const live = musts
     .filter((m) => m.event.dateFrom <= now && now < m.event.dateTo)
-    .sort((a, b) => a.event.dateTo - b.event.dateTo);
+    .sort((a, b) => b.event.dateFrom - a.event.dateFrom || a.event.dateTo - b.event.dateTo);
   if (live.length > 0) {
     return { kind: 'live', must: live[0], others: live.length - 1 };
   }

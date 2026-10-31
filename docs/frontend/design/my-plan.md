@@ -65,7 +65,7 @@ On every screen that has a top bar. On festival days it replaces the logo while 
 | State | Content | Progress |
 |---|---|---|
 | **Live** | left: red dot (7 pt), band name (bold, ellipsis); right: time left (bold accent): `● GOJIRA ……… −37 min` | 3 px bar along the bottom: accent for what remains, dark `livePassed` `#4a3f17` filling it for the elapsed fraction |
-| **Live, clash** | the live Must-see that **ends soonest**, then a red `warning-outline` glyph (13) at the far right; no count | same |
+| **Live, clash** | the live Must-see that **started last** (of those starting together, the one ending soonest), then a red `warning-outline` glyph (13) at the far right; no count | same |
 | **Break** | centred: time to the start (bold blue `#5b9bff`), a chevron (`textMuted`), band name: `−1 h 30 › NAPALM DEATH` | none |
 | **Otherwise** | the logo | — |
 
