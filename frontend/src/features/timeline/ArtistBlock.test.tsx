@@ -26,7 +26,7 @@ async function renderBlock(muted: boolean) {
 const box = () => StyleSheet.flatten(screen.getByTestId('block-box').props.style);
 const label = () => StyleSheet.flatten(screen.getByTestId('block-label').props.style);
 
-it('draws a muted block unfilled, in a dotted grey 1 pt frame all round with no stage colour, its text at 60 %', async () => {
+it('draws a muted block unfilled, in a dotted grey 1 pt frame all round with no stage colour, its text at 30 %', async () => {
   await renderBlock(true);
   // The same width on every side: Android draws a dotted border only then.
   expect(box()).toMatchObject({
@@ -37,7 +37,7 @@ it('draws a muted block unfilled, in a dotted grey 1 pt frame all round with no 
     borderColor: '#4d4d4d',
     borderLeftColor: '#4d4d4d',
   });
-  expect(label().opacity).toBe(0.6);
+  expect(label().opacity).toBe(0.3);
 });
 
 it('draws an unmuted block filled, with only its left bar, its text at full strength', async () => {

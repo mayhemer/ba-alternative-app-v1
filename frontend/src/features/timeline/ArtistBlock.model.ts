@@ -23,7 +23,7 @@ export const BLOCK_LAYOUT = {
   mutedEdge: '#4d4d4d',
   mutedEdgeWidth: 1,
   mutedEdgeStyle: 'dotted',
-  mutedTextOpacity: 0.6,
+  mutedTextOpacity: 0.3,
   starSize: 11,
   /** Narrower blocks show no label at all. */
   labelMinBlockWidth: 40,

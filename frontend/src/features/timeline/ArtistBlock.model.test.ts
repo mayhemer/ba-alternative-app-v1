@@ -11,7 +11,7 @@ import type { DbArtist, DbEvent } from '../../types/backend';
 //   pick   — none, or Maybe/Must-see (the star takes label width)
 //   muted  — not the lens's pick under My picks or a friend's lens: no fill, a
 //            dotted grey 1 pt frame all round (no stage-coloured left bar),
-//            its text at 60 %
+//            its text at 30 %
 //   length — a block longer than the label repeat gap (repeated labels)
 //   clash  — none, an overlap inside the block, one reaching past its start
 // Expected values are worked out by hand.
@@ -152,8 +152,8 @@ describe('its conflict bars', () => {
 });
 
 describe('a muted block (not the lens\'s pick)', () => {
-  it('has no fill and no stage colour: a dotted grey 1 pt frame all round, and its text at 60 %', () => {
-    expect(model({ muted: true })).toMatchObject({ bg: 'transparent', edge: '#4d4d4d', textOpacity: 0.6 });
+  it('has no fill and no stage colour: a dotted grey 1 pt frame all round, and its text at 30 %', () => {
+    expect(model({ muted: true })).toMatchObject({ bg: 'transparent', edge: '#4d4d4d', textOpacity: 0.3 });
   });
 
   it('is drawn as before when not muted', () => {
