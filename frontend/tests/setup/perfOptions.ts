@@ -44,6 +44,29 @@
 export const MEASURE_OPTIONS = { runs: 30, warmupRuns: 3 } as const;
 
 /**
+ * MEASURE_OPTIONS for `measureFunction`, plus a full garbage collection before
+ * every run, outside the timed span.
+ *
+ * A third noise source, and the one sampling cannot average away: garbage from
+ * an allocating function. Reassure collects after every run of `measureRenders`
+ * but never between runs of `measureFunction`, so whichever runs a scavenge
+ * happens to land in come out slow, and how many do changes from one Jest
+ * process to the next. computeConflictOverlaps, which allocates intervals per
+ * set, measured +4 %, +7.5 % and +15 % against its baseline in three runs of
+ * unchanged code, its stability between 3.5 % and 54 %; collecting before each
+ * run took its slowest sample from 14.9 to 12.8 ms. Every run then starts from
+ * the same empty young generation.
+ *
+ * Needs `--expose-gc`, which Reassure passes to Node; under plain Jest the call
+ * is skipped and the runs are measured as before.
+ */
+export const FUNCTION_MEASURE_OPTIONS = { ...MEASURE_OPTIONS, beforeEach: collectGarbage } as const;
+
+function collectGarbage(): void {
+  (globalThis as { gc?: () => void }).gc?.();
+}
+
+/**
  * Repeats `fn` so one measured run spans roughly 20 ms instead of a fraction of
  * one, and returns the wrapper to hand to `measureFunction`.
  *

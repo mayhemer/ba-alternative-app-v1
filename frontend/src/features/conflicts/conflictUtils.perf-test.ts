@@ -1,5 +1,5 @@
 import { measureFunction } from 'reassure';
-import { BATCH, MEASURE_OPTIONS, repeat } from '../../../tests/setup/perfOptions';
+import { BATCH, FUNCTION_MEASURE_OPTIONS, repeat } from '../../../tests/setup/perfOptions';
 import { computeConflictEntries, computeConflictOverlaps, type ConflictInputs } from './conflictUtils';
 import type { DbArtist, DbEvent, DbStage } from '../../types/backend';
 
@@ -42,7 +42,7 @@ const HEAVY = starred(40);
 test(`computeConflictEntries over a full plan (x${BATCH.conflictEntries})`, async () => {
   await measureFunction(
     repeat(() => computeConflictEntries(HEAVY, INPUTS), BATCH.conflictEntries),
-    MEASURE_OPTIONS,
+    FUNCTION_MEASURE_OPTIONS,
   );
 });
 
@@ -51,7 +51,7 @@ test(`computeConflictOverlaps over a full plan (x${BATCH.conflictOverlaps})`, as
   // the timeline recomputes on every star press.
   await measureFunction(
     repeat(() => computeConflictOverlaps(HEAVY, INPUTS), BATCH.conflictOverlaps),
-    MEASURE_OPTIONS,
+    FUNCTION_MEASURE_OPTIONS,
   );
 });
 
@@ -60,6 +60,6 @@ test(`computeConflictEntries with nothing starred (x${BATCH.conflictEntriesEmpty
   // every artist to collect the marked set.
   await measureFunction(
     repeat(() => computeConflictEntries({}, INPUTS), BATCH.conflictEntriesEmpty),
-    MEASURE_OPTIONS,
+    FUNCTION_MEASURE_OPTIONS,
   );
 });

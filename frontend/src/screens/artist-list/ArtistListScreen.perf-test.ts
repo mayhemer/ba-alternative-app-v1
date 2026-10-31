@@ -1,5 +1,5 @@
 import { measureFunction } from 'reassure';
-import { BATCH, MEASURE_OPTIONS, repeat } from '../../../tests/setup/perfOptions';
+import { BATCH, FUNCTION_MEASURE_OPTIONS, repeat } from '../../../tests/setup/perfOptions';
 import { buildSections } from './ArtistList.model';
 import type { DbArtist } from '../../types/backend';
 
@@ -21,7 +21,7 @@ import artistsFixture from '../../../tests/fixtures/generated/ba2025/artists.jso
 const ARTISTS = (artistsFixture as unknown as DbArtist[]).filter((a) => a.isPlayable);
 
 test(`buildSections over the full lineup (x${BATCH.buildSectionsFull})`, async () => {
-  await measureFunction(repeat(() => buildSections(ARTISTS), BATCH.buildSectionsFull), MEASURE_OPTIONS);
+  await measureFunction(repeat(() => buildSections(ARTISTS), BATCH.buildSectionsFull), FUNCTION_MEASURE_OPTIONS);
 });
 
 test(`buildSections over a typical search result (x${BATCH.buildSectionsNarrowed})`, async () => {
@@ -29,6 +29,6 @@ test(`buildSections over a typical search result (x${BATCH.buildSectionsNarrowed
   const narrowed = ARTISTS.filter((a) => a.name.toLowerCase().includes('a'));
   await measureFunction(
     repeat(() => buildSections(narrowed), BATCH.buildSectionsNarrowed),
-    MEASURE_OPTIONS,
+    FUNCTION_MEASURE_OPTIONS,
   );
 });
