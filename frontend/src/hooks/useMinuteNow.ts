@@ -1,7 +1,7 @@
-import { useCallback, useSyncExternalStore } from 'react';
+import { useSyncExternalStore } from 'react';
 import { AppState, type NativeEventSubscription } from 'react-native';
 import { currentTimeMs } from '../utils/clock';
-import { festivalToday } from '../utils/festivalTime';
+import { festivalToday, getFestivalDayStart } from '../utils/festivalTime';
 
 // ── A shared minute clock ─────────────────────────────────────────────────────
 //
@@ -94,11 +94,23 @@ export function minuteNow(): number {
   return getSnapshot();
 }
 
+function getDayStartSnapshot(): number {
+  return getFestivalDayStart(getSnapshot());
+}
+
+/**
+ * The 06:00 that started the festival day holding now (getFestivalDayStart),
+ * outside the festival too. Re-renders only when that day changes, at 06:00,
+ * not every minute: for whatever depends on now only through its day.
+ */
+export function useFestivalDayStart(): number {
+  return useSyncExternalStore(subscribe, getDayStartSnapshot, getDayStartSnapshot);
+}
+
 /**
  * The festival day that holds now (festivalToday), or null outside the
  * festival. Re-renders only when that day changes, at 06:00, not every minute.
  */
 export function useFestivalToday(festivalDays: readonly number[]): number | null {
-  const getToday = useCallback((): number | null => festivalToday(festivalDays, getSnapshot()), [festivalDays]);
-  return useSyncExternalStore(subscribe, getToday, getToday);
+  return festivalToday(festivalDays, useFestivalDayStart());
 }

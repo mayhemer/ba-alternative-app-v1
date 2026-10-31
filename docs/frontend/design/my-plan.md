@@ -222,7 +222,7 @@ What each element shows comes from its own model (see Principles), built from th
 
 - **Bottom bar:** the timeline's day buttons (`DayButtons`), always visible. The selected day is filled accent, and today has a red ▼ notch.
 - **Sources** (`PlanDaySwitcher.model.ts`, each button's own model in `DayButton.model.ts`):
-  - **today** is the festival day that holds now (`festivalToday`: 06:00 to 06:00). The list's "during the festival" follows the same rule.
+  - **today** is the festival day that holds now (`festivalToday`: 06:00 to 06:00). The list's "during the festival" follows the same rule. The switcher reads now at day resolution (`useFestivalDayStart`), so it renders again at 06:00, not on every minute.
   - **the clash stripes** come from `daysWithClash`, the conflict calculation the Only conflicts list follows, so a striped day is exactly a day that list has sets on. A clash across 06:00 stripes both days its sets start on.
 - **Default day:**
   - today;

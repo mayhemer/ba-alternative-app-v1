@@ -6,20 +6,24 @@ import { useSelectedSlug } from '../../store/AppContext';
 import { useArtistEventMap, useArtists, useFestivalDays, useStages } from '../../store/cacheStore';
 import { useInterest } from '../../features/interests/InterestContext';
 import { usePlanFilters, usePlanShownDay, usePlanStore } from './PlanContext';
-import { useMinuteNow } from '../../hooks/useMinuteNow';
+import { useFestivalDayStart } from '../../hooks/useMinuteNow';
 import { currentTimeMs } from '../../utils/clock';
 
 // ── My plan's day switcher (BottomBar content) ────────────────────────────────
 //
 // The timeline's day buttons, always visible, drawn from the switcher's model
 // (PlanDaySwitcher.model.ts). Tapping today's button while today is shown
-// scrolls to now, as on the timeline. Re-renders every minute (for today), but
-// each button renders again only when what it shows changes.
+// scrolls to now, as on the timeline. Everything here depends on now only
+// through its festival day — today, and the day shown by default — so it reads
+// the clock at day resolution and re-renders at 06:00, not on every minute.
+// Each button renders again only when what it shows changes.
 
 export function PlanDaySwitcher() {
   const slug = useSelectedSlug();
   const festivalDays = useFestivalDays(slug);
-  const now = useMinuteNow();
+  // The 06:00 that started today: an instant of the day, which is all the
+  // model and the shown day read from now.
+  const now = useFestivalDayStart();
   const store = usePlanStore();
   const shownDay = usePlanShownDay(festivalDays, now);
   const conflictsOnly = usePlanFilters().level === 'conflicts';

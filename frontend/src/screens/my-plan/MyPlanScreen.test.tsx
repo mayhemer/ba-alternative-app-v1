@@ -84,6 +84,16 @@ jest.mock('./filter/PlanFilterLevel', () => {
   const actual = jest.requireActual('./filter/PlanFilterLevel');
   return { ...actual, PlanFilterLevel: counted(actual.PlanFilterLevel) };
 });
+// The day switcher itself takes no props, so its counting copy is keyed by hand:
+// `plan-day-switcher`.
+// Called as a function, so the switcher's hooks stay its own component's.
+jest.mock('./PlanDaySwitcher', () => {
+  const { counted } = require('../../../tests/setup/countRenders');
+  const actual = jest.requireActual('./PlanDaySwitcher');
+  const switcher = counted((_props: { item: { key: string } }) => actual.PlanDaySwitcher());
+  const item = { key: 'plan-day-switcher' };
+  return { ...actual, PlanDaySwitcher: () => switcher({ item }) };
+});
 
 const SLUG = 'plantest';
 
@@ -641,6 +651,19 @@ describe('the chrome', () => {
       await mountSettled();
       await minuteTo(at(8, '06:00'));
       expect(chromeRenders()).toEqual({ [`day-${THU}`]: 1, [`day-${FRI}`]: 1 });
+    });
+
+    it('a new minute does not render the day switcher', async () => {
+      await mountSettled();
+      await minuteTo(at(7, '19:24'));
+      expect(rendersSinceReset()['plan-day-switcher']).toBeUndefined();
+    });
+
+    it('the minute a new day starts renders the day switcher once', async () => {
+      setCurrentTimeMs(at(8, '05:59'));
+      await mountSettled();
+      await minuteTo(at(8, '06:00'));
+      expect(rendersSinceReset()['plan-day-switcher']).toBe(1);
     });
 
     it('another day renders only the two day buttons whose selection changed', async () => {
