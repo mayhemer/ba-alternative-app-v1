@@ -4,7 +4,7 @@ import { colors } from '../../styling/tokens';
 // ── The interest star: what it shows ──────────────────────────────────────────
 //
 // One table for every place a pick is drawn — the star button, the indicator
-// beside names, the toast's cycle strip, the filter controls: each status's
+// beside names, the star selector, the filter controls: each status's
 // icon, colour, strike-through and feedback label. And the star button's size
 // and reach, which the toast keeps clear of.
 
@@ -22,7 +22,7 @@ export const STAR_CONFIG: Record<InterestStatus, StarConfig> = {
   none:     { icon: 'star-outline', color: colors.notInterested,   struck: false, feedbackLabel: 'Not marked' },
   maybe:    { icon: 'star-half',    color: colors.accent,          struck: false, feedbackLabel: 'Maybe'      },
   will_go:  { icon: 'star',         color: colors.accent,          struck: false, feedbackLabel: 'Must see!'  },
-  dont_go:  { icon: 'star-outline', color: colors.dangerSecondary, struck: true,  feedbackLabel: "Don't go"   },
+  dont_go:  { icon: 'star-outline', color: colors.dontGo,          struck: true,  feedbackLabel: "Don't go"   },
 };
 
 export type StarStrike = { left: number; top: number; length: number; thickness: number };

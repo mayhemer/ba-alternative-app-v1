@@ -62,22 +62,26 @@ when the festival edition changes, since ids are scoped to an edition.
 
 ---
 
-## Top Bar — Feedback Zone
+## Feedback toast
 
 - FeedbackMessage variants: confirmation text, async progress indicator, tick on completion, warning.
-- A star tap passes the new status (`startProgress(label, status)`), and the toast shows the
-  **interest cycle strip** (`InterestCycleStrip`): all four stars in tap order, the current one on a
-  dark disc (`surfaceRaised`) drawn white, the others black and dimmed, its label beneath —
-  the shapes tell the states apart. It shows the state and where
-  the next tap goes. Repeated taps update it in place. No spinner or tick — they would only track the
-  instant local write, and the star already shows the change; a failed save appends "⚠ not saved".
-- **The toast never covers a star button.** It is shown right after a star tap while the user may
-  tap on, and the stars sit at the right end of the artist row and of the detail header (which an
-  expanded sheet lifts into the toast's height). So instead of centring on the screen, the toast is
-  centred in a band of the content column that stops `STAR_COLUMN_RESERVE` short of its right edge
-  (`toastBand()` in FeedbackToast; the reserve is derived from the star sizes and hit slop in
-  StarButton). Unit-tested across widths and insets, and E2E-checked with real bounding boxes.
-- Other messages are plain text in the same band.
+- A star press doesn't use the toast: it opens the **star selector** beside the star (see
+  [interest-system.md](interest-system.md#star-selector)).
+- **Next to what was tapped** (`toastPlacement()` in `shell/FeedbackToast.model.ts`), from the
+  message's anchor (`FeedbackAnchor`):
+  - **Share, Copy link, Revoke** ("My schedule" at the end of the lens panel and My plan's filter
+    panel, which stay open): on the section heading's line, right-aligned, over the heading rather
+    than in its flow (`SectionFeedbackToast`). Copy link says only the outcome, never the link:
+    "Link copied", or "Could not copy the link" (`copyLinkFeedback`).
+  - **Nothing on screen to sit next to** (an opened share link): right under the top bar, so the now
+    pill in it stays visible; at the top of the screen in the short layout, which has no top bar.
+- **Look**: a dark card lighter than every other surface (`toastSurface`), a light 1 pt border, 18 pt
+  corners and a strong drop shadow (`FLOATING_SHADOW`, a `boxShadow`, the same on iOS, Android and
+  web). White text, a white spinner, a green tick, a red warning sign.
+- **It never covers a star button.** Under the top bar it stays in a band of the content column
+  that stops `STAR_COLUMN_RESERVE` short of its right edge (`toastBand()`; the reserve is derived
+  from the star sizes and hit slop in StarButton), so it can't land on the first row's star or the
+  artist sheet's. Unit-tested across widths and insets.
 
 ## Elements and their sources
 

@@ -9,6 +9,11 @@ export type ColorToken = keyof typeof colors;
 
 export const MAX_CONTENT_WIDTH = 700;
 
+// The drop shadow of what floats over the screen (the feedback toast, the star
+// selector), plus a dark ring just outside its light border that keeps the edge
+// clear over a bright artist photo. boxShadow draws the same on iOS, Android and web.
+export const FLOATING_SHADOW = '0px 8px 24px rgba(0, 0, 0, 0.85), 0px 0px 0px 1px rgba(0, 0, 0, 0.6)';
+
 // Single step-down applied to a label that will not fit its box at full size.
 // The one scale every fitted label shares — see utils/textFit.
 export const TEXT_SHRINK_SCALE = 0.8;

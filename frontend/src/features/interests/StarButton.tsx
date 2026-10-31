@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useCallback, useRef } from 'react';
 import { Pressable, View } from 'react-native';
+import type { MeasurableStar } from './StarSelectorContext';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { InterestStatus } from './InterestContext';
 import { isInterested } from './interestUtils';
@@ -70,7 +71,8 @@ export function StarIndicator({ status, size = 14 }: IndicatorProps) {
 
 type Props = {
   status: InterestStatus;
-  onPress: () => void;
+  /** Gets the pressed star, which the star selector measures and opens beside. */
+  onPress: (star: MeasurableStar | null) => void;
   label: string;
   size?: 'small' | 'large';
 };
@@ -78,10 +80,13 @@ type Props = {
 export function StarButton({ status, onPress, label, size = 'small' }: Props) {
   const iconSize = STAR_ICON_SIZE[size];
   const slop = STAR_HIT_SLOP[size];
+  const ref = useRef<React.ComponentRef<typeof View>>(null);
+  const handlePress = useCallback(() => { onPress(ref.current); }, [onPress]);
 
   return (
     <Pressable
-      onPress={onPress}
+      ref={ref}
+      onPress={handlePress}
       hitSlop={slop}
       accessibilityLabel={label}
       accessibilityRole="button"

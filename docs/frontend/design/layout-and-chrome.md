@@ -118,8 +118,11 @@ index lands on the wrong stop.
 
 - **Bottom bar** (`shell/BottomBar.model.ts`): a row under a screen with content for it, nothing
   under one without; on a short viewport it floats over the content, carrying the TopBar's controls.
-- **Feedback toast** (`shell/FeedbackToast.model.ts`): the band clear of the star column
-  (`toastBand`), and its content — the interest strip after a star tap, else the message — and
-  whether a tap dismisses it.
+- **Feedback toast** (`shell/FeedbackToast.model.ts`): where it goes, from the message's anchor
+  (`toastPlacement`: in the "My schedule" heading, or under the top bar inside the band clear of the
+  star column, `toastBand`), its message and icon, and whether a tap dismisses it.
+- **Star selector** (`features/interests/StarSelector.model.ts`): the capsule beside the pressed
+  star, apart from it, from its measured frame; the states, their size and which is current; the info
+  box above or below. See [interest-system.md](interest-system.md#star-selector).
 - **Friend avatar and facepile** (`features/social/FriendAvatar.model.ts`, `FriendFacepile.model.ts`): the
   photo or the initial, the pick's badge, sized from the avatar; three faces and "+N".

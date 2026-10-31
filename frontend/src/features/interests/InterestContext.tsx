@@ -51,6 +51,8 @@ type InterestStateContextValue = {
 
 type InterestCycleContextValue = {
   cycleStatus: (artistId: string) => CycleStatusResult;
+  /** Sets a status directly, as the star selector does: no steps between. */
+  setStatus: (artistId: string, status: InterestStatus) => CycleStatusResult;
   // Re-fetches server interests and merges them into local state (picks up edits
   // made on another device). No-op when signed out. Stable across interest changes.
   refreshFromServer: () => Promise<void>;
@@ -187,11 +189,8 @@ export function InterestProvider({ children }: { children: React.ReactNode }) {
     [state.interests],
   );
 
-  // cycleStatus reads state via ref so it stays stable across interest updates.
-  const cycleStatus = useCallback(
-    (artistId: string): CycleStatusResult => {
-      const current = stateRef.current.interests[artistId] ?? 'none';
-      const next = nextStatus(current);
+  const setStatus = useCallback(
+    (artistId: string, next: InterestStatus): CycleStatusResult => {
       const promise = setInterest(selectedSlug, artistId, next);
       dispatch({ type: 'SET', artistId, status: next });
 
@@ -214,6 +213,15 @@ export function InterestProvider({ children }: { children: React.ReactNode }) {
     [selectedSlug, getAccessToken],
   );
 
+  // cycleStatus reads state via ref so it stays stable across interest updates.
+  const cycleStatus = useCallback(
+    (artistId: string): CycleStatusResult => {
+      const current = stateRef.current.interests[artistId] ?? 'none';
+      return setStatus(artistId, nextStatus(current));
+    },
+    [setStatus],
+  );
+
   // Manual refresh entry point (used by the lens when a source is (re)selected).
   const refreshFromServer = useCallback(
     (): Promise<void> => syncFromServer(selectedSlug),
@@ -221,7 +229,7 @@ export function InterestProvider({ children }: { children: React.ReactNode }) {
   );
 
   const stateValue = useMemo(() => ({ interests: state.interests, getStatus }), [state.interests, getStatus]);
-  const cycleValue = useMemo(() => ({ cycleStatus, refreshFromServer }), [cycleStatus, refreshFromServer]);
+  const cycleValue = useMemo(() => ({ cycleStatus, setStatus, refreshFromServer }), [cycleStatus, setStatus, refreshFromServer]);
 
   return (
     <InterestCycleContext.Provider value={cycleValue}>

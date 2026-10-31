@@ -3,10 +3,11 @@ import { ActivityIndicator, Pressable, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text } from '../../ui/Text';
 import { PanelSectionLabel } from '../../ui/PanelSectionLabel';
-import { myScheduleShareModel, type MyScheduleShareModel } from './MyScheduleShare.model';
+import { copyLinkFeedback, myScheduleShareModel, type MyScheduleShareModel } from './MyScheduleShare.model';
 import { useSocialData, useSocialActions } from './SocialContext';
 import { useAuth } from '../../auth/AuthContext';
 import { useFeedback } from '../../shell/ScreenUIContext';
+import { SectionFeedbackToast } from '../../shell/FeedbackToast';
 import { shareLink, copyToClipboard } from './shareLink';
 import { navigationRef } from '../../navigation/navigationRef';
 import { colors } from '../../styling/tokens';
@@ -27,13 +28,25 @@ type ViewProps = {
   onShare: () => void;
   onCopy: () => void;
   onRevoke: () => void;
+  /** Drawn at the right end of the heading's line: the toast reporting this section's actions. */
+  headingAccessory?: React.ReactNode;
 };
 
-export function MyScheduleShareView({ item, busy, onSignIn, onShare, onCopy, onRevoke }: ViewProps) {
+export function MyScheduleShareView({ item, busy, onSignIn, onShare, onCopy, onRevoke, headingAccessory }: ViewProps) {
   return (
     <>
       <View style={{ height: 1, backgroundColor: colors.border, marginVertical: 10 }} />
-      <PanelSectionLabel>My schedule</PanelSectionLabel>
+      {/* The toast floats over the heading's line, centred on it, so showing it
+          moves nothing in the panel. */}
+      <View style={{ zIndex: 1 }}>
+        <PanelSectionLabel>My schedule</PanelSectionLabel>
+        <View
+          pointerEvents="box-none"
+          style={{ position: 'absolute', top: -20, bottom: -20, left: 0, right: 0, flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center' }}
+        >
+          {headingAccessory}
+        </View>
+      </View>
 
       {item.kind === 'signed-out' ? (
         <View
@@ -89,6 +102,9 @@ export function MyScheduleShareView({ item, busy, onSignIn, onShare, onCopy, onR
   );
 }
 
+/** Its messages show in its own heading, next to the buttons that caused them. */
+const IN_SECTION = { anchor: { kind: 'my-schedule' } } as const;
+
 export function MyScheduleShare({ onClose }: { onClose: () => void }) {
   const { myShare } = useSocialData();
   const { shareMine, revokeMine } = useSocialActions();
@@ -115,10 +131,10 @@ export function MyScheduleShare({ onClose }: { onClose: () => void }) {
     try {
       const share = await shareMine();
       const result = await shareLink(share.url, 'Check out my festival schedule');
-      if (result === 'copied') { showFeedback('Link copied', 'confirmation'); }
+      if (result === 'copied') { showFeedback('Link copied', 'confirmation', IN_SECTION); }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Could not create link';
-      showFeedback(message, 'warning');
+      showFeedback(message, 'warning', IN_SECTION);
     } finally {
       setBusy(false);
     }
@@ -126,15 +142,15 @@ export function MyScheduleShare({ onClose }: { onClose: () => void }) {
 
   const handleCopy = useCallback(async () => {
     if (myShare === null) { return; }
-    const ok = await copyToClipboard(myShare.url);
-    showFeedback(ok ? 'Link copied' : myShare.url, 'confirmation');
+    const { text, variant } = copyLinkFeedback(await copyToClipboard(myShare.url));
+    showFeedback(text, variant, IN_SECTION);
   }, [myShare, showFeedback]);
 
   const handleRevoke = useCallback(async () => {
     setBusy(true);
     try {
       await revokeMine();
-      showFeedback('Share link revoked', 'confirmation');
+      showFeedback('Share link revoked', 'confirmation', IN_SECTION);
     } finally {
       setBusy(false);
     }
@@ -142,6 +158,7 @@ export function MyScheduleShare({ onClose }: { onClose: () => void }) {
 
   return (
     <MyScheduleShareView
+      headingAccessory={<SectionFeedbackToast section="my-schedule" />}
       item={item}
       busy={busy}
       onSignIn={goToSettings}

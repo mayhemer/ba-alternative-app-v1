@@ -14,6 +14,12 @@ name: the lens narrows the Support Program to my picks
 # The sheet's title is the bare name; one press = "maybe", which "My picks" includes.
 - tapOn: { text: "Toggle interest", rightOf: "KUNDY CREW" }
 - assertVisible: "Maybe"
+# The star selector covers part of the row (or of the sheet's header), and a
+# touch on it is its own, until it closes by itself 1.8 s after the last tap.
+- extendedWaitUntil:
+    notVisible:
+      id: "star-selector"
+    timeout: 5000
 # Close the sheet: swipe it down by its handle. Its backdrop covers the top bar,
 # lens chip included, while it is open.
 - swipe:

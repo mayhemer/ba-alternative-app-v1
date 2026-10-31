@@ -1,17 +1,19 @@
-import type { InterestStatus } from '../features/interests/InterestContext';
-import type { FeedbackMessage, FeedbackVariant } from './ScreenUIContext';
+import type { FeedbackAnchor, FeedbackMessage, FeedbackVariant } from './ScreenUIContext';
 import { STAR_COLUMN_RESERVE } from '../features/interests/StarButton.model';
-import { MAX_CONTENT_WIDTH } from '../styling/tokens';
+import { MAX_CONTENT_WIDTH, TOPBAR_HEIGHT } from '../styling/tokens';
 
 // ── The feedback toast: where it goes and what it shows ───────────────────────
 //
-// Where: a band at the top of the content column that stops short of the star
-// column, so a toast shown right after a star tap never covers a star. What:
-// after a star tap, the interest cycle strip (a failure to save beside it);
-// otherwise the message with a spinner, a tick or a warning sign. A tap
-// dismisses it, except while it is still in progress.
+// Where: next to what was tapped. After a share action, in the panel's
+// "My schedule" heading; with nothing to sit next to, right under the top bar,
+// clear of the now pill, in a band that stops short of the star column so it
+// never covers a star. (A star press opens the star selector instead:
+// features/interests/StarSelector.) What: the message with a spinner, a tick or
+// a warning sign. A tap dismisses it, except while still in progress.
 
 const TOAST_GUTTER = 12;
+/** Space between the toast and the bar it sits under. */
+const TOAST_GAP = 8;
 
 /**
  * The horizontal band a toast may occupy. `centeredWidth` is the widest a
@@ -32,17 +34,35 @@ export function toastBand(
   return { left, width, centeredWidth };
 }
 
-export type FeedbackToastContent =
-  | { kind: 'interest'; status: InterestStatus; failed: boolean }
-  | { kind: 'text'; text: string; icon: FeedbackVariant };
+export type ToastLayout = {
+  screenWidth: number;
+  insets: { top: number; left: number; right: number };
+  /** False in the short layout, where the top bar is dropped. */
+  topBarShown: boolean;
+};
 
-export type FeedbackToastModel = { content: FeedbackToastContent; tappable: boolean };
+export type ToastPlacement =
+  /** Under the top bar, centred in the band as far as it fits. */
+  | { kind: 'top'; left: number; width: number; centeredWidth: number; top: number }
+  /** Drawn by the section it belongs to (SectionFeedbackToast), not over the screen. */
+  | { kind: 'in-section' };
+
+export function toastPlacement(anchor: FeedbackAnchor | undefined, layout: ToastLayout): ToastPlacement {
+  if (anchor?.kind === 'my-schedule') {
+    return { kind: 'in-section' };
+  }
+  const { screenWidth, insets, topBarShown } = layout;
+  const belowTopBar = insets.top + (topBarShown ? TOPBAR_HEIGHT : 0);
+  // The top inset is 0 in landscape, which would leave the toast flush against
+  // the screen edge: keep a floor under it.
+  return { kind: 'top', ...toastBand(screenWidth, insets), top: Math.max(belowTopBar, 12) + TOAST_GAP };
+}
+
+export type FeedbackToastModel = { content: { text: string; icon: FeedbackVariant }; tappable: boolean };
 
 export function feedbackToastModel(feedback: FeedbackMessage): FeedbackToastModel {
   return {
-    content: feedback.interest !== undefined
-      ? { kind: 'interest', status: feedback.interest, failed: feedback.variant === 'warning' }
-      : { kind: 'text', text: feedback.text, icon: feedback.variant },
+    content: { text: feedback.text, icon: feedback.variant },
     tappable: feedback.variant !== 'progress',
   };
 }

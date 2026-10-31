@@ -7,18 +7,26 @@ import React, {
   useRef,
 } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import type { InterestStatus } from '../features/interests/InterestContext';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export type FeedbackVariant = 'progress' | 'confirmation' | 'warning';
 
+/**
+ * What the toast sits next to (FeedbackToast.model › toastPlacement): the
+ * section whose action it reports. None: right under the top bar. (A star
+ * press opens the star selector instead: features/interests/StarSelector.)
+ */
+export type FeedbackAnchor = { kind: 'my-schedule' };
+
 export type FeedbackMessage = {
   text: string;
   variant: FeedbackVariant;
-  interest?: InterestStatus; // set by a star tap: the toast shows the whole interest cycle
+  anchor?: FeedbackAnchor;
   error?: unknown; // stored on warn() — reserved for future tap-for-detail
 };
+
+export type FeedbackOptions = { anchor?: FeedbackAnchor; durationMs?: number };
 
 export type FeedbackTracker = {
   /** Replace spinner with ✓ tick; auto-dismiss after 2 s or on tap. */
@@ -58,8 +66,8 @@ type ScreenUIAction =
 type ScreenUIActionsContextValue = {
   setTopBar: (config: TopBarConfig) => void;
   setBottomBar: (config: BottomBarConfig) => void;
-  showFeedback: (text: string, variant?: FeedbackVariant, durationMs?: number) => void;
-  startProgress: (text: string, interest?: InterestStatus) => FeedbackTracker;
+  showFeedback: (text: string, variant?: FeedbackVariant, options?: FeedbackOptions) => void;
+  startProgress: (text: string, anchor?: FeedbackAnchor) => FeedbackTracker;
   dismissFeedback: () => void;
 };
 
@@ -102,6 +110,10 @@ export function ScreenUIProvider({ children }: { children: React.ReactNode }) {
   const trackerCounterRef = useRef<number>(0);
   const activeTrackerIdRef = useRef<number>(0);
 
+  const setFeedback = useCallback((message: FeedbackMessage | null): void => {
+    dispatch({ type: 'SET_FEEDBACK', message });
+  }, []);
+
   // Stable helper — only refs, no deps
   const clearDismissTimer = useCallback((): void => {
     if (dismissTimerRef.current !== null) {
@@ -121,40 +133,40 @@ export function ScreenUIProvider({ children }: { children: React.ReactNode }) {
   const dismissFeedback = useCallback((): void => {
     clearDismissTimer();
     activeTrackerIdRef.current = 0;
-    dispatch({ type: 'SET_FEEDBACK', message: null });
-  }, [clearDismissTimer]);
+    setFeedback(null);
+  }, [clearDismissTimer, setFeedback]);
 
   const showFeedback = useCallback((
     text: string,
     variant: FeedbackVariant = 'confirmation',
-    durationMs: number = 2500,
+    { anchor, durationMs = 2500 }: FeedbackOptions = {},
   ): void => {
     clearDismissTimer();
     activeTrackerIdRef.current = 0;
-    dispatch({ type: 'SET_FEEDBACK', message: { text, variant } });
+    setFeedback({ text, variant, anchor });
     if (durationMs > 0) {
       dismissTimerRef.current = setTimeout(() => {
-        dispatch({ type: 'SET_FEEDBACK', message: null });
+        setFeedback(null);
         dismissTimerRef.current = null;
       }, durationMs);
     }
-  }, [clearDismissTimer]);
+  }, [clearDismissTimer, setFeedback]);
 
-  const startProgress = useCallback((text: string, interest?: InterestStatus): FeedbackTracker => {
+  const startProgress = useCallback((text: string, anchor?: FeedbackAnchor): FeedbackTracker => {
     clearDismissTimer();
 
     trackerCounterRef.current += 1;
     const trackerId = trackerCounterRef.current;
     activeTrackerIdRef.current = trackerId;
 
-    dispatch({ type: 'SET_FEEDBACK', message: { text, variant: 'progress', interest } });
+    setFeedback({ text, variant: 'progress', anchor });
 
     function confirm(): void {
       if (activeTrackerIdRef.current !== trackerId) { return; }
-      dispatch({ type: 'SET_FEEDBACK', message: { text, variant: 'confirmation', interest } });
+      setFeedback({ text, variant: 'confirmation', anchor });
       dismissTimerRef.current = setTimeout(() => {
         if (activeTrackerIdRef.current === trackerId) {
-          dispatch({ type: 'SET_FEEDBACK', message: null });
+          setFeedback(null);
           activeTrackerIdRef.current = 0;
         }
         dismissTimerRef.current = null;
@@ -163,7 +175,7 @@ export function ScreenUIProvider({ children }: { children: React.ReactNode }) {
 
     function warn(error?: unknown): void {
       if (activeTrackerIdRef.current !== trackerId) { return; }
-      dispatch({ type: 'SET_FEEDBACK', message: { text, variant: 'warning', interest, error } });
+      setFeedback({ text, variant: 'warning', anchor, error });
     }
 
     async function wrap<T>(promise: Promise<T>): Promise<T | null> {
@@ -178,7 +190,7 @@ export function ScreenUIProvider({ children }: { children: React.ReactNode }) {
     }
 
     return { confirm, warn, wrap };
-  }, [clearDismissTimer]);
+  }, [clearDismissTimer, setFeedback]);
 
   const actionsValue = useMemo(
     () => ({ setTopBar, setBottomBar, showFeedback, startProgress, dismissFeedback }),
@@ -222,14 +234,14 @@ export function useScreenUI() {
   return { state, ...actions };
 }
 
-export function useFeedback(): (text: string, variant?: FeedbackVariant) => void {
+export function useFeedback(): (text: string, variant?: FeedbackVariant, options?: FeedbackOptions) => void {
   const { showFeedback } = useScreenUIActions();
   return showFeedback;
 }
 
 // Subscribes only to the stable actions context — never re-renders due to
 // feedback/topBar/bottomBar state changes.
-export function useStartProgress(): (text: string, interest?: InterestStatus) => FeedbackTracker {
+export function useStartProgress(): (text: string, anchor?: FeedbackAnchor) => FeedbackTracker {
   const { startProgress } = useScreenUIActions();
   return startProgress;
 }

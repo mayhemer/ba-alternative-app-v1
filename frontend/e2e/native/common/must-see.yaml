@@ -5,5 +5,12 @@ appId: cz.janbambas.ba
 - runFlow:
     file: search-artist.yaml
     env: { QUERY: "${QUERY}" }
+# The star selector opens beside the star and leaves it uncovered.
 - tapOn: { text: "Toggle interest", index: 0 }
 - tapOn: { text: "Toggle interest", index: 0 }
+# The star selector covers part of the row (or of the sheet's header), and a
+# touch on it is its own, until it closes by itself 1.8 s after the last tap.
+- extendedWaitUntil:
+    notVisible:
+      id: "star-selector"
+    timeout: 5000

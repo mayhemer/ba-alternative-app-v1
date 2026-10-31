@@ -17,9 +17,9 @@ async function ready(page: Page): Promise<void> {
 /** Marks an artist a must-see from the list: two star presses. */
 async function mustSee(page: Page, query: string): Promise<void> {
   await page.getByTestId('artist-search').fill(query);
-  const star = page.getByLabel('Toggle interest').filter({ visible: true }).first();
-  await star.click();
-  await star.click();
+  // One press is Maybe and opens the selector; Must-see is picked in it.
+  await page.getByLabel('Toggle interest').filter({ visible: true }).first().click();
+  await page.getByTestId('star-selector').getByLabel('Must see!', { exact: true }).click();
 }
 
 async function pickClashingPair(page: Page): Promise<void> {

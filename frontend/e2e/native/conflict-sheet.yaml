@@ -16,6 +16,12 @@ name: a clash opens from the artist sheet on a timeline of its own
     env: { QUERY: "exorcizphobia" }
 - tapOn: { text: "Toggle interest", index: 0 }
 - tapOn: { text: "Toggle interest", index: 0 }
+# The star selector covers part of the row (or of the sheet's header), and a
+# touch on it is its own, until it closes by itself 1.8 s after the last tap.
+- extendedWaitUntil:
+    notVisible:
+      id: "star-selector"
+    timeout: 5000
 # The artist sheet lists the clashing set under its stage and time.
 - tapOn: ".*EXORCIZPHOBIA, THRASH METAL.*"
 - waitForAnimationToEnd

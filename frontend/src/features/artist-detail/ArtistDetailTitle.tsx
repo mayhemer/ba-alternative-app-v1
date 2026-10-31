@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import { Text } from '../../ui/Text';
 import { StarButton } from '../interests/StarButton';
+import type { MeasurableStar } from '../interests/StarSelectorContext';
 import { ExclamationTouchable } from '../../ui/Exclamation';
 import { sameProps } from '../../ui/sameProps';
 import { TITLE_LAYOUT, type ArtistDetailTitleModel } from './ArtistDetailTitle.model';
@@ -14,7 +15,7 @@ import { colors } from '../../styling/tokens';
 
 type Props = {
   item: ArtistDetailTitleModel;
-  onStar: () => void;
+  onStar: (star: MeasurableStar | null) => void;
   onExpand: () => void;
   onClose: () => void;
 };

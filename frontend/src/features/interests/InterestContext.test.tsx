@@ -6,6 +6,7 @@ import {
   nextStatus,
   useInterest,
   useInterestCycle,
+  type InterestStatus,
 } from './InterestContext';
 import { deleteUserInterest, fetchUserInterests, putUserInterest } from '../../adapters/baUserApiAdapter';
 import { setInterest } from '../../cache/cacheService';
@@ -63,12 +64,14 @@ function signedIn(token: string | null = FAKE_TOKEN) {
 // Renders the status it reads and exposes the cycle, so a case can press the
 // star the way the UI does.
 let press: (artistId: string) => void;
+let choose: (artistId: string, status: InterestStatus) => void;
 let refresh: () => Promise<void>;
 
 function Probe({ artistId }: { artistId: string }) {
   const { getStatus } = useInterest();
-  const { cycleStatus, refreshFromServer } = useInterestCycle();
+  const { cycleStatus, setStatus, refreshFromServer } = useInterestCycle();
   press = (id) => { cycleStatus(id); };
+  choose = (id, status) => { setStatus(id, status); };
   refresh = refreshFromServer;
   return <Text>{getStatus(artistId)}</Text>;
 }
@@ -197,6 +200,36 @@ describe('pressing the star', () => {
     // Swallowed on purpose: the next merge reconciles by updatedAt, and a lost
     // star would be worse than a late one.
     expect(screen.getByText('maybe')).toBeTruthy();
+  });
+});
+
+// ── Choosing a state in the star selector ─────────────────────────────────────
+
+describe('choosing a state directly', () => {
+  it('jumps to it, skipping the states between', async () => {
+    await mount();
+
+    await act(async () => { choose('a1', 'dont_go'); await flush(); });
+
+    expect(screen.getByText('dont_go')).toBeTruthy();
+  });
+
+  it('pushes the chosen state to the server', async () => {
+    await mount();
+
+    await act(async () => { choose('a1', 'will_go'); await flush(); });
+
+    expect(mockPut).toHaveBeenCalledWith(mockCurrentSlug, 'a1', 'will_go', FAKE_TOKEN);
+  });
+
+  it('deletes rather than putting when "Not marked" is chosen', async () => {
+    await mount();
+    await act(async () => { choose('a1', 'maybe'); await flush(); });
+
+    await act(async () => { choose('a1', 'none'); await flush(); });
+
+    expect(screen.getByText('none')).toBeTruthy();
+    expect(mockDelete).toHaveBeenCalledWith(mockCurrentSlug, 'a1', FAKE_TOKEN);
   });
 });
 

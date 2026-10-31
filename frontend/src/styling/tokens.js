@@ -21,6 +21,7 @@ const colors = {
     rulerText:          '#c0c0c0',
   },
   notInterested:  '#888888',
+  dontGo:         '#e04848',   // the "don't go" star: a little darker than danger, 3:1 or more on the list and on the star selector
   accent:         '#e8c84a',   // must-see / active
   friend:         '#000000',   // friends' shared picks (facepile, pip, avatars)
   amber:          '#b87a1a',   // warning
@@ -36,6 +37,17 @@ const colors = {
   breakBlue:      '#5b9bff',   // current gap / break: progress, countdown
   breakPassed:    '#1c2f52',   // the passed part of the break's progress, over the break blue
   maybeText:      '#8a8a8a',   // Maybe rows, and a live Maybe's progress
+  // ── Feedback toast ──────────────────────────────────────────────────────────
+  toastSurface:   '#2f2f2f',   // lighter than every other surface, so it reads as floating above them
+  toastBorder:    'rgba(255,255,255,0.24)',
+  toastHighlight: '#f2f2f2',   // the ring around the current state in the star selector
+  success:        '#5fd38d',   // the toast's done tick
+  // The star selector's name box: inverted, light on the dark screen, so it
+  // never reads as list text. Off-white rather than white, not to glare.
+  infoSurface:    '#e4e4e4',
+  infoText:       '#000000',
+  infoSuccess:    '#1a7a3a',   // the tick, dark enough for the light box
+  infoDanger:     '#c62828',   // "not saved", dark enough for the light box
   black:          '#000000',
   white:          '#ffffff',
 };

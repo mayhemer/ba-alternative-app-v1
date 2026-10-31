@@ -69,55 +69,107 @@ test('a share link opens the app rather than 404ing', async ({ appPage }) => {
   await expect(appPage.getByText('Artists', { exact: true }).first()).toBeVisible({ timeout: 20_000 });
 });
 
-// ── The star toast ────────────────────────────────────────────────────────────
+// ── The star selector ─────────────────────────────────────────────────────────
 //
-// A star tap shows the interest cycle in a toast while the user may tap on.
-// Whatever the viewport, the toast must not land on any star button — in the
-// list, or in the artist sheet's header, which sits right where the toast does.
+// A star press turns the pick one step and opens the selector beside the star,
+// apart from it: the four states to its left, the star left uncovered.
 
-type Box = { x: number; y: number; width: number; height: number };
+const STATES = ['Not marked', 'Maybe', 'Must see!', "Don't go"];
 
-function overlaps(a: Box, b: Box): boolean {
-  return a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
-}
+test('the star selector opens beside the pressed star, leaving it uncovered @layout', async ({ appPage }) => {
+  await ready(appPage);
+  const star = appPage.getByLabel('Toggle interest').filter({ visible: true }).first();
+  const starBox = (await star.boundingBox())!;
 
-async function expectToastClearOfStars(page: import('@playwright/test').Page): Promise<void> {
-  const toast = page.getByTestId('feedback-toast');
-  await expect(toast).toBeVisible();
-  const toastBox = (await toast.boundingBox())!;
-  const stars = page.getByLabel('Toggle interest').filter({ visible: true });
-  for (const star of await stars.all()) {
-    const starBox = await star.boundingBox();
-    if (starBox !== null) {
-      expect(overlaps(toastBox, starBox), `toast ${JSON.stringify(toastBox)} covers star ${JSON.stringify(starBox)}`).toBe(false);
-    }
+  await star.click();
+
+  const selector = appPage.getByTestId('star-selector');
+  const selectorBox = (await selector.boundingBox())!;
+  // Left of the star, apart from it, centred on it.
+  expect(selectorBox.x + selectorBox.width).toBeLessThan(starBox.x);
+  expect(Math.abs(selectorBox.y + selectorBox.height / 2 - (starBox.y + starBox.height / 2))).toBeLessThanOrEqual(1);
+  // The four states, in tap order, left of the star with room between.
+  const boxes = await Promise.all(STATES.map(async (s) => (await selector.getByLabel(s, { exact: true }).boundingBox())!));
+  for (let i = 1; i < boxes.length; i++) {
+    expect(boxes[i].x).toBeGreaterThan(boxes[i - 1].x);
   }
-}
-
-test('the star toast stays clear of the list stars @layout', async ({ appPage }) => {
-  await ready(appPage);
-
-  await appPage.getByLabel('Toggle interest').filter({ visible: true }).first().click();
-
-  await expectToastClearOfStars(appPage);
+  expect(starBox.x - (boxes[3].x + boxes[3].width)).toBeGreaterThanOrEqual(39);
+  // Within the screen.
+  expect(selectorBox.x).toBeGreaterThanOrEqual(0);
 });
 
-test('the star toast is centred when there is room for it @layout', async ({ appPage }) => {
+test('pressing the star again keeps the selector open, without a blink', async ({ appPage }) => {
   await ready(appPage);
+  const star = appPage.getByLabel('Toggle interest').filter({ visible: true }).first();
+  await star.click();
+  const before = await appPage.getByTestId('star-selector').elementHandle();
 
-  await appPage.getByLabel('Toggle interest').filter({ visible: true }).first().click();
+  await star.click();
 
-  const toast = (await appPage.getByTestId('feedback-toast').boundingBox())!;
-  const viewportWidth = appPage.viewportSize()!.width;
-  expect(Math.abs(toast.x + toast.width / 2 - viewportWidth / 2)).toBeLessThanOrEqual(1);
+  // The same element: it was neither closed nor drawn again from scratch.
+  expect(await before!.evaluate((el) => el.isConnected)).toBe(true);
+  await expect(appPage.getByTestId('star-selector-info')).toHaveText('Must see!✓');
 });
 
-test('the star toast stays clear of the artist sheet star @layout', async ({ appPage }) => {
+test('a state tapped in the selector is the pick', async ({ appPage }) => {
+  await ready(appPage);
+  await appPage.getByLabel('Toggle interest').filter({ visible: true }).first().click();
+
+  await appPage.getByTestId('star-selector').getByLabel('Must see!', { exact: true }).click();
+
+  await expect(appPage.getByTestId('star-selector-info')).toHaveText('Must see!✓');
+  const stored = await appPage.evaluate(() => window.localStorage.getItem('user:interests:v2:ba2025'));
+  expect(stored).toContain('will_go');
+});
+
+test('the star selector closes by itself', async ({ appPage }) => {
+  await ready(appPage);
+  await appPage.getByLabel('Toggle interest').filter({ visible: true }).first().click();
+  await expect(appPage.getByTestId('star-selector')).toBeVisible();
+
+  await expect(appPage.getByTestId('star-selector')).toHaveCount(0, { timeout: 3_000 });
+});
+
+test('a tap elsewhere in the list closes the selector and still does its job', async ({ appPage }) => {
+  await ready(appPage);
+  const stars = appPage.getByLabel('Toggle interest').filter({ visible: true });
+  await stars.nth(0).click();
+  const secondBox = (await stars.nth(1).boundingBox())!;
+
+  // The next row's star: it turns, and the selector moves to it.
+  await stars.nth(1).click();
+
+  // The old selector closes on the touch, the new one opens once the star is measured.
+  await expect.poll(async () => {
+    const box = await appPage.getByTestId('star-selector').boundingBox();
+    return box === null ? Infinity : Math.abs(box.y + box.height / 2 - (secondBox.y + secondBox.height / 2));
+  }).toBeLessThanOrEqual(1);
+});
+
+test('the star selector goes away when the list scrolls', async ({ appPage }) => {
+  await ready(appPage);
+  const star = appPage.getByLabel('Toggle interest').filter({ visible: true }).first();
+  await star.click();
+  await expect(appPage.getByTestId('star-selector')).toBeVisible();
+
+  // Over the list, by a band's name (left of the selector).
+  await appPage.getByText(FIRST_ARTIST, { exact: false }).filter({ visible: true }).first().hover();
+  await appPage.mouse.wheel(0, 400);
+
+  // Well before it would close by itself.
+  await expect(appPage.getByTestId('star-selector')).toHaveCount(0, { timeout: 1_000 });
+});
+
+test('in the artist sheet a tap elsewhere closes the selector and still does its job @layout', async ({ appPage }) => {
   await ready(appPage);
   await appPage.getByText(FIRST_ARTIST, { exact: false }).filter({ visible: true }).first().click();
-
   // The sheet's star is the last one in the tree, above the list.
   await appPage.getByLabel('Toggle interest').filter({ visible: true }).last().click();
+  await expect(appPage.getByTestId('star-selector')).toBeVisible();
 
-  await expectToastClearOfStars(appPage);
+  // Nothing is dimmed, so the sheet's ✕ is reachable at once, and closes it.
+  await appPage.getByText('✕', { exact: true }).filter({ visible: true }).first().click();
+
+  await expect(appPage.getByTestId('star-selector')).toHaveCount(0);
+  await expect(appPage.getByText('✕', { exact: true }).filter({ visible: true })).toHaveCount(0);
 });

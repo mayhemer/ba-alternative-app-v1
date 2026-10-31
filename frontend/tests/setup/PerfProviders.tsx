@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ScreenUIProvider } from '../../src/shell/ScreenUIContext';
 import { InterestProvider } from '../../src/features/interests/InterestContext';
+import { StarSelectorProvider } from '../../src/features/interests/StarSelectorContext';
 import { SocialProvider } from '../../src/features/social/SocialContext';
 import { LensProvider } from '../../src/features/social/LensContext';
 import { ConflictProvider } from '../../src/features/conflicts/ConflictContext';
@@ -41,23 +42,25 @@ export function FeatureProviders({ children }: { children: React.ReactNode }) {
   return (
     <ScreenUIProvider>
         <InterestProvider>
-          <SocialProvider>
-            <LensProvider>
-              <ConflictProvider>
-                <ArtistDetailProvider>
-                  <ConflictDetailProvider>
-                    <ArtistListFilterProvider>
-                      <TimelineFilterProvider>
-                        <PlanProvider>
-                          {children}
-                        </PlanProvider>
-                      </TimelineFilterProvider>
-                    </ArtistListFilterProvider>
-                  </ConflictDetailProvider>
-                </ArtistDetailProvider>
-              </ConflictProvider>
-            </LensProvider>
-          </SocialProvider>
+          <StarSelectorProvider>
+            <SocialProvider>
+              <LensProvider>
+                <ConflictProvider>
+                  <ArtistDetailProvider>
+                    <ConflictDetailProvider>
+                      <ArtistListFilterProvider>
+                        <TimelineFilterProvider>
+                          <PlanProvider>
+                            {children}
+                          </PlanProvider>
+                        </TimelineFilterProvider>
+                      </ArtistListFilterProvider>
+                    </ConflictDetailProvider>
+                  </ArtistDetailProvider>
+                </ConflictProvider>
+              </LensProvider>
+            </SocialProvider>
+          </StarSelectorProvider>
         </InterestProvider>
     </ScreenUIProvider>
   );

@@ -3,9 +3,8 @@ import { TouchableOpacity, View } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 import { Text } from '../../ui/Text';
 import type { DbArtist } from '../../types/backend';
-import { useInterestCycle } from '../../features/interests/InterestContext';
-import { useStartProgress } from '../../shell/ScreenUIContext';
-import { StarButton, getFeedbackLabel } from '../../features/interests/StarButton';
+import { StarButton } from '../../features/interests/StarButton';
+import { useStarSelectorActions, type MeasurableStar } from '../../features/interests/StarSelectorContext';
 import { FriendFacepile } from '../../features/social/FriendFacepile';
 import { sameProps } from '../../ui/sameProps';
 import type { ArtistRowModel } from './ArtistRow.model';
@@ -21,14 +20,12 @@ type Props = {
 };
 
 function ArtistRowBase({ item, onPress }: Props) {
-  const { cycleStatus } = useInterestCycle();
-  const startProgress = useStartProgress();
+  const { pressStar } = useStarSelectorActions();
   const { artist } = item;
 
-  const handleStarPress = useCallback((): void => {
-    const { next, promise } = cycleStatus(artist.artistId);
-    startProgress(getFeedbackLabel(next), next).wrap(promise);
-  }, [artist.artistId, cycleStatus, startProgress]);
+  const handleStarPress = useCallback((star: MeasurableStar | null): void => {
+    pressStar({ artistId: artist.artistId, size: 'small', star });
+  }, [artist.artistId, pressStar]);
 
   const handlePress = useCallback((): void => {
     onPress(artist);

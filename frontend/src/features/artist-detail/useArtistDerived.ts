@@ -1,11 +1,10 @@
 import { useCallback, useMemo } from 'react';
 import { Platform } from 'react-native';
-import { getFeedbackLabel } from '../interests/StarButton';
 import { useArtistDetail as useArtistDetailContext } from './ArtistDetailContext';
 import { useInterest } from '../interests/InterestContext';
 import { useConflictDetail } from '../conflicts/ConflictDetailContext';
 import { useConflicts } from '../conflicts/ConflictContext';
-import { useStartProgress } from '../../shell/ScreenUIContext';
+import { useStarSelectorActions, type MeasurableStar } from '../interests/StarSelectorContext';
 import type { ConflictEntry } from '../conflicts/conflictUtils';
 import type { DbArtist } from '../../types/backend';
 import { MAX_CONTENT_WIDTH } from '../../styling/tokens';
@@ -18,10 +17,10 @@ import { useLayoutMode } from '../../hooks/useLayoutMode';
 
 export function useArtistDerived(artist: DbArtist) {
   const { closeDetail, expandDetail } = useArtistDetailContext();
-  const { getStatus, cycleStatus } = useInterest();
+  const { getStatus } = useInterest();
   const { openConflict } = useConflictDetail();
   const { entries } = useConflicts();
-  const startProgress = useStartProgress();
+  const { pressStar } = useStarSelectorActions();
   const { width, height, contentPadding } = useLayoutMode();
 
   const status = getStatus(artist.artistId);
@@ -35,10 +34,9 @@ export function useArtistDerived(artist: DbArtist) {
     [entries, artist.artistId],
   );
 
-  const handleStarPress = useCallback((): void => {
-    const { next, promise } = cycleStatus(artist.artistId);
-    startProgress(getFeedbackLabel(next), next).wrap(promise);
-  }, [artist.artistId, cycleStatus, startProgress]);
+  const handleStarPress = useCallback((star: MeasurableStar | null): void => {
+    pressStar({ artistId: artist.artistId, size: 'large', star });
+  }, [artist.artistId, pressStar]);
 
   return { closeDetail, expandDetail, status, innerWidth, hPad: contentPadding, isWeb, width, height, handleStarPress, conflicts, openConflict };
 }

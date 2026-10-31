@@ -10,6 +10,7 @@ import { ArtistDetailProvider } from './src/features/artist-detail/ArtistDetailC
 import { ConflictDetailProvider } from './src/features/conflicts/ConflictDetailContext';
 import { ConflictProvider } from './src/features/conflicts/ConflictContext';
 import { InterestProvider } from './src/features/interests/InterestContext';
+import { StarSelectorProvider } from './src/features/interests/StarSelectorContext';
 import { SocialProvider } from './src/features/social/SocialContext';
 import { LensProvider } from './src/features/social/LensContext';
 import { ArtistListFilterProvider } from './src/screens/artist-list/ArtistListFilterContext';
@@ -31,23 +32,25 @@ function AppContent() {
   return (
     <ScreenUIProvider>
       <InterestProvider>
-        <SocialProvider>
-          <LensProvider>
-            <ConflictProvider>
-              <ArtistDetailProvider>
-                <ConflictDetailProvider>
-                  <ArtistListFilterProvider>
-                    <TimelineFilterProvider>
-                      <PlanProvider>
-                        <AppShell />
-                      </PlanProvider>
-                    </TimelineFilterProvider>
-                  </ArtistListFilterProvider>
-                </ConflictDetailProvider>
-              </ArtistDetailProvider>
-            </ConflictProvider>
-          </LensProvider>
-        </SocialProvider>
+        <StarSelectorProvider>
+          <SocialProvider>
+            <LensProvider>
+              <ConflictProvider>
+                <ArtistDetailProvider>
+                  <ConflictDetailProvider>
+                    <ArtistListFilterProvider>
+                      <TimelineFilterProvider>
+                        <PlanProvider>
+                          <AppShell />
+                        </PlanProvider>
+                      </TimelineFilterProvider>
+                    </ArtistListFilterProvider>
+                  </ConflictDetailProvider>
+                </ArtistDetailProvider>
+              </ConflictProvider>
+            </LensProvider>
+          </SocialProvider>
+        </StarSelectorProvider>
       </InterestProvider>
     </ScreenUIProvider>
   );

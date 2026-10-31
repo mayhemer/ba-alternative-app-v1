@@ -16,3 +16,10 @@ export function myScheduleShareModel({ isLoggedIn, hasShare }: Inputs): MySchedu
   }
   return { kind: 'signed-in', shareLabel: hasShare ? 'Share again' : 'Share my schedule', canCopyOrRevoke: hasShare };
 }
+
+/** What the toast says after Copy link: only the outcome, never the link itself. */
+export function copyLinkFeedback(copied: boolean): { text: string; variant: 'confirmation' | 'warning' } {
+  return copied
+    ? { text: 'Link copied', variant: 'confirmation' }
+    : { text: 'Could not copy the link', variant: 'warning' };
+}

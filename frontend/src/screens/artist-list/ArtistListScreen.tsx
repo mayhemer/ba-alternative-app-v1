@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
 import {
+  Platform,
   SectionList,
   TextInput,
   View,
@@ -11,6 +12,7 @@ import { artistRowModel } from './ArtistRow.model';
 import { useSelectedSlug } from '../../store/AppContext';
 import { useArtists } from '../../store/cacheStore';
 import { useTopBar, useBottomBar } from '../../shell/ScreenUIContext';
+import { useStarSelectorActions } from '../../features/interests/StarSelectorContext';
 import { useInterest } from '../../features/interests/InterestContext';
 import { useArtistListFilter } from './ArtistListFilterContext';
 import { useLens } from '../../features/social/LensContext';
@@ -28,6 +30,16 @@ function ArtistListTopBarRight() {
   return <LensChip />;
 }
 
+// The star selector sits on its star; once the list scrolls, it no longer
+// would. Native reports the start of a drag once; web has no drag event (a wheel
+// scrolls without a touch), so every scroll event asks, and closing is a no-op
+// unless the selector is open.
+function closeStarSelectorOnScroll(close: () => void) {
+  return Platform.OS === 'web'
+    ? { onScroll: close, scrollEventThrottle: 100 }
+    : { onScrollBeginDrag: close };
+}
+
 // ── Inner screen (needs ArtistListFilterContext) ──────────────────────────────
 
 function ArtistListScreenInner() {
@@ -38,6 +50,8 @@ function ArtistListScreenInner() {
   const { getFriend, friendsByArtist } = useSocialData();
   const { openDetail } = useArtistDetail();
   const { bottomClearance } = useLayoutMode();
+  const { close: closeStarSelector } = useStarSelectorActions();
+  const scrollProps = useMemo(() => closeStarSelectorOnScroll(closeStarSelector), [closeStarSelector]);
 
   const friendInterests =
     scope.kind === 'friend' ? getFriend(scope.token)?.interests : undefined;
@@ -103,6 +117,7 @@ function ArtistListScreenInner() {
           </Text>
         </View>
       }
+      {...scrollProps}
       stickySectionHeadersEnabled
       className="flex-1 bg-background"
       contentContainerStyle={{ paddingBottom: bottomClearance }}

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { View, type GestureResponderEvent } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationContainer } from '@react-navigation/native';
 import type { NavigationState } from '@react-navigation/native';
@@ -10,6 +10,8 @@ import { BottomBar } from './BottomBar';
 import { ArtistDetailSheet } from '../features/artist-detail/ArtistDetailSheet';
 import { ConflictDetailSheet } from '../features/conflicts/ConflictDetailSheet';
 import { FeedbackToast } from './FeedbackToast';
+import { StarSelector } from '../features/interests/StarSelector';
+import { useStarSelectorActions } from '../features/interests/StarSelectorContext';
 import { LensPanel } from '../features/social/LensPanel';
 import { PlanFilterPanel } from '../screens/my-plan/filter/PlanFilterPanel';
 import { useShareLinkHandler } from '../navigation/useShareLinkHandler';
@@ -27,6 +29,14 @@ export function AppShell() {
   const [initialState, setInitialState] = useState<NavigationState | undefined>(undefined);
   const [isReady, setIsReady] = useState(false);
   const { isShort } = useLayoutMode();
+  const { closeOnTouchOutside } = useStarSelectorActions();
+
+  // Sees every touch on its way down without claiming it, so a touch anywhere
+  // off the star selector closes it and still does whatever it does.
+  const handleTouchCapture = useCallback((event: GestureResponderEvent): boolean => {
+    closeOnTouchOutside(event.nativeEvent.pageX, event.nativeEvent.pageY);
+    return false;
+  }, [closeOnTouchOutside]);
 
   // Handle incoming add-friend share links (cold start + while running).
   useShareLinkHandler();
@@ -62,7 +72,7 @@ export function AppShell() {
   }
 
   return (
-    <GestureHandlerRootView className="flex-1">
+    <GestureHandlerRootView className="flex-1" onStartShouldSetResponderCapture={handleTouchCapture}>
 
       {/* Main app layout — TopBar, screen content, BottomBar.
           left/right edges matter in landscape: without them content sits under
@@ -105,6 +115,9 @@ export function AppShell() {
 
       {/* Conflict detail sheet — likewise only while it has a conflict to show */}
       <ConflictDetailSheet />
+
+      {/* Star selector — above the sheets, whose stars open it too */}
+      <StarSelector />
 
       {/* Feedback toast — rendered last so it's always above backdrop and sheet */}
       <FeedbackToast />

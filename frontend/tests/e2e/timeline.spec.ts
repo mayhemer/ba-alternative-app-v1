@@ -266,8 +266,9 @@ test('the now line stands at the current time', async ({ appPage }) => {
 /** Sets a pick from the artist sheet: one star press is Maybe, two Must-see, three "don't go". */
 async function pickFromSheet(page: Page, name: string, presses: number): Promise<void> {
   await visible(page, name).click();
+  // The selector opens beside the sheet's star and leaves it uncovered.
   for (let i = 0; i < presses; i++) {
-    await page.getByLabel('Toggle interest').filter({ visible: true }).first().click();
+    await page.getByLabel('Toggle interest').filter({ visible: true }).last().click();
   }
   await page.getByText('✕', { exact: true }).filter({ visible: true }).first().click();
 }
