@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo, useState } from 'react';
+import React, { memo, useCallback, useDeferredValue, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -171,7 +171,11 @@ function useNowPillPress(target: NowPillTarget | null, festivalDays: number[]): 
 
 export function NowPill() {
   const slug = useSelectedSlug();
-  const { interests } = useInterest();
+  // Deferred: a star press draws the star first, and the pill follows in a
+  // render of its own that a next tap can interrupt. The conflicts read the
+  // same deferred picks (ConflictContext), so the two never disagree.
+  const { interests: livePicks } = useInterest();
+  const interests = useDeferredValue(livePicks);
   const artists = useArtists(slug);
   const stages = useStages(slug);
   const artistEvents = useArtistEventMap(slug);

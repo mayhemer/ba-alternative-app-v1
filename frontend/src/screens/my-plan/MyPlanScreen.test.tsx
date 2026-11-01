@@ -466,11 +466,13 @@ describe('commits', () => {
     expect(commits).toBe(2);
   });
 
-  it('a changed pick commits twice: the change, then the cell-window check', async () => {
+  // One more than the other changes: the conflicts read the picks deferred
+  // (ConflictContext), so they land in a commit of their own after the change.
+  it('a changed pick commits three times: the change, the deferred conflicts, then the cell-window check', async () => {
     await mountSettled();
     await act(async () => { controls.cycle('batushka'); });
     await settle();
-    expect(commits).toBe(2);
+    expect(commits).toBe(3);
   });
 
   it('showing the Maybes commits twice: the change, then the cell-window check', async () => {

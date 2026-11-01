@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo } from 'react';
+import React, { createContext, useContext, useDeferredValue, useMemo } from 'react';
 import { useSelectedSlug } from '../../store/AppContext';
 import { useArtistEventMap, useArtists, useStages } from '../../store/cacheStore';
 import { useInterest } from '../interests/InterestContext';
@@ -18,7 +18,11 @@ const ConflictContext = createContext<ConflictContextValue | null>(null);
 
 export function ConflictProvider({ children }: { children: React.ReactNode }) {
   const selectedSlug = useSelectedSlug();
-  const { interests } = useInterest();
+  // Deferred: a star press draws the star first; the conflicts (the drawer's
+  // count, the sheets) follow in a render of their own that a next tap can
+  // interrupt. The now pill reads the same deferred picks.
+  const { interests: livePicks } = useInterest();
+  const interests = useDeferredValue(livePicks);
 
   // Reading through these hooks subscribes the provider to the cache, so a
   // background sync re-renders it; and because they are real values, the memo
