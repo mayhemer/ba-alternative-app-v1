@@ -1,4 +1,4 @@
-import { nowPillModel, nowPillTap, nowPillTarget, type NowPillModel } from './NowPill.model';
+import { nowPillModel, nowPillSet, nowPillTap, nowPillTarget, type NowPillModel } from './NowPill.model';
 import { getFestivalDayStart } from '../utils/festivalTime';
 import type { PlanInputs } from '../screens/my-plan/planUtils';
 import type { DbArtist, DbEvent, DbStage } from '../types/backend';
@@ -125,7 +125,7 @@ const CASES: [name: string, data: Spec[], now: number, expected: NowPillModel][]
 describe('nowPillModel', () => {
   it.each(CASES)('%s', (_name, data, now, expected) => {
     const { inputs, interests } = setup(data);
-    expect(nowPillModel(interests, inputs, DAYS, now)).toEqual(expected);
+    expect(nowPillModel(nowPillSet(interests, inputs, DAYS, now), now)).toEqual(expected);
   });
 });
 
@@ -141,7 +141,7 @@ describe('nowPillModel', () => {
 function target(data: Spec[], now: number, supportIds: string[] = []): [string, boolean, number] | null {
   const { inputs, interests } = setup(data);
   const artists = inputs.artists.map((a) => (supportIds.includes(a.artistId) ? { ...a, isPlayable: false } : a));
-  const set = nowPillTarget(interests, { ...inputs, artists }, DAYS, now);
+  const set = nowPillTarget(nowPillSet(interests, { ...inputs, artists }, DAYS, now));
   if (set === null) {
     return null;
   }
@@ -189,8 +189,8 @@ describe("the pill's set, whose timeline a tap opens", () => {
 
 describe('nowPillTap', () => {
   const { inputs, interests } = setup(DAY);
-  const gojiraLive = nowPillTarget(interests, inputs, DAYS, at(7, '19:23'));
-  const emperorNext = nowPillTarget(interests, inputs, DAYS, at(7, '21:10'));
+  const gojiraLive = nowPillTarget(nowPillSet(interests, inputs, DAYS, at(7, '19:23')));
+  const emperorNext = nowPillTarget(nowPillSet(interests, inputs, DAYS, at(7, '21:10')));
   const atNow = { showsToday: true, nowInView: true };
   const awayFromNow = { showsToday: true, nowInView: false };
   const plans = [atNow, awayFromNow, { showsToday: false, nowInView: true }, { showsToday: false, nowInView: false }];

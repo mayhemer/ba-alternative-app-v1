@@ -1,4 +1,4 @@
-import { mustSeeSets, planPicks } from './plan';
+import { liveMustSees, mustSeeSets, planPicks } from './plan';
 import type { ConflictInputs } from './conflictUtils';
 import type { DbArtist, DbEvent } from '../types/backend';
 
@@ -60,5 +60,22 @@ describe('planPicks', () => {
       ['maybe-1', 'maybe'],
       ['must-late', 'will_go'],
     ]);
+  });
+});
+
+describe('liveMustSees', () => {
+  // must-early 13:00–14:00 and late-1 12:30–13:30 (Must-sees), maybe-1 15:00–16:00 (a Maybe).
+  const picks = planPicks(INTERESTS, INPUTS, false);
+  const liveAt = (hm: string): string[] => liveMustSees(picks, at(hm)).map((s) => s.event.eventId);
+
+  it('counts a Must-see live from its first minute, not at its last', () => {
+    expect(liveAt('12:59')).toEqual(['late-1']);
+    expect(liveAt('13:00')).toEqual(['late-1', 'must-early']);
+    expect(liveAt('13:30')).toEqual(['must-early']);
+    expect(liveAt('14:00')).toEqual([]);
+  });
+
+  it('never counts a Maybe, live or not', () => {
+    expect(liveAt('15:30')).toEqual([]);
   });
 });

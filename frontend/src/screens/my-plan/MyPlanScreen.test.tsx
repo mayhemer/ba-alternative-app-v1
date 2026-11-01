@@ -106,6 +106,16 @@ jest.mock('../../lib/conflictUtils', () => {
   };
 });
 
+// Counts each time the Must-sees' sets are gathered (lib/plan), for the now pill.
+let mockMustSeeScans = 0;
+jest.mock('../../lib/plan', () => {
+  const actual = jest.requireActual('../../lib/plan');
+  return {
+    ...actual,
+    mustSeeSets: (...args: unknown[]) => { mockMustSeeScans += 1; return actual.mustSeeSets(...args); },
+  };
+});
+
 const SLUG = 'plantest';
 
 function at(dayOfMonth: number, hm: string): number {
@@ -789,5 +799,22 @@ describe('the conflict calculation per pick', () => {
 
     expect(mockConflictRuns).toBe(1);
     expect(screen.queryByTestId(`day-clash-${THU}`)).toBeNull();
+  });
+});
+
+// ── The now pill per minute ───────────────────────────────────────────────────
+//
+// The pill names one set, and a tap opens that same set: both come from one
+// selection, made once per change.
+
+describe('the now pill per minute', () => {
+  it("selects its set once for a new minute, for what it shows and where a tap goes", async () => {
+    await mount();
+    mockMustSeeScans = 0;
+
+    await minuteTo(at(7, '19:24'));
+
+    expect(mockMustSeeScans).toBe(1);
+    expect(pill()).toBe('Gojira LIVE −36\u202Fmin');
   });
 });

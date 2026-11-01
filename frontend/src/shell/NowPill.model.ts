@@ -1,6 +1,6 @@
 import { getFestivalDayStart } from '../utils/festivalTime';
 import type { PlanInputs } from '../screens/my-plan/planUtils';
-import { BREAK_WINDOW_OFFSET_MS, mustSeeSets, type PlannedSet } from '../lib/plan';
+import { BREAK_WINDOW_OFFSET_MS, liveMustSees, mustSeeSets, type PlannedSet } from '../lib/plan';
 import { formatRemaining, NARROW_SPACE, planStrings } from '../screens/my-plan/planStrings';
 import { timelineJump, type TimelineJump } from '../lib/timelineJump';
 import type { DbEvent } from '../types/backend';
@@ -16,7 +16,7 @@ import type { DbEvent } from '../types/backend';
 //           finished one, or from 08:00 when none has finished yet;
 //   logo  — nothing to say: outside the festival, before 08:00, after the day's
 //           last Must-see, or no Must-see today at all.
-// One selection (pillSet) picks the set the pill names; nowPillTarget hands the
+// One selection (nowPillSet) picks the set the pill names; nowPillTarget hands the
 // same set to a tap on My plan, which opens its timeline at now (see nowPillTap).
 
 const strings = planStrings();
@@ -38,12 +38,16 @@ function todaysMusts(interests: Record<string, string>, inputs: PlanInputs, toda
 }
 
 /** The set the pill names: live (the one started last) or next, or none for the logo. */
-type PillSet =
+export type PillSet =
   | { kind: 'live'; must: Must; others: number }
   | { kind: 'break'; must: Must }
   | null;
 
-function pillSet(
+/**
+ * The one selection the pill makes: what it shows (nowPillModel) and where a
+ * tap goes (nowPillTarget) both take its result, so they never name two sets.
+ */
+export function nowPillSet(
   interests: Record<string, string>,
   inputs: PlanInputs,
   festivalDays: number[],
@@ -55,8 +59,7 @@ function pillSet(
   }
   const musts = todaysMusts(interests, inputs, today);
 
-  const live = musts
-    .filter((m) => m.event.dateFrom <= now && now < m.event.dateTo)
+  const live = liveMustSees(musts, now)
     .sort((a, b) => b.event.dateFrom - a.event.dateFrom || a.event.dateTo - b.event.dateTo);
   if (live.length > 0) {
     return { kind: 'live', must: live[0], others: live.length - 1 };
@@ -78,13 +81,7 @@ function pillSet(
   return { kind: 'break', must: next };
 }
 
-export function nowPillModel(
-  interests: Record<string, string>,
-  inputs: PlanInputs,
-  festivalDays: number[],
-  now: number,
-): NowPillModel {
-  const set = pillSet(interests, inputs, festivalDays, now);
+export function nowPillModel(set: PillSet, now: number): NowPillModel {
   if (set === null) {
     return LOGO;
   }
@@ -110,13 +107,7 @@ export function nowPillModel(
 }
 
 /** The set the pill names and where it is drawn; null while the pill shows the logo. */
-export function nowPillTarget(
-  interests: Record<string, string>,
-  inputs: PlanInputs,
-  festivalDays: number[],
-  now: number,
-): NowPillTarget | null {
-  const set = pillSet(interests, inputs, festivalDays, now);
+export function nowPillTarget(set: PillSet): NowPillTarget | null {
   if (set === null) {
     return null;
   }

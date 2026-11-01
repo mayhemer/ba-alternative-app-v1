@@ -75,3 +75,11 @@ export function planPicks(interests: Record<string, string>, inputs: PickInputs,
   });
   return sets.sort((a, b) => a.event.dateFrom - b.event.dateFrom);
 }
+
+/**
+ * The Must-sees playing at `now`, from their first minute to before their last,
+ * in the order given. The one "live" rule of My plan's list and the now pill.
+ */
+export function liveMustSees(sets: PlannedSet[], now: number): PlannedSet[] {
+  return sets.filter((s) => s.level === 'will_go' && s.event.dateFrom <= now && now < s.event.dateTo);
+}

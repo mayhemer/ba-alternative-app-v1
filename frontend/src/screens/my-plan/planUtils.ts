@@ -1,5 +1,5 @@
 import type { ConflictEntry, ConflictInputs, Conflicts } from '../../lib/conflictUtils';
-import { BREAK_WINDOW_OFFSET_MS, planPicks } from '../../lib/plan';
+import { BREAK_WINDOW_OFFSET_MS, liveMustSees, planPicks } from '../../lib/plan';
 import { getFestivalDayStart } from '../../utils/festivalTime';
 import { planCapModel, type PlanCapModel } from './PlanCap.model';
 import { planEmptyModel, type PlanEmptyModel } from './PlanEmpty.model';
@@ -75,9 +75,7 @@ export function buildPlanDay(
   const conflictsOnly = level === 'conflicts';
   const allPicks = planPicks(interests, inputs, level === 'all');
   const dayPicks = allPicks.filter((p) => getFestivalDayStart(p.event.dateFrom) === dayStart);
-  const liveMusts = allPicks
-    .filter((p) => p.level === 'will_go' && p.event.dateFrom <= now && now < p.event.dateTo)
-    .map((p) => p.event);
+  const liveMusts = liveMustSees(allPicks, now).map((p) => p.event);
   const visible = dayPicks.filter((p) => {
     if (conflictsOnly) {
       return p.level === 'will_go' && overlaps.has(p.event.eventId);

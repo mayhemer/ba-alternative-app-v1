@@ -81,7 +81,7 @@ On every screen that has a top bar. On festival days it replaces the logo while 
   - On My plan showing another day, or showing today with now out of view: the same, My plan on **today, scrolled to now**.
   - On My plan showing today with **now in view**: shows **the pill's set's timeline at now** (`useJumpToTimelineNow`): the Program or the Support Program, whichever the set the pill names is on, scrolled to now in time only, as today's day button does; the lane stays where it was. So on My plan a first tap brings now into view and the next one switches.
   - **Now is in view** (`planNowInView`) when the first now arrow is drawn inside the **central 80 %** (`PLAN_NOW_BAND`, 10 % in from each edge) of the list above the floating bottom bar (`planNowView`), or when a scroll to now would not move the list (it cannot get closer: the arrow near the top or the end of the day, or no arrow). Asked only at the tap: My plan registers a probe (`planNowProbe`), so scrolling re-renders nothing.
-  - The set comes from the same selection as the pill's text (`nowPillTarget` and `nowPillModel` share `pillSet`), so the tap always goes to the set the pill names.
+  - The set comes from the same selection as the pill's text (`nowPillTarget` and `nowPillModel` both take the one `nowPillSet`), so the tap always goes to the set the pill names.
   - The logo is not a button.
 
 ### Filter chip (right, My plan only)

@@ -12,7 +12,7 @@ import { festivalToday } from '../utils/festivalTime';
 import { navigationRef } from '../navigation/navigationRef';
 import { useJumpToTimelineNow } from '../navigation/useJumpToTimeline';
 import { isPlanNowInView } from '../screens/my-plan/planNowProbe';
-import { nowPillModel, nowPillTap, nowPillTarget, type NowPillModel, type NowPillTarget } from './NowPill.model';
+import { nowPillModel, nowPillSet, nowPillTap, nowPillTarget, type NowPillModel, type NowPillTarget } from './NowPill.model';
 import { BOLD, PROGRESS_COLORS, TABULAR } from '../screens/my-plan/planStyles';
 import { colors } from '../styling/tokens';
 
@@ -181,15 +181,13 @@ export function NowPill() {
   const festivalDays = useFestivalDays(slug);
   const now = useMinuteNow();
 
-  const state = useMemo(
-    () => nowPillModel(interests, { artists, stages, artistEvents }, festivalDays, now),
+  // One selection for what the pill shows and where a tap goes.
+  const set = useMemo(
+    () => nowPillSet(interests, { artists, stages, artistEvents }, festivalDays, now),
     [interests, artists, stages, artistEvents, festivalDays, now],
   );
-
-  const target = useMemo(
-    () => nowPillTarget(interests, { artists, stages, artistEvents }, festivalDays, now),
-    [interests, artists, stages, artistEvents, festivalDays, now],
-  );
+  const state = useMemo(() => nowPillModel(set, now), [set, now]);
+  const target = useMemo(() => nowPillTarget(set), [set]);
   const onPress = useNowPillPress(target, festivalDays);
 
   return <NowPillView state={state} onPress={onPress} />;
