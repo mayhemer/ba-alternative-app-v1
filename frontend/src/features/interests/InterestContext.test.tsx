@@ -6,6 +6,7 @@ import {
   nextStatus,
   useInterest,
   useInterestCycle,
+  useInterestStatus,
   type InterestStatus,
 } from './InterestContext';
 import { deleteUserInterest, fetchUserInterests, putUserInterest } from '../../adapters/baUserApiAdapter';
@@ -280,5 +281,78 @@ describe('refreshing from the server', () => {
     await act(async () => { await refresh(); });
 
     expect(mockFetch).not.toHaveBeenCalled();
+  });
+});
+
+// ── One artist's status ───────────────────────────────────────────────────────
+//
+// What a row reads: its own artist's pick, and a render only when that changes.
+
+describe("one artist's status", () => {
+  const statusRenders: Record<string, number> = {};
+
+  function StatusProbe({ artistId }: { artistId: string }) {
+    const status = useInterestStatus(artistId);
+    statusRenders[artistId] = (statusRenders[artistId] ?? 0) + 1;
+    return <Text testID={`status-${artistId}`}>{status}</Text>;
+  }
+
+  async function mountStatuses(...artistIds: string[]) {
+    await render(
+      <InterestProvider>
+        <Probe artistId="unused" />
+        {artistIds.map((id) => <StatusProbe key={id} artistId={id} />)}
+      </InterestProvider>,
+    );
+    await act(async () => { await flush(); });
+    for (const id of Object.keys(statusRenders)) { delete statusRenders[id]; }
+  }
+
+  const shownFor = (artistId: string) => screen.getByTestId(`status-${artistId}`).props.children;
+
+  it('shows the pick the startup gate loaded', async () => {
+    signedIn(null);
+    await setInterest(mockCurrentSlug, 'a1', 'will_go');
+    await mountStatuses('a1');
+    expect(shownFor('a1')).toBe('will_go');
+  });
+
+  it('follows a press, a direct choice and a pick from another device', async () => {
+    await mountStatuses('a1');
+
+    await act(async () => { press('a1'); await flush(); });
+    expect(shownFor('a1')).toBe('maybe');
+
+    await act(async () => { choose('a1', 'dont_go'); await flush(); });
+    expect(shownFor('a1')).toBe('dont_go');
+
+    mockFetch.mockResolvedValue([
+      { userId: 'u1', slugArtistId: `${mockCurrentSlug}#a1`, status: 'will_go', updatedAt: NOW + 1 },
+    ]);
+    await act(async () => { await refresh(); await flush(); });
+    expect(shownFor('a1')).toBe('will_go');
+  });
+
+  it("renders only for its own artist's change", async () => {
+    await mountStatuses('a1', 'a2');
+
+    await act(async () => { press('a1'); await flush(); });
+
+    expect(statusRenders).toEqual({ a1: 1 });
+    expect(shownFor('a2')).toBe('none');
+  });
+
+  it('a press reads the pick at call time, without subscribing', async () => {
+    let getStatus: (artistId: string) => InterestStatus = () => 'none';
+    function Reader() {
+      getStatus = useInterestCycle().getStatus;
+      return null;
+    }
+    await render(<InterestProvider><Probe artistId="a1" /><Reader /></InterestProvider>);
+    await act(async () => { await flush(); });
+
+    await act(async () => { press('a1'); await flush(); });
+
+    expect(getStatus('a1')).toBe('maybe');
   });
 });

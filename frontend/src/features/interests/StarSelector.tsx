@@ -4,7 +4,7 @@ import Animated, { Easing, ReduceMotion, useAnimatedStyle, useSharedValue, withT
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../../ui/Text';
 import { StarGlyph } from './StarButton';
-import { useInterest, type InterestStatus } from './InterestContext';
+import { useInterestStatus, type InterestStatus } from './InterestContext';
 import { useOpenStarSelector, useStarSelectorActions, type OpenStarSelector } from './StarSelectorContext';
 import {
   starSelectorModel,
@@ -51,12 +51,11 @@ export function StarSelector() {
 }
 
 function OpenSelector({ open }: { open: OpenStarSelector }) {
-  const { getStatus } = useInterest();
+  const status = useInterestStatus(open.artistId);
   const { select, hold, release } = useStarSelectorActions();
   const insets = useSafeAreaInsets();
   const { height: windowHeight, isShort } = useLayoutMode();
 
-  const status = getStatus(open.artistId);
   const model = starSelectorModel({
     frame: open.frame,
     size: open.size,

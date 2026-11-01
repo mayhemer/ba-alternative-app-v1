@@ -4,8 +4,9 @@ import React, {
   useContext,
   useEffect,
   useMemo,
-  useReducer,
   useRef,
+  useState,
+  useSyncExternalStore,
 } from 'react';
 import { useSelectedSlug } from '../../store/AppContext';
 import { useAuth } from '../../auth/AuthContext';
@@ -31,14 +32,6 @@ export type { InterestStatus };
 // Local React state only needs the status value; updatedAt is managed by cacheService.
 type InterestMap = Record<string, InterestStatus>; // artistId → status
 
-type InterestState = {
-  interests: InterestMap;
-};
-
-type InterestAction =
-  | { type: 'REPLACE'; interests: InterestMap }
-  | { type: 'SET'; artistId: string; status: InterestStatus };
-
 export type CycleStatusResult = {
   next: InterestStatus;
   promise: Promise<LocalInterest>; // resolves when local persistence is complete
@@ -50,6 +43,8 @@ type InterestStateContextValue = {
 };
 
 type InterestCycleContextValue = {
+  /** The pick now, read at call time (a press, a handler): never re-renders its user. */
+  getStatus: (artistId: string) => InterestStatus;
   cycleStatus: (artistId: string) => CycleStatusResult;
   /** Sets a status directly, as the star selector does: no steps between. */
   setStatus: (artistId: string, status: InterestStatus) => CycleStatusResult;
@@ -84,7 +79,35 @@ function toStatusMap(localMap: Record<string, LocalInterest>): InterestMap {
   return result;
 }
 
-// ── Reducer ───────────────────────────────────────────────────────────────────
+// ── The picks, as a small store ───────────────────────────────────────────────
+//
+// The one copy of my picks in memory. Readers subscribe to as much as they draw:
+// a row to its own artist's pick (useInterestStatus), so a press renders that
+// row alone; the screens and providers that derive from every pick to the whole
+// map (useInterest). Each change is a new map, never an edit of the old one, as
+// useSyncExternalStore needs.
+
+type InterestStore = {
+  get: () => InterestMap;
+  set: (next: InterestMap) => void;
+  subscribe: (listener: () => void) => () => void;
+};
+
+function createInterestStore(initial: InterestMap): InterestStore {
+  let current = initial;
+  const listeners = new Set<() => void>();
+  return {
+    get: () => current,
+    set: (next) => {
+      current = next;
+      listeners.forEach((listener) => { listener(); });
+    },
+    subscribe: (listener) => {
+      listeners.add(listener);
+      return () => { listeners.delete(listener); };
+    },
+  };
+}
 
 /**
  * Starts from the interests StartupGate already loaded into memory, rather than
@@ -93,20 +116,8 @@ function toStatusMap(localMap: Record<string, LocalInterest>): InterestMap {
  * The gate unmounts this provider on an edition switch and loads the new
  * edition before mounting it again, so reading once at creation is enough.
  */
-function initialInterestState(slug: string): InterestState {
-  return { interests: toStatusMap(getLocalInterests(slug) ?? {}) };
-}
-
-function interestReducer(state: InterestState, action: InterestAction): InterestState {
-  switch (action.type) {
-    case 'REPLACE':
-      return { interests: action.interests };
-    case 'SET':
-      return {
-        ...state,
-        interests: { ...state.interests, [action.artistId]: action.status },
-      };
-  }
+function initialInterests(slug: string): InterestMap {
+  return toStatusMap(getLocalInterests(slug) ?? {});
 }
 
 // ── Contexts ──────────────────────────────────────────────────────────────────
@@ -116,16 +127,14 @@ function interestReducer(state: InterestState, action: InterestAction): Interest
 // - InterestCycleContext is stable and only changes when the slug changes
 const InterestStateContext = createContext<InterestStateContextValue | null>(null);
 const InterestCycleContext = createContext<InterestCycleContextValue | null>(null);
+// The store itself, for useInterestStatus. Stable for the provider's life.
+const InterestStoreContext = createContext<InterestStore | null>(null);
 
 export function InterestProvider({ children }: { children: React.ReactNode }) {
   const selectedSlug = useSelectedSlug();
   const { isLoggedIn, getAccessToken } = useAuth();
-  const [state, dispatch] = useReducer(interestReducer, selectedSlug, initialInterestState);
-
-  // Ref so cycleStatus can read current state without it being a dependency,
-  // keeping cycleStatus stable across interest updates.
-  const stateRef = useRef(state);
-  useEffect(() => { stateRef.current = state; }, [state]);
+  const [store] = useState(() => createInterestStore(initialInterests(selectedSlug)));
+  const interests = useSyncExternalStore(store.subscribe, store.get, store.get);
 
   // Fetches server interests and merges them with local state.
   // Called on login and on slug change while logged in.
@@ -135,7 +144,7 @@ export function InterestProvider({ children }: { children: React.ReactNode }) {
 
     const serverInterests = await fetchUserInterests(slug, token);
     const merged = await mergeServerInterests(slug, serverInterests);
-    dispatch({ type: 'REPLACE', interests: toStatusMap(merged) });
+    store.set(toStatusMap(merged));
 
     // Push back any local interests that won the merge (local.updatedAt was newer).
     // This syncs changes made offline or on another device that we just merged locally.
@@ -160,7 +169,7 @@ export function InterestProvider({ children }: { children: React.ReactNode }) {
         }
       }
     }
-  }, [getAccessToken]);
+  }, [getAccessToken, store]);
 
   // Local picks are already in the initial state; merge the server's copy in if
   // signed in. Logging in later is handled by the effect below.
@@ -184,15 +193,21 @@ export function InterestProvider({ children }: { children: React.ReactNode }) {
 
   const getStatus = useCallback(
     (artistId: string): InterestStatus => {
-      return state.interests[artistId] ?? 'none';
+      return interests[artistId] ?? 'none';
     },
-    [state.interests],
+    [interests],
+  );
+
+  // The same, read from the store at call time: stable across picks.
+  const getCurrentStatus = useCallback(
+    (artistId: string): InterestStatus => store.get()[artistId] ?? 'none',
+    [store],
   );
 
   const setStatus = useCallback(
     (artistId: string, next: InterestStatus): CycleStatusResult => {
       const promise = setInterest(selectedSlug, artistId, next);
-      dispatch({ type: 'SET', artistId, status: next });
+      store.set({ ...store.get(), [artistId]: next });
 
       // Fire-and-forget sync to server. Errors are swallowed; the merge on next
       // login/launch will reconcile any divergence using updatedAt timestamps.
@@ -210,16 +225,14 @@ export function InterestProvider({ children }: { children: React.ReactNode }) {
 
       return { next, promise };
     },
-    [selectedSlug, getAccessToken],
+    [selectedSlug, getAccessToken, store],
   );
 
-  // cycleStatus reads state via ref so it stays stable across interest updates.
+  // Reads the store, not render state, so it stays stable across picks and a
+  // second press always steps on from the first.
   const cycleStatus = useCallback(
-    (artistId: string): CycleStatusResult => {
-      const current = stateRef.current.interests[artistId] ?? 'none';
-      return setStatus(artistId, nextStatus(current));
-    },
-    [setStatus],
+    (artistId: string): CycleStatusResult => setStatus(artistId, nextStatus(getCurrentStatus(artistId))),
+    [setStatus, getCurrentStatus],
   );
 
   // Manual refresh entry point (used by the lens when a source is (re)selected).
@@ -228,15 +241,20 @@ export function InterestProvider({ children }: { children: React.ReactNode }) {
     [syncFromServer, selectedSlug],
   );
 
-  const stateValue = useMemo(() => ({ interests: state.interests, getStatus }), [state.interests, getStatus]);
-  const cycleValue = useMemo(() => ({ cycleStatus, setStatus, refreshFromServer }), [cycleStatus, setStatus, refreshFromServer]);
+  const stateValue = useMemo(() => ({ interests, getStatus }), [interests, getStatus]);
+  const cycleValue = useMemo(
+    () => ({ getStatus: getCurrentStatus, cycleStatus, setStatus, refreshFromServer }),
+    [getCurrentStatus, cycleStatus, setStatus, refreshFromServer],
+  );
 
   return (
-    <InterestCycleContext.Provider value={cycleValue}>
-      <InterestStateContext.Provider value={stateValue}>
-        {children}
-      </InterestStateContext.Provider>
-    </InterestCycleContext.Provider>
+    <InterestStoreContext.Provider value={store}>
+      <InterestCycleContext.Provider value={cycleValue}>
+        <InterestStateContext.Provider value={stateValue}>
+          {children}
+        </InterestStateContext.Provider>
+      </InterestCycleContext.Provider>
+    </InterestStoreContext.Provider>
   );
 }
 
@@ -259,4 +277,14 @@ export function useInterestCycle() {
     throw new Error('useInterestCycle must be used inside InterestProvider');
   }
   return cycleCtx;
+}
+
+/** One artist's pick: re-renders its user only when that pick changes. For rows and the star selector. */
+export function useInterestStatus(artistId: string): InterestStatus {
+  const store = useContext(InterestStoreContext);
+  if (store === null) {
+    throw new Error('useInterestStatus must be used inside InterestProvider');
+  }
+  const read = useCallback((): InterestStatus => store.get()[artistId] ?? 'none', [store, artistId]);
+  return useSyncExternalStore(store.subscribe, read, read);
 }

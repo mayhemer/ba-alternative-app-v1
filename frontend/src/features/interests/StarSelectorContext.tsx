@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { useInterest, useInterestCycle, type InterestStatus } from './InterestContext';
+import { useInterestCycle, type InterestStatus } from './InterestContext';
 import {
   starSelectorCapsule,
   touchesCapsule,
@@ -54,11 +54,9 @@ const ActionsContext = createContext<Actions | null>(null);
 const StateContext = createContext<OpenStarSelector | null>(null);
 
 export function StarSelectorProvider({ children }: { children: React.ReactNode }) {
-  const { cycleStatus, setStatus } = useInterestCycle();
-  const { getStatus } = useInterest();
-  // Read at press time, without making pressStar change with every pick.
-  const getStatusRef = useRef(getStatus);
-  getStatusRef.current = getStatus;
+  // getStatus reads the pick at press time and never changes, so this provider
+  // does not render for picks.
+  const { cycleStatus, setStatus, getStatus } = useInterestCycle();
   const openingsRef = useRef(0);
   const [open, setOpen] = useState<OpenStarSelector | null>(null);
   // Mirrors `open` for the actions, which stay stable and so cannot read state.
@@ -113,7 +111,7 @@ export function StarSelectorProvider({ children }: { children: React.ReactNode }
       restartTimer();
       return;
     }
-    const from = getStatusRef.current(artistId);
+    const from = getStatus(artistId);
     const { promise } = cycleStatus(artistId);
     // The measurement may come back after the save has already failed.
     let failed = false;
@@ -124,7 +122,7 @@ export function StarSelectorProvider({ children }: { children: React.ReactNode }
       update({ id: openingsRef.current, artistId, size, frame: { x, y, width, height }, from, failed });
       restartTimer();
     });
-  }, [cycleStatus, watchSave, update, restartTimer]);
+  }, [cycleStatus, getStatus, watchSave, update, restartTimer]);
 
   const select = useCallback((status: InterestStatus): void => {
     const current = openRef.current;
