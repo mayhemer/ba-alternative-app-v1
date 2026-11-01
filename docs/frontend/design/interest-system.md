@@ -55,7 +55,7 @@ to set a pick.
   text on the dark screen, centred over
   them; on the top row, where there is no room under the top bar, below them. A failed save drops
   the tick and adds "⚠ not saved" as a row of its own in the box.
-- **Closing**: 1.8 s after the last tap (`STAR_SELECTOR_TIMEOUT_MS`), never while a finger is on
+- **Closing**: 2.5 s after the last tap (`STAR_SELECTOR_TIMEOUT_MS`), never while a finger is on
   it, not at all after a failed save; at once on a touch anywhere off it and off its own star (and
   that star's reach), which still does what it does (AppShell sees every touch on its way down
   without claiming it: a tap on another star turns that one and moves the selector there); and when

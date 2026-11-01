@@ -12,7 +12,7 @@ import { FeatureProviders } from '../../../tests/setup/PerfProviders';
 // apart from it, confirming the change: the four states, the current one ringed
 // (the ring moves there from the state before) and the others dimmed, its name
 // above with a tick. A tap on a state sets it; another press on the star turns
-// it again, the same selector staying open. It closes 1.8 s after the last tap
+// it again, the same selector staying open. It closes 2.5 s after the last tap
 // (never while a finger is on it), or on a touch anywhere off it and off its
 // star. Nothing around it is dimmed.
 //
@@ -186,15 +186,15 @@ it('closes on a touch between itself and the star\'s reach', async () => {
   expect(selector()).toBeNull();
 });
 
-it('closes by itself 1.8 s after the last tap', async () => {
+it('closes by itself 2.5 s after the last tap', async () => {
   await pressStar();
 
-  await act(async () => { jest.advanceTimersByTime(1700); });
+  await act(async () => { jest.advanceTimersByTime(2400); });
   expect(selector()).toBeTruthy();
 
   // A tap restarts the wait.
   await act(async () => { fireEvent.press(screen.getByLabelText('Must see!')); });
-  await act(async () => { jest.advanceTimersByTime(1700); });
+  await act(async () => { jest.advanceTimersByTime(2400); });
   expect(selector()).toBeTruthy();
 
   await act(async () => { jest.advanceTimersByTime(100); });
@@ -209,7 +209,7 @@ it('never closes while a finger is on it', async () => {
   expect(selector()).toBeTruthy();
 
   await act(async () => { fireEvent(screen.getByTestId('star-selector'), 'touchEnd'); });
-  await act(async () => { jest.advanceTimersByTime(1800); });
+  await act(async () => { jest.advanceTimersByTime(2500); });
   expect(selector()).toBeNull();
 });
 

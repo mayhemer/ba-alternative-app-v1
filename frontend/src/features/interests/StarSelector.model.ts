@@ -15,7 +15,7 @@ export type StarFrame = { x: number; y: number; width: number; height: number };
 export type StarSize = keyof typeof STAR_ICON_SIZE;
 
 /** Closes this long after the last tap on the star or in the selector. */
-export const STAR_SELECTOR_TIMEOUT_MS = 1800;
+export const STAR_SELECTOR_TIMEOUT_MS = 2500;
 /** The ring's move from one state to the next, starting at once. */
 export const STAR_SELECTOR_RING_MS = 100;
 /** Opacity of the states other than the current one. */

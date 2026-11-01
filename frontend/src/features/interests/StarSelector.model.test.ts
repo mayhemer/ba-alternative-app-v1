@@ -128,6 +128,6 @@ describe('touchesStar', () => {
   });
 });
 
-it('closes 1.8 s after the last tap', () => {
-  expect(STAR_SELECTOR_TIMEOUT_MS).toBe(1800);
+it('closes 2.5 s after the last tap', () => {
+  expect(STAR_SELECTOR_TIMEOUT_MS).toBe(2500);
 });

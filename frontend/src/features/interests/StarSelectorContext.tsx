@@ -12,7 +12,7 @@ import { perfMark } from '../../utils/perfMarks';
 
 // ── The star selector's state ─────────────────────────────────────────────────
 //
-// Which star the selector is open on, and when it closes: 1.8 s after the last
+// Which star the selector is open on, and when it closes: 2.5 s after the last
 // tap, never while a finger is on it, never after a failed save (that stays
 // until dismissed), at once on a touch anywhere off it and off its star
 // (AppShell reports every touch) or when the list scrolls. A star press turns

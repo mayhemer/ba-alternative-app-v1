@@ -1,5 +1,5 @@
 # Closes the artist sheet after a star press: waits for the star selector to
-# close by itself (1.8 s after the last tap; until then a touch on it is its
+# close by itself (2.5 s after the last tap; until then a touch on it is its
 # own), then swipes the sheet down by its handle. The sheet's backdrop covers
 # the top bar, lens chip included, while it is open.
 appId: cz.janbambas.ba
