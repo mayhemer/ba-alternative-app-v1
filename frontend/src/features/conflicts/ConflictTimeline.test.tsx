@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
 import { StyleSheet } from 'react-native';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import type { TestInstance } from 'test-renderer';
 import { ConflictTimeline } from './ConflictTimeline';
 import { FeatureProviders } from '../../../tests/setup/PerfProviders';
+import { useInterestCycle, useInterestStatus } from '../interests/InterestContext';
 import { createDataCollector, populateCache } from '../../cache/cacheService';
 import { getCategoryLocalized } from '../../utils/localization';
 import { getFestivalDayStart } from '../../utils/festivalTime';
@@ -23,6 +24,19 @@ import scheduleFixture from '../../../tests/fixtures/generated/ba2025/schedule.j
 jest.mock('../../store/AppContext', () => {
   const actual = jest.requireActual('../../store/AppContext');
   return { ...actual, useSelectedSlug: () => 'ba2025' };
+});
+
+// Counts each model built, for the pick order at the end.
+let mockModelBuilds = 0;
+jest.mock('./ConflictTimeline.model', () => {
+  const actual = jest.requireActual('./ConflictTimeline.model');
+  return {
+    ...actual,
+    conflictTimelineModel: (...args: unknown[]) => {
+      mockModelBuilds += 1;
+      return actual.conflictTimelineModel(...args);
+    },
+  };
 });
 
 jest.mock('../../auth/AuthContext', () => ({
@@ -199,5 +213,54 @@ describe('now', () => {
     const arrow = line.children.find((c): c is TestInstance => typeof c !== 'string' && styleOf(c).borderTopColor === '#ff4444');
     expect(arrow).toBeDefined();
     expect(styleOf(arrow!).borderTopWidth).toBe(7);
+  });
+});
+
+// ── What a pick renders first ─────────────────────────────────────────────────
+//
+// A pick (from the artist sheet opened from this one) commits the pressed star
+// first, on its own; the clash timeline only follows from it, in a deferred
+// render after that commit. A probe beside it reads the pick the way the star
+// does and notes, in the commit that shows its new state, how many times the
+// timeline had built its model by then.
+
+describe('what a pick renders first', () => {
+  let builtBeforeStar: number | null = null;
+  let cycle: (artistId: string) => void = () => undefined;
+
+  function StarProbe({ artistId }: { artistId: string }) {
+    const status = useInterestStatus(artistId);
+    cycle = useInterestCycle().cycleStatus as (artistId: string) => void;
+    const mounted = useRef(false);
+    useLayoutEffect(() => {
+      if (!mounted.current) {
+        mounted.current = true;
+        return;
+      }
+      builtBeforeStar = mockModelBuilds;
+    }, [status]);
+    return null;
+  }
+
+  it('commits the star before the clash timeline builds again', async () => {
+    await render(
+      <FeatureProviders>
+        <StarProbe artistId={band.artistId} />
+        <ConflictTimeline events={[band, support]} onBlockPress={jest.fn()} />
+      </FeatureProviders>,
+    );
+    mockModelBuilds = 0;
+    builtBeforeStar = null;
+
+    await act(async () => { cycle(band.artistId); });
+
+    expect(builtBeforeStar).toBe(0);
+    // And then it did follow.
+    expect(mockModelBuilds).toBe(1);
+    // Back to none: Must-see, don't go, none.
+    const press = (): void => { cycle(band.artistId); };
+    await act(async () => { press(); });
+    await act(async () => { press(); });
+    await act(async () => { press(); });
   });
 });

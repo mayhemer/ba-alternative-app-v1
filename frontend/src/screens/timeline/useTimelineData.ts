@@ -1,20 +1,14 @@
 import { useMemo } from 'react';
 import { useSelectedSlug } from '../../store/AppContext';
-import {
-  useArtistEventMap,
-  useArtists,
-  useCategories,
-  useEvents,
-  useStages,
-} from '../../store/cacheStore';
-import { useInterest } from '../../features/interests/InterestContext';
+import { useArtists, useCategories, useEvents } from '../../store/cacheStore';
+import { useDeferredInterests } from '../../features/interests/InterestContext';
+import { useConflicts } from '../../features/conflicts/ConflictContext';
 import { useTimelineFilter } from './TimelineFilterContext';
 import { useLens } from '../../features/social/LensContext';
 import { useSocialData } from '../../features/social/SocialContext';
 import type { DbArtist } from '../../types/backend';
 import { timelineDayModel, type TimelineDayModel } from './TimelineDay.model';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
-import { computeConflictOverlaps } from '../../features/conflicts/conflictUtils';
 
 type Options = {
   /**
@@ -34,7 +28,11 @@ type Options = {
  */
 export function useTimelineData({ dayStart, filterArtist, useSubRows = false }: Options): TimelineDayModel {
   const selectedSlug = useSelectedSlug();
-  const { interests } = useInterest();
+  // Deferred, with the conflicts: a pick from the artist sheet commits its star
+  // first, and the blocks and bars follow.
+  const interests = useDeferredInterests();
+  // The shared conflict calculation, the one the sheets and the drawer count follow.
+  const { overlaps: conflictOverlaps } = useConflicts();
   const { hiddenCategories } = useTimelineFilter();
   const { scope } = useLens();
   const { isShort } = useLayoutMode();
@@ -51,16 +49,6 @@ export function useTimelineData({ dayStart, filterArtist, useSubRows = false }: 
   const events     = useEvents(selectedSlug);
   const artists    = useArtists(selectedSlug);
   const categories = useCategories(selectedSlug);
-  const stages     = useStages(selectedSlug);
-  const artistEvents = useArtistEventMap(selectedSlug);
-
-  // The cache inputs are dependencies: a memo that read the cache through
-  // computeConflictOverlaps but depended only on the interest map is why the
-  // timeline's conflict bars once went stale after a background sync.
-  const conflictOverlaps = useMemo(
-    () => computeConflictOverlaps(interests, { artists, stages, artistEvents }),
-    [interests, artists, stages, artistEvents],
-  );
 
   return useMemo(
     () => timelineDayModel({

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
 import { AppState, ScrollView, StyleSheet } from 'react-native';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import type { TestInstance } from 'test-renderer';
@@ -7,7 +7,7 @@ import { BaseTimelineScreen } from './BaseTimelineScreen';
 import { DaySwitcher } from './DaySwitcher';
 import { PerfProviders } from '../../../tests/setup/PerfProviders';
 import { useLens } from '../../features/social/LensContext';
-import { useInterestCycle } from '../../features/interests/InterestContext';
+import { useInterestCycle, useInterestStatus } from '../../features/interests/InterestContext';
 import { rendersSinceReset, resetRenders } from '../../../tests/setup/countRenders';
 import { useTimelineFilter } from './TimelineFilterContext';
 import { createDataCollector, getCategories, hydrateInterests, populateCache, setInterest } from '../../cache/cacheService';
@@ -869,5 +869,55 @@ describe('the progressive mount', () => {
     expect(screen.getByText('M&G - CARNIVORE A.D.')).toBeTruthy();
     expect(screen.getByText('M&G - FUNERAL')).toBeTruthy();
     expect(blockCount()).toBe(6);
+  });
+});
+
+// ── What a pick renders first ─────────────────────────────────────────────────
+//
+// A pick (from the artist sheet over the timeline) commits the pressed star
+// first, on its own; the blocks and lanes only follow from it, in a deferred
+// render after that commit. A probe beside the screen reads the pick the way the
+// star does and notes, in the commit that shows its new state, which of the
+// timeline's elements had rendered by then.
+
+describe('what a pick renders first', () => {
+  let renderedBeforeStar: Record<string, number> | null = null;
+
+  function StarProbe({ artistId }: { artistId: string }) {
+    const status = useInterestStatus(artistId);
+    const mounted = useRef(false);
+    useLayoutEffect(() => {
+      if (!mounted.current) {
+        mounted.current = true;
+        return;
+      }
+      renderedBeforeStar = rendersSinceReset();
+    }, [status]);
+    return null;
+  }
+
+  it('commits the star before the timeline renders its block and lane', async () => {
+    setSelectedDay('first-star', WED);
+    await render(
+      <PerfProviders>
+        <>
+          <Controls />
+          <StarProbe artistId="51" />
+          <BaseTimelineScreen title="Timeline" screenKey="first-star" BottomBarComponent={NoBottomBar} filterArtist={playable} />
+        </>
+      </PerfProviders>,
+    );
+    await settleWholeDay();
+    resetRenders();
+    renderedBeforeStar = null;
+
+    await act(async () => { cycle('51'); });
+    await settle();
+
+    expect(renderedBeforeStar).toEqual({});
+    // And then they did follow: the block and its lane.
+    expect(rendersSinceReset()).toEqual({ '3': 1, '7029': 1 });
+    // Back to none: Must-see, don't go, none — one press per render.
+    await pressTimes('51', 3);
   });
 });

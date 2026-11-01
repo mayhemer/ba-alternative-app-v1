@@ -124,8 +124,13 @@ export function computeConflictOverlaps(
   interests: Record<string, string>,
   inputs: ConflictInputs,
 ): Map<string, ConflictOverlap[]> {
+  return conflictOverlapsOf(computeConflictEntries(interests, inputs));
+}
+
+/** The same, from conflict entries already computed (ConflictProvider's). */
+export function conflictOverlapsOf(entries: ConflictEntry[]): Map<string, ConflictOverlap[]> {
   const map = new Map<string, ConflictOverlap[]>();
-  for (const entry of computeConflictEntries(interests, inputs)) {
+  for (const entry of entries) {
     // Pairwise intersections of this event with each event it conflicts with.
     const intervals: ConflictOverlap[] = [];
     for (const other of entry.overlappingEvents) {

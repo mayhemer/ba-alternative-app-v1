@@ -4,14 +4,16 @@ import { useArtistEventMap, useArtists, useStages } from '../../store/cacheStore
 import { useDeferredInterests } from '../interests/InterestContext';
 import { useStableValue } from '../../hooks/useStableValue';
 import { equalValues } from '../../ui/sameProps';
-import { computeConflictEntries } from './conflictUtils';
-import type { ConflictEntry } from './conflictUtils';
+import { computeConflictEntries, conflictOverlapsOf } from './conflictUtils';
+import type { ConflictEntry, ConflictOverlap } from './conflictUtils';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type ConflictContextValue = {
   entries: ConflictEntry[];
   count: number;
+  /** Per clashing set (eventId), where it overlaps others: the timelines' conflict bars. */
+  overlaps: Map<string, ConflictOverlap[]>;
 };
 
 // ── Context ───────────────────────────────────────────────────────────────────
@@ -42,7 +44,7 @@ export function ConflictProvider({ children }: { children: React.ReactNode }) {
   const entries = useStableValue(computed, equalValues);
 
   const value = useMemo<ConflictContextValue>(
-    () => ({ entries, count: entries.length }),
+    () => ({ entries, count: entries.length, overlaps: conflictOverlapsOf(entries) }),
     [entries],
   );
 

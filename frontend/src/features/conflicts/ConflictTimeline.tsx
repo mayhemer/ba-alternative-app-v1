@@ -2,9 +2,9 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { ScrollView, useWindowDimensions, View } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
 import { useSelectedSlug } from '../../store/AppContext';
-import { useArtistEventMap, useArtists, useCategories, useStages } from '../../store/cacheStore';
-import { useInterest } from '../interests/InterestContext';
-import { computeConflictOverlaps } from './conflictUtils';
+import { useArtists, useCategories } from '../../store/cacheStore';
+import { useDeferredInterests } from '../interests/InterestContext';
+import { useConflicts } from './ConflictContext';
 import { useNowX } from '../timeline/useNowX';
 import { CategoryLane } from '../timeline/CategoryLane';
 import { conflictTimelineModel } from './ConflictTimeline.model';
@@ -38,9 +38,10 @@ export function ConflictTimeline({ events, onBlockPress }: Props) {
   const slug = useSelectedSlug();
   const artists = useArtists(slug);
   const categories = useCategories(slug);
-  const stages = useStages(slug);
-  const artistEvents = useArtistEventMap(slug);
-  const { interests } = useInterest();
+  // Deferred, with the conflicts: a pick commits its star first, and this follows.
+  const interests = useDeferredInterests();
+  // The same overlaps the timeline draws its conflict bars from.
+  const { overlaps: conflictOverlaps } = useConflicts();
   const { width } = useWindowDimensions();
   // The sheet spans the window up to its maximum width; measured to be exact.
   const [viewWidth, setViewWidth] = useState(() => Math.min(width, MAX_CONTENT_WIDTH));
@@ -48,11 +49,6 @@ export function ConflictTimeline({ events, onBlockPress }: Props) {
     setViewWidth(e.nativeEvent.layout.width);
   }, []);
 
-  // The same overlaps the timeline draws its conflict bars from.
-  const conflictOverlaps = useMemo(
-    () => computeConflictOverlaps(interests, { artists, stages, artistEvents }),
-    [interests, artists, stages, artistEvents],
-  );
   const model = useMemo(
     () => conflictTimelineModel({ group: events, artists, categories, interests, conflictOverlaps, viewWidth }),
     [events, artists, categories, interests, conflictOverlaps, viewWidth],
