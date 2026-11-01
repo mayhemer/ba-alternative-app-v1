@@ -44,6 +44,25 @@ jest.mock('./ArtistDetailTitle', () => {
   const actual = jest.requireActual('./ArtistDetailTitle');
   return { ...actual, ArtistDetailTitle: counted(actual.ArtistDetailTitle) };
 });
+// The sheet's two parts, counted by name: the sticky header (title row, star)
+// and the scrolling body (links, hero, set rows, bio).
+const mockPartRenders: Record<string, number> = {};
+jest.mock('./ArtistDetailScreen', () => {
+  const actual = jest.requireActual('./ArtistDetailScreen');
+  const countedPart = (name: string, part: (props: unknown) => unknown) => (props: unknown) => {
+    mockPartRenders[name] = (mockPartRenders[name] ?? 0) + 1;
+    return part(props);
+  };
+  return {
+    ...actual,
+    ArtistDetailHeader: countedPart('header', actual.ArtistDetailHeader),
+    ArtistDetailBody: countedPart('body', actual.ArtistDetailBody),
+  };
+});
+const resetPartRenders = (): void => {
+  for (const name of Object.keys(mockPartRenders)) { delete mockPartRenders[name]; }
+};
+
 jest.mock('./ArtistSetRow', () => {
   const { counted } = require('../../../tests/setup/countRenders');
   const actual = jest.requireActual('./ArtistSetRow');
@@ -150,5 +169,21 @@ describe('render counts', () => {
     // none → Maybe: a Maybe does not clash.
     await act(async () => { cycle('rival'); });
     expect(rendersSinceReset()).toEqual({});
+  });
+
+  it('another artist\'s pick that changes no clash renders neither part of the sheet', async () => {
+    await openSheet({ bastion: 'will_go' });
+    resetPartRenders();
+    // none → Maybe: a Maybe does not clash.
+    await act(async () => { cycle('rival'); });
+    expect(mockPartRenders).toEqual({});
+  });
+
+  it('its own star renders the header (the star), not the body, while no clash changes', async () => {
+    await openSheet();
+    resetPartRenders();
+    // none → Maybe: BASTION's own star, no clash either way.
+    await act(async () => { cycle('bastion'); });
+    expect(mockPartRenders).toEqual({ header: 1 });
   });
 });

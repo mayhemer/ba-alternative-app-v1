@@ -1,7 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { Platform } from 'react-native';
 import { useArtistDetail as useArtistDetailContext } from './ArtistDetailContext';
-import { useInterest } from '../interests/InterestContext';
 import { useConflictDetail } from '../conflicts/ConflictDetailContext';
 import { useConflicts } from '../conflicts/ConflictContext';
 import { useStarSelectorActions, type MeasurableStar } from '../interests/StarSelectorContext';
@@ -17,13 +16,11 @@ import { useLayoutMode } from '../../hooks/useLayoutMode';
 
 export function useArtistDerived(artist: DbArtist) {
   const { closeDetail, expandDetail } = useArtistDetailContext();
-  const { getStatus } = useInterest();
   const { openConflict } = useConflictDetail();
   const { entries } = useConflicts();
   const { pressStar } = useStarSelectorActions();
   const { width, height, contentPadding } = useLayoutMode();
 
-  const status = getStatus(artist.artistId);
   const innerWidth = Math.min(width, MAX_CONTENT_WIDTH);
   const isWeb = Platform.OS === 'web';
 
@@ -38,5 +35,5 @@ export function useArtistDerived(artist: DbArtist) {
     pressStar({ artistId: artist.artistId, size: 'large', star });
   }, [artist.artistId, pressStar]);
 
-  return { closeDetail, expandDetail, status, innerWidth, hPad: contentPadding, isWeb, width, height, handleStarPress, conflicts, openConflict };
+  return { closeDetail, expandDetail, innerWidth, hPad: contentPadding, isWeb, width, height, handleStarPress, conflicts, openConflict };
 }

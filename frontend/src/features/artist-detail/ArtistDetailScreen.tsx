@@ -8,6 +8,7 @@ import { colors } from '../../styling/tokens';
 import type { DbArtist } from '../../types/backend';
 import { useArtistDerived } from './useArtistDerived';
 import { useArtistBio } from './useArtistBio';
+import { useInterestStatus } from '../interests/InterestContext';
 import { useJumpToTimeline } from '../../navigation/useJumpToTimeline';
 import { useSocialData } from '../social/SocialContext';
 import { FriendPickList } from '../social/FriendPickList';
@@ -38,7 +39,9 @@ type Props = { artist: DbArtist };
 // ── Header (sticky — rendered outside scroll view) ────────────────────────────
 
 export function ArtistDetailHeader({ artist }: Props) {
-  const { closeDetail, expandDetail, status, innerWidth, hPad, isWeb, handleStarPress, conflicts } = useArtistDerived(artist);
+  const { closeDetail, expandDetail, innerWidth, hPad, isWeb, handleStarPress, conflicts } = useArtistDerived(artist);
+  // This artist's pick only: a pick of another artist does not render the sheet.
+  const status = useInterestStatus(artist.artistId);
   const item = useMemo(
     () => artistDetailTitleModel({ artist, status, hasConflict: conflicts.size > 0, innerWidth, padding: hPad, isWeb }),
     [artist, status, conflicts, innerWidth, hPad, isWeb],
