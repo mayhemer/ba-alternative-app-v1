@@ -30,6 +30,10 @@ npm run install:preview-perfinst:android
 adb logcat -v epoch | grep '\[perf\]'   # then use the app; subtract the timestamps
 ```
 
+A star press logs `star:press` in its handler and `star:shown` on the frame after the selector it
+opened (with the new star) first drew. Press stars on different rows: pressing the star of an open
+selector again opens nothing, so it logs no `star:shown`.
+
 Driven over adb, but each measured window runs on the phone by itself. Elements are found with
 `uiautomator dump` beforehand. Then one adb call starts a small injector
 (`scripts/android-inject/`, run with `app_process` the way `input` is) that resets the frame stats,

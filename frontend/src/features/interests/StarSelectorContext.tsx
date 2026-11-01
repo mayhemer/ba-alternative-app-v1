@@ -8,6 +8,7 @@ import {
   type StarFrame,
   type StarSize,
 } from './StarSelector.model';
+import { perfMark } from '../../utils/perfMarks';
 
 // ── The star selector's state ─────────────────────────────────────────────────
 //
@@ -103,6 +104,7 @@ export function StarSelectorProvider({ children }: { children: React.ReactNode }
   }, [clearTimer, update]);
 
   const pressStar = useCallback(({ artistId, size, star }: StarPress): void => {
+    perfMark('star:press');
     const current = openRef.current;
     if (current !== null && current.artistId === artistId) {
       // Its own star again: the same selector stays, and its ring follows.

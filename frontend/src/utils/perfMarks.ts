@@ -10,7 +10,14 @@
 const PERF_MARKS = process.env.EXPO_PUBLIC_PERF_MARKS === '1';
 
 /** Names the runner matches literally — change both together. */
-export type PerfMark = 'startup:ready' | 'day:select' | 'timeline:mounted';
+export type PerfMark =
+  | 'startup:ready'
+  | 'day:select'
+  | 'timeline:mounted'
+  // A star press, and the frame after the selector it opened (with the new
+  // star) first drew. Read by hand from logcat for now; no runner scenario yet.
+  | 'star:press'
+  | 'star:shown';
 
 export function perfMark(name: PerfMark): void {
   if (PERF_MARKS) {

@@ -13,6 +13,7 @@ import {
   type StarSelectorModel,
 } from './StarSelector.model';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
+import { perfMark, perfMarksEnabled } from '../../utils/perfMarks';
 import { colors, FLOATING_SHADOW, TOPBAR_HEIGHT } from '../../styling/tokens';
 
 // ── The star selector ─────────────────────────────────────────────────────────
@@ -78,6 +79,15 @@ function OpenSelector({ open }: { open: OpenStarSelector }) {
     ringX.value = withTiming(target, RING_TIMING);
   }, [target, ringX]);
   const ringStyle = useAnimatedStyle(() => ({ transform: [{ translateX: ringX.value }] }));
+
+  // Perf builds: the frame after this opening first drew. Only an effect sees a
+  // committed opening; a mark in the render body would also fire for renders
+  // React throws away.
+  useEffect(() => {
+    if (!perfMarksEnabled()) { return undefined; }
+    const frame = requestAnimationFrame(() => { perfMark('star:shown'); });
+    return () => { cancelAnimationFrame(frame); };
+  }, []);
 
   return (
     <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
