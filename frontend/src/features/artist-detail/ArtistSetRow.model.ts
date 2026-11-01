@@ -3,7 +3,7 @@ import type { ConflictEntry } from '../../lib/conflictUtils';
 import { decodeCategoryColor } from '../../utils/color';
 import { getStageLocalized } from '../../utils/localization';
 import { formatDayLabel, formatTime } from '../../utils/festivalTime';
-import { timelineJump, type TimelineJump } from '../../navigation/timelineJump';
+import { timelineJump, type TimelineJump } from '../../lib/timelineJump';
 import { colors } from '../../styling/tokens';
 
 // ── One of the artist's sets in the sheet: what it shows ──────────────────────

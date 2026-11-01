@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useTimelineFilter } from '../screens/timeline/TimelineFilterContext';
 import { navigationRef } from './navigationRef';
-import type { TimelineJump } from './timelineJump';
+import type { TimelineJump } from '../lib/timelineJump';
 import type { DbEvent } from '../types/backend';
 
 /**

@@ -2,7 +2,7 @@ import { getFestivalDayStart } from '../utils/festivalTime';
 import { isConflictEligible } from '../lib/conflictUtils';
 import { BREAK_WINDOW_OFFSET_MS, type PlanInputs } from '../screens/my-plan/planUtils';
 import { formatRemaining, NARROW_SPACE, planStrings } from '../screens/my-plan/planStrings';
-import { timelineJump, type TimelineJump } from '../navigation/timelineJump';
+import { timelineJump, type TimelineJump } from '../lib/timelineJump';
 import type { DbArtist, DbEvent } from '../types/backend';
 
 // ── What the now pill in the top bar says ─────────────────────────────────────
