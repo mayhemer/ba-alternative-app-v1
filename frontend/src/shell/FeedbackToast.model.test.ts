@@ -1,4 +1,5 @@
-import { feedbackToastModel, toastBand, toastPlacement } from './FeedbackToast.model';
+import { toastBand, toastPlacement } from './FeedbackToast.model';
+import { feedbackToastModel } from '../ui/FeedbackToastCard.model';
 import { TOPBAR_HEIGHT } from '../styling/tokens';
 
 // ── The toast's content, as a model ───────────────────────────────────────────

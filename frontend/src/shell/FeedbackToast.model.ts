@@ -1,4 +1,4 @@
-import type { FeedbackAnchor, FeedbackMessage, FeedbackVariant } from './ScreenUIContext';
+import type { FeedbackAnchor } from './ScreenUIContext';
 import { STAR_COLUMN_RESERVE } from '../features/interests/StarButton.model';
 import { MAX_CONTENT_WIDTH, TOPBAR_HEIGHT } from '../styling/tokens';
 
@@ -56,13 +56,4 @@ export function toastPlacement(anchor: FeedbackAnchor | undefined, layout: Toast
   // The top inset is 0 in landscape, which would leave the toast flush against
   // the screen edge: keep a floor under it.
   return { kind: 'top', ...toastBand(screenWidth, insets), top: Math.max(belowTopBar, 12) + TOAST_GAP };
-}
-
-export type FeedbackToastModel = { content: { text: string; icon: FeedbackVariant }; tappable: boolean };
-
-export function feedbackToastModel(feedback: FeedbackMessage): FeedbackToastModel {
-  return {
-    content: { text: feedback.text, icon: feedback.variant },
-    tappable: feedback.variant !== 'progress',
-  };
 }

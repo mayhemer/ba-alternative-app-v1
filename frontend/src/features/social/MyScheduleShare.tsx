@@ -7,7 +7,7 @@ import { copyLinkFeedback, myScheduleShareModel, type MyScheduleShareModel } fro
 import { useSocialData, useSocialActions } from './SocialContext';
 import { useAuth } from '../../auth/AuthContext';
 import { useFeedback } from '../../shell/ScreenUIContext';
-import { SectionFeedbackToast } from '../../shell/FeedbackToast';
+import { SectionFeedbackToast } from '../../ui/FeedbackToastCard';
 import { shareLink, copyToClipboard } from './shareLink';
 import { navigationRef } from '../../navigation/navigationRef';
 import { colors } from '../../styling/tokens';
