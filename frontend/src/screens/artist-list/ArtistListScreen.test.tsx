@@ -36,6 +36,20 @@ jest.mock('./ArtistRow', () => {
   return { ...actual, ArtistRow: counted(actual.ArtistRow) };
 });
 
+// The row model is counted too, by artistId: building a model is the work a
+// list render does for every mounted row even where the row itself skips.
+const mockModelBuilds = new Map<string, number>();
+jest.mock('./ArtistRow.model', () => {
+  const actual = jest.requireActual('./ArtistRow.model');
+  return {
+    ...actual,
+    artistRowModel: (inputs: { artist: { artistId: string } }) => {
+      mockModelBuilds.set(inputs.artist.artistId, (mockModelBuilds.get(inputs.artist.artistId) ?? 0) + 1);
+      return actual.artistRowModel(inputs);
+    },
+  };
+});
+
 // One auth value for the whole run, as the real provider memoises its own: a
 // fresh getAccessToken on every call would change the interest context on each
 // pick, and every row reading it would render again — in the test only.
@@ -191,13 +205,23 @@ describe('the list reacts', () => {
     async function mountCounted(): Promise<void> {
       await mountList();
       resetRenders();
+      mockModelBuilds.clear();
     }
+
+    const modelBuilds = (): Record<string, number> => Object.fromEntries([...mockModelBuilds.entries()].sort(([a], [b]) => a.localeCompare(b)));
 
     it('a pick renders only its row', async () => {
       await mountCounted();
       await act(async () => { cycle('163'); });
       expect(rendersSinceReset()).toEqual({ '163': 1 });
       // Back to none: Must-see, don't go, none — one press per render.
+      await pressTimes('163', 3);
+    });
+
+    it('a pick builds only its own row again, not the list', async () => {
+      await mountCounted();
+      await act(async () => { cycle('163'); });
+      expect(modelBuilds()).toEqual({ '163': 1 });
       await pressTimes('163', 3);
     });
 

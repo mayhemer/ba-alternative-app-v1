@@ -8,7 +8,6 @@ import {
 import { Text } from '../../ui/Text';
 import type { DbArtist } from '../../types/backend';
 import { sortedArtistList, withLens, type Section } from './ArtistList.model';
-import { artistRowModel } from './ArtistRow.model';
 import { useSelectedSlug } from '../../store/AppContext';
 import { useArtists } from '../../store/cacheStore';
 import { useTopBar, useBottomBar } from '../../shell/ScreenUIContext';
@@ -18,7 +17,7 @@ import { useArtistListFilter } from './ArtistListFilterContext';
 import { useLens } from '../../features/social/LensContext';
 import { useSocialData } from '../../features/social/SocialContext';
 import { useArtistDetail } from '../../features/artist-detail/ArtistDetailContext';
-import { ArtistRow } from './ArtistRow';
+import { ConnectedArtistRow } from './ConnectedArtistRow';
 import { SectionSeparator } from './SectionSeparator';
 import { LoadingScreen } from '../../ui/LoadingScreen';
 import { LensChip } from '../../features/social/LensChip';
@@ -40,11 +39,61 @@ function closeStarSelectorOnScroll(close: () => void) {
     : { onScrollBeginDrag: close };
 }
 
+// ── The list itself ───────────────────────────────────────────────────────────
+//
+// Memoised on purpose: SectionList hands its cells a new renderItem on every
+// render of its own, so any render of it renders every mounted cell again. With
+// stable props it renders only when the sections, the header or the row
+// renderer change — never for a pick on the "Everything" lens, which the rows
+// take themselves (ConnectedArtistRow).
+
+type ScrollProps = ReturnType<typeof closeStarSelectorOnScroll>;
+
+type ListProps = {
+  sections: Section[];
+  renderItem: ({ item }: { item: DbArtist }) => React.ReactElement;
+  header: React.ReactElement;
+  scrollProps: ScrollProps;
+  bottomClearance: number;
+};
+
+const keyExtractor = (item: DbArtist): string => item.artistId;
+
+const renderSectionHeader = ({ section }: { section: Section }): React.ReactElement => (
+  <SectionSeparator letter={section.title} />
+);
+
+const EMPTY_LIST = (
+  <View className="flex-1 items-center justify-center py-16">
+    <Text className="text-textSecondary text-sm tracking-widest uppercase">
+      No artists found
+    </Text>
+  </View>
+);
+
+const ArtistSectionList = React.memo(function ArtistSectionList({ sections, renderItem, header, scrollProps, bottomClearance }: ListProps) {
+  const contentContainerStyle = useMemo(() => ({ paddingBottom: bottomClearance }), [bottomClearance]);
+  return (
+    <SectionList<DbArtist, Section>
+      sections={sections}
+      keyExtractor={keyExtractor}
+      renderItem={renderItem}
+      renderSectionHeader={renderSectionHeader}
+      ListHeaderComponent={header}
+      ListEmptyComponent={EMPTY_LIST}
+      {...scrollProps}
+      stickySectionHeadersEnabled
+      className="flex-1 bg-background"
+      contentContainerStyle={contentContainerStyle}
+    />
+  );
+});
+
 // ── Inner screen (needs ArtistListFilterContext) ──────────────────────────────
 
 function ArtistListScreenInner() {
   const selectedSlug = useSelectedSlug();
-  const { getStatus, interests } = useInterest();
+  const { interests } = useInterest();
   const { searchQuery, setSearchQuery } = useArtistListFilter();
   const { scope } = useLens();
   const { getFriend, friendsByArtist } = useSocialData();
@@ -81,11 +130,23 @@ function ArtistListScreenInner() {
   }, [openDetail]);
 
   const renderItem = useCallback(({ item }: { item: DbArtist }) => (
-    <ArtistRow
-      item={artistRowModel({ artist: item, status: getStatus(item.artistId), friends: friendsByArtist[item.artistId] })}
-      onPress={handleRowPress}
-    />
-  ), [getStatus, friendsByArtist, handleRowPress]);
+    <ConnectedArtistRow artist={item} friends={friendsByArtist[item.artistId]} onPress={handleRowPress} />
+  ), [friendsByArtist, handleRowPress]);
+
+  const header = useMemo(() => (
+    <View className="px-4 py-2 bg-background border-b border-border">
+      <TextInput
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+        // Stable handle for native E2E (Maestro): a placeholder is not reliably
+        // exposed as matchable text on iOS. Maps to accessibilityIdentifier.
+        testID="artist-search"
+        placeholder="Search artists…"
+        placeholderTextColor="#555555"
+        className="h-9 px-3 bg-surface text-textPrimary text-sm"
+      />
+    </View>
+  ), [searchQuery, setSearchQuery]);
 
   // Nothing cached yet is a wait, not an answer — the same state the timeline shows
   // while its days are still being derived. Filters only ever narrow the loaded
@@ -95,38 +156,12 @@ function ArtistListScreenInner() {
   }
 
   return (
-    <SectionList<DbArtist, Section>
+    <ArtistSectionList
       sections={sections}
-      keyExtractor={(item) => item.artistId}
       renderItem={renderItem}
-      renderSectionHeader={({ section }) => (
-        <SectionSeparator letter={section.title} />
-      )}
-      ListHeaderComponent={
-        <View className="px-4 py-2 bg-background border-b border-border">
-          <TextInput
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            // Stable handle for native E2E (Maestro): a placeholder is not reliably
-            // exposed as matchable text on iOS. Maps to accessibilityIdentifier.
-            testID="artist-search"
-            placeholder="Search artists…"
-            placeholderTextColor="#555555"
-            className="h-9 px-3 bg-surface text-textPrimary text-sm"
-          />
-        </View>
-      }
-      ListEmptyComponent={
-        <View className="flex-1 items-center justify-center py-16">
-          <Text className="text-textSecondary text-sm tracking-widest uppercase">
-            No artists found
-          </Text>
-        </View>
-      }
-      {...scrollProps}
-      stickySectionHeadersEnabled
-      className="flex-1 bg-background"
-      contentContainerStyle={{ paddingBottom: bottomClearance }}
+      header={header}
+      scrollProps={scrollProps}
+      bottomClearance={bottomClearance}
     />
   );
 }
