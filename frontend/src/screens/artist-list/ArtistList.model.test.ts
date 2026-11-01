@@ -1,4 +1,4 @@
-import { artistListModel, type ArtistListInputs } from './ArtistList.model';
+import { artistListModel, sortedArtistList, withLens, type ArtistListInputs } from './ArtistList.model';
 import type { DbArtist } from '../../types/backend';
 
 // ── The artist list, configured ───────────────────────────────────────────────
@@ -77,6 +77,38 @@ describe('the lens', () => {
 
   it("lists the friend's picks, not mine", () => {
     expect(shown(list({ scope: { kind: 'friend', token: 'f', level: null }, friendInterests: { abba: 'maybe' } }))).toEqual(['A: Abbath']);
+  });
+});
+
+// ── In two steps: sorted once, then the lens ──────────────────────────────────
+//
+// A pick changes only the lens step's input, so the screen keeps the sorted
+// list and never sorts again for a pick.
+
+describe('the two steps', () => {
+  const LENS_ALL = { scope: { kind: 'all' as const }, interests: MINE, friendInterests: undefined };
+  const LENS_ME = { scope: { kind: 'me' as const, level: null }, interests: MINE, friendInterests: undefined };
+
+  it('with Everything, hands back the sorted list itself', () => {
+    const sorted = sortedArtistList({ artists: ARTISTS, query: '' });
+    expect(withLens(sorted, LENS_ALL)).toBe(sorted);
+  });
+
+  it('narrows the sections it is given in their own order, dropping a letter it empties', () => {
+    // Deliberately not in sorted order: the lens must keep it, not sort again.
+    const given = {
+      loading: false,
+      sections: [
+        { title: 'G', data: [ARTISTS[0], ARTISTS[3]] },  // Gojira (will_go), GHOST (dont_go)
+        { title: 'A', data: [ARTISTS[6], ARTISTS[5]] },  // Abbath, AC/DC — no picks
+        { title: 'B', data: [ARTISTS[2]] },              // Blood Incantation (maybe)
+      ],
+    };
+    expect(shown(withLens(given, LENS_ME))).toEqual(['G: Gojira', 'B: Blood Incantation']);
+  });
+
+  it('keeps waiting while nothing is cached, whatever the lens', () => {
+    expect(withLens(sortedArtistList({ artists: [], query: '' }), LENS_ME)).toEqual({ loading: true, sections: [] });
   });
 });
 

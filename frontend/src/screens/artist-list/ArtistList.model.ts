@@ -63,7 +63,12 @@ export function buildSections(artists: DbArtist[]): Section[] {
     }));
 }
 
-export function artistListModel({ artists, query, scope, interests, friendInterests }: ArtistListInputs): ArtistListModel {
+// Built in two steps so a screen can keep the first across picks: a pick only
+// changes the lens step's input, and the lens never needs to sort again — it
+// keeps the sections' order and drops a letter it empties.
+
+/** Step one: the bands, narrowed by the search, grouped and sorted. */
+export function sortedArtistList({ artists, query }: Pick<ArtistListInputs, 'artists' | 'query'>): ArtistListModel {
   let listed = artists.filter((a) => a.isPlayable);
   if (listed.length === 0) {
     return { loading: true, sections: [] };
@@ -72,8 +77,27 @@ export function artistListModel({ artists, query, scope, interests, friendIntere
     const q = query.toLowerCase();
     listed = listed.filter((a) => a.name.toLowerCase().includes(q));
   }
-  if (scope.kind !== 'all') {
-    listed = listed.filter((a) => matchesScope(scope, (interests[a.artistId] ?? 'none') as InterestStatus, friendInterests?.[a.artistId]));
-  }
   return { loading: false, sections: buildSections(listed) };
+}
+
+/** Step two: the lens over a sorted list. Everything hands back the same list, unchanged. */
+export function withLens(
+  sorted: ArtistListModel,
+  { scope, interests, friendInterests }: Pick<ArtistListInputs, 'scope' | 'interests' | 'friendInterests'>,
+): ArtistListModel {
+  if (scope.kind === 'all' || sorted.loading) {
+    return sorted;
+  }
+  const sections: Section[] = [];
+  for (const section of sorted.sections) {
+    const data = section.data.filter((a) => matchesScope(scope, (interests[a.artistId] ?? 'none') as InterestStatus, friendInterests?.[a.artistId]));
+    if (data.length > 0) {
+      sections.push({ title: section.title, data });
+    }
+  }
+  return { loading: false, sections };
+}
+
+export function artistListModel({ artists, query, scope, interests, friendInterests }: ArtistListInputs): ArtistListModel {
+  return withLens(sortedArtistList({ artists, query }), { scope, interests, friendInterests });
 }

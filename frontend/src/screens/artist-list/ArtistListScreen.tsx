@@ -7,7 +7,7 @@ import {
 } from 'react-native';
 import { Text } from '../../ui/Text';
 import type { DbArtist } from '../../types/backend';
-import { artistListModel, type Section } from './ArtistList.model';
+import { sortedArtistList, withLens, type Section } from './ArtistList.model';
 import { artistRowModel } from './ArtistRow.model';
 import { useSelectedSlug } from '../../store/AppContext';
 import { useArtists } from '../../store/cacheStore';
@@ -65,9 +65,15 @@ function ArtistListScreenInner() {
   useTopBar({ title: 'Artists', RightComponent: ArtistListTopBarRight });
   useBottomBar({});
 
+  // Two steps, so a pick never sorts again: the sort follows the lineup and the
+  // search only; the lens over it is a filter, and on Everything no work at all.
+  const sorted = useMemo(
+    () => sortedArtistList({ artists, query: searchQuery }),
+    [artists, searchQuery],
+  );
   const { loading, sections } = useMemo(
-    () => artistListModel({ artists, query: searchQuery, scope, interests, friendInterests }),
-    [artists, searchQuery, scope, interests, friendInterests],
+    () => withLens(sorted, { scope, interests, friendInterests }),
+    [sorted, scope, interests, friendInterests],
   );
 
   const handleRowPress = useCallback((artist: DbArtist): void => {
