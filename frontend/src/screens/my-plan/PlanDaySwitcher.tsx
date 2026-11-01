@@ -4,7 +4,7 @@ import { dayPickAction } from '../../features/timeline/DayButton.model';
 import { planDaySwitcherModel } from './PlanDaySwitcher.model';
 import { useSelectedSlug } from '../../store/AppContext';
 import { useArtistEventMap, useArtists, useFestivalDays, useStages } from '../../store/cacheStore';
-import { useInterest } from '../../features/interests/InterestContext';
+import { useDeferredInterests } from '../../features/interests/InterestContext';
 import { usePlanFilters, usePlanShownDay, usePlanStore } from './PlanContext';
 import { useFestivalDayStart } from '../../hooks/useMinuteNow';
 import { currentTimeMs } from '../../utils/clock';
@@ -27,7 +27,8 @@ export function PlanDaySwitcher() {
   const store = usePlanStore();
   const shownDay = usePlanShownDay(festivalDays, now);
   const conflictsOnly = usePlanFilters().level === 'conflicts';
-  const { interests } = useInterest();
+  // Deferred, the same picks the list and the conflicts follow.
+  const interests = useDeferredInterests();
   const artists = useArtists(slug);
   const stages = useStages(slug);
   const artistEvents = useArtistEventMap(slug);

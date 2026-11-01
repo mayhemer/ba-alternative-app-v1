@@ -5,7 +5,7 @@ import { useTopBar, useBottomBar } from '../../shell/ScreenUIContext';
 import { useSelectedSlug } from '../../store/AppContext';
 import { useArtistEventMap, useArtists, useCategories, useFestivalDays, useStages } from '../../store/cacheStore';
 import { decodeCategoryColor, categoryBlockColors } from '../../utils/color';
-import { useInterest } from '../../features/interests/InterestContext';
+import { useDeferredInterests } from '../../features/interests/InterestContext';
 import { useArtistDetail } from '../../features/artist-detail/ArtistDetailContext';
 import { useConflictDetail } from '../../features/conflicts/ConflictDetailContext';
 import { usePlanFilters, usePlanPanel, usePlanShownDay, usePlanStore, usePlanStoreVersion } from './PlanContext';
@@ -84,7 +84,9 @@ export function MyPlanScreen() {
   useBottomBar({ ContentComponent: PlanDaySwitcher });
 
   const slug = useSelectedSlug();
-  const { interests } = useInterest();
+  // Deferred, as the conflicts and the now pill read them: a pick from the
+  // artist sheet commits its star first, and the list follows.
+  const interests = useDeferredInterests();
   const artists = useArtists(slug);
   const stages = useStages(slug);
   const artistEvents = useArtistEventMap(slug);

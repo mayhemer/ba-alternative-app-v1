@@ -1,4 +1,4 @@
-import React, { Profiler } from 'react';
+import React, { Profiler, useLayoutEffect, useRef } from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { MyPlanScreen } from './MyPlanScreen';
 import { NowPill } from './NowPill';
@@ -7,7 +7,7 @@ import { PlanFilterChip } from './filter/PlanFilterChip';
 import { PlanFilterPanel } from './filter/PlanFilterPanel';
 import { PerfProviders } from '../../../tests/setup/PerfProviders';
 import { PlanProvider, usePlanFilters, usePlanStore } from './PlanContext';
-import { useInterest } from '../../features/interests/InterestContext';
+import { useInterest, useInterestStatus } from '../../features/interests/InterestContext';
 import { createDataCollector, populateCache, setInterest } from '../../cache/cacheService';
 import { setCurrentTimeMs } from '../../utils/clock';
 import { setPlanFilters, setScroll, type PlanLevel } from '../../store/uiStatePersistence';
@@ -699,5 +699,56 @@ describe('the chrome', () => {
       await act(async () => { controls.cycle('batushka'); });
       expect(chromeRenders()).toEqual({ [`day-${THU}`]: 1 });
     });
+  });
+});
+
+// ── What a pick renders first ─────────────────────────────────────────────────
+//
+// A pick (from the artist sheet over My plan) commits the pressed star first, on
+// its own; the list and the day switcher only follow from it, so they render in
+// a deferred render after that commit. A probe beside them reads the pick the way
+// the star does and notes, in the commit that shows its new state, which of My
+// plan's elements had rendered by then.
+
+describe('what a pick renders first', () => {
+  let renderedBeforeStar: Record<string, number> | null = null;
+
+  function StarProbe({ artistId }: { artistId: string }) {
+    const status = useInterestStatus(artistId);
+    const mounted = useRef(false);
+    useLayoutEffect(() => {
+      if (!mounted.current) {
+        mounted.current = true;
+        return;
+      }
+      renderedBeforeStar = rendersSinceReset();
+    }, [status]);
+    return null;
+  }
+
+  it("commits the star before My plan's list and day switcher render", async () => {
+    await render(
+      <PerfProviders>
+        <PlanProvider>
+          <Controls />
+          <StarProbe artistId="batushka" />
+          <MyPlanScreen />
+          <PlanDaySwitcher />
+        </PlanProvider>
+      </PerfProviders>,
+    );
+    // Only conflicts: the pick below ends Thursday's clash, so the switcher
+    // drops its stripe and the list its rows.
+    await act(async () => { controls.setLevel('conflicts'); });
+    resetRenders();
+    renderedBeforeStar = null;
+
+    // Must-see → don't go.
+    await act(async () => { controls.cycle('batushka'); });
+
+    expect(renderedBeforeStar).toEqual({});
+    // And then they did follow.
+    expect(rendersSinceReset()).toEqual(expect.objectContaining({ 'plan-day-switcher': 1 }));
+    expect(Object.keys(rendersSinceReset()).length).toBeGreaterThan(1);
   });
 });
