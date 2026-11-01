@@ -8,20 +8,22 @@
 //   npm run install:perf:android -- --list       the perf builds there are, one per
 //                                                line: versionCode, commit, date
 //
-// install:preview:android takes the same flags for the `preview` profile; both
-// run this script with `--profile <name>`.
+// install:preview:android and install:preview-perfinst:android take the same flags
+// for their profiles; all run this script with `--profile <name>`.
 //
 // The perf build points at the fixture API (http://localhost:4010, reached over
 // USB via `adb reverse`) and opens on ba2025; the preview build talks to the
-// production API. Both share one package name, so either replaces whatever
-// build of the app the device had. APKs are cached by EAS build id, so
-// reinstalling the same build does not download it again.
+// production API. preview-perfinst is the preview build plus the perf marks in
+// logcat (src/utils/perfMarks.ts), for timing the real app by hand. All share
+// one package name, so each replaces whatever build of the app the device had.
+// APKs are cached by EAS build id, so reinstalling the same build does not
+// download it again.
 
 import { adb, installedVersion, PACKAGE, pickDevice } from './lib/adb.ts';
 import { buildByVersion, fetchArtifact, latestBuild, listBuilds, staleness } from './lib/eas.ts';
 import { EXIT, has, parseArgs, run, skip } from './lib/proc.ts';
 
-const PROFILES = ['perf', 'preview'];
+const PROFILES = ['perf', 'preview', 'preview-perfinst'];
 
 const args = parseArgs(process.argv.slice(2));
 const profile = args.profile;

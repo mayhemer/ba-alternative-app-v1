@@ -40,6 +40,12 @@
         "BA_ALLOW_CLEARTEXT": "1"
       }
     },
+    "preview-perfinst": {
+      "extends": "preview",
+      "env": {
+        "EXPO_PUBLIC_PERF_MARKS": "1"
+      }
+    },
     "e2e-ios-sim": {
       "distribution": "internal",
       "ios": {

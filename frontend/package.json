@@ -26,6 +26,7 @@
     "clean:e2e:ios": "node --experimental-strip-types --no-warnings scripts/clean-e2e-ios.ts",
     "install:perf:android": "node --experimental-strip-types --no-warnings scripts/install-android.ts --profile perf",
     "install:preview:android": "node --experimental-strip-types --no-warnings scripts/install-android.ts --profile preview",
+    "install:preview-perfinst:android": "node --experimental-strip-types --no-warnings scripts/install-android.ts --profile preview-perfinst",
     "install:preview:ios": "EXTRA_PACKAGER_ARGS=--reset-cache npx expo run:ios --configuration Release --no-bundler --device",
     "serve:fixtures": "node --experimental-strip-types --no-warnings tests/server/fixtureServer.ts 4010",
     "gen:icons": "node scripts/gen-icons.js",
@@ -36,6 +37,7 @@
     "eas-build:preview:ios": "eas build --platform ios --profile preview",
     "eas-build:preview:android": "eas build --platform android --profile preview --non-interactive",
     "eas-build:perf:android": "eas build --platform android --profile perf --non-interactive",
+    "eas-build:preview-perfinst:android": "eas build --platform android --profile preview-perfinst --non-interactive",
     "eas-build:e2e:ios": "eas build --platform ios --profile e2e-ios-sim",
     "build:web": "npx expo export --platform web"
   },

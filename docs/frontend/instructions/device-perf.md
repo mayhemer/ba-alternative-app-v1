@@ -20,6 +20,16 @@ the frame after the day's last slice mounted, from two logcat marks (`src/utils/
 JS-side cost frame stats cannot see. It needs a perf build that has the marks, and reads `n/a` on an
 older one.
 
+**Timing the real app by hand.** The perf build differs from what you use day to day (fixture API,
+ba2025, cleartext HTTP). The `preview-perfinst` profile is the preview build — production API, your own
+data — plus the same marks, and nothing else:
+
+```bash
+npm run eas-build:preview-perfinst:android
+npm run install:preview-perfinst:android
+adb logcat -v epoch | grep '\[perf\]'   # then use the app; subtract the timestamps
+```
+
 Driven over adb, but each measured window runs on the phone by itself. Elements are found with
 `uiautomator dump` beforehand. Then one adb call starts a small injector
 (`scripts/android-inject/`, run with `app_process` the way `input` is) that resets the frame stats,
