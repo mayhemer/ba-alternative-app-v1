@@ -17,8 +17,11 @@ jest.mock('../../src/store/AppContext', () => {
   };
 });
 
-jest.mock('../../src/auth/AuthContext', () => ({
-  useAuth: () => ({
+// One auth value for the whole run, as the real provider memoises its own: new
+// functions on every call would make each render of InterestProvider rebuild
+// its callbacks and render their stable readers, which the app never does.
+jest.mock('../../src/auth/AuthContext', () => {
+  const auth = {
     isLoggedIn: false,
     isRestoringSession: false,
     userId: null,
@@ -27,5 +30,6 @@ jest.mock('../../src/auth/AuthContext', () => ({
     getAccessToken: async () => null,
     signIn: async () => undefined,
     signOut: async () => undefined,
-  }),
-}));
+  };
+  return { useAuth: () => auth };
+});
