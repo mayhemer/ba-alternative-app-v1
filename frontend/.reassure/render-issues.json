@@ -1,5 +1,10 @@
 {
   "My plan: a new minute": {"initialUpdateCount":0,"redundantUpdates":[2]},
-  "My plan: one pick changed": {"initialUpdateCount":0,"redundantUpdates":[2]},
-  "My plan: switching to another day": {"initialUpdateCount":0,"redundantUpdates":[1,2]}
+  "My plan: one pick changed": {"initialUpdateCount":0,"redundantUpdates":[2,3]},
+  "My plan: switching to another day": {"initialUpdateCount":0,"redundantUpdates":[1,2]},
+  "artist sheet: a star into a conflict": {"initialUpdateCount":0,"redundantUpdates":[3]},
+  "chrome: a star into a conflict (drawer count)": {"initialUpdateCount":0,"redundantUpdates":[1,2]},
+  "starring an artist into a conflict, via the detail sheet's star": {"initialUpdateCount":0,"redundantUpdates":[5]},
+  "starring an artist with no clash, via the detail sheet's star": {"initialUpdateCount":0,"redundantUpdates":[5,6]},
+  "unstarring an artist out of a conflict, via the detail sheet's star": {"initialUpdateCount":0,"redundantUpdates":[5]}
 }
