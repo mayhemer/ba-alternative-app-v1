@@ -1,11 +1,11 @@
-import React, { memo, useCallback, useDeferredValue, useMemo, useState } from 'react';
+import React, { memo, useCallback, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text } from '../../ui/Text';
 import { useSelectedSlug } from '../../store/AppContext';
 import { useArtistEventMap, useArtists, useFestivalDays, useStages } from '../../store/cacheStore';
-import { useInterest } from '../../features/interests/InterestContext';
+import { useDeferredInterests } from '../../features/interests/InterestContext';
 import { shownPlanDay, usePlanStore } from './PlanContext';
 import { minuteNow, useMinuteNow } from '../../hooks/useMinuteNow';
 import { festivalToday } from '../../utils/festivalTime';
@@ -173,9 +173,8 @@ export function NowPill() {
   const slug = useSelectedSlug();
   // Deferred: a star press draws the star first, and the pill follows in a
   // render of its own that a next tap can interrupt. The conflicts read the
-  // same deferred picks (ConflictContext), so the two never disagree.
-  const { interests: livePicks } = useInterest();
-  const interests = useDeferredValue(livePicks);
+  // same deferred picks, so the two never disagree.
+  const interests = useDeferredInterests();
   const artists = useArtists(slug);
   const stages = useStages(slug);
   const artistEvents = useArtistEventMap(slug);

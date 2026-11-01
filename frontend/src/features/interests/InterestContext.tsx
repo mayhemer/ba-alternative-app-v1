@@ -2,6 +2,7 @@ import React, {
   createContext,
   useCallback,
   useContext,
+  useDeferredValue,
   useEffect,
   useMemo,
   useRef,
@@ -129,6 +130,8 @@ const InterestStateContext = createContext<InterestStateContextValue | null>(nul
 const InterestCycleContext = createContext<InterestCycleContextValue | null>(null);
 // The store itself, for useInterestStatus. Stable for the provider's life.
 const InterestStoreContext = createContext<InterestStore | null>(null);
+// The picks, deferred: one copy for everything that only follows from a pick.
+const DeferredInterestsContext = createContext<InterestMap | null>(null);
 
 export function InterestProvider({ children }: { children: React.ReactNode }) {
   const selectedSlug = useSelectedSlug();
@@ -251,11 +254,24 @@ export function InterestProvider({ children }: { children: React.ReactNode }) {
     <InterestStoreContext.Provider value={store}>
       <InterestCycleContext.Provider value={cycleValue}>
         <InterestStateContext.Provider value={stateValue}>
-          {children}
+          <DeferredInterestsProvider interests={interests}>
+            {children}
+          </DeferredInterestsProvider>
         </InterestStateContext.Provider>
       </InterestCycleContext.Provider>
     </InterestStoreContext.Provider>
   );
+}
+
+/**
+ * The deferred copy of the picks. A component of its own, so the deferred
+ * render after a pick renders only this, not InterestProvider and its callbacks.
+ * During the urgent render the copy is still the previous map, so nothing
+ * reading it renders; it follows in the deferred render.
+ */
+function DeferredInterestsProvider({ interests, children }: { interests: InterestMap; children: React.ReactNode }) {
+  const deferred = useDeferredValue(interests);
+  return <DeferredInterestsContext.Provider value={deferred}>{children}</DeferredInterestsContext.Provider>;
 }
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
@@ -287,4 +303,19 @@ export function useInterestStatus(artistId: string): InterestStatus {
   }
   const read = useCallback((): InterestStatus => store.get()[artistId] ?? 'none', [store, artistId]);
   return useSyncExternalStore(store.subscribe, read, read);
+}
+
+/**
+ * The picks for what only follows from a pick (conflicts, the now pill, My
+ * plan, the timelines): after a pick, the pressed star and the selector commit
+ * first, and this follows in a deferred render a next tap can interrupt. One
+ * value for every reader, so related elements never disagree. See
+ * docs/frontend/design/architecture/responsiveness.md.
+ */
+export function useDeferredInterests(): InterestMap {
+  const picks = useContext(DeferredInterestsContext);
+  if (picks === null) {
+    throw new Error('useDeferredInterests must be used inside InterestProvider');
+  }
+  return picks;
 }

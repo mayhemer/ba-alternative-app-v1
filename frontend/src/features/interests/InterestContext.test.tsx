@@ -5,6 +5,7 @@ import {
   InterestProvider,
   nextStatus,
   useInterest,
+  useDeferredInterests,
   useInterestCycle,
   useInterestStatus,
   type InterestStatus,
@@ -354,5 +355,53 @@ describe("one artist's status", () => {
     await act(async () => { press('a1'); await flush(); });
 
     expect(getStatus('a1')).toBe('maybe');
+  });
+});
+
+describe('the deferred picks', () => {
+  const seen: Record<string, Record<string, InterestStatus>> = {};
+
+  function DeferredProbe({ name }: { name: string }) {
+    const picks = useDeferredInterests();
+    seen[name] = picks;
+    return <Text testID={`deferred-${name}`}>{picks.a1 ?? 'none'}</Text>;
+  }
+
+  async function mountDeferred() {
+    await render(
+      <InterestProvider>
+        <Probe artistId="a1" />
+        <DeferredProbe name="first" />
+        <DeferredProbe name="second" />
+      </InterestProvider>,
+    );
+    await act(async () => { await flush(); });
+  }
+
+  const deferredA1 = () => screen.getByTestId('deferred-first').props.children;
+
+  it('follow a press, a direct choice and a pick from another device', async () => {
+    await mountDeferred();
+
+    await act(async () => { press('a1'); await flush(); });
+    expect(deferredA1()).toBe('maybe');
+
+    await act(async () => { choose('a1', 'dont_go'); await flush(); });
+    expect(deferredA1()).toBe('dont_go');
+
+    mockFetch.mockResolvedValue([
+      { userId: 'u1', slugArtistId: `${mockCurrentSlug}#a1`, status: 'will_go', updatedAt: NOW + 1 },
+    ]);
+    await act(async () => { await refresh(); await flush(); });
+    expect(deferredA1()).toBe('will_go');
+  });
+
+  it('are one value: every reader gets the same object', async () => {
+    await mountDeferred();
+
+    await act(async () => { press('a1'); await flush(); });
+
+    expect(seen.first.a1).toBe('maybe');
+    expect(seen.second).toBe(seen.first);
   });
 });

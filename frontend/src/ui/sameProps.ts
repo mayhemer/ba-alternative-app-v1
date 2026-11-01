@@ -9,7 +9,8 @@
 // Models are small plain data (numbers, strings, the set and artist records),
 // so the walk is cheap next to a render.
 
-function equalValues(a: unknown, b: unknown): boolean {
+/** Equal by value: plain data walked deeply, anything else by identity. */
+export function equalValues(a: unknown, b: unknown): boolean {
   if (a === b) {
     return true;
   }

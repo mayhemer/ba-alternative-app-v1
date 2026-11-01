@@ -1,7 +1,9 @@
-import React, { createContext, useContext, useDeferredValue, useMemo } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 import { useSelectedSlug } from '../../store/AppContext';
 import { useArtistEventMap, useArtists, useStages } from '../../store/cacheStore';
-import { useInterest } from '../interests/InterestContext';
+import { useDeferredInterests } from '../interests/InterestContext';
+import { useStableValue } from '../../hooks/useStableValue';
+import { equalValues } from '../../ui/sameProps';
 import { computeConflictEntries } from './conflictUtils';
 import type { ConflictEntry } from './conflictUtils';
 
@@ -20,9 +22,8 @@ export function ConflictProvider({ children }: { children: React.ReactNode }) {
   const selectedSlug = useSelectedSlug();
   // Deferred: a star press draws the star first; the conflicts (the drawer's
   // count, the sheets) follow in a render of their own that a next tap can
-  // interrupt. The now pill reads the same deferred picks.
-  const { interests: livePicks } = useInterest();
-  const interests = useDeferredValue(livePicks);
+  // interrupt. Everything else that follows a pick reads the same deferred picks.
+  const interests = useDeferredInterests();
 
   // Reading through these hooks subscribes the provider to the cache, so a
   // background sync re-renders it; and because they are real values, the memo
@@ -32,10 +33,13 @@ export function ConflictProvider({ children }: { children: React.ReactNode }) {
   const stages       = useStages(selectedSlug);
   const artistEvents = useArtistEventMap(selectedSlug);
 
-  const entries = useMemo(
+  const computed = useMemo(
     () => computeConflictEntries(interests, { artists, stages, artistEvents }),
     [interests, artists, stages, artistEvents],
   );
+  // Most picks make or end no clash: the same list then, so nobody reading the
+  // conflicts renders for it.
+  const entries = useStableValue(computed, equalValues);
 
   const value = useMemo<ConflictContextValue>(
     () => ({ entries, count: entries.length }),
