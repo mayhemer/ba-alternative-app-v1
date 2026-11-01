@@ -1,6 +1,6 @@
 import type { DbArtist, DbCategory, DbEvent } from '../../types/backend';
 import type { InterestStatus } from '../../cache/cacheService';
-import type { ConflictOverlap } from './conflictUtils';
+import type { ConflictOverlap } from '../../lib/conflictUtils';
 import { categoryLaneModel, laneTitleModel, type CategoryLaneModel, type LaneSetInput, type LaneTitleModel } from '../timeline/CategoryLane.model';
 import { conflictWindow, labelRepeatPx, timeToX } from '../timeline/timelineLayout';
 import { getFestivalDayStart } from '../../utils/festivalTime';

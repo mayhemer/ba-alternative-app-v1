@@ -6,14 +6,14 @@ import {
   isConflictEligible,
   type ConflictInputs,
 } from './conflictUtils';
-import type { DbArtist, DbEvent, DbStage } from '../../types/backend';
+import type { DbArtist, DbEvent, DbStage } from '../types/backend';
 
 // Real captured data, normalized through the backend's own functions — see
 // scripts/gen-fixtures.ts. Assertions are relational against it rather than
 // hardcoded, so refreshing the capture cannot break them.
-import artistsFixture from '../../../tests/fixtures/generated/ba2025/artists.json';
-import stagesFixture from '../../../tests/fixtures/generated/ba2025/stages.json';
-import scheduleFixture from '../../../tests/fixtures/generated/ba2025/schedule.json';
+import artistsFixture from '../../tests/fixtures/generated/ba2025/artists.json';
+import stagesFixture from '../../tests/fixtures/generated/ba2025/stages.json';
+import scheduleFixture from '../../tests/fixtures/generated/ba2025/schedule.json';
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 

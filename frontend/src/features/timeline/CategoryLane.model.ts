@@ -1,6 +1,6 @@
 import type { DbArtist, DbCategory, DbEvent } from '../../types/backend';
 import type { InterestStatus } from '../../cache/cacheService';
-import type { ConflictOverlap } from '../conflicts/conflictUtils';
+import type { ConflictOverlap } from '../../lib/conflictUtils';
 import { decodeCategoryColor } from '../../utils/color';
 import { getCategoryLocalized } from '../../utils/localization';
 import { assignSubRows, LANE_HEIGHT, STRIP_HEIGHT, stripHeightFor } from './timelineLayout';

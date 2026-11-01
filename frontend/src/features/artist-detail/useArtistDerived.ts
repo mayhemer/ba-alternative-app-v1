@@ -4,7 +4,7 @@ import { useArtistDetail as useArtistDetailContext } from './ArtistDetailContext
 import { useConflictDetail } from '../conflicts/ConflictDetailContext';
 import { useConflicts } from '../conflicts/ConflictContext';
 import { useStarSelectorActions, type MeasurableStar } from '../interests/StarSelectorContext';
-import type { ConflictEntry } from '../conflicts/conflictUtils';
+import type { ConflictEntry } from '../../lib/conflictUtils';
 import type { DbArtist } from '../../types/backend';
 import { MAX_CONTENT_WIDTH } from '../../styling/tokens';
 import { useLayoutMode } from '../../hooks/useLayoutMode';

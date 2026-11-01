@@ -1,4 +1,4 @@
-import { eventsOverlap, type ConflictOverlap } from '../../features/conflicts/conflictUtils';
+import { eventsOverlap, type ConflictOverlap } from '../../lib/conflictUtils';
 import { getStageLocalized } from '../../utils/localization';
 import { formatTime } from '../../utils/festivalTime';
 import { formatRemaining, planStrings } from './planStrings';

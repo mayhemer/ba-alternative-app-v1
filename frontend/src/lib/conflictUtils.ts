@@ -1,6 +1,6 @@
-import type { DbArtistEventMap } from '../../cache/cacheService';
-import { getStageLocalized } from '../../utils/localization';
-import type { DbArtist, DbEvent, DbStage } from '../../types/backend';
+import type { DbArtistEventMap } from '../cache/cacheService';
+import { getStageLocalized } from '../utils/localization';
+import type { DbArtist, DbEvent, DbStage } from '../types/backend';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

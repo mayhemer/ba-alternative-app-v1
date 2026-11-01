@@ -1,6 +1,6 @@
 import { timelineDayModel, type TimelineDayInputs } from './TimelineDay.model';
 import type { DbArtist, DbCategory, DbEvent } from '../../types/backend';
-import type { ConflictOverlap } from '../../features/conflicts/conflictUtils';
+import type { ConflictOverlap } from '../../lib/conflictUtils';
 
 // ── One festival day of a timeline, configured ────────────────────────────────
 //

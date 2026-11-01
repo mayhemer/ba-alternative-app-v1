@@ -1,5 +1,5 @@
 import type { DbArtist, DbCategory, DbEvent, DbStage } from '../../types/backend';
-import type { ConflictEntry } from '../conflicts/conflictUtils';
+import type { ConflictEntry } from '../../lib/conflictUtils';
 import { decodeCategoryColor } from '../../utils/color';
 import { getStageLocalized } from '../../utils/localization';
 import { formatDayLabel, formatTime } from '../../utils/festivalTime';

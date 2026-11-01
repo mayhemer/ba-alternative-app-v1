@@ -10,7 +10,7 @@ import { useConflictDetail } from './ConflictDetailContext';
 import { useConflicts } from './ConflictContext';
 import { useArtistDetail } from '../artist-detail/ArtistDetailContext';
 import { useBottomSheetMount } from '../../hooks/useBottomSheetMount';
-import { conflictGroupOf } from './conflictUtils';
+import { conflictGroupOf } from '../../lib/conflictUtils';
 import { ConflictTimeline } from './ConflictTimeline';
 import { conflictHeaderWhen } from './ConflictDetailHeader.model';
 import { conflictStrings } from './conflictStrings';

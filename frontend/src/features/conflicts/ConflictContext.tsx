@@ -4,8 +4,8 @@ import { useArtistEventMap, useArtists, useStages } from '../../store/cacheStore
 import { useDeferredInterests } from '../interests/InterestContext';
 import { useStableValue } from '../../hooks/useStableValue';
 import { equalValues } from '../../ui/sameProps';
-import { computeConflictEntries, conflictOverlapsOf } from './conflictUtils';
-import type { ConflictEntry, ConflictOverlap } from './conflictUtils';
+import { computeConflictEntries, conflictOverlapsOf } from '../../lib/conflictUtils';
+import type { ConflictEntry, ConflictOverlap } from '../../lib/conflictUtils';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

@@ -1,6 +1,6 @@
 import type { DbArtist, DbEvent } from '../../types/backend';
 import type { InterestStatus } from '../../cache/cacheService';
-import type { ConflictOverlap } from '../conflicts/conflictUtils';
+import type { ConflictOverlap } from '../../lib/conflictUtils';
 import { isInterested } from '../../lib/interestUtils';
 import { fitFontSize } from '../../utils/textFit';
 import { categoryBlockColors } from '../../utils/color';

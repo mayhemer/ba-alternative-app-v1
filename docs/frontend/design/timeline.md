@@ -88,7 +88,7 @@ press and said nothing the block itself could not show.
   gesture gives up once a move goes 10 pt sideways (`failOffsetX`) and starts only after 10 pt up
   or down (`activeOffsetY`), or on Android it would take the touch from the scroller.
 - **ConflictsScreen** is a dedicated list of the current conflicts.
-- Overlap computation lives in `src/features/conflicts/conflictUtils.ts`; `ConflictContext` holds the result.
+- Overlap computation lives in `src/lib/conflictUtils.ts`; `ConflictContext` holds the result.
   Only `must_see` counts today — including `maybe` is an open option (TODO in `conflictUtils`).
 
 ## Bottom Bar

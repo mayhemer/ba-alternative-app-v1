@@ -1,6 +1,6 @@
 import { artistSetRowModel, type ArtistSetRowInputs } from './ArtistSetRow.model';
 import type { DbArtist, DbCategory, DbEvent, DbStage } from '../../types/backend';
-import type { ConflictEntry } from '../conflicts/conflictUtils';
+import type { ConflictEntry } from '../../lib/conflictUtils';
 import { colors } from '../../styling/tokens';
 
 // ── One of the artist's sets in the sheet, as a model ─────────────────────────

@@ -1,4 +1,4 @@
-import { computeConflictEntries, computeConflictOverlaps, isConflictEligible, type ConflictInputs } from '../../features/conflicts/conflictUtils';
+import { computeConflictEntries, computeConflictOverlaps, isConflictEligible, type ConflictInputs } from '../../lib/conflictUtils';
 import { getFestivalDayStart } from '../../utils/festivalTime';
 import { planCapModel, type PlanCapModel } from './PlanCap.model';
 import { planEmptyModel, type PlanEmptyModel } from './PlanEmpty.model';

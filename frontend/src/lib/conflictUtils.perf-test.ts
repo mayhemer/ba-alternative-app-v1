@@ -1,11 +1,11 @@
 import { measureFunction } from 'reassure';
-import { BATCH, FUNCTION_MEASURE_OPTIONS, repeat } from '../../../tests/setup/perfOptions';
+import { BATCH, FUNCTION_MEASURE_OPTIONS, repeat } from '../../tests/setup/perfOptions';
 import { computeConflictEntries, computeConflictOverlaps, type ConflictInputs } from './conflictUtils';
-import type { DbArtist, DbEvent, DbStage } from '../../types/backend';
+import type { DbArtist, DbEvent, DbStage } from '../types/backend';
 
-import artistsFixture from '../../../tests/fixtures/generated/ba2025/artists.json';
-import stagesFixture from '../../../tests/fixtures/generated/ba2025/stages.json';
-import scheduleFixture from '../../../tests/fixtures/generated/ba2025/schedule.json';
+import artistsFixture from '../../tests/fixtures/generated/ba2025/artists.json';
+import stagesFixture from '../../tests/fixtures/generated/ba2025/stages.json';
+import scheduleFixture from '../../tests/fixtures/generated/ba2025/schedule.json';
 
 // ── Conflict pairing ──────────────────────────────────────────────────────────
 //
