@@ -1,6 +1,7 @@
 import type { DbArtistEventMap } from '../cache/cacheService';
 import { getStageLocalized } from '../utils/localization';
 import type { DbArtist, DbEvent, DbStage } from '../types/backend';
+import { isConflictEligible, mustSeeSets } from './plan';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -27,8 +28,6 @@ export type ConflictEntry = {
 
 // ── Core computation ──────────────────────────────────────────────────────────
 
-const EVENT_DURATION_MAX_FOR_CONFLICT_ELIGIBILITY_MS = 2 * 60 * 60 * 1000;
-
 /**
  * Computes all will_go conflict entries for an interest map and cache inputs.
  * Single source of truth — used by both ConflictContext and ConflictDetailSheet.
@@ -40,17 +39,13 @@ export function computeConflictEntries(
   const stageById  = Object.fromEntries(stages.map((s) => [s.stageId, s]));
   const artistById = Object.fromEntries(artists.map((a) => [a.artistId, a]));
 
-  // Collect all will_go events that can clash at all. Eligibility is checked
-  // here, once per set, rather than by eventsOverlap twice per pair below: under
+  // The Must-sees' sets that can clash at all, from the plan's one rule
+  // (lib/plan.ts). Eligibility is checked there, once per set, rather than by
+  // eventsOverlap twice per pair below: under
   // an interpreter (Hermes; Reassure's --max-opt=1) every call in the pairing
   // loop is paid in full.
   // TODO: may want a filter that will include "maybe" into the conflict list
-  const markedEvents: DbEvent[] = [];
-  for (const artist of artists) {
-    if ((interests[artist.artistId] ?? 'none') === 'will_go') {
-      markedEvents.push(...(artistEvents[artist.artistId] ?? []).filter(isConflictEligible));
-    }
-  }
+  const markedEvents = mustSeeSets(interests, { artists, artistEvents }).map((s) => s.event);
 
   // Build conflict map: eventId → overlapping events. The sets are all eligible,
   // so this is eventsOverlap's time test alone, inlined.
@@ -159,18 +154,6 @@ export function conflictOverlapsOf(entries: ConflictEntry[]): Map<string, Confli
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-/**
- * Whether a set takes part in conflicts at all: no longer than two hours. Longer
- * ones are things like all-day exhibitions, which clash with everything.
- *
- * The one eligibility rule shared by the conflict calculation and My plan's list
- * (planUtils, NowPill.model): the plan lists exactly the sets considered here, so
- * the two never disagree. Change it here, for both.
- */
-export function isConflictEligible(event: DbEvent): boolean {
-  return event.dateTo - event.dateFrom <= EVENT_DURATION_MAX_FOR_CONFLICT_ELIGIBILITY_MS;
-}
 
 /** Returns true if two events' time ranges intersect (strict overlap). */
 export function eventsOverlap(a: DbEvent, b: DbEvent): boolean {

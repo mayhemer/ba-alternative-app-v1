@@ -1,9 +1,9 @@
 import { getFestivalDayStart } from '../utils/festivalTime';
-import { isConflictEligible } from '../lib/conflictUtils';
-import { BREAK_WINDOW_OFFSET_MS, type PlanInputs } from '../screens/my-plan/planUtils';
+import type { PlanInputs } from '../screens/my-plan/planUtils';
+import { BREAK_WINDOW_OFFSET_MS, mustSeeSets, type PlannedSet } from '../lib/plan';
 import { formatRemaining, NARROW_SPACE, planStrings } from '../screens/my-plan/planStrings';
 import { timelineJump, type TimelineJump } from '../lib/timelineJump';
-import type { DbArtist, DbEvent } from '../types/backend';
+import type { DbEvent } from '../types/backend';
 
 // ── What the now pill in the top bar says ─────────────────────────────────────
 //
@@ -31,21 +31,10 @@ export type NowPillTarget = { event: DbEvent; jump: TimelineJump };
 
 const LOGO: NowPillModel = { kind: 'logo' };
 
-type Must = { event: DbEvent; artist: DbArtist };
+type Must = PlannedSet;
 
-function todaysMusts(interests: Record<string, string>, { artists, artistEvents }: PlanInputs, today: number): Must[] {
-  const musts: Must[] = [];
-  for (const artist of artists) {
-    if (interests[artist.artistId] !== 'will_go') {
-      continue;
-    }
-    for (const event of artistEvents[artist.artistId] ?? []) {
-      if (isConflictEligible(event) && getFestivalDayStart(event.dateFrom) === today) {
-        musts.push({ event, artist });
-      }
-    }
-  }
-  return musts;
+function todaysMusts(interests: Record<string, string>, inputs: PlanInputs, today: number): Must[] {
+  return mustSeeSets(interests, inputs).filter((m) => getFestivalDayStart(m.event.dateFrom) === today);
 }
 
 /** The set the pill names: live (the one started last) or next, or none for the logo. */

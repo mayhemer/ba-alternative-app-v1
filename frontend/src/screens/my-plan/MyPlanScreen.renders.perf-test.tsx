@@ -12,7 +12,7 @@ import { PlanProvider, usePlanFilters, usePlanStore } from './PlanContext';
 import { useInterestCycle } from '../../features/interests/InterestContext';
 import { createDataCollector, getFestivalDays, hydrateInterests, populateCache, setInterest } from '../../cache/cacheService';
 import { setPlanFilters, type PlanLevel } from '../../store/uiStatePersistence';
-import { isConflictEligible } from '../../lib/conflictUtils';
+import { isConflictEligible } from '../../lib/plan';
 import { setCurrentTimeMs } from '../../utils/clock';
 import { getFestivalDayStart } from '../../utils/festivalTime';
 import type { DbArtist, DbCategory, DbEvent, DbStage } from '../../types/backend';

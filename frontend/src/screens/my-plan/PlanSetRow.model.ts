@@ -1,4 +1,5 @@
 import { eventsOverlap, type ConflictOverlap } from '../../lib/conflictUtils';
+import type { PickLevel } from '../../lib/plan';
 import { getStageLocalized } from '../../utils/localization';
 import { formatTime } from '../../utils/festivalTime';
 import { formatRemaining, planStrings } from './planStrings';
@@ -14,7 +15,7 @@ import type { DbArtist, DbEvent, DbStage } from '../../types/backend';
 // under All sets) the same row outlined, a Maybe one dashed line.
 
 /** How the set is picked: Must-see, Maybe, or not at all (listed only under All sets). */
-export type PlanSetLevel = 'will_go' | 'maybe' | 'none';
+export type PlanSetLevel = PickLevel;
 
 const strings = planStrings();
 

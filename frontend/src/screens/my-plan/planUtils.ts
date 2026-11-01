@@ -1,12 +1,13 @@
-import { computeConflictEntries, computeConflictOverlaps, isConflictEligible, type ConflictInputs } from '../../lib/conflictUtils';
+import { computeConflictEntries, computeConflictOverlaps, type ConflictInputs } from '../../lib/conflictUtils';
+import { BREAK_WINDOW_OFFSET_MS, planPicks } from '../../lib/plan';
 import { getFestivalDayStart } from '../../utils/festivalTime';
 import { planCapModel, type PlanCapModel } from './PlanCap.model';
 import { planEmptyModel, type PlanEmptyModel } from './PlanEmpty.model';
 import { planGapModel, type PlanGapModel } from './PlanGap.model';
-import { planSetModel, type PlanSetLevel, type PlanSetModel } from './PlanSetRow.model';
+import { planSetModel, type PlanSetModel } from './PlanSetRow.model';
 import { ITEM_SPACING } from './planStyles';
 import type { PlanLevel } from '../../store/uiStatePersistence';
-import type { DbArtist, DbEvent } from '../../types/backend';
+import type { DbEvent } from '../../types/backend';
 
 // ── My plan: one festival day of the user's picks ─────────────────────────────
 //
@@ -41,14 +42,6 @@ export const PLAN_LAYOUT = {
   spacer: 24,
 } as const;
 
-const HOUR_MS = 60 * 60 * 1000;
-
-/**
- * A day's break window opens two hours after the 06:00 day boundary: 08:00. The
- * list's day-start break and the now pill's first countdown both start here.
- */
-export const BREAK_WINDOW_OFFSET_MS = 2 * HOUR_MS;
-
 /**
  * The day My plan shows by default: today on a festival day; before the festival
  * the first day, after it the last; between days, the next one. 0 when the
@@ -60,36 +53,6 @@ export function defaultPlanDay(festivalDays: number[], now: number): number {
   }
   const today = getFestivalDayStart(now);
   return festivalDays.find((day) => day >= today) ?? festivalDays[festivalDays.length - 1];
-}
-
-// ── Picks ─────────────────────────────────────────────────────────────────────
-
-type Pick = { event: DbEvent; artist: DbArtist; level: PlanSetLevel };
-
-/**
- * The sets My plan can list, by start: your Must-see and Maybe picks, and with
- * `unpicked` also every Program band's set you haven't picked (All sets). Never
- * a "don't go" pick, and never an unpicked support-programme item.
- */
-function picksOf(interests: Record<string, string>, { artists, artistEvents }: PlanInputs, unpicked: boolean): Pick[] {
-  const picks: Pick[] = [];
-  for (const artist of artists) {
-    const status = interests[artist.artistId];
-    let level: PlanSetLevel;
-    if (status === 'will_go' || status === 'maybe') {
-      level = status;
-    } else if (unpicked && status !== 'dont_go' && artist.isPlayable) {
-      level = 'none';
-    } else {
-      continue;
-    }
-    // Only the sets the conflict calculation considers: one shared rule, so the
-    // plan never lists a set that cannot clash (or hides one that can).
-    for (const event of (artistEvents[artist.artistId] ?? []).filter(isConflictEligible)) {
-      picks.push({ event, artist, level });
-    }
-  }
-  return picks.sort((a, b) => a.event.dateFrom - b.event.dateFrom);
 }
 
 // ── Building a day ────────────────────────────────────────────────────────────
@@ -107,7 +70,7 @@ export function buildPlanDay(
   const leaders = new Set(entries.filter((e) => e.leader).map((e) => e.event.eventId));
 
   const conflictsOnly = level === 'conflicts';
-  const allPicks = picksOf(interests, inputs, level === 'all');
+  const allPicks = planPicks(interests, inputs, level === 'all');
   const dayPicks = allPicks.filter((p) => getFestivalDayStart(p.event.dateFrom) === dayStart);
   const liveMusts = allPicks
     .filter((p) => p.level === 'will_go' && p.event.dateFrom <= now && now < p.event.dateTo)

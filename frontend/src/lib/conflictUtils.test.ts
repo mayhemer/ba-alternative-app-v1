@@ -3,9 +3,9 @@ import {
   computeConflictOverlaps,
   conflictGroupOf,
   eventsOverlap,
-  isConflictEligible,
   type ConflictInputs,
 } from './conflictUtils';
+import { isConflictEligible } from './plan';
 import type { DbArtist, DbEvent, DbStage } from '../types/backend';
 
 // Real captured data, normalized through the backend's own functions — see
