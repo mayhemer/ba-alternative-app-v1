@@ -1,4 +1,5 @@
 import { planDaySwitcherModel, type PlanDaySwitcherInputs } from './PlanDaySwitcher.model';
+import { computeConflictEntries } from '../../lib/conflictUtils';
 import type { DbArtist, DbEvent, DbStage } from '../../types/backend';
 
 // ── My plan's day switcher, as a model ────────────────────────────────────────
@@ -38,8 +39,10 @@ function inputs(sets: Set[], overrides: Partial<PlanDaySwitcherInputs> = {}): Pl
     shownDay: THU,
     now: at('2025-08-07T15:00:00+02:00'),
     conflictsOnly: true,
-    interests: Object.fromEntries(sets.map((s) => [s.id, s.pick])),
-    inputs: { artists, stages, artistEvents: Object.fromEntries(events.map((e) => [e.artistId, [e]])) },
+    entries: computeConflictEntries(
+      Object.fromEntries(sets.map((s) => [s.id, s.pick])),
+      { artists, stages, artistEvents: Object.fromEntries(events.map((e) => [e.artistId, [e]])) },
+    ),
     ...overrides,
   };
 }

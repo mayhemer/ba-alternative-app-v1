@@ -4,6 +4,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react-native
 import { PlanSetRow } from './PlanSetRow';
 import { ConflictGroupTitle, NowArrow } from './PlanListItems';
 import { buildPlanDay, type PlanInputs } from './planUtils';
+import { computeConflictEntries, conflictOverlapsOf } from '../../lib/conflictUtils';
 import type { PlanSetModel } from './PlanSetRow.model';
 import { getFestivalDayStart } from '../../utils/festivalTime';
 import { colors } from '../../styling/tokens';
@@ -42,7 +43,8 @@ function setup(): { inputs: PlanInputs; interests: Record<string, string> } {
 
 function item(name: string, now: string): PlanSetModel {
   const { inputs, interests } = setup();
-  const items = buildPlanDay(interests, inputs, { dayStart: THU, now: at(now), duringFestival: true, level: 'all' });
+  const entries = computeConflictEntries(interests, inputs);
+  const items = buildPlanDay(interests, inputs, { entries, overlaps: conflictOverlapsOf(entries) }, { dayStart: THU, now: at(now), duringFestival: true, level: 'all' });
   const found = items.find((i): i is PlanSetModel => i.kind === 'set' && i.artist.name === name);
   if (found === undefined) {
     throw new Error(`no ${name}`);

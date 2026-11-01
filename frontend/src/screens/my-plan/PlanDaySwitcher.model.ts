@@ -1,5 +1,6 @@
 import { dayButtonModels, type DayButtonModel } from '../../features/timeline/DayButton.model';
-import { daysWithClash, type PlanInputs } from './planUtils';
+import { daysWithClash } from './planUtils';
+import type { ConflictEntry } from '../../lib/conflictUtils';
 import { festivalToday } from '../../utils/festivalTime';
 
 // ── My plan's day switcher: what it shows ─────────────────────────────────────
@@ -17,8 +18,8 @@ export type PlanDaySwitcherInputs = {
   shownDay: number;
   now: number;
   conflictsOnly: boolean;
-  interests: Record<string, string>;
-  inputs: PlanInputs;
+  /** The conflict calculation's entries (ConflictProvider's). */
+  entries: ConflictEntry[];
 };
 
 export type PlanDaySwitcherModel = {
@@ -27,8 +28,8 @@ export type PlanDaySwitcherModel = {
   buttons: DayButtonModel[];
 };
 
-export function planDaySwitcherModel({ festivalDays, shownDay, now, conflictsOnly, interests, inputs }: PlanDaySwitcherInputs): PlanDaySwitcherModel {
+export function planDaySwitcherModel({ festivalDays, shownDay, now, conflictsOnly, entries }: PlanDaySwitcherInputs): PlanDaySwitcherModel {
   const today = festivalToday(festivalDays, now);
-  const clashDays = conflictsOnly ? daysWithClash(interests, inputs) : undefined;
+  const clashDays = conflictsOnly ? daysWithClash(entries) : undefined;
   return { today, buttons: dayButtonModels(festivalDays, { selected: shownDay, today, clashDays }) };
 }

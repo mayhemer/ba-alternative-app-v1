@@ -60,8 +60,10 @@ same. As a context value, that new object renders every reader for nothing.
 `useStableValue(value, isEqual)` (`hooks/useStableValue.ts`) hands back the previous value while
 the new one equals it. `ConflictProvider` keeps its conflict list this way (compared with
 `equalValues` from `ui/sameProps.ts`), so a pick that makes or ends no clash renders none of its
-readers. The overlaps for the timelines' conflict bars come from that list
-(`useConflicts().overlaps`), not from a calculation of their own.
+readers. Everything that shows conflicts follows this one run: the timelines' bars
+(`useConflicts().overlaps`), My plan's list and its day switcher's stripes (`buildPlanDay` and
+`daysWithClash` take the provider's result), the sheets and the drawer. A pick runs the
+calculation once (*the conflict calculation per pick* in `MyPlanScreen.test.tsx`).
 
 ### External stores update synchronously
 
@@ -116,10 +118,6 @@ The `star:press` → `star:shown` marks on the `preview-perfinst` build time a s
 by hand; see [device-perf.md](../../instructions/device-perf.md).
 
 ## Not reviewed yet
-
-Every pick still runs the conflict calculation more than once: `ConflictProvider` once, and My plan
-again inside `buildPlanDay` (twice) and `daysWithClash`. Moving the plan and conflict logic into a
-UI-free folder below `features/` lets them all read the provider's single result.
 
 Readers of the cache (`useArtists`, `useStages`, `useArtistEventMap`) render urgently when a sync
 lands. Each one needs a decision: is it urgent here or not?

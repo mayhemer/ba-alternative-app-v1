@@ -5,15 +5,13 @@ import { useDeferredInterests } from '../interests/InterestContext';
 import { useStableValue } from '../../hooks/useStableValue';
 import { equalValues } from '../../ui/sameProps';
 import { computeConflictEntries, conflictOverlapsOf } from '../../lib/conflictUtils';
-import type { ConflictEntry, ConflictOverlap } from '../../lib/conflictUtils';
+import type { Conflicts } from '../../lib/conflictUtils';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type ConflictContextValue = {
-  entries: ConflictEntry[];
+/** The one conflict calculation the whole app follows: the timelines, My plan, the sheets, the drawer. */
+type ConflictContextValue = Conflicts & {
   count: number;
-  /** Per clashing set (eventId), where it overlaps others: the timelines' conflict bars. */
-  overlaps: Map<string, ConflictOverlap[]>;
 };
 
 // ── Context ───────────────────────────────────────────────────────────────────

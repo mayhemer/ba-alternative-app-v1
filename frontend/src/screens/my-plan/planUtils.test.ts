@@ -17,6 +17,7 @@ import { gapHeight } from './PlanGap.model';
 import type { PlanGapModel } from './PlanGap.model';
 import type { PlanSetModel, SetStatus } from './PlanSetRow.model';
 import { getFestivalDayStart } from '../../utils/festivalTime';
+import { computeConflictEntries, conflictOverlapsOf } from '../../lib/conflictUtils';
 import type { DbArtist, DbEvent, DbStage } from '../../types/backend';
 
 // ── My plan: what one day lists ───────────────────────────────────────────────
@@ -159,7 +160,8 @@ const TODAY: Options = { day: THU, now: at(7, '12:00'), filter: 'must', festival
 function build(data: Spec[], opts: Partial<Options>): PlanItem[] {
   const { day, now, filter, festival } = { ...TODAY, ...opts };
   const { inputs, interests } = inputsOf(data);
-  return buildPlanDay(interests, inputs, { dayStart: day, now, duringFestival: festival, level: filter });
+  const entries = computeConflictEntries(interests, inputs);
+  return buildPlanDay(interests, inputs, { entries, overlaps: conflictOverlapsOf(entries) }, { dayStart: day, now, duringFestival: festival, level: filter });
 }
 
 function statusText(status: SetStatus): string {
@@ -781,7 +783,7 @@ describe('planNowInView', () => {
 describe('daysWithClash', () => {
   it('lists the festival days that have a Must-see clash', () => {
     const { inputs, interests } = inputsOf(DAY);
-    const days = daysWithClash(interests, inputs);
+    const days = daysWithClash(computeConflictEntries(interests, inputs));
     expect(days.has(THU)).toBe(true);
     expect(days.has(FRI)).toBe(false);
   });

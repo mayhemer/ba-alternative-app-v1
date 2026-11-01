@@ -1,4 +1,4 @@
-import { computeConflictEntries, computeConflictOverlaps, type ConflictInputs } from '../../lib/conflictUtils';
+import type { ConflictEntry, ConflictInputs, Conflicts } from '../../lib/conflictUtils';
 import { BREAK_WINDOW_OFFSET_MS, planPicks } from '../../lib/plan';
 import { getFestivalDayStart } from '../../utils/festivalTime';
 import { planCapModel, type PlanCapModel } from './PlanCap.model';
@@ -57,16 +57,19 @@ export function defaultPlanDay(festivalDays: number[], now: number): number {
 
 // ── Building a day ────────────────────────────────────────────────────────────
 
-/** Everything My plan lists for one festival day, top to bottom. */
+/**
+ * Everything My plan lists for one festival day, top to bottom. The conflicts
+ * are ConflictProvider's, computed once for the same picks: the list's clash
+ * marks and its conflicts-only filter follow the app's one calculation.
+ */
 export function buildPlanDay(
   interests: Record<string, string>,
   inputs: PlanInputs,
+  { entries, overlaps }: Conflicts,
   { dayStart, now: wallNow, duringFestival, level }: PlanOptions,
 ): PlanItem[] {
   // Outside the festival the list reads as it does before it: every set is ahead.
   const now = duringFestival ? wallNow : Number.NEGATIVE_INFINITY;
-  const overlaps = computeConflictOverlaps(interests, inputs);
-  const entries = computeConflictEntries(interests, inputs);
   const leaders = new Set(entries.filter((e) => e.leader).map((e) => e.event.eventId));
 
   const conflictsOnly = level === 'conflicts';
@@ -274,9 +277,9 @@ export function planNowView(
 }
 
 /** The festival days (06:00 starts) with at least one Must-see clash. */
-export function daysWithClash(interests: Record<string, string>, inputs: PlanInputs): Set<number> {
+export function daysWithClash(entries: ConflictEntry[]): Set<number> {
   const days = new Set<number>();
-  for (const entry of computeConflictEntries(interests, inputs)) {
+  for (const entry of entries) {
     days.add(getFestivalDayStart(entry.event.dateFrom));
   }
   return days;

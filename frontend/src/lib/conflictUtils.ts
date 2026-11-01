@@ -26,6 +26,13 @@ export type ConflictEntry = {
   overlappingEvents: DbEvent[];
 };
 
+/** One run of the conflict calculation: the clashing sets, and where each overlaps others. */
+export type Conflicts = {
+  entries: ConflictEntry[];
+  /** Per clashing set (eventId), where it overlaps others: the conflict bars. */
+  overlaps: Map<string, ConflictOverlap[]>;
+};
+
 // ── Core computation ──────────────────────────────────────────────────────────
 
 /**

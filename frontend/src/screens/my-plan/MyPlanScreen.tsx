@@ -8,6 +8,7 @@ import { decodeCategoryColor, categoryBlockColors } from '../../utils/color';
 import { useDeferredInterests } from '../../features/interests/InterestContext';
 import { useArtistDetail } from '../../features/artist-detail/ArtistDetailContext';
 import { useConflictDetail } from '../../features/conflicts/ConflictDetailContext';
+import { useConflicts } from '../../features/conflicts/ConflictContext';
 import { usePlanFilters, usePlanPanel, usePlanShownDay, usePlanStore, usePlanStoreVersion } from './PlanContext';
 import { useMinuteNow } from '../../hooks/useMinuteNow';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
@@ -87,6 +88,9 @@ export function MyPlanScreen() {
   // Deferred, as the conflicts and the now pill read them: a pick from the
   // artist sheet commits its star first, and the list follows.
   const interests = useDeferredInterests();
+  // The app's one conflict calculation, for the same deferred picks: the list's
+  // clash marks and its conflicts-only filter follow it, never a run of their own.
+  const conflicts = useConflicts();
   const artists = useArtists(slug);
   const stages = useStages(slug);
   const artistEvents = useArtistEventMap(slug);
@@ -109,8 +113,8 @@ export function MyPlanScreen() {
 
   const duringFestival = festivalToday(festivalDays, now) !== null;
   const items = useMemo<PlanItem[]>(
-    () => (day === 0 ? [] : buildPlanDay(interests, { artists, stages, artistEvents }, { dayStart: day, now, duringFestival, level })),
-    [day, interests, artists, stages, artistEvents, now, duringFestival, level],
+    () => (day === 0 ? [] : buildPlanDay(interests, { artists, stages, artistEvents }, conflicts, { dayStart: day, now, duringFestival, level })),
+    [day, interests, artists, stages, artistEvents, conflicts, now, duringFestival, level],
   );
   const offsets = useMemo(() => itemOffsets(items), [items]);
 

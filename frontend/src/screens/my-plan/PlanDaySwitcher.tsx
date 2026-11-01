@@ -3,8 +3,8 @@ import { DayButtons } from '../../features/timeline/DayButtons';
 import { dayPickAction } from '../../features/timeline/DayButton.model';
 import { planDaySwitcherModel } from './PlanDaySwitcher.model';
 import { useSelectedSlug } from '../../store/AppContext';
-import { useArtistEventMap, useArtists, useFestivalDays, useStages } from '../../store/cacheStore';
-import { useDeferredInterests } from '../../features/interests/InterestContext';
+import { useFestivalDays } from '../../store/cacheStore';
+import { useConflicts } from '../../features/conflicts/ConflictContext';
 import { usePlanFilters, usePlanShownDay, usePlanStore } from './PlanContext';
 import { useFestivalDayStart } from '../../hooks/useMinuteNow';
 import { currentTimeMs } from '../../utils/clock';
@@ -27,15 +27,12 @@ export function PlanDaySwitcher() {
   const store = usePlanStore();
   const shownDay = usePlanShownDay(festivalDays, now);
   const conflictsOnly = usePlanFilters().level === 'conflicts';
-  // Deferred, the same picks the list and the conflicts follow.
-  const interests = useDeferredInterests();
-  const artists = useArtists(slug);
-  const stages = useStages(slug);
-  const artistEvents = useArtistEventMap(slug);
+  // The app's one conflict calculation, deferred with the picks, as the list follows it.
+  const { entries } = useConflicts();
 
   const { today, buttons } = useMemo(
-    () => planDaySwitcherModel({ festivalDays, shownDay, now, conflictsOnly, interests, inputs: { artists, stages, artistEvents } }),
-    [festivalDays, shownDay, now, conflictsOnly, interests, artists, stages, artistEvents],
+    () => planDaySwitcherModel({ festivalDays, shownDay, now, conflictsOnly, entries }),
+    [festivalDays, shownDay, now, conflictsOnly, entries],
   );
 
   // Read at the tap, not a dependency: a callback that changed with the shown

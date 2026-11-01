@@ -95,6 +95,17 @@ jest.mock('./PlanDaySwitcher', () => {
   return { ...actual, PlanDaySwitcher: () => switcher({ item }) };
 });
 
+// Counts every run of the conflict calculation, either entry point.
+let mockConflictRuns = 0;
+jest.mock('../../lib/conflictUtils', () => {
+  const actual = jest.requireActual('../../lib/conflictUtils');
+  return {
+    ...actual,
+    computeConflictEntries: (...args: unknown[]) => { mockConflictRuns += 1; return actual.computeConflictEntries(...args); },
+    computeConflictOverlaps: (...args: unknown[]) => { mockConflictRuns += 1; return actual.computeConflictOverlaps(...args); },
+  };
+});
+
 const SLUG = 'plantest';
 
 function at(dayOfMonth: number, hm: string): number {
@@ -750,5 +761,33 @@ describe('what a pick renders first', () => {
     // And then they did follow.
     expect(rendersSinceReset()).toEqual(expect.objectContaining({ 'plan-day-switcher': 1 }));
     expect(Object.keys(rendersSinceReset()).length).toBeGreaterThan(1);
+  });
+});
+
+// ── The conflict calculation per pick ─────────────────────────────────────────
+//
+// The list, the day switcher's stripes and the conflicts (the drawer's count,
+// the sheets) all follow one conflict calculation: ConflictProvider's. A pick
+// runs it once, however many of them show it.
+
+describe('the conflict calculation per pick', () => {
+  it('runs once for a pick, with only conflicts shown and the day switcher striping', async () => {
+    await render(
+      <PerfProviders>
+        <PlanProvider>
+          <Controls />
+          <MyPlanScreen />
+          <PlanDaySwitcher />
+        </PlanProvider>
+      </PerfProviders>,
+    );
+    await act(async () => { controls.setLevel('conflicts'); });
+    mockConflictRuns = 0;
+
+    // Must-see → don't go: ends Thursday's clash.
+    await act(async () => { controls.cycle('batushka'); });
+
+    expect(mockConflictRuns).toBe(1);
+    expect(screen.queryByTestId(`day-clash-${THU}`)).toBeNull();
   });
 });
