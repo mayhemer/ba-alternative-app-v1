@@ -26,7 +26,8 @@ An element that reacts to a touch subscribes to exactly the data it shows. Then 
 the elements it changes and nothing else.
 
 - `useInterestStatus(artistId)` (`features/interests/InterestContext.tsx`) renders its user only
-  when that artist's pick changes. Used by `ConnectedArtistRow` and the open `StarSelector`.
+  when that artist's pick changes. Used by `ConnectedArtistRow`, the open `StarSelector` and the
+  artist sheet's header (its star); the sheet's body reads no pick at all.
 - Never hand a whole map, or a getter whose identity changes with every update, to many
   elements. A `getStatus` that changes with every pick re-renders every row.
 - A callback that needs the current value at call time reads it through a stable getter
@@ -35,18 +36,32 @@ the elements it changes and nothing else.
 ### Defer what follows
 
 A consumer of the change that the user is not touching reads the deferred value and feeds its
-memos with it:
+memos with it. For picks, that is `useDeferredInterests()`: `InterestProvider` makes one deferred
+copy of the picks and hands it to every reader, so elements that show related information read the
+same value by construction and never disagree.
 
 ```tsx
-const { interests: livePicks } = useInterest();
-const interests = useDeferredValue(livePicks);
-const entries = useMemo(() => computeConflictEntries(..., interests), [..., interests]);
+const interests = useDeferredInterests();
+const entries = useMemo(() => computeConflictEntries(interests, inputs), [interests, inputs]);
 ```
 
-Elements that show related information read the same deferred value, so they never disagree.
-`ConflictProvider` (`features/conflicts/ConflictContext.tsx`) and `NowPill`
-(`screens/my-plan/NowPill.tsx`) both do. A deferred render is thrown away when a newer change
-arrives, so quick taps cost one conflict scan, not one per tap.
+Readers: `ConflictProvider`, `NowPill`, `MyPlanScreen` and `PlanDaySwitcher`, the timeline
+(`useTimelineData`) and the conflict sheet's `ConflictTimeline`. A deferred render is thrown away
+when a newer change arrives, so quick taps cost one conflict scan, not one per tap.
+
+One reader stays urgent on purpose: the artist list's lens filter (`ArtistListScreen`). Under a
+picks lens the row the user is touching appears or goes with the star. On *Everything* it costs the
+screen's own render only; the sections and the list keep their identity.
+
+### Hand on a result only when it changed
+
+A memo recomputes whenever an input changes and returns a new object, even when the result is the
+same. As a context value, that new object renders every reader for nothing.
+`useStableValue(value, isEqual)` (`hooks/useStableValue.ts`) hands back the previous value while
+the new one equals it. `ConflictProvider` keeps its conflict list this way (compared with
+`equalValues` from `ui/sameProps.ts`), so a pick that makes or ends no clash renders none of its
+readers. The overlaps for the timelines' conflict bars come from that list
+(`useConflicts().overlaps`), not from a calculation of their own.
 
 ### External stores update synchronously
 
@@ -87,6 +102,10 @@ known there) or effects (they run once per commit). Example: the `star:shown` ma
 
 - A deferred consumer adds a commit: the urgent one, then the deferred one. Render-count tests
   expect it and say why; e.g. *a changed pick commits three times* in `MyPlanScreen.test.tsx`.
+- That a consumer is deferred is tested by order, not by count (`act()` flushes both renders): a
+  probe reads the pick the way the star does and, in a layout effect, notes what had rendered by
+  the commit that shows the new pick. Nothing of the consumer may have. See *what a pick renders
+  first* in `MyPlanScreen.test.tsx`, `BaseTimelineScreen.test.tsx` and `ConflictTimeline.test.tsx`.
 - Each narrow subscription gets a test that a change renders only its own element. Example:
   *a pick builds only its own row again, not the list* in `ArtistListScreen.test.tsx`.
 - `act()` flushes deferred renders, so behaviour tests see the final state unchanged.
@@ -98,13 +117,9 @@ by hand; see [device-perf.md](../../instructions/device-perf.md).
 
 ## Not reviewed yet
 
-These still read the whole picks map urgently, through `useInterest()`, so every pick renders
-them:
-
-- `screens/timeline/useTimelineData.ts`
-- `screens/my-plan/MyPlanScreen.tsx` and `PlanDaySwitcher.tsx`
-- `features/conflicts/ConflictTimeline.tsx`
-- `features/artist-detail/useArtistDerived.ts` (`getStatus`)
+Every pick still runs the conflict calculation more than once: `ConflictProvider` once, and My plan
+again inside `buildPlanDay` (twice) and `daysWithClash`. Moving the plan and conflict logic into a
+UI-free folder below `features/` lets them all read the provider's single result.
 
 Readers of the cache (`useArtists`, `useStages`, `useArtistEventMap`) render urgently when a sync
 lands. Each one needs a decision: is it urgent here or not?
