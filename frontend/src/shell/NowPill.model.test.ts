@@ -1,7 +1,7 @@
 import { nowPillModel, nowPillTap, nowPillTarget, type NowPillModel } from './NowPill.model';
-import { getFestivalDayStart } from '../../utils/festivalTime';
-import type { PlanInputs } from './planUtils';
-import type { DbArtist, DbEvent, DbStage } from '../../types/backend';
+import { getFestivalDayStart } from '../utils/festivalTime';
+import type { PlanInputs } from '../screens/my-plan/planUtils';
+import type { DbArtist, DbEvent, DbStage } from '../types/backend';
 
 // ── What the now pill says ────────────────────────────────────────────────────
 //

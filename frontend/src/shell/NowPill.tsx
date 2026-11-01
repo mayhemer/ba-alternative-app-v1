@@ -2,19 +2,19 @@ import React, { memo, useCallback, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Text } from '../../ui/Text';
-import { useSelectedSlug } from '../../store/AppContext';
-import { useArtistEventMap, useArtists, useFestivalDays, useStages } from '../../store/cacheStore';
-import { useDeferredInterests } from '../../features/interests/InterestContext';
-import { shownPlanDay, usePlanStore } from './PlanContext';
-import { minuteNow, useMinuteNow } from '../../hooks/useMinuteNow';
-import { festivalToday } from '../../utils/festivalTime';
-import { navigationRef } from '../../navigation/navigationRef';
-import { useJumpToTimelineNow } from '../../navigation/useJumpToTimeline';
-import { isPlanNowInView } from './planNowProbe';
+import { Text } from '../ui/Text';
+import { useSelectedSlug } from '../store/AppContext';
+import { useArtistEventMap, useArtists, useFestivalDays, useStages } from '../store/cacheStore';
+import { useDeferredInterests } from '../features/interests/InterestContext';
+import { shownPlanDay, usePlanStore } from '../screens/my-plan/PlanContext';
+import { minuteNow, useMinuteNow } from '../hooks/useMinuteNow';
+import { festivalToday } from '../utils/festivalTime';
+import { navigationRef } from '../navigation/navigationRef';
+import { useJumpToTimelineNow } from '../navigation/useJumpToTimeline';
+import { isPlanNowInView } from '../screens/my-plan/planNowProbe';
 import { nowPillModel, nowPillTap, nowPillTarget, type NowPillModel, type NowPillTarget } from './NowPill.model';
-import { BOLD, PROGRESS_COLORS, TABULAR } from './planStyles';
-import { colors } from '../../styling/tokens';
+import { BOLD, PROGRESS_COLORS, TABULAR } from '../screens/my-plan/planStyles';
+import { colors } from '../styling/tokens';
 
 // ── Now pill: the TopBar centre ───────────────────────────────────────────────
 //
@@ -68,7 +68,7 @@ const PROGRESS_TRACK_STYLE = { position: 'absolute' as const, left: 0, right: 0,
 function Logo() {
   return (
     <ExpoImage
-      source={require('../../../assets/logo-ba.png')}
+      source={require('../../assets/logo-ba.png')}
       style={LOGO_STYLE}
       contentFit="contain"
       accessibilityLabel="Brutal Assault"

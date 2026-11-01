@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { NowPillView } from './NowPill';
 import type { NowPillModel } from './NowPill.model';
-import { colors } from '../../styling/tokens';
+import { colors } from '../styling/tokens';
 
 // The logo image, swapped for a stand-in that counts how often it is drawn.
 const mockLogoRenders = jest.fn();

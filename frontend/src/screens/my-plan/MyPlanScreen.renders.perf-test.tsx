@@ -2,7 +2,7 @@ import React from 'react';
 import { measureRenders } from 'reassure';
 import { act, fireEvent, screen } from '@testing-library/react-native';
 import { MyPlanScreen } from './MyPlanScreen';
-import { NowPill } from './NowPill';
+import { NowPill } from '../../shell/NowPill';
 import { PlanDaySwitcher } from './PlanDaySwitcher';
 import { PlanFilterChip } from './filter/PlanFilterChip';
 import { PlanFilterPanel } from './filter/PlanFilterPanel';

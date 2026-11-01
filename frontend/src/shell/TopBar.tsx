@@ -2,7 +2,7 @@ import React from 'react';
 import { View } from 'react-native';
 import { useScreenUI } from './ScreenUIContext';
 import { DrawerButton } from './DrawerButton';
-import { NowPill } from '../screens/my-plan/NowPill';
+import { NowPill } from './NowPill';
 import { TOPBAR_HEIGHT } from '../styling/tokens';
 
 export function TopBar() {
@@ -25,7 +25,7 @@ export function TopBar() {
       </View>
 
       {/* Center — the now pill: what is on for you right now, or the logo when
-          there is nothing to say (see screens/my-plan/NowPill) */}
+          there is nothing to say (see shell/NowPill) */}
       <View className="flex-1 items-center">
         <NowPill />
       </View>

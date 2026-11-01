@@ -46,7 +46,7 @@ to know about this** — `useTopBar({ RightComponent })` keeps working unchanged
 normally renders `null` when a screen contributes no content, also renders when `isShort` so that
 Settings still gets a hamburger.
 
-The TopBar's centre holds the **now pill** (`screens/my-plan/NowPill`, spec in
+The TopBar's centre holds the **now pill** (`shell/NowPill`, spec in
 [my-plan.md](my-plan.md)), which falls back to the logo. It is not moved
 anywhere on short viewports: there is no pill in landscape.
 
