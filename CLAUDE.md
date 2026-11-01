@@ -25,6 +25,14 @@ You are a senior engineer with experience in writing expo/react native/aws fulls
 - When two elements show related information (e.g. the now pill and the plan list), the spec states which source each one follows. Never copy one element's rule into the other silently.
 - A constant with one meaning is defined once and imported.
 
+### UI responsiveness
+- A user's action gets its visible feedback in the next frame, and nothing else rides along in that render. Only what the user is looking at right now is urgent.
+- A change costs in proportion to what it changes. Each element subscribes to exactly the data it shows, and each computation reruns only when its own inputs change.
+- Everything derived from the change (summaries, conflicts, counts, other screens) is deferred. Elements showing related information share one deferred value.
+- External stores (`useSyncExternalStore`) always update synchronously, and a transition cannot defer them. Defer on the read side with `useDeferredValue(snapshot)`, so snapshots must be immutable.
+- Renders are pure, and side effects stay in handlers and effects, because deferred renders can repeat or be discarded.
+- How, in this codebase, and what is not reviewed yet: docs/frontend/design/architecture/responsiveness.md.
+
 ### Where files go
 - Place frontend files by the rules in docs/frontend/design/architecture/overview.md (*Where a file goes*): screens/, features/, shell/, ui/, hooks/, utils/; an element's component, model and tests stay side by side.
 

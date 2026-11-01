@@ -48,6 +48,7 @@ Architecture
 - [cache-freshness.md](frontend/design/architecture/cache-freshness.md) — persisted cache and the server watermark
 - [background-sync.md](frontend/design/architecture/background-sync.md) — sync runs, intervals, error handling
 - [startup.md](frontend/design/architecture/startup.md) — startup gate, UI state persistence, splash
+- [responsiveness.md](frontend/design/architecture/responsiveness.md) — urgent vs deferred updates, narrow subscriptions, list rendering
 - [known-gaps.md](frontend/design/architecture/known-gaps.md) — deferred items and known gaps
 
 Build
