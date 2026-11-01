@@ -1,7 +1,7 @@
 import type { DbArtist } from '../../types/backend';
 import type { SharedInterestStatus } from '../../adapters/baShareApiAdapter';
 import type { InterestStatus } from '../../cache/cacheService';
-import { matchesScope, type LensScope } from '../../features/interests/interestUtils';
+import { matchesScope, type LensScope } from '../../lib/interestUtils';
 import { sectionLetter } from './SectionSeparator.model';
 
 // ── The artist list: what it lists ────────────────────────────────────────────

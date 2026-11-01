@@ -7,7 +7,7 @@ import React, {
   useState,
 } from 'react';
 import { useExclusiveOverlay } from '../../hooks/useExclusiveOverlay';
-import type { LensScope } from '../interests/interestUtils';
+import type { LensScope } from '../../lib/interestUtils';
 import { getUiState, setLensScope } from '../../store/uiStatePersistence';
 
 // The "lens" is the global source+filter that the artist list and both timelines

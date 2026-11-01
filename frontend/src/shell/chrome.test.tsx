@@ -10,7 +10,7 @@ import { useInterestCycle } from '../features/interests/InterestContext';
 import { createDataCollector, hydrateInterests, populateCache, setInterest } from '../cache/cacheService';
 import { hydrateSocial, saveFriends } from '../cache/socialCache';
 import { setLensScope } from '../store/uiStatePersistence';
-import { DEFAULT_SCOPE, type LensScope } from '../features/interests/interestUtils';
+import { DEFAULT_SCOPE, type LensScope } from '../lib/interestUtils';
 import { rendersSinceReset, resetRenders } from '../../tests/setup/countRenders';
 import type { DbArtist, DbCategory, DbEvent, DbStage } from '../types/backend';
 

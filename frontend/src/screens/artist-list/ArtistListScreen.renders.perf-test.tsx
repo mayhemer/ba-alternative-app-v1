@@ -3,7 +3,7 @@ import { measureRenders } from 'reassure';
 import { act, screen } from '@testing-library/react-native';
 import { useLens } from '../../features/social/LensContext';
 import { setLensScope } from '../../store/uiStatePersistence';
-import { DEFAULT_SCOPE, type LensScope } from '../../features/interests/interestUtils';
+import { DEFAULT_SCOPE, type LensScope } from '../../lib/interestUtils';
 import { ArtistListScreen } from './ArtistListScreen';
 import { PerfProviders } from '../../../tests/setup/PerfProviders';
 import { MEASURE_OPTIONS } from '../../../tests/setup/perfOptions';

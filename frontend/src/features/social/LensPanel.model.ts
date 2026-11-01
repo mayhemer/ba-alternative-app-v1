@@ -1,4 +1,4 @@
-import type { LensScope } from '../interests/interestUtils';
+import type { LensScope } from '../../lib/interestUtils';
 
 // ── The lens panel: what it shows ─────────────────────────────────────────────
 //

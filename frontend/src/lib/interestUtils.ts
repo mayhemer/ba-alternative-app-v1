@@ -1,5 +1,5 @@
-import type { InterestStatus } from './InterestContext';
-import type { SharedInterestStatus } from '../../adapters/baShareApiAdapter';
+import type { InterestStatus } from '../cache/cacheService';
+import type { SharedInterestStatus } from '../adapters/baShareApiAdapter';
 
 /**
  * True for the statuses that count as a pick. 'dont_go' is a decision against

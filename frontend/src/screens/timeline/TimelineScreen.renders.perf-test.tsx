@@ -8,7 +8,7 @@ import { MEASURE_OPTIONS } from '../../../tests/setup/perfOptions';
 import { useTimelineFilter } from './TimelineFilterContext';
 import { useLens } from '../../features/social/LensContext';
 import { setHiddenCategories, setLensScope } from '../../store/uiStatePersistence';
-import { DEFAULT_SCOPE, type LensScope } from '../../features/interests/interestUtils';
+import { DEFAULT_SCOPE, type LensScope } from '../../lib/interestUtils';
 import { createDataCollector, getFestivalDays, hydrateInterests, populateCache, setInterest } from '../../cache/cacheService';
 import { setCurrentTimeMs } from '../../utils/clock';
 import type { DbArtist, DbCategory, DbEvent, DbStage } from '../../types/backend';

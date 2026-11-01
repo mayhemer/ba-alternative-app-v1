@@ -3,7 +3,7 @@ import { Text } from 'react-native';
 import { act, render, screen } from '@testing-library/react-native';
 import { LensProvider, useLens } from './LensContext';
 import { getUiState, setLensScope } from '../../store/uiStatePersistence';
-import type { LensScope } from '../interests/interestUtils';
+import type { LensScope } from '../../lib/interestUtils';
 
 // ── The lens at startup ───────────────────────────────────────────────────────
 //

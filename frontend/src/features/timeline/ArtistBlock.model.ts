@@ -1,7 +1,7 @@
 import type { DbArtist, DbEvent } from '../../types/backend';
 import type { InterestStatus } from '../../cache/cacheService';
 import type { ConflictOverlap } from '../conflicts/conflictUtils';
-import { isInterested } from '../interests/interestUtils';
+import { isInterested } from '../../lib/interestUtils';
 import { fitFontSize } from '../../utils/textFit';
 import { categoryBlockColors } from '../../utils/color';
 import { BLOCK_FONT_SIZE, LANE_BORDER_WIDTH, LANE_HEIGHT, MIN_BLOCK_WIDTH, PIXELS_PER_MS, timeToX } from './timelineLayout';

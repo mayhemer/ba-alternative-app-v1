@@ -11,7 +11,7 @@ import { useLens } from '../features/social/LensContext';
 import { useInterestCycle } from '../features/interests/InterestContext';
 import { createDataCollector, hydrateInterests, populateCache, setInterest } from '../cache/cacheService';
 import { setLensScope } from '../store/uiStatePersistence';
-import { DEFAULT_SCOPE, type LensScope } from '../features/interests/interestUtils';
+import { DEFAULT_SCOPE, type LensScope } from '../lib/interestUtils';
 import type { DbArtist, DbCategory, DbEvent, DbStage } from '../types/backend';
 
 import artistsFixture from '../../tests/fixtures/generated/ba2025/artists.json';

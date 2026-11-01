@@ -14,7 +14,7 @@ import { createDataCollector, getCategories, hydrateInterests, populateCache, se
 import { getScroll, setHiddenCategories, setLensScope, setSelectedDay } from '../../store/uiStatePersistence';
 import { defaultScrollX, eventScrollTarget } from '../../features/timeline/timelineLayout';
 import { setCurrentTimeMs } from '../../utils/clock';
-import { DEFAULT_SCOPE, type LensScope } from '../../features/interests/interestUtils';
+import { DEFAULT_SCOPE, type LensScope } from '../../lib/interestUtils';
 import { getCategoryLocalized } from '../../utils/localization';
 import type { DbArtist, DbCategory, DbEvent, DbStage } from '../../types/backend';
 

@@ -1,5 +1,5 @@
 import { isInterested, matchesScope } from './interestUtils';
-import type { InterestStatus } from './InterestContext';
+import type { InterestStatus } from '../features/interests/InterestContext';
 
 // ── 'dont_go' is a decision against an artist ────────────────────────────────
 //

@@ -3,7 +3,7 @@ import { Pressable, View } from 'react-native';
 import type { MeasurableStar } from './StarSelectorContext';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { InterestStatus } from './InterestContext';
-import { isInterested } from './interestUtils';
+import { isInterested } from '../../lib/interestUtils';
 import { STAR_CONFIG, STAR_HIT_SLOP, STAR_ICON_SIZE, starGlyphModel } from './StarButton.model';
 
 export { getFeedbackLabel, STAR_COLUMN_RESERVE } from './StarButton.model';

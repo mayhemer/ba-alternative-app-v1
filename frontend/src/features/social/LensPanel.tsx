@@ -7,7 +7,7 @@ import { useLens, useLensPanel } from './LensContext';
 import { useSocialData, useSocialActions } from './SocialContext';
 import { MyScheduleShare } from './MyScheduleShare';
 import { useInterestCycle } from '../interests/InterestContext';
-import { type LensScope } from '../interests/interestUtils';
+import { type LensScope } from '../../lib/interestUtils';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
 import {
   colors,

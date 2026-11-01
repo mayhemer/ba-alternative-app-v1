@@ -1,4 +1,4 @@
-import type { LensScope } from '../interests/interestUtils';
+import type { LensScope } from '../../lib/interestUtils';
 import type { InterestStatus } from '../interests/InterestContext';
 import { STAR_CONFIG, type StarIconName } from '../interests/StarButton.model';
 import { colors } from '../../styling/tokens';

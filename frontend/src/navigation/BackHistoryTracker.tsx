@@ -20,7 +20,7 @@ import { useConflictDetail } from '../features/conflicts/ConflictDetailContext';
 import { useConflicts } from '../features/conflicts/ConflictContext';
 import { useSocialData } from '../features/social/SocialContext';
 import { getArtists } from '../cache/cacheService';
-import type { LensScope } from '../features/interests/interestUtils';
+import type { LensScope } from '../lib/interestUtils';
 
 // The React end of navigation/backHistory: feeds it the current position, tells
 // it how to restore one, and owns the back trigger for each platform.

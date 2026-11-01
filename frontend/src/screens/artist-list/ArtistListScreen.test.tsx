@@ -5,11 +5,11 @@ import { ArtistListScreen } from './ArtistListScreen';
 import { PerfProviders } from '../../../tests/setup/PerfProviders';
 import { useLens } from '../../features/social/LensContext';
 import { setLensScope } from '../../store/uiStatePersistence';
-import { DEFAULT_SCOPE } from '../../features/interests/interestUtils';
+import { DEFAULT_SCOPE } from '../../lib/interestUtils';
 import { createDataCollector, hydrateInterests, populateCache, setInterest } from '../../cache/cacheService';
 import { useInterestCycle } from '../../features/interests/InterestContext';
 import { rendersSinceReset, resetRenders } from '../../../tests/setup/countRenders';
-import type { LensScope } from '../../features/interests/interestUtils';
+import type { LensScope } from '../../lib/interestUtils';
 import type { DbArtist, DbCategory, DbEvent, DbStage } from '../../types/backend';
 
 import artistsFixture from '../../../tests/fixtures/generated/ba2025/artists.json';
