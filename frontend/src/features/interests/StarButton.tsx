@@ -13,7 +13,18 @@ export type { StarIconName } from './StarButton.model';
 // The star for a status, as the star button shows it. Ionicons has no struck-out
 // star, so 'dont_go' lays a bar over the outline instead of pulling in a second
 // icon font (which would have to be preloaded behind the splash, see fonts.ts).
-// Every other status stays a bare glyph — the shape every artist row renders.
+//
+// The glyph is the same view for every status, never wrapped: a press re-renders
+// the star while a quick second tap may already be down on it, and a glyph
+// remounted under that finger would lose the tap on native (its release goes to
+// a view that no longer exists). So the bar is a sibling laid over the glyph,
+// which never takes a touch itself.
+//
+// The bar is positioned in the glyph's parent, which must be the glyph's own
+// size (the star button's Pressable, the selector's slot wrapper). The glyph is
+// text, and its line box is taller than `size`; the bar sits on the size × size
+// square the glyph is drawn in (its model), at the top of that box, not on the
+// box's centre, which sits below the star's.
 
 type GlyphProps = {
   status: InterestStatus;
@@ -23,32 +34,27 @@ type GlyphProps = {
 
 export function StarGlyph({ status, size, color }: GlyphProps) {
   const model = starGlyphModel(status, size, color);
-  const glyph = <Ionicons name={model.icon} size={model.size} color={model.color} />;
-  if (model.strike === null) { return glyph; }
-
-  // The wrapper takes the glyph's own size: the glyph is text, and its line box
-  // is taller than `size`, so a fixed size would make this star shorter than the
-  // bare ones and shift whatever is laid out around the button. The bar sits on
-  // the size × size square the glyph is drawn in (its model), at the top of that
-  // box — not on the box's centre, which sits below the star's.
   const { strike } = model;
   return (
-    <View>
-      {glyph}
-      <View
-        testID="star-strike"
-        style={{
-          position: 'absolute',
-          left: strike.left,
-          top: strike.top,
-          width: strike.length,
-          height: strike.thickness,
-          borderRadius: strike.thickness / 2,
-          backgroundColor: model.color,
-          transform: [{ rotate: '45deg' }],
-        }}
-      />
-    </View>
+    <>
+      <Ionicons name={model.icon} size={model.size} color={model.color} />
+      {strike !== null && (
+        <View
+          testID="star-strike"
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            left: strike.left,
+            top: strike.top,
+            width: strike.length,
+            height: strike.thickness,
+            borderRadius: strike.thickness / 2,
+            backgroundColor: model.color,
+            transform: [{ rotate: '45deg' }],
+          }}
+        />
+      )}
+    </>
   );
 }
 
