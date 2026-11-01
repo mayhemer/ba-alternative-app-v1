@@ -14,7 +14,7 @@ with no conversion layer:
 - `dont_go` records "I listened and decided not to go", so a band once checked is never re-checked
   by mistake (and it can be counted). After it, "status ≠ none" means "I have checked this band".
 - `dont_go` shows **only on the StarButton** (artist row, artist detail). Everywhere else it is the
-  same as `none`: `isInterested()` (features/interests/interestUtils) is the one definition of "is a pick", used by
+  same as `none`: `isInterested()` (lib/interestUtils) is the one definition of "is a pick", used by
   the "my picks" lens, `StarIndicator` (timeline, conflicts, sheets), the timeline block's star width,
   and friends' schedules.
 - It is stored on the server like any decision (PUT; only `none` is a DELETE) and returned in share

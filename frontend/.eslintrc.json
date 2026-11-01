@@ -1,3 +1,209 @@
 {
-  "extends": "react-app"
+  "extends": "react-app",
+  "settings": {
+    "import/resolver": {
+      "node": {
+        "extensions": [
+          ".js",
+          ".jsx",
+          ".ts",
+          ".tsx"
+        ]
+      }
+    }
+  },
+  "rules": {
+    "import/no-restricted-paths": [
+      "error",
+      {
+        "zones": [
+          {
+            "target": "./src/screens",
+            "from": "./src/shell",
+            "message": "Only shell/ScreenUIContext, the app's feedback and bars API, may be used from below shell. Imports point downward: shell → screens → features → lib / ui → hooks → utils (docs/frontend/design/architecture/overview.md, Where a file goes).",
+            "except": [
+              "./ScreenUIContext.tsx"
+            ]
+          },
+          {
+            "target": "./src/features",
+            "from": "./src/screens",
+            "message": "Imports point downward: shell → screens → features → lib / ui → hooks → utils (docs/frontend/design/architecture/overview.md, Where a file goes)."
+          },
+          {
+            "target": "./src/features",
+            "from": "./src/shell",
+            "message": "Only shell/ScreenUIContext, the app's feedback and bars API, may be used from below shell. Imports point downward: shell → screens → features → lib / ui → hooks → utils (docs/frontend/design/architecture/overview.md, Where a file goes).",
+            "except": [
+              "./ScreenUIContext.tsx"
+            ]
+          },
+          {
+            "target": "./src/ui",
+            "from": "./src/screens",
+            "message": "Imports point downward: shell → screens → features → lib / ui → hooks → utils (docs/frontend/design/architecture/overview.md, Where a file goes)."
+          },
+          {
+            "target": "./src/ui",
+            "from": "./src/features",
+            "message": "Imports point downward: shell → screens → features → lib / ui → hooks → utils (docs/frontend/design/architecture/overview.md, Where a file goes)."
+          },
+          {
+            "target": "./src/ui",
+            "from": "./src/lib",
+            "message": "ui/ holds generic elements: no festival logic. Imports point downward: shell → screens → features → lib / ui → hooks → utils (docs/frontend/design/architecture/overview.md, Where a file goes)."
+          },
+          {
+            "target": "./src/ui",
+            "from": "./src/shell",
+            "message": "Only shell/ScreenUIContext, the app's feedback and bars API, may be used from below shell. Imports point downward: shell → screens → features → lib / ui → hooks → utils (docs/frontend/design/architecture/overview.md, Where a file goes).",
+            "except": [
+              "./ScreenUIContext.tsx"
+            ]
+          },
+          {
+            "target": "./src/hooks",
+            "from": "./src/screens",
+            "message": "Imports point downward: shell → screens → features → lib / ui → hooks → utils (docs/frontend/design/architecture/overview.md, Where a file goes)."
+          },
+          {
+            "target": "./src/hooks",
+            "from": "./src/features",
+            "message": "Imports point downward: shell → screens → features → lib / ui → hooks → utils (docs/frontend/design/architecture/overview.md, Where a file goes)."
+          },
+          {
+            "target": "./src/hooks",
+            "from": "./src/lib",
+            "message": "hooks/ holds generic hooks: no festival logic. Imports point downward: shell → screens → features → lib / ui → hooks → utils (docs/frontend/design/architecture/overview.md, Where a file goes)."
+          },
+          {
+            "target": "./src/hooks",
+            "from": "./src/ui",
+            "message": "Imports point downward: shell → screens → features → lib / ui → hooks → utils (docs/frontend/design/architecture/overview.md, Where a file goes)."
+          },
+          {
+            "target": "./src/hooks",
+            "from": "./src/shell",
+            "message": "Only shell/ScreenUIContext, the app's feedback and bars API, may be used from below shell. Imports point downward: shell → screens → features → lib / ui → hooks → utils (docs/frontend/design/architecture/overview.md, Where a file goes).",
+            "except": [
+              "./ScreenUIContext.tsx"
+            ]
+          },
+          {
+            "target": "./src/lib",
+            "from": "./src/shell",
+            "message": "lib/ is festival logic without UI: it imports only utils/, types/ and data types. Imports point downward: shell → screens → features → lib / ui → hooks → utils (docs/frontend/design/architecture/overview.md, Where a file goes)."
+          },
+          {
+            "target": "./src/lib",
+            "from": "./src/screens",
+            "message": "lib/ is festival logic without UI: it imports only utils/, types/ and data types. Imports point downward: shell → screens → features → lib / ui → hooks → utils (docs/frontend/design/architecture/overview.md, Where a file goes)."
+          },
+          {
+            "target": "./src/lib",
+            "from": "./src/features",
+            "message": "lib/ is festival logic without UI: it imports only utils/, types/ and data types. Imports point downward: shell → screens → features → lib / ui → hooks → utils (docs/frontend/design/architecture/overview.md, Where a file goes)."
+          },
+          {
+            "target": "./src/lib",
+            "from": "./src/ui",
+            "message": "lib/ is festival logic without UI: it imports only utils/, types/ and data types. Imports point downward: shell → screens → features → lib / ui → hooks → utils (docs/frontend/design/architecture/overview.md, Where a file goes)."
+          },
+          {
+            "target": "./src/lib",
+            "from": "./src/hooks",
+            "message": "lib/ is festival logic without UI: it imports only utils/, types/ and data types. Imports point downward: shell → screens → features → lib / ui → hooks → utils (docs/frontend/design/architecture/overview.md, Where a file goes)."
+          },
+          {
+            "target": "./src/lib",
+            "from": "./src/navigation",
+            "message": "lib/ is festival logic without UI: it imports only utils/, types/ and data types. Imports point downward: shell → screens → features → lib / ui → hooks → utils (docs/frontend/design/architecture/overview.md, Where a file goes)."
+          },
+          {
+            "target": "./src/utils",
+            "from": "./src/shell",
+            "message": "utils/ holds plain helpers: no React, no rules about picks or sets. Imports point downward: shell → screens → features → lib / ui → hooks → utils (docs/frontend/design/architecture/overview.md, Where a file goes)."
+          },
+          {
+            "target": "./src/utils",
+            "from": "./src/screens",
+            "message": "utils/ holds plain helpers: no React, no rules about picks or sets. Imports point downward: shell → screens → features → lib / ui → hooks → utils (docs/frontend/design/architecture/overview.md, Where a file goes)."
+          },
+          {
+            "target": "./src/utils",
+            "from": "./src/features",
+            "message": "utils/ holds plain helpers: no React, no rules about picks or sets. Imports point downward: shell → screens → features → lib / ui → hooks → utils (docs/frontend/design/architecture/overview.md, Where a file goes)."
+          },
+          {
+            "target": "./src/utils",
+            "from": "./src/lib",
+            "message": "utils/ holds plain helpers: no React, no rules about picks or sets. Imports point downward: shell → screens → features → lib / ui → hooks → utils (docs/frontend/design/architecture/overview.md, Where a file goes)."
+          },
+          {
+            "target": "./src/utils",
+            "from": "./src/ui",
+            "message": "utils/ holds plain helpers: no React, no rules about picks or sets. Imports point downward: shell → screens → features → lib / ui → hooks → utils (docs/frontend/design/architecture/overview.md, Where a file goes)."
+          },
+          {
+            "target": "./src/utils",
+            "from": "./src/hooks",
+            "message": "utils/ holds plain helpers: no React, no rules about picks or sets. Imports point downward: shell → screens → features → lib / ui → hooks → utils (docs/frontend/design/architecture/overview.md, Where a file goes)."
+          },
+          {
+            "target": "./src/utils",
+            "from": "./src/navigation",
+            "message": "utils/ holds plain helpers: no React, no rules about picks or sets. Imports point downward: shell → screens → features → lib / ui → hooks → utils (docs/frontend/design/architecture/overview.md, Where a file goes)."
+          }
+        ]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "src/lib/**",
+        "src/utils/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "react",
+                "message": "No React here: see overview.md, Where a file goes."
+              },
+              {
+                "name": "react-native",
+                "message": "No React Native here: see overview.md, Where a file goes."
+              }
+            ],
+            "patterns": [
+              {
+                "group": [
+                  "react-native-*",
+                  "@react-native*/*",
+                  "expo-*",
+                  "@react-navigation/*"
+                ],
+                "message": "No UI libraries here: see overview.md, Where a file goes."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/*.perf-test.ts",
+        "**/*.perf-test.tsx"
+      ],
+      "rules": {
+        "import/no-restricted-paths": "off",
+        "no-restricted-imports": "off"
+      }
+    }
+  ]
 }

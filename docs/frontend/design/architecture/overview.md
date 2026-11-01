@@ -31,19 +31,20 @@ src/
   screens/        # One folder per navigation route: the screen and everything only it uses
     artist-list/    #   list, rows, letter headers, the list's filter context
     timeline/       #   Timeline + Support timeline, TimelineView, the day filter context
-    my-plan/        #   the plan list, its elements, PlanContext, now pill; filter/ = filter chip + panel
+    my-plan/        #   the plan list, its elements, PlanContext; filter/ = filter chip + panel
     settings/
     splash/
   features/       # Functionality several screens use: its context, logic and elements
     timeline/       #   the drawn timeline (lanes, blocks, ruler, now line, day buttons) + its geometry
     artist-detail/  #   the artist detail sheet, opened from every screen
-    conflicts/      #   clash computation, the conflict sheet, conflict copy
-    interests/      #   picks (Must-see / Maybe / …), the star
+    conflicts/      #   ConflictContext, the conflict sheet, conflict copy
+    interests/      #   picks (Must-see / Maybe / …), the star, the star selector
     social/         #   friends, the lens, share links
-  shell/          # The frame around screens: AppShell, top/bottom bar, drawer, toast, ScreenUIContext
-  ui/             # Reusable pieces with no festival knowledge (Text, chip frame, panel section label, stripes, sameProps)
-  hooks/          # General React hooks (layout mode, minute clock, overlays, bottom sheets)
-  utils/          # General helpers, no React (festival time and days, colour, text fit, perf marks)
+  shell/          # The frame around screens: AppShell, top/bottom bar, drawer, now pill, toast placement, ScreenUIContext
+  lib/            # Festival logic without UI: conflicts, lens and interest rules, timeline jumps
+  ui/             # Generic React elements, no festival logic (Text, chip frame, panel section label, toast card, stripes, sameProps)
+  hooks/          # Generic React hooks (layout mode, minute clock, overlays, bottom sheets, stable value)
+  utils/          # Plain helpers, no React (festival clock and days, colour, text fit, perf marks)
 
   adapters/       # API-specific fetchers (swappable)
   auth/           # Cognito config, token storage, sign-in/out, AuthContext
@@ -61,14 +62,32 @@ src/
    sit side by side, never in a folder of their own; there are no `index.ts` barrels or
    re-exporting modules — import from the file that defines the thing.
 2. **One user → that user's folder.** A file or function used by one screen or feature lives
-   there. When a second one starts using it, it moves out: to `features/`, or to `ui/` / `utils/`
-   if it has no festival knowledge (e.g. `getFestivalDayStart` lives in `utils/festivalTime.ts`,
-   not in the timeline's geometry).
-3. **Imports point downward** — `shell` → `screens` → `features` → `ui` / `hooks` / `utils` —
-   except calls into the app's two APIs, which any layer may use: `shell/ScreenUIContext` (set the
-   bars, show feedback) and `navigation/`'s helpers (`navigationRef`, jumping to the timeline).
-   `shell/`, `navigation/AppNavigator` and `store/StartupGate` assemble the app and may import
-   any screen.
+   there. When a second one starts using it, it moves out, by what it is:
+   - React with festival knowledge (a context, an element) → `features/`;
+   - festival logic without UI (rules over picks, sets, conflicts) → `lib/`;
+   - a generic React element or hook → `ui/` / `hooks/`;
+   - a plain helper → `utils/`, which also holds the festival clock (time zone, the 06:00 day
+     boundary: `utils/festivalTime.ts`), because generic hooks need it too.
+3. **Imports point downward**:
+
+   ```
+   shell → screens → features ─┬→ lib ──────────┬→ utils
+                               └→ ui → hooks ───┘
+   ```
+
+   `lib/` and `ui/` / `hooks/` never import each other: `lib/` has no React (nor React Native,
+   Expo or navigation), and `ui/` / `hooks/` have no festival logic. `styling/` and `types/` are
+   leaves anyone may import; `lib/` may import data types from `cache/` and `adapters/`.
+   Exceptions:
+   - the app's two APIs, which any layer above `lib/` may use: `shell/ScreenUIContext` (set the
+     bars, show feedback) and `navigation/`'s helpers (`navigationRef`, jumping to the timeline);
+   - `shell/`, `navigation/AppNavigator` and `store/StartupGate` assemble the app and may import
+     any screen;
+   - tests and perf tests, which assemble screens with their chrome the way `shell/` does.
+
+   Lint enforces it (`import/no-restricted-paths` zones and `no-restricted-imports` in
+   `frontend/.eslintrc.json`). The data and service folders (`adapters/`, `auth/`, `cache/`,
+   `store/`, `sync/`) are outside the chain for now.
 4. **A context sits with its feature** (`PlanContext` in `screens/my-plan/`, `LensContext` in
    `features/social/`); there is no global `context/` folder.
 5. **A folder past ~30 files splits by sub-function**, as `screens/my-plan/filter/`.

@@ -34,7 +34,8 @@ You are a senior engineer with experience in writing expo/react native/aws fulls
 - How, in this codebase, and what is not reviewed yet: docs/frontend/design/architecture/responsiveness.md.
 
 ### Where files go
-- Place frontend files by the rules in docs/frontend/design/architecture/overview.md (*Where a file goes*): screens/, features/, shell/, ui/, hooks/, utils/; an element's component, model and tests stay side by side.
+- Place frontend files by the rules in docs/frontend/design/architecture/overview.md (*Where a file goes*): screens/, features/, shell/, lib/, ui/, hooks/, utils/; an element's component, model and tests stay side by side.
+- Imports point downward: shell → screens → features → lib or ui → hooks, both → utils. lib/ is festival logic without React; ui/ and hooks/ are generic, without festival logic; they never import each other. Lint enforces it; exceptions are in overview.md.
 
 ## Tests
 - Write or update tests before the code, and show that they fail for the expected reason.
