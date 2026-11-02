@@ -2,7 +2,7 @@
 
 `npm run test:e2e:ios` builds the app, boots a simulator (`--sim "<name>"` or `IOS_SIM`, default
 iPhone 17 Pro), installs the build, serves the fixtures on `:4010` and runs every flow in
-`e2e/native/` with Maestro. The simulator shares the Mac's network, so the build's
+`e2e/native/` with Maestro (`--flow e2e/native/<file>.yaml` runs one, while writing it). The simulator shares the Mac's network, so the build's
 `http://localhost:4010` reaches the server with no further setup.
 
 The build is a Release simulator build made with `xcodebuild` from the prebuilt `ios/` folder, into

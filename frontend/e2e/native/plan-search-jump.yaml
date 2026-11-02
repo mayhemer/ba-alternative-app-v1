@@ -1,0 +1,43 @@
+appId: cz.janbambas.ba
+name: from a search landing on My plan, the set's sheet goes to the timeline at the set
+---
+# A bug seen on an iPhone: search on My plan, tap the result (the plan lands on
+# the set and frames it), tap the row, and in its sheet go to the timeline
+# while the frame still shows. The Program opened on the right day but did not
+# scroll to the set. The frame shows for 3 s (ui/LandingRing), so the steps from
+# the result to the jump run back to back, with no waiting in between.
+#
+# REPLICANT plays once, Friday 22:30, in the Octagon (the bottom lane), so
+# reaching it needs a long horizontal scroll and a vertical one (as in
+# timeline-jump.yaml). Nobody has picked it: My plan lands on it under All sets.
+- runFlow: common/launch-fresh.yaml
+- runFlow:
+    file: common/open-section.yaml
+    env: { SECTION: "My plan" }
+- tapOn: "Filters"
+- tapOn: { id: "search-entry" }
+- retry:
+    maxRetries: 2
+    commands:
+      - tapOn: { id: "search-input" }
+      - eraseText: 30
+      - inputText: "replicant"
+      - pressKey: Enter
+      - assertVisible: "REPLICANT, Fri.*"
+# The result: day, time and stage after the name. The landing closes the search.
+- tapOn: "REPLICANT, Fri.*"
+# The plan row: the time right after the name, the stage last.
+- tapOn: "REPLICANT, 22:30–23:30, Octagon"
+# The sheet opens collapsed over My plan; its sets are below the fold, so it is
+# swiped up by its handle (as close-sheet-after-star.yaml swipes it down).
+- swipe:
+    start: "50%,62%"
+    end: "50%,12%"
+# The sheet's set row: the stage first, which tells it from the plan row.
+- tapOn: "Octagon.*22:30–23:30.*"
+# The block's label is the name, then its time.
+- extendedWaitUntil:
+    visible: "REPLICANT.*22:30.*"
+    timeout: 10000
+# On screen, not merely mounted: a set ~3 h earlier in the same lane is off it.
+- assertNotVisible: ".*FIVE THE HIEROPHANT.*"

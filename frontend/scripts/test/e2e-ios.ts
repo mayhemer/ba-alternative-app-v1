@@ -5,6 +5,7 @@
 //   npm run test:e2e:ios -- --app path/X.app  any other simulator app
 //   npm run test:e2e:ios -- --sim "iPhone 17" a different simulator
 //   npm run test:e2e:ios -- --show            bring up the Simulator window
+//   npm run test:e2e:ios -- --flow e2e/native/X.yaml   one flow only, while writing it
 //
 // Boots a simulator, installs the app, serves the fixture API on :4010 (the
 // simulator shares the Mac's network, so the build's http://localhost:4010
@@ -39,6 +40,12 @@ const PROFILE = 'e2e-ios-sim';
 
 const args = parseArgs(process.argv.slice(2));
 const simName = simulatorName(args);
+
+// The whole suite, or one flow while it is being written (a full run is ~11 min).
+const flows = typeof args.flow === 'string' ? resolve(args.flow) : FLOWS;
+if (!existsSync(flows)) {
+  skip(`--flow ${flows} does not exist`);
+}
 
 // ── Prerequisites ─────────────────────────────────────────────────────────────
 
@@ -155,7 +162,7 @@ const maestro = run('maestro', [
   '--format', 'junit',
   '--output', join(REPORTS, 'junit.xml'),
   '--test-output-dir', REPORTS,
-  FLOWS,
+  flows,
 ], { stdio: 'inherit', env: { ...process.env, MAESTRO_CLI_NO_ANALYTICS: '1' } });
 
 server.close();
