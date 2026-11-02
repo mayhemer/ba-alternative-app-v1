@@ -2,8 +2,8 @@ import { drawerItemModels } from './SideDrawerContent.model';
 
 // ── The navigation drawer, configured ─────────────────────────────────────────
 //
-// Dimensions: each timeline with or without categories; the active screen;
-// the clash count, none or some.
+// Dimensions: each timeline with or without categories (My plan follows them:
+// listed while either timeline is); the active screen; the clash count, none or some.
 
 const base = { activeRoute: 'ArtistList', hasProgram: true, hasSupportProgram: true, conflictCount: 0 };
 
@@ -15,6 +15,12 @@ describe('drawerItemModels', () => {
   it('leaves out a timeline without categories for its artists', () => {
     expect(drawerItemModels({ ...base, hasProgram: false }).map((i) => i.key)).toEqual(['MyPlan', 'ArtistList', 'SupportTimeline', 'Settings']);
     expect(drawerItemModels({ ...base, hasSupportProgram: false }).map((i) => i.key)).toEqual(['MyPlan', 'ArtistList', 'Timeline', 'Settings']);
+  });
+
+  it('leaves out My plan when neither timeline is listed, and keeps it while one is', () => {
+    expect(drawerItemModels({ ...base, hasProgram: false, hasSupportProgram: false }).map((i) => i.key)).toEqual(['ArtistList', 'Settings']);
+    expect(drawerItemModels({ ...base, hasProgram: false }).map((i) => i.key)).toContain('MyPlan');
+    expect(drawerItemModels({ ...base, hasSupportProgram: false }).map((i) => i.key)).toContain('MyPlan');
   });
 
   it('marks the active screen only', () => {

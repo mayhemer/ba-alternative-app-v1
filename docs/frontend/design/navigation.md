@@ -8,8 +8,10 @@
   "Close menu". It sits in the TopBar's left slot normally, and in the BottomBar's left slot
   on short viewports where the TopBar is not rendered; on wide screens it is not rendered at
   all, because the drawer is permanent there (`DrawerButton`).
-- Contains navigation between the main sections: Artists, Program, Support Program, Conflicts,
-  Settings.
+- Contains navigation between the main sections: My plan, Artists, Program, Support Program,
+  Settings. Program and Support Program are listed only when the edition has categories to lay out
+  their sets by (`hasTimelineCategories`), and My plan while either of them is, so before the
+  schedule is published only Artists and Settings remain.
 - Dismissed by tapping outside, swiping left, or the hamburger.
 - Exception: when ArtistDetailScreen is fully expanded, swipe-from-left closes the detail view
   instead of opening the drawer. There is **no in-app back button** — backward movement is the
@@ -87,7 +89,7 @@ when the festival edition changes, since ids are scoped to an edition.
 
 | Element | Model | Source |
 |---|---|---|
-| Drawer entries | `shell/SideDrawerContent.model.ts` (drawn by `DrawerItem`) | the active screen, whether each timeline has categories for its artists, and the clash count of the shared conflict calculation (`useConflicts`), the one My plan follows |
+| Drawer entries | `shell/SideDrawerContent.model.ts` (drawn by `DrawerItem`) | the active screen, whether each timeline has categories for its artists (My plan is listed while either timeline is), and the clash count of the shared conflict calculation (`useConflicts`), the one My plan follows |
 | Lens chip | `features/social/LensChip.model.ts` (drawn by `LensChipView`) | the lens and the focused friend; the panel's open state |
 | Lens panel | `features/social/LensPanel.model.ts` (each source a `LensScopeRow`) | the lens, the followed friends, the friend armed for removal |
 | "My schedule" (ends the lens panel and My plan's filter panel) | `features/social/MyScheduleShare.model.ts` (drawn by `MyScheduleShareView`) | the session and the share |

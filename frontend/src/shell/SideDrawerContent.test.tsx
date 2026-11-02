@@ -8,7 +8,7 @@ import type { DbArtist, DbCategory, DbEvent } from '../types/backend';
 // ── Timeline items in the drawer ──────────────────────────────────────────────
 //
 // "Program" and "Support Program" are listed only when hasTimelineCategories
-// says there is something to lay their lanes out by. The matrix below walks
+// says there is something to lay their lanes out by; "My plan" while either is. The matrix below walks
 // every input that decides it — whether the edition has categories at all, and,
 // for each side (playable / support), whether there is such an artist, whether
 // it has events, and whether those events sit in a category that exists — and
@@ -143,7 +143,7 @@ const CASES: Case[] = [true, false].flatMap((hasCategories) =>
 
 describe('timeline items in the drawer', () => {
   it.each(CASES)(
-    'categories: $hasCategories, playable: $playable, support: $support → Program: $program, Support Program: $supportProgram',
+    'categories: $hasCategories, playable: $playable, support: $support → Program: $program, Support Program: $supportProgram, My plan: either',
     async ({ hasCategories, playable, support, program, supportProgram }) => {
       const slug = freshSlug();
       seed(slug, hasCategories, playable, support);
@@ -152,9 +152,10 @@ describe('timeline items in the drawer', () => {
 
       expectItem('Program', program);
       expectItem('Support Program', supportProgram);
+      // My plan follows the timelines: listed while either of them is.
+      expectItem('My plan', program || supportProgram);
       // The rest of the drawer does not depend on the timeline data.
       expectItem('Artists', true);
-      expectItem('My plan', true);
       expectItem('Settings', true);
       expectItem('Conflicts', false);
     },
@@ -166,6 +167,7 @@ describe('timeline items in the drawer', () => {
     await renderDrawer(slug);
     expectItem('Program', false);
     expectItem('Support Program', false);
+    expectItem('My plan', false);
 
     await act(async () => {
       seed(slug, true, 'event in known category', 'event in known category');
@@ -173,6 +175,7 @@ describe('timeline items in the drawer', () => {
 
     expectItem('Program', true);
     expectItem('Support Program', true);
+    expectItem('My plan', true);
   });
 
   it('hides the items again once a sync drops the categories', async () => {
@@ -181,6 +184,7 @@ describe('timeline items in the drawer', () => {
     await renderDrawer(slug);
     expectItem('Program', true);
     expectItem('Support Program', true);
+    expectItem('My plan', true);
 
     await act(async () => {
       seed(slug, false, 'event in known category', 'event in known category');
@@ -188,6 +192,7 @@ describe('timeline items in the drawer', () => {
 
     expectItem('Program', false);
     expectItem('Support Program', false);
+    expectItem('My plan', false);
   });
 });
 

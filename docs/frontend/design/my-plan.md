@@ -277,7 +277,7 @@ All My plan strings live in one module, so a later i18n pass is a drop-in. Curre
 
 ## Navigation
 
-- The drawer entry **"My plan"** replaces "Conflicts", at the top of the list.
+- The drawer entry **"My plan"** replaces "Conflicts", at the top of the list. It is listed only while Program or Support Program is (both need categories for their sets), so it is hidden before the schedule is published.
   - It shows a **clash marker**: `⚠ 2`, a red warning triangle followed by the number of clashing Must-see sets (`useConflicts().count`). Red text with no badge background, shown only when the count is above 0.
     - The triangle says what's being counted, because a bare red number badge next to "My plan" would be ambiguous.
     - It's the same symbol as the `⚠ Conflict` group titles and the Only conflicts chip state.

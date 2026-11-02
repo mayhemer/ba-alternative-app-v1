@@ -4,7 +4,8 @@ import { conflictStrings } from '../features/conflicts/conflictStrings';
 // ── The navigation drawer: what it lists ──────────────────────────────────────
 //
 // My plan, the artists, the two timelines — each only when there are
-// categories to build its lanes from for the artists it shows — and Settings;
+// categories to build its lanes from for the artists it shows, and My plan
+// while either of them is listed — and Settings;
 // the active one marked. My plan carries a warning sign with the number of
 // clashing Must-sees (the shared conflict calculation's count), which its
 // accessibility label reads out too.
@@ -39,6 +40,7 @@ export function drawerItemModels({ activeRoute, hasProgram, hasSupportProgram, c
     .filter((item) => {
       if (item.screen === 'Timeline') { return hasProgram; }
       if (item.screen === 'SupportTimeline') { return hasSupportProgram; }
+      if (item.screen === 'MyPlan') { return hasProgram || hasSupportProgram; }
       return true;
     })
     .map((item) => {
