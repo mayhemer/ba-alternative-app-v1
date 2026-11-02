@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { LoadingScreen } from '../../ui/LoadingScreen';
 import type { DbArtist, DbEvent } from '../../types/backend';
 import { useTopBar, useBottomBar } from '../../shell/ScreenUIContext';
@@ -9,6 +9,11 @@ import { LensChip } from '../../features/social/LensChip';
 import { useTimelineData } from './useTimelineData';
 import { setSelectedDay } from '../../store/uiStatePersistence';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
+import { useLens } from '../../features/social/LensContext';
+import { useDeferredInterests } from '../../features/interests/InterestContext';
+import { useSearchScope } from '../../features/search/SearchContext';
+import { useJumpToTimeline } from '../../navigation/useJumpToTimeline';
+import { timelineSearchScope } from './timelineSearchScope';
 
 // ── Shared TopBar / BottomBar slot components ─────────────────────────────────
 
@@ -29,7 +34,17 @@ type Props = {
 
 export function BaseTimelineScreen({ title, screenKey, BottomBarComponent, filterArtist, useSubRows = false }: Props) {
   const { openDetail } = useArtistDetail();
-  const { shareOpeningDay } = useTimelineFilter();
+  const { shareOpeningDay, hiddenCategories, toggleCategory } = useTimelineFilter();
+  const { scope: lens, setScope: setLens } = useLens();
+  const interests = useDeferredInterests();
+  const jump = useJumpToTimeline();
+
+  // What this timeline tells search (timelineSearchScope), while it is focused.
+  const searchScope = useMemo(
+    () => timelineSearchScope({ support: screenKey === 'support', lens, interests, hidden: hiddenCategories, setLens, showLane: toggleCategory, jump }),
+    [screenKey, lens, interests, hiddenCategories, setLens, toggleCategory, jump],
+  );
+  useSearchScope(searchScope);
 
   // ── Festival day ────────────────────────────────────────────────────────────
 

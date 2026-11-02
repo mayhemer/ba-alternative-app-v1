@@ -38,6 +38,8 @@ export type ScrollToTimeSignal = {
   toMs: number;
   /** Lane to centre vertically; undefined leaves the vertical offset alone. */
   categoryId?: string;
+  /** The set landed on, highlighted once there; undefined for a scroll to now. */
+  eventId?: string;
   counter: number;
 };
 
@@ -66,7 +68,7 @@ type TimelineFilterContextValue = {
   // "now" button omits it, since jumping to the current time should not move the
   // lane the user is looking at.
   scrollToTimeSignal: ScrollToTimeSignal;
-  requestScrollToTime: (screenKey: string, fromMs: number, toMs: number, categoryId?: string) => void;
+  requestScrollToTime: (screenKey: string, fromMs: number, toMs: number, categoryId?: string, eventId?: string) => void;
 
   // Convenience wrapper: scroll so the current time is centred.
   requestScrollToNow: (screenKey: string) => void;
@@ -160,8 +162,8 @@ export function TimelineFilterProvider({ children }: { children: React.ReactNode
     });
   }, []);
 
-  const requestScrollToTime = useCallback((screenKey: string, fromMs: number, toMs: number, categoryId?: string): void => {
-    setScrollToTimeSignal((prev) => ({ screenKey, fromMs, toMs, categoryId, counter: prev.counter + 1 }));
+  const requestScrollToTime = useCallback((screenKey: string, fromMs: number, toMs: number, categoryId?: string, eventId?: string): void => {
+    setScrollToTimeSignal((prev) => ({ screenKey, fromMs, toMs, categoryId, eventId, counter: prev.counter + 1 }));
   }, []);
 
   const requestScrollToNow = useCallback((screenKey: string): void => {

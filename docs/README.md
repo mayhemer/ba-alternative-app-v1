@@ -40,6 +40,7 @@ Design
 - [timeline-rendering.md](frontend/design/timeline-rendering.md) — landscape trade-off, landing position, no counter-animation against scroll
 - [layout-and-chrome.md](frontend/design/layout-and-chrome.md) — layout modes, app chrome, overlays across rotation
 - [my-plan.md](frontend/design/my-plan.md) — My plan screen
+- [search.md](frontend/design/search.md) — search on every event screen: sections, landing, highlight
 - [component-inventory.md](frontend/design/component-inventory.md) — UI components, open topics
 
 Architecture

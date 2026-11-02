@@ -30,7 +30,7 @@ import { fileURLToPath } from 'node:url';
 import { adb, type Device, installedVersion, PACKAGE, pickDevice, shell } from '../lib/adb.ts';
 import { batteryTempC, coldStart, coolDown, FRAMES_READ, FRAMES_RESET, type FramePhases, type Frames, type Memory, markGapMs, parseFramePhases, parseFrames, readMemory } from '../lib/androidMetrics.ts';
 import { drift, inject, pushInjector, type Step } from '../lib/androidInput.ts';
-import { dumpUi, find, tap, tapWhenVisible, type UiNode, waitFor } from '../lib/androidUi.ts';
+import { dumpUi, tap, tapWhenVisible, type UiNode, waitFor } from '../lib/androidUi.ts';
 import { buildByVersion, staleness } from '../lib/eas.ts';
 import { type FixtureProcess, startFixtureProcess } from '../lib/fixtureProcess.ts';
 import { EXIT, parseArgs, run, skip, sleep } from '../lib/proc.ts';
@@ -341,7 +341,11 @@ async function scenarioDetailOpen(): Promise<void> {
 
 async function scenarioSearchTyping(): Promise<void> {
   await openSection('Artists');
-  const field = find(dumpUi(d), { id: 'artist-search' }) ?? (await waitFor(d, { cls: 'android.widget.EditText' }));
+  // The search opens from the lens chip, through the field at the top of its
+  // panel (docs/frontend/design/search.md); its own field takes the focus.
+  await tapWhenVisible(d, { desc: 'View and share schedules' });
+  await tapWhenVisible(d, { id: 'search-entry' });
+  const field = await waitFor(d, { id: 'search-input' });
   tap(d, field);
   await sleep(1500); // keyboard animation must finish before the window opens
   await repeat('search-typing', async () => {

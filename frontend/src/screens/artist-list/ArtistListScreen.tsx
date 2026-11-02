@@ -2,7 +2,6 @@ import React, { useCallback, useMemo } from 'react';
 import {
   Platform,
   SectionList,
-  TextInput,
   View,
 } from 'react-native';
 import { Text } from '../../ui/Text';
@@ -10,10 +9,13 @@ import type { DbArtist } from '../../types/backend';
 import { sortedArtistList, withLens, type Section } from './ArtistList.model';
 import { useSelectedSlug } from '../../store/AppContext';
 import { useArtists } from '../../store/cacheStore';
+import { useSearchScope } from '../../features/search/SearchContext';
+import type { SearchScope } from '../../features/search/searchScope';
+import { searchStrings } from '../../features/search/searchStrings';
+import { onSupportProgram } from '../../lib/timelineJump';
 import { useTopBar, useBottomBar } from '../../shell/ScreenUIContext';
 import { useStarSelectorActions } from '../../features/interests/StarSelectorContext';
 import { useInterest } from '../../features/interests/InterestContext';
-import { useArtistListFilter } from './ArtistListFilterContext';
 import { useLens } from '../../features/social/LensContext';
 import { useSocialData } from '../../features/social/SocialContext';
 import { useArtistDetail } from '../../features/artist-detail/ArtistDetailContext';
@@ -52,7 +54,6 @@ type ScrollProps = ReturnType<typeof closeStarSelectorOnScroll>;
 type ListProps = {
   sections: Section[];
   renderItem: ({ item }: { item: DbArtist }) => React.ReactElement;
-  header: React.ReactElement;
   scrollProps: ScrollProps;
   bottomClearance: number;
 };
@@ -71,7 +72,7 @@ const EMPTY_LIST = (
   </View>
 );
 
-const ArtistSectionList = React.memo(function ArtistSectionList({ sections, renderItem, header, scrollProps, bottomClearance }: ListProps) {
+const ArtistSectionList = React.memo(function ArtistSectionList({ sections, renderItem, scrollProps, bottomClearance }: ListProps) {
   const contentContainerStyle = useMemo(() => ({ paddingBottom: bottomClearance }), [bottomClearance]);
   return (
     <SectionList<DbArtist, Section>
@@ -79,7 +80,6 @@ const ArtistSectionList = React.memo(function ArtistSectionList({ sections, rend
       keyExtractor={keyExtractor}
       renderItem={renderItem}
       renderSectionHeader={renderSectionHeader}
-      ListHeaderComponent={header}
       ListEmptyComponent={EMPTY_LIST}
       {...scrollProps}
       stickySectionHeadersEnabled
@@ -89,12 +89,25 @@ const ArtistSectionList = React.memo(function ArtistSectionList({ sections, rend
   );
 });
 
-// ── Inner screen (needs ArtistListFilterContext) ──────────────────────────────
+/** What the artist list tells search: its bands, every result opening details. */
+const ARTIST_SEARCH_SCOPE: SearchScope = {
+  title: searchStrings.bands,
+  hereOpens: 'details',
+  elsewhereOpens: 'details',
+  contains: (ref) => !onSupportProgram(ref.artist),
+  views: [{ shows: () => true, tag: null }],
+  reveal: () => undefined,
+  openElsewhere: () => undefined,
+};
 
-function ArtistListScreenInner() {
+// ── Screen ────────────────────────────────────────────────────────────────────
+//
+// No search field of its own: search opens from the lens panel, the same on
+// every screen (features/search). A result opens the artist sheet.
+
+export function ArtistListScreen() {
   const selectedSlug = useSelectedSlug();
   const { interests } = useInterest();
-  const { searchQuery, setSearchQuery } = useArtistListFilter();
   const { scope } = useLens();
   const { getFriend, friendsByArtist } = useSocialData();
   const { openDetail } = useArtistDetail();
@@ -112,14 +125,14 @@ function ArtistListScreenInner() {
   const artists = useArtists(selectedSlug);
 
   useTopBar({ title: 'Artists', RightComponent: ArtistListTopBarRight });
+  // Every result opens the artist sheet over the results (SearchView); bands are
+  // this list's own.
+  useSearchScope(ARTIST_SEARCH_SCOPE);
   useBottomBar({});
 
-  // Two steps, so a pick never sorts again: the sort follows the lineup and the
-  // search only; the lens over it is a filter, and on Everything no work at all.
-  const sorted = useMemo(
-    () => sortedArtistList({ artists, query: searchQuery }),
-    [artists, searchQuery],
-  );
+  // Two steps, so a pick never sorts again: the sort follows the lineup only;
+  // the lens over it is a filter, and on Everything no work at all.
+  const sorted = useMemo(() => sortedArtistList({ artists }), [artists]);
   const { loading, sections } = useMemo(
     () => withLens(sorted, { scope, interests, friendInterests }),
     [sorted, scope, interests, friendInterests],
@@ -133,21 +146,6 @@ function ArtistListScreenInner() {
     <ConnectedArtistRow artist={item} friends={friendsByArtist[item.artistId]} onPress={handleRowPress} />
   ), [friendsByArtist, handleRowPress]);
 
-  const header = useMemo(() => (
-    <View className="px-4 py-2 bg-background border-b border-border">
-      <TextInput
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-        // Stable handle for native E2E (Maestro): a placeholder is not reliably
-        // exposed as matchable text on iOS. Maps to accessibilityIdentifier.
-        testID="artist-search"
-        placeholder="Search artists…"
-        placeholderTextColor="#555555"
-        className="h-9 px-3 bg-surface text-textPrimary text-sm"
-      />
-    </View>
-  ), [searchQuery, setSearchQuery]);
-
   // Nothing cached yet is a wait, not an answer — the same state the timeline shows
   // while its days are still being derived. Filters only ever narrow the loaded
   // lineup, so an empty list after them is ListEmptyComponent.
@@ -159,17 +157,8 @@ function ArtistListScreenInner() {
     <ArtistSectionList
       sections={sections}
       renderItem={renderItem}
-      header={header}
       scrollProps={scrollProps}
       bottomClearance={bottomClearance}
     />
   );
-}
-
-// ── Screen ────────────────────────────────────────────────────────────────────
-
-// ArtistListFilterProvider lives above AppShell in App.tsx so that slot
-// components rendered in the TopBar can access the context.
-export function ArtistListScreen() {
-  return <ArtistListScreenInner />;
 }

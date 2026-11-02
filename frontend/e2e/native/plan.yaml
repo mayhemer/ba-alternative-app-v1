@@ -3,24 +3,14 @@ name: two clashing must-sees show up as a conflict in My plan
 ---
 - runFlow: common/launch-fresh.yaml
 # EXORCIZPHOBIA and CRYSTAL LAKE overlap on Wednesday in the ba2025 capture.
-# Two presses each = "must see"; only must-sees count as conflicts.
-# The search narrows the list to one row, so its star is element 0. The search
-# step closes the keyboard: while it is up, the list's first tap only dismisses
-# it (keyboardShouldPersistTaps defaults to "never").
+# Two presses each = "must see"; only must-sees count as conflicts. Each is
+# found by search and starred in its sheet (common/must-see.yaml).
 - runFlow:
-    file: common/search-artist.yaml
+    file: common/must-see.yaml
     env: { QUERY: "exorcizphobia" }
-- tapOn: { text: "Toggle interest", index: 0 }
-- tapOn: { text: "Toggle interest", index: 0 }
-# The step clears the field before typing, so the previous query goes.
 - runFlow:
-    file: common/search-artist.yaml
+    file: common/must-see.yaml
     env: { QUERY: "crystal lake" }
-- tapOn: { text: "Toggle interest", index: 0 }
-- tapOn: { text: "Toggle interest", index: 0 }
-- tapOn: { id: "artist-search" }
-- waitForAnimationToEnd
-- eraseText: 20
 # With conflicts the drawer entry carries a warning sign and the count.
 - runFlow:
     file: common/open-section.yaml

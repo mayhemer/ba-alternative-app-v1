@@ -22,6 +22,14 @@ export const TITLE_LAYOUT = {
   closeWidth: 30,
 } as const;
 
+/** Between genre and country on the sheet, and wherever that line is shown again (search). */
+export const GENRE_COUNTRY_SEPARATOR = '  ·  ';
+
+/** The artist's genre and country, each only when known (lineups arrive in waves). */
+export function artistGenreCountry(artist: DbArtist): string[] {
+  return [getArtistLocalized(artist.localized, 'genre'), getArtistLocalized(artist.localized, 'country')].filter((part) => part !== '');
+}
+
 export type ArtistDetailTitleModel = {
   /** The artistId. */
   key: string;
@@ -54,13 +62,11 @@ export function artistDetailTitleModel({ artist, status, hasConflict, innerWidth
     + (hasConflict ? TITLE_LAYOUT.conflictWidth + TITLE_LAYOUT.gap : 0)
     + (isWeb ? TITLE_LAYOUT.closeWidth : 0);
   const titleWidth = innerWidth - padding * 2 - TITLE_LAYOUT.marginRight - controls;
-  const genre = getArtistLocalized(artist.localized, 'genre');
-  const country = getArtistLocalized(artist.localized, 'country');
   return {
     key: artist.artistId,
     name: artist.name,
     fontSize: fitFontSize(artist.name.length, titleWidth, TITLE_LAYOUT.lines, TITLE_LAYOUT.fontSize),
-    meta: [genre, country].filter(Boolean).join('  ·  '),
+    meta: artistGenreCountry(artist).join(GENRE_COUNTRY_SEPARATOR),
     showConflict: hasConflict,
     showClose: isWeb,
     status,

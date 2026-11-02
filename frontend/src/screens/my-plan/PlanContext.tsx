@@ -23,7 +23,7 @@ import { getFestivalDayStart } from '../../utils/festivalTime';
 //     conflicts;
 //   - the filter panel's open state, in the screen-exclusivity hub with the
 //     drawer and the lens panel;
-//   - a small store for the shown day and "go to now" requests.
+//   - a small store for the shown day and landing requests (now, or a set).
 //
 // The shown day is derived during render, never seeded by an effect: a day the
 // user picked counts only while the festival day it was picked on is still
@@ -34,6 +34,9 @@ import { getFestivalDayStart } from '../../utils/festivalTime';
 
 type DaySelection = { day: number; pickedOnDay: number };
 
+/** Where the screen is asked to land: now (the pill, today's button) or a set (search). */
+export type PlanLanding = { kind: 'now' } | { kind: 'set'; eventId: string };
+
 type PlanStore = {
   getSelection: () => DaySelection | null;
   /** Bumped on every change, for subscribers. */
@@ -41,14 +44,16 @@ type PlanStore = {
   pickDay: (day: number, now: number) => void;
   /** Today, scrolled to now: clears the picked day and asks the screen to scroll. */
   requestNow: () => void;
-  /** Takes a pending "scroll to now" request; true once per request. */
-  takeNowRequest: () => boolean;
+  /** A set's day, scrolled to its row, which lights up (search). */
+  requestSet: (day: number, eventId: string, now: number) => void;
+  /** Takes the pending landing request, once per request; null when there is none. */
+  takeLanding: () => PlanLanding | null;
   subscribe: (listener: () => void) => () => void;
 };
 
 function createPlanStore(): PlanStore {
   let selection: DaySelection | null = null;
-  let nowPending = false;
+  let landing: PlanLanding | null = null;
   let version = 0;
   const listeners = new Set<() => void>();
   const changed = (): void => {
@@ -64,12 +69,17 @@ function createPlanStore(): PlanStore {
     },
     requestNow: () => {
       selection = null;
-      nowPending = true;
+      landing = { kind: 'now' };
       changed();
     },
-    takeNowRequest: () => {
-      const pending = nowPending;
-      nowPending = false;
+    requestSet: (day, eventId, now) => {
+      selection = { day, pickedOnDay: getFestivalDayStart(now) };
+      landing = { kind: 'set', eventId };
+      changed();
+    },
+    takeLanding: () => {
+      const pending = landing;
+      landing = null;
       return pending;
     },
     subscribe: (listener) => {

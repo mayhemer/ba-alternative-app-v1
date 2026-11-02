@@ -6,6 +6,7 @@ import { Text } from '../ui/Text';
 import { useSelectedSlug } from '../store/AppContext';
 import { useArtistEventMap, useArtists, useFestivalDays, useStages } from '../store/cacheStore';
 import { useDeferredInterests } from '../features/interests/InterestContext';
+import { useSearch } from '../features/search/SearchContext';
 import { shownPlanDay, usePlanStore } from '../screens/my-plan/PlanContext';
 import { minuteNow, useMinuteNow } from '../hooks/useMinuteNow';
 import { festivalToday } from '../utils/festivalTime';
@@ -148,7 +149,10 @@ export const NowPillView = memo(NowPillViewBase);
 function useNowPillPress(target: NowPillTarget | null, festivalDays: number[]): () => void {
   const store = usePlanStore();
   const jumpToTimelineNow = useJumpToTimelineNow();
+  const { close: closeSearch } = useSearch();
   return useCallback((): void => {
+    // A tap on the top bar closes an open search, then does what it always does.
+    closeSearch();
     if (!navigationRef.isReady()) {
       return;
     }
@@ -166,7 +170,7 @@ function useNowPillPress(target: NowPillTarget | null, festivalDays: number[]): 
       case 'none':
         break;
     }
-  }, [target, festivalDays, store, jumpToTimelineNow]);
+  }, [target, festivalDays, store, jumpToTimelineNow, closeSearch]);
 }
 
 export function NowPill() {

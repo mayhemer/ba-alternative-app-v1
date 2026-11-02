@@ -1,4 +1,5 @@
 import { expect, test } from './fixtures';
+import { closeSearch, searchFor, searchResult } from './search';
 
 // ── Artist list interactions ──────────────────────────────────────────────────
 
@@ -9,39 +10,32 @@ async function ready(page: import('@playwright/test').Page): Promise<void> {
   await expect(page.getByText('LOADING ARTISTS…')).toHaveCount(0, { timeout: 20_000 });
 }
 
-test('search narrows the list', async ({ appPage }) => {
+test('search finds a band and opens it over the results', async ({ appPage }) => {
   await ready(appPage);
-  await expect(appPage.getByText(FIRST_ARTIST, { exact: false }).first()).toBeVisible();
+  await searchFor(appPage, 'mastodon');
+  await expect(searchResult(appPage, 'MASTODON')).toBeVisible();
 
-  await appPage.getByPlaceholder('Search artists…').fill('mastodon');
+  await searchResult(appPage, 'MASTODON').click();
 
-  // Narrowing brings a name in from far down the collated order, which is also
-  // the path that re-runs the grouping and its collated sort on every keystroke.
-  await expect(appPage.getByText('MASTODON', { exact: false }).first()).toBeVisible();
-  await expect(appPage.getByText(FIRST_ARTIST, { exact: false })).toHaveCount(0);
+  // The artist sheet opens over the results, which stay for the next pick.
+  await expect(appPage.getByText('✕', { exact: true }).filter({ visible: true }).first()).toBeVisible();
+  await expect(appPage.getByTestId('search-input')).toBeVisible();
 });
 
-test('clearing the search restores the full list', async ({ appPage }) => {
+test('closing the search leaves the list as it was', async ({ appPage }) => {
   await ready(appPage);
-  const search = appPage.getByPlaceholder('Search artists…');
+  await searchFor(appPage, 'mastodon');
+  await closeSearch(appPage);
 
-  await search.fill('mastodon');
-  await expect(appPage.getByText(FIRST_ARTIST, { exact: false })).toHaveCount(0);
-  await search.fill('');
-
+  await expect(appPage.getByTestId('search-input')).toHaveCount(0);
   await expect(appPage.getByText(FIRST_ARTIST, { exact: false }).first()).toBeVisible();
 });
 
 test('a search matching nothing says so rather than looking broken', async ({ appPage }) => {
   await ready(appPage);
+  await searchFor(appPage, 'zzzzzzzz-no-such-band');
 
-  await appPage.getByPlaceholder('Search artists…').fill('zzzzzzzz-no-such-band');
-
-  // An empty result is an answer, not a wait — the list must not fall back to
-  // its loading state.
-  await expect(appPage.getByText('LOADING ARTISTS…')).toHaveCount(0);
-  await expect(appPage.getByText(FIRST_ARTIST, { exact: false })).toHaveCount(0);
-  await expect(appPage.getByText('No artists found', { exact: true })).toBeVisible();
+  await expect(appPage.getByText('Nothing found for “zzzzzzzz-no-such-band”', { exact: true })).toBeVisible();
 });
 
 test('a star survives a reload', async ({ appPage }) => {

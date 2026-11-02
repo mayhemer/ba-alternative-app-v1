@@ -15,6 +15,7 @@ import {
 import { useSelectedSlug } from '../store/AppContext';
 import { useSelectedDay, useTimelineFilter } from '../screens/timeline/TimelineFilterContext';
 import { useLens, useLensPanel } from '../features/social/LensContext';
+import { useSearch } from '../features/search/SearchContext';
 import { useArtistDetail } from '../features/artist-detail/ArtistDetailContext';
 import { useConflictDetail } from '../features/conflicts/ConflictDetailContext';
 import { useConflicts } from '../features/conflicts/ConflictContext';
@@ -71,6 +72,7 @@ export function BackHistoryTracker() {
   const selectedDayStart = useSelectedDay();
   const { scope, setScope } = useLens();
   const { isOpen: isLensPanelOpen, close: closeLensPanel } = useLensPanel();
+  const { isOpen: isSearchOpen, close: closeSearch } = useSearch();
   const { detailState, openDetail, closeDetail } = useArtistDetail();
   const { conflictState, openConflict, closeConflict } = useConflictDetail();
   const { entries } = useConflicts();
@@ -83,6 +85,7 @@ export function BackHistoryTracker() {
     selectedSlug, setSelectedDayStart, setScope,
     openDetail, closeDetail, openConflict, closeConflict, entries, getFriend,
     isLensPanelOpen, closeLensPanel,
+    isSearchOpen, closeSearch,
     isArtistOpen: detailState.artist !== null,
     isConflictOpen: conflictState.event !== null,
   };
@@ -178,6 +181,7 @@ export function BackHistoryTracker() {
     const l = live.current;
     if (l.isConflictOpen) { l.closeConflict(); return true; }
     if (l.isArtistOpen) { l.closeDetail(); return true; }
+    if (l.isSearchOpen) { l.closeSearch(); return true; }
     if (l.isLensPanelOpen) { l.closeLensPanel(); return true; }
     return false;
   }, []);
@@ -191,6 +195,12 @@ export function BackHistoryTracker() {
       // out of the navigator's own history — returning false hands it the press.
       if (isDrawerOpen()) { return false; }
       if (live.current.isLensPanelOpen) { live.current.closeLensPanel(); return true; }
+      // A sheet over the search is a position of its own, which back closes
+      // first; with none, back closes the search, which is not one.
+      if (live.current.isSearchOpen && !live.current.isArtistOpen && !live.current.isConflictOpen) {
+        live.current.closeSearch();
+        return true;
+      }
       return goBack();
     });
     return () => sub.remove();

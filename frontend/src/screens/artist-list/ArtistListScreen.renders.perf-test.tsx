@@ -40,20 +40,6 @@ test('mounting the artist list', async () => {
   await measureRenders(<ArtistListScreen />, { ...MEASURE_OPTIONS, wrapper: PerfProviders });
 });
 
-test('typing one character into search', async () => {
-  // The expensive path: the memo depends on the query, so the whole grouping and
-  // its collated sort re-run. What is gated here is that it costs a bounded
-  // number of renders — not that the sort got faster.
-  await measureRenders(<ArtistListScreen />, {
-    ...MEASURE_OPTIONS,
-    wrapper: PerfProviders,
-    scenario: async () => {
-      const search = screen.getByPlaceholderText('Search artists…');
-      await act(async () => { search.props.onChangeText('m'); });
-    },
-  });
-});
-
 test('pressing one star', async () => {
   // A star press changes the interest map, which every context consumer sees.
   // If this count climbs, something stopped memoising and the whole list is

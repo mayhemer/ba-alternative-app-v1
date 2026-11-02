@@ -56,3 +56,12 @@ export function matchesScope(
   if (scope.level === null) { return true; }
   return matchesInterestFilter(friendStatus, scope.level);
 }
+
+/**
+ * Whether the lens takes a set off the timelines altogether. The lens only mutes
+ * sets there, except my own "don't go" under My picks. TimelineDay.model draws
+ * by it, and search widens it away before landing on such a set.
+ */
+export function isRemovedByLens(scope: LensScope, myStatus: InterestStatus): boolean {
+  return scope.kind === 'me' && myStatus === 'dont_go';
+}

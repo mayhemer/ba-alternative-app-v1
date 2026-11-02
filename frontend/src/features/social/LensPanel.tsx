@@ -6,6 +6,7 @@ import { lensPanelModel, type LensScopeRowModel } from './LensPanel.model';
 import { useLens, useLensPanel } from './LensContext';
 import { useSocialData, useSocialActions } from './SocialContext';
 import { MyScheduleShare } from './MyScheduleShare';
+import { SearchEntry } from '../search/SearchEntry';
 import { useInterestCycle } from '../interests/InterestContext';
 import { type LensScope } from '../../lib/interestUtils';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
@@ -129,7 +130,11 @@ export function LensPanel() {
         }}
       >
         <ScrollView keyboardShouldPersistTaps="handled">
+          {/* ── SEARCH ───────────────────────────────────────────── */}
+          <SearchEntry />
+
           {/* ── SHOW ─────────────────────────────────────────────── */}
+          <View style={{ height: 8 }} />
           <PanelSectionLabel>Show</PanelSectionLabel>
 
           {model.rows.map((row) => (

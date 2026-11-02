@@ -1,16 +1,19 @@
-# Marks ${QUERY} a must-see from the artist list: two star presses. The search
-# narrows the list to one row, so its star is element 0.
+# Marks ${QUERY} a must-see: found by search, two presses of the star in its
+# artist sheet (the sheet's title is the bare name; the search field, which
+# also holds the query, spans the width, so nothing is right of it). Then the
+# sheet and the search close again.
 appId: cz.janbambas.ba
 ---
 - runFlow:
     file: search-artist.yaml
     env: { QUERY: "${QUERY}" }
 # The star selector opens beside the star and leaves it uncovered.
-- tapOn: { text: "Toggle interest", index: 0 }
-- tapOn: { text: "Toggle interest", index: 0 }
-# The star selector covers part of the row (or of the sheet's header), and a
-# touch on it is its own, until it closes by itself 2.5 s after the last tap.
+- tapOn: { text: "Toggle interest", rightOf: "${QUERY}" }
+- tapOn: { text: "Toggle interest", rightOf: "${QUERY}" }
+# The star selector covers part of the sheet's header, and a touch on it is its
+# own, until it closes by itself 2.5 s after the last tap.
 - extendedWaitUntil:
     notVisible:
       id: "star-selector"
     timeout: 5000
+- runFlow: close-sheet-and-search.yaml

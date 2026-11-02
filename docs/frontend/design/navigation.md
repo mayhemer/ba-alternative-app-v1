@@ -42,14 +42,17 @@ selected festival day, the lens scope, and which sheet is open (artist / conflic
   from the artist detail view, switching the day on a timeline, opening the artist or
   conflict sheet, changing the lens filter. The now pill's switch from My plan to a timeline at
   now is one position.
-- **What is not**: opening the drawer or the lens panel, hidden categories, the artist
-  list's search query, and expanding the artist sheet from collapsed. The drawer is
+- **What is not**: opening the drawer, the lens panel or the search, hidden categories, the
+  typed query, and expanding the artist sheet from collapsed. A search's landing
+  is a position (its screen, day and lens), so one back press returns from it. The drawer is
   left to React Navigation, which already closes it on back; the lens panel is closed
   by a back press but is never a place you return *to*.
 - One user action is one back press, even when it moves several fields at once
   ("go to timeline" from the artist sheet changes screen + day + closes the sheet).
 - Dismissing a sheet by swipe, backdrop or Escape is itself a backward move, so it
   never needs a second press to undo.
+- **Search** ([search.md](search.md)) closes on Android back and web Escape like the lens panel,
+  after any sheet open over it. Browser back on web does not close it.
 
 Implementation is two files — `navigation/backHistory.ts` (the stack, platform-free)
 and `navigation/BackHistoryTracker.tsx` (observes the contexts, restores a position,

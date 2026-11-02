@@ -13,9 +13,9 @@ import { InterestProvider } from './src/features/interests/InterestContext';
 import { StarSelectorProvider } from './src/features/interests/StarSelectorContext';
 import { SocialProvider } from './src/features/social/SocialContext';
 import { LensProvider } from './src/features/social/LensContext';
-import { ArtistListFilterProvider } from './src/screens/artist-list/ArtistListFilterContext';
 import { TimelineFilterProvider } from './src/screens/timeline/TimelineFilterContext';
 import { PlanProvider } from './src/screens/my-plan/PlanContext';
+import { SearchProvider } from './src/features/search/SearchContext';
 import { AppShell } from './src/shell/AppShell';
 import { Image as ExpoImage } from 'expo-image';
 import * as SplashScreen from 'expo-splash-screen';
@@ -38,13 +38,13 @@ function AppContent() {
               <ConflictProvider>
                 <ArtistDetailProvider>
                   <ConflictDetailProvider>
-                    <ArtistListFilterProvider>
-                      <TimelineFilterProvider>
-                        <PlanProvider>
+                    <TimelineFilterProvider>
+                      <PlanProvider>
+                        <SearchProvider>
                           <AppShell />
-                        </PlanProvider>
-                      </TimelineFilterProvider>
-                    </ArtistListFilterProvider>
+                        </SearchProvider>
+                      </PlanProvider>
+                    </TimelineFilterProvider>
                   </ConflictDetailProvider>
                 </ArtistDetailProvider>
               </ConflictProvider>

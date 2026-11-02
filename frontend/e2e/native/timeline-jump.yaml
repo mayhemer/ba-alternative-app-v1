@@ -8,15 +8,15 @@ name: going to a set from the artist sheet scrolls the timeline to it
 # REPLICANT plays once, Friday 22:30, in the Octagon — the bottom lane — so the
 # jump needs a day switch, a long horizontal move and a vertical one.
 - runFlow: common/launch-fresh.yaml
+# Search opens the sheet (common/search-artist.yaml).
 - runFlow:
     file: common/search-artist.yaml
     env: { QUERY: "replicant" }
-# The row's merged label, not the bare name: the search field holds "replicant"
-# too, and Maestro matches case-insensitively.
-- tapOn: "REPLICANT, TECHNICAL.*"
-- waitForAnimationToEnd
-# The sheet's event row: stage, day and time merged into one label.
-- tapOn: ".*22:30–23:30.*"
+# The sheet's event row: stage, day and time merged into one label, the stage
+# first. The search result behind carries the same time after the name, so the
+# stage at the start is what tells them apart. The tap navigates, which closes
+# the search.
+- tapOn: "Octagon.*22:30–23:30.*"
 - waitForAnimationToEnd
 # The block's label is the name followed by its time; the list row's is the
 # name followed by genre and country, so this cannot match the list behind.

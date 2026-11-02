@@ -25,6 +25,7 @@ import {
   defaultScrollX,
   eventScrollTarget,
 } from '../../features/timeline/timelineLayout';
+import { showLandingHighlight } from '../../features/timeline/landingHighlight';
 import { colors } from '../../styling/tokens';
 import { perfMark, perfMarksEnabled } from '../../utils/perfMarks';
 import type { DbArtist, DbEvent } from '../../types/backend';
@@ -271,7 +272,7 @@ export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress }:
   useEffect(() => {
     if (scrollToTimeSignal.counter === 0) { return; }
     if (scrollToTimeSignal.screenKey !== screenKey) { return; }
-    const { fromMs, toMs, categoryId } = scrollToTimeSignal;
+    const { fromMs, toMs, categoryId, eventId } = scrollToTimeSignal;
     const timer = setTimeout(() => {
       // The lane is unknown for a "now" jump, or when the category is hidden by
       // the filter; the vertical offset then stands.
@@ -305,6 +306,10 @@ export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress }:
       horizontalScrollRef.current?.scrollTo({ x: targetX, animated: true });
       if (targetY !== undefined) {
         verticalScrollRef.current?.scrollTo({ y: targetY, animated: true });
+      }
+      // A jump to a set lights its block (landingHighlight); a scroll to now names none.
+      if (eventId !== undefined) {
+        showLandingHighlight(eventId);
       }
     }, 120);
     return () => clearTimeout(timer);

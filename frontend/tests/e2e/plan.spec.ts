@@ -1,6 +1,7 @@
 import { expect, PINNED_NOW, test } from './fixtures';
 import type { Locator, Page } from '@playwright/test';
 import { eventScrollTarget } from '../../src/features/timeline/timelineLayout';
+import { closeSearch, searchFor, searchResult } from './search';
 
 // ── My plan ───────────────────────────────────────────────────────────────────
 //
@@ -14,18 +15,21 @@ async function ready(page: Page): Promise<void> {
   await expect(page.getByText('LOADING ARTISTS…')).toHaveCount(0, { timeout: 20_000 });
 }
 
-/** Marks an artist a must-see from the list: two star presses. */
+/** Marks an artist a must-see: found by search, starred in its sheet, both closed again. */
 async function mustSee(page: Page, query: string): Promise<void> {
-  await page.getByTestId('artist-search').fill(query);
-  // One press is Maybe and opens the selector; Must-see is picked in it.
-  await page.getByLabel('Toggle interest').filter({ visible: true }).first().click();
+  await searchFor(page, query);
+  await searchResult(page, query.toUpperCase()).click();
+  // The sheet's star is the last one in the tree. One press is Maybe and opens
+  // the selector; Must-see is picked in it.
+  await page.getByLabel('Toggle interest').filter({ visible: true }).last().click();
   await page.getByTestId('star-selector').getByLabel('Must see!', { exact: true }).click();
+  await page.getByText('✕', { exact: true }).filter({ visible: true }).first().click();
+  await closeSearch(page);
 }
 
 async function pickClashingPair(page: Page): Promise<void> {
   await mustSee(page, 'crystal lake');
   await mustSee(page, 'exorcizphobia');
-  await page.getByTestId('artist-search').fill('');
 }
 
 test('the now pill shows the live must-see and opens the plan', async ({ appPage }) => {
@@ -157,7 +161,6 @@ test('in a break, the now pill on My plan goes to the timeline at now, not to th
   await ready(appPage);
   // At 14:00 MINISTRY (22:20) is hours away: the pill counts down to it.
   await mustSee(appPage, 'ministry');
-  await appPage.getByTestId('artist-search').fill('');
   const pill = appPage.getByTestId('now-pill');
   await expect(pill).toHaveAccessibleName(/MINISTRY START/);
   await pill.click();

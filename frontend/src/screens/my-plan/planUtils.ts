@@ -1,5 +1,5 @@
 import type { ConflictEntry, ConflictInputs, Conflicts } from '../../lib/conflictUtils';
-import { BREAK_WINDOW_OFFSET_MS, liveMustSees, planPicks } from '../../lib/plan';
+import { BREAK_WINDOW_OFFSET_MS, liveMustSees, planLevelLists, planPicks } from '../../lib/plan';
 import { getFestivalDayStart } from '../../utils/festivalTime';
 import { planCapModel, type PlanCapModel } from './PlanCap.model';
 import { planEmptyModel, type PlanEmptyModel } from './PlanEmpty.model';
@@ -76,15 +76,7 @@ export function buildPlanDay(
   const allPicks = planPicks(interests, inputs, level === 'all');
   const dayPicks = allPicks.filter((p) => getFestivalDayStart(p.event.dateFrom) === dayStart);
   const liveMusts = liveMustSees(allPicks, now).map((p) => p.event);
-  const visible = dayPicks.filter((p) => {
-    if (conflictsOnly) {
-      return p.level === 'will_go' && overlaps.has(p.event.eventId);
-    }
-    if (p.level === 'maybe') {
-      return level === 'maybe' || level === 'all';
-    }
-    return p.level === 'will_go' || level === 'all';
-  });
+  const visible = dayPicks.filter((p) => planLevelLists(level, p.level, overlaps.has(p.event.eventId)));
 
   // No day title: the day switcher names the shown day.
   const items: PlanItem[] = [];
@@ -195,6 +187,19 @@ export function itemsToFill(items: PlanItem[], y: number, height: number): numbe
  */
 export function nowScrollOffset(items: PlanItem[], viewportHeight: number): number | null {
   const index = items.findIndex(hostsNow);
+  if (index === -1) {
+    return null;
+  }
+  return Math.max(0, itemOffsets(items)[index] - viewportHeight / 3);
+}
+
+/**
+ * Scroll offset that puts a set's row about a third from the top of a viewport
+ * of the given height, as a scroll to now does; null when the day does not
+ * list it. Where a search lands on My plan.
+ */
+export function setScrollOffset(items: PlanItem[], eventId: string, viewportHeight: number): number | null {
+  const index = items.findIndex((item) => item.kind === 'set' && item.key === eventId);
   if (index === -1) {
     return null;
   }

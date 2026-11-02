@@ -1,0 +1,12 @@
+# Closes the artist sheet a search result opened, then the search under it
+# (its ✕), back to the screen as it was. The sheet opens expanded, up to the
+# safe area, so there is no backdrop to tap: it is swiped down by its handle
+# and header, which drag the sheet as the handle does.
+appId: cz.janbambas.ba
+---
+- swipe:
+    start: "50%,12%"
+    end: "50%,95%"
+- waitForAnimationToEnd
+- tapOn: "Close search"
+- waitForAnimationToEnd

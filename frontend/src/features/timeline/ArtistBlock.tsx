@@ -8,11 +8,14 @@ import { StarIndicator } from '../interests/StarButton';
 import { sameProps } from '../../ui/sameProps';
 import { BLOCK_LAYOUT, type ArtistBlockModel, type BlockLabelModel } from './ArtistBlock.model';
 import { CONFLICT_STRIPE, stripePath } from '../../ui/stripes';
+import { LandingRing } from '../../ui/LandingRing';
+import { endLandingHighlight, useLandingHighlight } from './landingHighlight';
 
 // ── A set's block on the timeline ─────────────────────────────────────────────
 //
 // Draws its model (ArtistBlock.model.ts): the box at its time and row, the
-// label (repeated along a long block), the star, and the conflict bars.
+// label (repeated along a long block), the star, and the conflict bars; and,
+// after a jump that landed on its set, the frame (landingHighlight).
 
 type Props = {
   item: ArtistBlockModel;
@@ -43,6 +46,8 @@ function LabelContent({ label }: { label: BlockLabelModel }) {
 
 function ArtistBlockBase({ item, onPress }: Props) {
   const { label } = item;
+  // Only this block's own answer: a landing renders the block it lands on alone.
+  const landing = useLandingHighlight(item.key);
   const handlePress = (): void => { onPress(item.event, item.artist); };
   return (
     <View
@@ -135,6 +140,9 @@ function ArtistBlockBase({ item, onPress }: Props) {
           </Svg>
         );
       })}
+
+      {/* The frame of a jump that landed here (search, the artist sheet). */}
+      {landing !== null && <LandingRing key={landing} token={landing} onEnd={endLandingHighlight} />}
     </View>
   );
 }

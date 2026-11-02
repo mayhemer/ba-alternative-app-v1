@@ -24,12 +24,15 @@ Two things to know when writing flows:
 - **A touchable is one accessibility element on iOS.** Its children's text is merged into a single
   label, so an artist row reads "3 INCHES OF BLOOD, HEAVY METAL, …", not just the name. Match names as
   `".*NAME.*"`; match drawer items exactly, so "Program" does not also hit "Support Program".
-- Elements with no stable text get a `testID` (the search field is `artist-search`; the timeline's
+- Elements with no stable text get a `testID` (the panels' search field is `search-entry`, the open
+  search's input `search-input`; the timeline's
   scrollers are `timeline-scroll-x` and `timeline-scroll-y`). A placeholder is not reliably matchable.
 - Maestro lists only what intersects the screen, so `assertNotVisible` on an off-screen timeline
   block is a real position check (`timeline-jump.yaml` relies on it).
 - Typing into the search field occasionally goes nowhere on a freshly booted simulator; use
-  `common/search-artist.yaml`, which retries until the filter visibly applied.
+  `common/search-artist.yaml`, which retries until the result is on screen and then opens its
+  artist sheet; `common/must-see.yaml` stars an artist there, and `common/close-sheet-and-search.yaml`
+  closes both again. A result's label is "NAME, Day HH:MM–HH:MM, Stage".
 - `openLink` with the `ba://` scheme raises iOS's "Open in …?" alert until it has been accepted once.
   Tap it away (optionally) in the flow — left up, it sits over every later flow.
 - The fixture API serves one share token (`tests/server/shareFixture.ts`) for the add-friend flows.

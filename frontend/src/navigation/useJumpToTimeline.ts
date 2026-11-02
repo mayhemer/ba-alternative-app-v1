@@ -6,7 +6,8 @@ import type { DbEvent } from '../types/backend';
 
 /**
  * Shows a set on its timeline: selects its day, centres its time and its
- * category's lane, and switches to the matching timeline (support or main).
+ * category's lane, switches to the matching timeline (support or main) and
+ * highlights the set once there.
  * Back history records the move as one position.
  */
 export function useJumpToTimeline(): (event: DbEvent, jump: TimelineJump) => void {
@@ -14,7 +15,7 @@ export function useJumpToTimeline(): (event: DbEvent, jump: TimelineJump) => voi
   return useCallback((event: DbEvent, jump: TimelineJump): void => {
     const screenKey = jump.support ? 'support' : 'timeline';
     setSelectedDayStart(jump.day);
-    requestScrollToTime(screenKey, event.dateFrom, event.dateTo, event.categoryId);
+    requestScrollToTime(screenKey, event.dateFrom, event.dateTo, event.categoryId, event.eventId);
     if (navigationRef.isReady()) {
       if (jump.support) {
         navigationRef.navigate('SupportTimeline');

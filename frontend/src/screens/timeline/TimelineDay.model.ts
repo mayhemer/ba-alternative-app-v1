@@ -2,7 +2,7 @@ import type { DbArtist, DbCategory, DbEvent } from '../../types/backend';
 import type { InterestStatus } from '../../cache/cacheService';
 import type { SharedInterestStatus } from '../../adapters/baShareApiAdapter';
 import type { ConflictOverlap } from '../../lib/conflictUtils';
-import { matchesScope, type LensScope } from '../../lib/interestUtils';
+import { isRemovedByLens, matchesScope, type LensScope } from '../../lib/interestUtils';
 import { categoryLaneModel, laneTitleModel, type CategoryLaneModel, type LaneSetInput, type LaneTitleModel } from '../../features/timeline/CategoryLane.model';
 import { RULER_HEIGHT } from '../../features/timeline/timelineLayout';
 import { DAY_DURATION_MS } from '../../utils/festivalTime';
@@ -74,7 +74,7 @@ export function timelineDayModel(inputs: TimelineDayInputs): TimelineDayModel {
         continue;
       }
       const status = (interests[artist.artistId] ?? 'none') as InterestStatus;
-      if (scope.kind === 'me' && status === 'dont_go') {
+      if (isRemovedByLens(scope, status)) {
         continue;
       }
       const muted = !matchesScope(scope, status, friendInterests?.[artist.artistId]);

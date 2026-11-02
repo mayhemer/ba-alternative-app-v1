@@ -1,4 +1,4 @@
-import { liveMustSees, mustSeeSets, planPicks } from './plan';
+import { liveMustSees, mustSeeSets, planLevelLists, planPicks } from './plan';
 import type { ConflictInputs } from './conflictUtils';
 import type { DbArtist, DbEvent } from '../types/backend';
 
@@ -77,5 +77,30 @@ describe('liveMustSees', () => {
 
   it('never counts a Maybe, live or not', () => {
     expect(liveAt('15:30')).toEqual([]);
+  });
+});
+
+// ── Which filter lists a planned set ──────────────────────────────────────────
+//
+// The one rule My plan's list and search both follow: under each filter, which
+// of planPicks' sets are listed, by their level and whether they clash.
+
+describe('planLevelLists', () => {
+  it.each([
+    // level,       pick,      clashing, listed
+    ['conflicts', 'will_go', true,  true],
+    ['conflicts', 'will_go', false, false],
+    ['conflicts', 'maybe',   true,  false],
+    ['must',      'will_go', false, true],
+    ['must',      'maybe',   false, false],
+    ['must',      'none',    false, false],
+    ['maybe',     'will_go', false, true],
+    ['maybe',     'maybe',   false, true],
+    ['maybe',     'none',    false, false],
+    ['all',       'will_go', false, true],
+    ['all',       'maybe',   false, true],
+    ['all',       'none',    false, true],
+  ] as const)('%s lists a %s set (clashing: %s): %s', (level, pick, clashing, listed) => {
+    expect(planLevelLists(level, pick, clashing)).toBe(listed);
   });
 });

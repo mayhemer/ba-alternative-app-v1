@@ -30,7 +30,9 @@ Separately, `MAX_CONTENT_WIDTH` (700) caps centred content so a desktop window s
 <View flex-1>
   navigator
   <LensPanel />                 ← absolute, inset 0
-  {isShort && <BottomBar />}    ← absolute, floats over the content
+  <PlanFilterPanel />           ← absolute, inset 0
+  <SearchView />                ← absolute, inset 0, over the content and panels (search.md)
+  {isShort && <BottomBar />}    ← absolute, floats over the content and the search
 </View>
 {!isShort && <BottomBar />}     ← in-flow, solid
 ```

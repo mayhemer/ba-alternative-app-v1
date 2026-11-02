@@ -9,6 +9,8 @@ import { StarGlyph } from '../../features/interests/StarButton';
 import { sameProps } from '../../ui/sameProps';
 import type { ClashBar, PlanSetModel, SetStatus } from './PlanSetRow.model';
 import type { DbArtist } from '../../types/backend';
+import { LandingRing } from '../../ui/LandingRing';
+import { endLandingHighlight, useLandingHighlight } from '../../features/timeline/landingHighlight';
 import { colors, MAX_CONTENT_WIDTH } from '../../styling/tokens';
 
 // ── One set in My plan ────────────────────────────────────────────────────────
@@ -212,13 +214,16 @@ function SetCard({ item, onPressArtist, background = colors.surface, border = co
   );
 }
 
-/** The card inside the list's side gutters, and the now arrow in the left one while live. */
+/** The card inside the list's side gutters, the now arrow in the left one while live, and the ring of a landing on it. */
 function PlanSetRowBase(props: Props) {
   const { nowY } = props.item;
+  // Only this row's own answer: a landing renders the row it lands on alone.
+  const landing = useLandingHighlight(props.item.key);
   return (
     <View>
       <View style={{ paddingHorizontal: LIST_GUTTER }}>
         <SetCard {...props} />
+        {landing !== null && <LandingRing key={landing} token={landing} onEnd={endLandingHighlight} horizontalInset={LIST_GUTTER} />}
       </View>
       {nowY !== null && <NowArrow y={nowY} />}
     </View>

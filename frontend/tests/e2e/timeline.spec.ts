@@ -1,5 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, PINNED_NOW, test } from './fixtures';
+import { searchFor, searchResult } from './search';
 import { defaultScrollX, eventScrollTarget } from '../../src/features/timeline/timelineLayout';
 import type { DbArtist, DbEvent } from '../../src/types/backend';
 
@@ -136,8 +137,8 @@ test('each day keeps its own scroll position, across a reload too', async ({ app
 
 test('going to a set from the artist sheet brings it into view @layout', async ({ appPage }) => {
   await ready(appPage);
-  await appPage.getByPlaceholder('Search artists…').fill(JUMP_ARTIST.toLowerCase());
-  await appPage.getByText(JUMP_ARTIST, { exact: true }).filter({ visible: true }).first().click();
+  await searchFor(appPage, JUMP_ARTIST.toLowerCase());
+  await searchResult(appPage, JUMP_ARTIST).click();
   await appPage.getByText(JUMP_TIME, { exact: true }).filter({ visible: true }).first().click();
 
   const block = scrollerX(appPage).getByText(JUMP_ARTIST, { exact: true }).first();
@@ -181,8 +182,8 @@ test('the browser back button undoes "go to timeline" in one press', async ({ ap
   // faster than any person's would be folded into the starting point.
   await appPage.waitForTimeout(150);
 
-  await appPage.getByPlaceholder('Search artists…').fill(JUMP_ARTIST.toLowerCase());
-  await appPage.getByText(JUMP_ARTIST, { exact: true }).filter({ visible: true }).first().click();
+  await searchFor(appPage, JUMP_ARTIST.toLowerCase());
+  await searchResult(appPage, JUMP_ARTIST).click();
   await expectBackDepth(appPage, 1);
   const eventRow = appPage.getByText(JUMP_TIME, { exact: true }).filter({ visible: true }).first();
   await eventRow.click();
@@ -194,7 +195,7 @@ test('the browser back button undoes "go to timeline" in one press', async ({ ap
 
   // Back on the list, with the artist's sheet open again.
   await expectBackDepth(appPage, 1);
-  await expect(appPage.getByPlaceholder('Search artists…')).toBeVisible();
+  await expect(appPage.getByText('3 INCHES OF BLOOD', { exact: true }).first()).toBeVisible();
   await expect(scrollerX(appPage)).toHaveCount(0);
   await expect(eventRow).toBeVisible();
 });

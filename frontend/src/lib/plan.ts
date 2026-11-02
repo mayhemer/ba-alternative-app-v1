@@ -76,6 +76,24 @@ export function planPicks(interests: Record<string, string>, inputs: PickInputs,
   return sets.sort((a, b) => a.event.dateFrom - b.event.dateFrom);
 }
 
+/** My plan's filter: Only conflicts, Must-see only, Must-see and Maybe, All sets. */
+export type PlanFilterLevel = 'conflicts' | 'must' | 'maybe' | 'all';
+
+/**
+ * Whether My plan's filter `level` lists one of planPicks' sets, by its pick
+ * level and whether it clashes (the shared conflict calculation). The one rule
+ * the list (buildPlanDay) and search follow.
+ */
+export function planLevelLists(level: PlanFilterLevel, pick: PickLevel, clashing: boolean): boolean {
+  if (level === 'conflicts') {
+    return pick === 'will_go' && clashing;
+  }
+  if (pick === 'maybe') {
+    return level === 'maybe' || level === 'all';
+  }
+  return pick === 'will_go' || level === 'all';
+}
+
 /**
  * The Must-sees playing at `now`, from their first minute to before their last,
  * in the order given. The one "live" rule of My plan's list and the now pill.

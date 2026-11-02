@@ -94,16 +94,11 @@ function MyPicksLens() {
   return null;
 }
 
-it('says so when a search matches nothing', async () => {
+it('has no search field of its own: search opens from the lens panel', async () => {
   await render(<PerfProviders><ArtistListScreen /></PerfProviders>);
   expect(screen.getByText('3 INCHES OF BLOOD')).toBeTruthy();
-
-  await act(async () => {
-    screen.getByPlaceholderText('Search artists…').props.onChangeText('zzzz-no-such-band');
-  });
-
-  expect(screen.getByText('No artists found')).toBeTruthy();
-  expect(screen.queryByText('Loading artists…')).toBeNull();
+  expect(screen.queryByPlaceholderText('Search artists…')).toBeNull();
+  expect(screen.queryByTestId('artist-search')).toBeNull();
 });
 
 it('says so when "my picks" has no picks yet', async () => {
@@ -122,15 +117,13 @@ it('says so when "my picks" has no picks yet', async () => {
 
 // ── The list reacts to every input ────────────────────────────────────────────
 //
-// The search, the lens, a pick and a sync that adds, renames or removes an
-// artist. Then the render counts: after one change, which rows render again,
+// The lens, a pick and a sync that adds, renames or removes an artist. Then the render counts: after one change, which rows render again,
 // by artistId. As in the list's existing perf scenarios, no timers run after
 // the change. The list opens on 3 INCHES OF BLOOD (92), ABBIE FALLS (163),
 // ABSU (101); EXORCIZPHOBIA (216) is further down, not mounted at first.
 
 let setScope: (scope: LensScope) => void;
 let cycle: (artistId: string) => void;
-let search: (query: string) => void;
 
 /** One press of a pick's star, in a render of its own, as a tap would. */
 async function press(artistId: string): Promise<void> {
@@ -153,7 +146,6 @@ function Controls() {
 
 async function mountList(): Promise<void> {
   await render(<PerfProviders><><Controls /><ArtistListScreen /></></PerfProviders>);
-  search = (query) => { screen.getByPlaceholderText('Search artists…').props.onChangeText(query); };
 }
 
 async function withPicks(picks: Record<string, 'maybe' | 'will_go'>, run: () => Promise<void>): Promise<void> {
@@ -172,9 +164,8 @@ async function withPicks(picks: Record<string, 'maybe' | 'will_go'>, run: () => 
 }
 
 describe('the list reacts', () => {
-  afterEach(async () => {
+  afterEach(() => {
     syncWith();
-    await act(async () => { search(''); });
   });
 
   it('lists an artist picked after the lens narrowed to my picks', async () => {
@@ -223,12 +214,6 @@ describe('the list reacts', () => {
       await act(async () => { cycle('163'); });
       expect(modelBuilds()).toEqual({ '163': 1 });
       await pressTimes('163', 3);
-    });
-
-    it('a search down to one artist renders only that row, newly shown', async () => {
-      await mountCounted();
-      await act(async () => { search('exorcizphobia'); });
-      expect(rendersSinceReset()).toEqual({ '216': 1 });
     });
 
     it('the lens on my picks renders none of the rows it keeps', async () => {

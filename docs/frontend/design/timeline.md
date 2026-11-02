@@ -14,6 +14,13 @@
   whatever zone the device is in — someone planning from abroad sees the same timeline as someone on
   site (`utils/festivalTime`).
 
+## Landing on a set
+
+A jump to a set (the artist sheet's "jump to timeline", search, the now pill's switch) selects its
+day and centres its time and lane (`requestScrollToTime`). A jump that names a set (`eventId`)
+lights its block: a plain accent frame for 3 s from when it is on screen, then gone, without a fade
+(`features/timeline/landingHighlight`, `ui/LandingRing`); only that block renders again. A scroll to now names no set and lights nothing.
+
 ## Top Bar Controls
 
 - Filter: "My schedule only" (shows only artists with maybe or must see state).

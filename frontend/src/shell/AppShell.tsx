@@ -14,6 +14,7 @@ import { StarSelector } from '../features/interests/StarSelector';
 import { useStarSelectorActions } from '../features/interests/StarSelectorContext';
 import { LensPanel } from '../features/social/LensPanel';
 import { PlanFilterPanel } from '../screens/my-plan/filter/PlanFilterPanel';
+import { SearchView } from '../features/search/SearchView';
 import { useShareLinkHandler } from '../navigation/useShareLinkHandler';
 import { AppNavigator, DRAWER_ROUTE_NAMES } from '../navigation/AppNavigator';
 import { sanitizeNavState } from '../navigation/navState';
@@ -98,6 +99,10 @@ export function AppShell() {
           <LensPanel />
           {/* My plan's filter panel — the same kind of drop-down, in the same place */}
           <PlanFilterPanel />
+          {/* Search — over the content and the panels, under the top bar and the
+              floating bottom bar, which stay in sight and usable: their buttons
+              close the search and still do their job (features/search/SearchView) */}
+          <SearchView />
           {/* Short viewports: the bar floats over the content, reclaiming its
               height for the timeline. Screens add BOTTOM_OVERLAY_CLEARANCE so
               their last row scrolls clear of it. */}

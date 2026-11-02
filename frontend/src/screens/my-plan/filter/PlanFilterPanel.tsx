@@ -5,6 +5,7 @@ import { useLayoutMode } from '../../../hooks/useLayoutMode';
 import { planStrings } from '../planStrings';
 import { PlanFilterLevel } from './PlanFilterLevel';
 import { MyScheduleShare } from '../../../features/social/MyScheduleShare';
+import { SearchEntry } from '../../../features/search/SearchEntry';
 import { planFilterLevelModels, type PlanFilterLevelModel } from './PlanFilterLevel.model';
 import type { PlanLevel } from '../../../store/uiStatePersistence';
 import {
@@ -28,11 +29,13 @@ type ViewProps = {
   levels: PlanFilterLevelModel[];
   onPick: (level: PlanLevel) => void;
   onClose: () => void;
+  /** Drawn above the filter buttons: the search field. */
+  header?: React.ReactNode;
   /** Drawn below the filter buttons. */
   children?: React.ReactNode;
 };
 
-export function PlanFilterPanelView({ levels, onPick, onClose, children }: ViewProps) {
+export function PlanFilterPanelView({ levels, onPick, onClose, header, children }: ViewProps) {
   const { isWide } = useLayoutMode();
   return (
     <>
@@ -62,6 +65,7 @@ export function PlanFilterPanelView({ levels, onPick, onClose, children }: ViewP
           elevation: 12,
         }}
       >
+        {header !== undefined && <View style={{ marginBottom: 12 }}>{header}</View>}
         <View style={{ flexDirection: 'row', gap: 8 }}>
           {levels.map((item) => <PlanFilterLevel key={item.key} item={item} onPick={onPick} />)}
         </View>
@@ -84,7 +88,7 @@ export function PlanFilterPanel() {
     return null;
   }
   return (
-    <PlanFilterPanelView levels={levels} onPick={handlePick} onClose={close}>
+    <PlanFilterPanelView levels={levels} onPick={handlePick} onClose={close} header={<SearchEntry />}>
       <MyScheduleShare onClose={close} />
     </PlanFilterPanelView>
   );

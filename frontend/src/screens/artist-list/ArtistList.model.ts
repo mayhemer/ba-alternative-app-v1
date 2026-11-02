@@ -6,8 +6,8 @@ import { sectionLetter } from './SectionSeparator.model';
 
 // ── The artist list: what it lists ────────────────────────────────────────────
 //
-// The bands (playable artists) of the edition, narrowed by the search and the
-// lens, grouped under their letter and sorted. Nothing cached yet is a wait
+// The bands (playable artists) of the edition, narrowed by the lens, grouped
+// under their letter and sorted. Nothing cached yet is a wait
 // ("loading"), never an answer: the filters only ever narrow a loaded lineup, so
 // an empty list after them is "No artists found".
 
@@ -24,7 +24,6 @@ export type ArtistListModel = {
 
 export type ArtistListInputs = {
   artists: DbArtist[];
-  query: string;
   scope: LensScope;
   interests: Record<string, string>;
   /** The focused friend's picks, for a friend's lens. */
@@ -67,15 +66,11 @@ export function buildSections(artists: DbArtist[]): Section[] {
 // changes the lens step's input, and the lens never needs to sort again — it
 // keeps the sections' order and drops a letter it empties.
 
-/** Step one: the bands, narrowed by the search, grouped and sorted. */
-export function sortedArtistList({ artists, query }: Pick<ArtistListInputs, 'artists' | 'query'>): ArtistListModel {
-  let listed = artists.filter((a) => a.isPlayable);
+/** Step one: the bands, grouped and sorted. */
+export function sortedArtistList({ artists }: Pick<ArtistListInputs, 'artists'>): ArtistListModel {
+  const listed = artists.filter((a) => a.isPlayable);
   if (listed.length === 0) {
     return { loading: true, sections: [] };
-  }
-  if (query.trim() !== '') {
-    const q = query.toLowerCase();
-    listed = listed.filter((a) => a.name.toLowerCase().includes(q));
   }
   return { loading: false, sections: buildSections(listed) };
 }
@@ -98,6 +93,6 @@ export function withLens(
   return { loading: false, sections };
 }
 
-export function artistListModel({ artists, query, scope, interests, friendInterests }: ArtistListInputs): ArtistListModel {
-  return withLens(sortedArtistList({ artists, query }), { scope, interests, friendInterests });
+export function artistListModel({ artists, scope, interests, friendInterests }: ArtistListInputs): ArtistListModel {
+  return withLens(sortedArtistList({ artists }), { scope, interests, friendInterests });
 }

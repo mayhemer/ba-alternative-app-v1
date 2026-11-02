@@ -10,6 +10,11 @@ import type { DbArtist, DbEvent } from '../types/backend';
 
 export type TimelineJump = { support: boolean; day: number };
 
+/** Whether an artist's sets are on the Support Program rather than the Program: not a band. */
+export function onSupportProgram(artist: DbArtist): boolean {
+  return !artist.isPlayable;
+}
+
 export function timelineJump(artist: DbArtist, event: DbEvent): TimelineJump {
-  return { support: !artist.isPlayable, day: getFestivalDayStart(event.dateFrom) };
+  return { support: onSupportProgram(artist), day: getFestivalDayStart(event.dateFrom) };
 }

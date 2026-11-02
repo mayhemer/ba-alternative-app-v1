@@ -10,12 +10,16 @@ import { useArtistDetail } from '../../features/artist-detail/ArtistDetailContex
 import { useConflictDetail } from '../../features/conflicts/ConflictDetailContext';
 import { useConflicts } from '../../features/conflicts/ConflictContext';
 import { usePlanFilters, usePlanPanel, usePlanShownDay, usePlanStore, usePlanStoreVersion } from './PlanContext';
-import { useMinuteNow } from '../../hooks/useMinuteNow';
+import { minuteNow, useMinuteNow } from '../../hooks/useMinuteNow';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
 import { getScroll, setScroll } from '../../store/uiStatePersistence';
-import { buildPlanDay, itemAtOffset, itemOffsets, itemsToFill, maxScrollOffset, nowScrollOffset, PLAN_LAYOUT, planNowInView, planNowView, type PlanItem } from './planUtils';
+import { buildPlanDay, itemAtOffset, itemOffsets, itemsToFill, maxScrollOffset, nowScrollOffset, PLAN_LAYOUT, planNowInView, planNowView, setScrollOffset, type PlanItem } from './planUtils';
 import { registerPlanNowProbe } from './planNowProbe';
-import { festivalToday } from '../../utils/festivalTime';
+import { festivalToday, getFestivalDayStart } from '../../utils/festivalTime';
+import { planPicks } from '../../lib/plan';
+import { useSearchScope } from '../../features/search/SearchContext';
+import { showLandingHighlight } from '../../features/timeline/landingHighlight';
+import { planSearchScope } from './planSearchScope';
 import { PlanSetRow } from './PlanSetRow';
 import { PlanCap } from './PlanCap';
 import { PlanEmpty } from './PlanEmpty';
@@ -49,7 +53,8 @@ import { colors } from '../../styling/tokens';
 // Scrolling works like the timeline's: the position is remembered per day
 // (uiStatePersistence, under PLAN_SCREEN_KEY, as y offsets); a day without one
 // lands with "now" a third from the top if it is today, else at the top; and a
-// "now" request (the pill, or today's day button tapped again) scrolls to now.
+// "now" request (the pill, or today's day button tapped again) scrolls to now,
+// and a set request (search) scrolls to that set's row and lights it.
 // Every landing is held within what the list can scroll (landingOffset): a
 // position saved under a longer filter, or now on the end cap, can be past the
 // end, and a list started there draws only the cells it thinks are in view.
@@ -102,7 +107,7 @@ export function MyPlanScreen() {
     [categories],
   );
   const now = useMinuteNow();
-  const { level } = usePlanFilters();
+  const { level, setLevel } = usePlanFilters();
   const { close: closePanel } = usePlanPanel();
   const store = usePlanStore();
   const storeVersion = usePlanStoreVersion();
@@ -117,6 +122,21 @@ export function MyPlanScreen() {
     [day, interests, artists, stages, artistEvents, conflicts, now, duringFestival, level],
   );
   const offsets = useMemo(() => itemOffsets(items), [items]);
+
+  // What My plan tells search (planSearchScope): every set any filter can list,
+  // by the rule the list and the conflicts share, and the same clashes.
+  const listable = useMemo(
+    () => new Map(planPicks(interests, { artists, artistEvents }, true).map((p) => [p.event.eventId, p.level])),
+    [interests, artists, artistEvents],
+  );
+  const landOnSet = useCallback((event: DbEvent): void => {
+    store.requestSet(getFestivalDayStart(event.dateFrom), event.eventId, minuteNow());
+  }, [store]);
+  const searchScope = useMemo(
+    () => planSearchScope({ level, listable, clashing: conflicts.overlaps, setLevel, land: landOnSet }),
+    [level, listable, conflicts.overlaps, setLevel, landOnSet],
+  );
+  useSearchScope(searchScope);
 
   // The filter panel belongs to this screen: leaving it closes the panel.
   useFocusEffect(useCallback(() => () => { closePanel(); }, [closePanel]));
@@ -158,19 +178,27 @@ export function MyPlanScreen() {
     if (viewportHeight === 0 || day === 0) {
       return;
     }
-    const nowRequested = store.takeNowRequest();
-    if (!nowRequested && landedDayRef.current === day) {
+    const request = store.takeLanding();
+    if (request === null && landedDayRef.current === day) {
       return;
     }
-    const target = landingOffset(itemsRef.current, day, nowRequested, viewportHeight, bottomClearanceRef.current);
-    const animated = nowRequested && landedDayRef.current === day;
+    // A set (search) lands a third down, as now does, held within the list; a
+    // set the day does not list falls back to the day's own landing.
+    const setOffset = request?.kind === 'set' ? setScrollOffset(itemsRef.current, request.eventId, viewportHeight) : null;
+    const target = setOffset !== null
+      ? Math.min(setOffset, maxScrollOffset(itemsRef.current, viewportHeight, bottomClearanceRef.current))
+      : landingOffset(itemsRef.current, day, request?.kind === 'now', viewportHeight, bottomClearanceRef.current);
+    const animated = request !== null && landedDayRef.current === day;
     landedDayRef.current = day;
-    // An animated scroll to now is the user's own request; that position may be kept.
+    // An animated scroll to now or to a set is the user's own request; that position may be kept.
     skipNextScrollRef.current = !animated;
     if (!animated) {
       scrollYRef.current = target;
     }
     listRef.current?.scrollToOffset({ offset: target, animated });
+    if (setOffset !== null && request?.kind === 'set') {
+      showLandingHighlight(request.eventId);
+    }
   }, [day, viewportHeight, storeVersion, store]);
 
   // ── Landing: where a day's list starts, fixed for the life of that list ─────

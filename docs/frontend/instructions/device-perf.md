@@ -11,8 +11,8 @@ npm run test:perf:device        # --runs N, --warmup N, --scenarios a,b, --basel
 ```
 
 Scenarios: **cold start** (first frame, and the moment the app is usable via a logcat marker the perf
-build emits), **list fling**, **detail open** (the artist sheet over the list), **search typing** (the
-Intl collation path), **timeline day switch** and **timeline pan** (a settled day, panned out and
+build emits), **list fling**, **detail open** (the artist sheet over the list), **search typing** (four
+keys into the search opened from the Artists lens panel: matching and the deferred results list), **timeline day switch** and **timeline pan** (a settled day, panned out and
 back). Each reports `dumpsys gfxinfo` frame stats — p50/p90/p99 and mean frame time, frames of 34 ms
 or more, slow-UI-thread count, janky % (pinned near 100 % on this phone, so mostly useless) — and
 memory from `dumpsys meminfo`. The day switch also reports **mountMs**: from the tap's handler to

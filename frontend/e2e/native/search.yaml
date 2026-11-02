@@ -1,13 +1,13 @@
 appId: cz.janbambas.ba
-name: search narrows the list and clearing restores it
+name: search finds a band, opens it over the results, and closes back to the list
 ---
 - runFlow: common/launch-fresh.yaml
-- tapOn:
-    id: "artist-search"
-- waitForAnimationToEnd
-- inputText: "mastodon"
-# Far down the collated order — only reachable because the filter worked.
-- assertVisible: ".*MASTODON.*"
-- assertNotVisible: ".*3 INCHES OF BLOOD.*"
-- eraseText: 20
+# Far down the collated order: found only through the search.
+- runFlow:
+    file: common/search-artist.yaml
+    env: { QUERY: "mastodon" }
+# The sheet's title, the bare name.
+- assertVisible: "MASTODON"
+- runFlow: common/close-sheet-and-search.yaml
+- assertNotVisible: { id: "search-input" }
 - assertVisible: ".*3 INCHES OF BLOOD.*"

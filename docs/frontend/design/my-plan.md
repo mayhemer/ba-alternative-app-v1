@@ -96,7 +96,7 @@ On every screen that has a top bar. On festival days it replaces the logo while 
   | **Must-see only** (default) | ★ full star, accent | your Must-see picks |
   | **Only conflicts** | ⚠ red | your clashing Must-sees (see [Conflicts](#conflicts)) |
 - **⋮** turns accent while the panel is open.
-- **Panel:** tapping drops a panel from under the top bar, like the lens panel, with a dimmed backdrop. It holds one row of four buttons, glyphs only, in the order above; the current one has an accent border on a raised background. Each button's accessibility label names its filter.
+- **Panel:** tapping drops a panel from under the top bar, like the lens panel, with a dimmed backdrop. It opens with the search field ([search.md](search.md)), then holds one row of four buttons, glyphs only, in the order above; the current one has an accent border on a raised background. Each button's accessibility label names its filter.
   - **Tapping a button applies its filter and closes the panel**, back to the list, the current one too.
   - **Below the buttons, the lens panel's "My schedule" section**, the same element (`features/social/MyScheduleShare`): signed out, *Sign in* (to Settings, closing the panel); signed in, *Share my schedule* (*Share again* once shared) with *Copy link* and *Revoke* while a share exists.
 - **Persistence:** the filter is saved through `uiStatePersistence`. A filter saved by an older build (two switches) loads as: only conflicts → **Only conflicts**; Maybe picks shown → **Must-see and Maybe**; else **Must-see only**.
@@ -236,6 +236,7 @@ What each element shows comes from its own model (see Principles), built from th
   - First visit to a day: today lands with now about ⅓ from the top; other days land at the top.
   - A landing never goes past the end of the day's list (`maxScrollOffset`): a position saved under a longer filter, or now on the end cap after the last set, lands at the end. Started past its end, a list would draw only the rows it thinks are in view and leave the screen blank until touched.
   - Tapping today's button while today is shown scrolls to now (`requestScrollToNow`).
+  - A search landing on a set shows its day, scrolls its row about ⅓ from the top (`setScrollOffset`, held within `maxScrollOffset`) and lights it (`requestSet`, the plan store's landing request, which otherwise means now). The filter widens first if it does not list the set ([search.md](search.md)).
   - Tapping the now pill goes to today at now, except on My plan showing today with now in view, where it goes to the pill's set's timeline at now (see Top bar).
 - **Switching days** mounts the new day the way the timeline does: once the screen's height is known, each day gets a list of its own that starts at its landing spot (saved position, else now, else the top) and draws about one screen of rows from there, the rest following one screenful per batch. Mounting the whole day at once, or its top first and then scrolling, made the switch visibly slow on phones. The very first list, before the screen is measured, starts from the top and is scrolled into place.
 

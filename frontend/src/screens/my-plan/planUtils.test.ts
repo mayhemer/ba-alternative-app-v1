@@ -7,6 +7,7 @@ import {
   itemsToFill,
   maxScrollOffset,
   nowScrollOffset,
+  setScrollOffset,
   planNowInView,
   planNowView,
   PLAN_LAYOUT,
@@ -786,5 +787,32 @@ describe('daysWithClash', () => {
     const days = daysWithClash(computeConflictEntries(interests, inputs));
     expect(days.has(THU)).toBe(true);
     expect(days.has(FRI)).toBe(false);
+  });
+});
+
+// ── Where a landing on a set scrolls ──────────────────────────────────────────
+//
+// A search lands on a set's row a third down the list, as a scroll to now lands
+// on now; a set the day does not list has no place.
+
+describe('setScrollOffset', () => {
+  // Tops: cap 12 (the padding), a 12 + 30 + 6 = 48, b 48 + 58 + 6 = 112.
+  const items = [
+    { kind: 'cap', key: 'cap-start', height: 30 },
+    { kind: 'set', key: 'a', height: 58 },
+    { kind: 'set', key: 'b', height: 58 },
+  ] as unknown as PlanItem[];
+
+  it('puts the set\'s row a third down a viewport of the given height', () => {
+    expect(setScrollOffset(items, 'b', 300)).toBe(12);
+  });
+
+  it('never scrolls above the top', () => {
+    expect(setScrollOffset(items, 'a', 300)).toBe(0);
+  });
+
+  it('has no place for a set the day does not list', () => {
+    expect(setScrollOffset(items, 'zzz', 300)).toBeNull();
+    expect(setScrollOffset(items, 'cap-start', 300)).toBeNull();
   });
 });

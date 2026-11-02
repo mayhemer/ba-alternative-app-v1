@@ -1,22 +1,25 @@
-# Narrows the artist list to ${QUERY} and closes the keyboard.
+# Opens ${QUERY}'s artist sheet through search: the lens chip, the search field
+# at the top of its panel, the query, then the best result. The sheet opens over
+# the results, which stay (docs/frontend/design/search.md). Call it with no
+# sheet open: an open sheet's backdrop takes the tap meant for the chip.
 #
 # On a freshly booted simulator the tap sometimes does not focus the field yet,
-# and the typed text goes nowhere (seen twice in a handful of runs: the list
-# stayed unfiltered, the keyboard never came up). So the step is retried, and
-# only counts once the text landed (the query is on screen — in the field, and
-# in the matching row) and the filter applied (the first name in the full list
-# is gone; on its own, that would also hold for a list an earlier search left
-# narrowed). Return closes the keyboard: while it is up, the list's first tap
-# only dismisses it.
+# and the typed text goes nowhere; so the typing is retried until the result is
+# on screen. A result's label is the name, then the day and time, then the
+# stage ("CRYSTAL LAKE, Wed 14:00–14:40, Sea Shepherd"), and Maestro matches the
+# whole label, so "${QUERY}, .*" is the band and never its meet & greet
+# ("M&G - CRYSTAL LAKE, …"). Return closes the keyboard first.
 appId: cz.janbambas.ba
 ---
+- tapOn: "View and share schedules"
+- tapOn: { id: "search-entry" }
 - retry:
     maxRetries: 2
     commands:
-      - tapOn: { id: "artist-search" }
-      - waitForAnimationToEnd
+      - tapOn: { id: "search-input" }
       - eraseText: 30
       - inputText: ${QUERY}
       - pressKey: Enter
-      - assertVisible: ".*${QUERY}.*"
-      - assertNotVisible: ".*3 INCHES OF BLOOD.*"
+      - assertVisible: "${QUERY}, .*"
+- tapOn: "${QUERY}, .*"
+- waitForAnimationToEnd

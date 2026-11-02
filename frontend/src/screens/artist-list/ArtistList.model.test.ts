@@ -4,7 +4,6 @@ import type { DbArtist } from '../../types/backend';
 // ── The artist list, configured ───────────────────────────────────────────────
 //
 // Dimensions, and the corner cases tested for each:
-//   search — blank, spaces only, a partial match in another case, no match
 //   lens   — Everything; My picks (any level, Maybe and up, Must-see only);
 //            a friend's picks (theirs, not mine)
 //   data   — a support artist (never listed); a "don't go" (not a pick);
@@ -29,7 +28,7 @@ const ARTISTS = [
 const MINE: Record<string, string> = { gojira: 'will_go', blood: 'maybe', ghost: 'dont_go' };
 
 function list(overrides: Partial<ArtistListInputs> = {}) {
-  return artistListModel({ artists: ARTISTS, query: '', scope: { kind: 'all' }, interests: MINE, friendInterests: undefined, ...overrides });
+  return artistListModel({ artists: ARTISTS, scope: { kind: 'all' }, interests: MINE, friendInterests: undefined, ...overrides });
 }
 
 /** The list as `letter: names`. */
@@ -44,25 +43,6 @@ describe('the order', () => {
       'G: GHOST, Gojira',
       'O: Öbscure',
     ]);
-  });
-});
-
-describe('the search', () => {
-  it('lists everything for a blank search, or one of spaces', () => {
-    expect(shown(list({ query: '' }))).toEqual(shown(list({ query: '   ' })));
-  });
-
-  it('matches part of a name, whatever the case', () => {
-    expect(shown(list({ query: 'GOJ' }))).toEqual(['G: Gojira']);
-    expect(shown(list({ query: 'blood' }))).toEqual(['#: 3 Inches of Blood', 'B: Blood Incantation']);
-  });
-
-  it('lists nothing for no match — an answer, not a wait', () => {
-    expect(list({ query: 'zzz' })).toEqual({ loading: false, sections: [] });
-  });
-
-  it('narrows within the lens', () => {
-    expect(shown(list({ query: 'blood', scope: { kind: 'me', level: null } }))).toEqual(['B: Blood Incantation']);
   });
 });
 
@@ -90,7 +70,7 @@ describe('the two steps', () => {
   const LENS_ME = { scope: { kind: 'me' as const, level: null }, interests: MINE, friendInterests: undefined };
 
   it('with Everything, hands back the sorted list itself', () => {
-    const sorted = sortedArtistList({ artists: ARTISTS, query: '' });
+    const sorted = sortedArtistList({ artists: ARTISTS });
     expect(withLens(sorted, LENS_ALL)).toBe(sorted);
   });
 
@@ -108,13 +88,13 @@ describe('the two steps', () => {
   });
 
   it('keeps waiting while nothing is cached, whatever the lens', () => {
-    expect(withLens(sortedArtistList({ artists: [], query: '' }), LENS_ME)).toEqual({ loading: true, sections: [] });
+    expect(withLens(sortedArtistList({ artists: [] }), LENS_ME)).toEqual({ loading: true, sections: [] });
   });
 });
 
 describe('what is never listed', () => {
   it('leaves the support programme out', () => {
-    expect(shown(list({ query: 'pit' }))).toEqual([]);
+    expect(list().sections.flatMap((s) => s.data.map((a) => a.artistId))).not.toContain('pit');
   });
 
   it('waits while nothing is cached', () => {

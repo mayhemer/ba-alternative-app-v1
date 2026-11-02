@@ -9,9 +9,9 @@ import { LensProvider } from '../../src/features/social/LensContext';
 import { ConflictProvider } from '../../src/features/conflicts/ConflictContext';
 import { ArtistDetailProvider } from '../../src/features/artist-detail/ArtistDetailContext';
 import { ConflictDetailProvider } from '../../src/features/conflicts/ConflictDetailContext';
-import { ArtistListFilterProvider } from '../../src/screens/artist-list/ArtistListFilterContext';
 import { TimelineFilterProvider } from '../../src/screens/timeline/TimelineFilterContext';
 import { PlanProvider } from '../../src/screens/my-plan/PlanContext';
+import { SearchProvider } from '../../src/features/search/SearchContext';
 
 // ── Provider tree for render measurements ─────────────────────────────────────
 //
@@ -48,13 +48,13 @@ export function FeatureProviders({ children }: { children: React.ReactNode }) {
                 <ConflictProvider>
                   <ArtistDetailProvider>
                     <ConflictDetailProvider>
-                      <ArtistListFilterProvider>
-                        <TimelineFilterProvider>
-                          <PlanProvider>
+                      <TimelineFilterProvider>
+                        <PlanProvider>
+                          <SearchProvider>
                             {children}
-                          </PlanProvider>
-                        </TimelineFilterProvider>
-                      </ArtistListFilterProvider>
+                          </SearchProvider>
+                        </PlanProvider>
+                      </TimelineFilterProvider>
                     </ConflictDetailProvider>
                   </ArtistDetailProvider>
                 </ConflictProvider>
