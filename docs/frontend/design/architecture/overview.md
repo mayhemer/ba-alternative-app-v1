@@ -12,7 +12,10 @@ deployment, deep links).
 ## Tech Stack
 
 - React Native 0.81 + Expo SDK 54 (production releases only, no canary)
-- NativeWind 4 (TailwindCSS for React Native); design tokens in `src/styling/tokens.*`
+- NativeWind 4 (TailwindCSS for React Native); design tokens in `src/styling/tokens.*`. Its
+  wrapper drops a `Pressable`'s function `style` (`({ pressed }) => …`) on iOS and Android, while web
+  and Jest still apply it: track the pressed state with `onPressIn`/`onPressOut` instead (`NowPill`,
+  `SearchResultRow`). Lint rejects the function form.
 - React Navigation 7 (native stack + drawer)
 - React Context + `useReducer` (built-in, no Zustand)
 - `@react-native-async-storage/async-storage` (platform-independent persistence)

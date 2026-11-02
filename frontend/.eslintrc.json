@@ -13,6 +13,13 @@
     }
   },
   "rules": {
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "JSXOpeningElement[name.name='Pressable'] > JSXAttribute[name.name='style'] > JSXExpressionContainer > :matches(ArrowFunctionExpression, FunctionExpression)",
+        "message": "NativeWind wraps Pressable on native and drops a function style (the whole style is lost on iOS/Android; web and Jest still apply it). Track pressed with onPressIn/onPressOut and pass a plain style, as NowPill does."
+      }
+    ],
     "import/no-restricted-paths": [
       "error",
       {
