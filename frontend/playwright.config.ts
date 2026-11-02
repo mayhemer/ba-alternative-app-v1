@@ -21,6 +21,9 @@ const APP_PORT = 4009;
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
+  // Two browsers at a time at most, as for Jest (jest.config.ts): the default
+  // takes half the cores, each with its own browser.
+  workers: 2,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'list' : [['list'], ['html', { open: 'never' }]],

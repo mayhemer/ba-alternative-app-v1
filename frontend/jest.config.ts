@@ -41,6 +41,10 @@ const shared = {
 const WEB_ONLY_IGNORES = ['\\.test\\.tsx$'];
 
 const config: Config = {
+  // At most two test files at a time, across all three projects: each worker
+  // holds the React Native module graph (~700 MB), and the default (one per
+  // core) took the machine's memory and CPU.
+  maxWorkers: 2,
   globalSetup: '<rootDir>/tests/setup/globalTz.ts',
   projects: (['ios', 'android', 'web'] as const).map((platform) => ({
     ...shared,
