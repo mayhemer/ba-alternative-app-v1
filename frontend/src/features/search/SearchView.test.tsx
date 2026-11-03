@@ -1,7 +1,7 @@
 import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Keyboard } from 'react-native';
+import { Keyboard, TextInput } from 'react-native';
 import { SearchView } from './SearchView';
 import { BaseTimelineScreen } from '../../screens/timeline/BaseTimelineScreen';
 import { ArtistListScreen } from '../../screens/artist-list/ArtistListScreen';
@@ -47,6 +47,8 @@ jest.mock('../../hooks/useLayoutMode', () => ({
     ? { isWide: true, isShort: false, contentPadding: 0, bottomClearance: 0, width: 1280, height: 800 }
     : { isWide: false, isShort: false, contentPadding: 16, bottomClearance: 0, width: 390, height: 844 }),
 }));
+
+jest.mock('react-native-safe-area-context', () => require('react-native-safe-area-context/jest/mock').default);
 
 jest.mock('../../auth/AuthContext', () => {
   const auth = {
@@ -217,6 +219,49 @@ describe('search on the Program', () => {
     await act(async () => { fireEvent.press(screen.getByLabelText('View and share schedules')); });
     expect(screen.queryByTestId('search-input')).toBeNull();
     expect(screen.getByText('Show')).toBeTruthy();
+  });
+});
+
+describe('the field at the bottom edge', () => {
+  const at = (y: number) => ({ nativeEvent: { contentOffset: { x: 0, y }, contentSize: { width: 390, height: 2000 }, layoutMeasurement: { width: 390, height: 700 } } });
+
+  async function scrollResults(event: 'scrollBeginDrag' | 'scrollEndDrag' | 'momentumScrollEnd', y: number): Promise<void> {
+    await act(async () => { fireEvent(screen.getByTestId('search-results'), event, at(y)); });
+  }
+
+  it('gives the field the keyboard back when the results are dragged back to the top', async () => {
+    const focus = jest.spyOn(TextInput.prototype, 'focus');
+    await renderOn('program');
+    await openSearch();
+    await type('gojira');
+    await scrollResults('scrollBeginDrag', 400);
+    await scrollResults('scrollEndDrag', 0);
+    expect(focus).toHaveBeenCalledTimes(1);
+  });
+
+  it('and when a fling toward the top comes to rest at it', async () => {
+    const focus = jest.spyOn(TextInput.prototype, 'focus');
+    await renderOn('program');
+    await openSearch();
+    await type('gojira');
+    await scrollResults('scrollBeginDrag', 400);
+    await scrollResults('scrollEndDrag', 250);
+    expect(focus).not.toHaveBeenCalled();
+    await scrollResults('momentumScrollEnd', 0);
+    expect(focus).toHaveBeenCalledTimes(1);
+  });
+
+  it('not when the scroll rests below the top, nor for the drag that starts at it', async () => {
+    const focus = jest.spyOn(TextInput.prototype, 'focus');
+    await renderOn('program');
+    await openSearch();
+    await type('gojira');
+    await scrollResults('scrollBeginDrag', 400);
+    await scrollResults('scrollEndDrag', 120);
+    await scrollResults('momentumScrollEnd', 80);
+    await scrollResults('scrollBeginDrag', 0);
+    await scrollResults('scrollEndDrag', 0);
+    expect(focus).not.toHaveBeenCalled();
   });
 });
 

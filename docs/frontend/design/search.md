@@ -9,17 +9,34 @@ document wins over the mock wherever they differ.
 
 ## Opening and closing
 
-- **Entry:** a search field at the top of the lens panel (Artists, Program, Support Program) and of
-  My plan's filter panel (`features/search/SearchEntry`). Tapping it opens the search; the panel
-  closes behind it.
-- **The search view** (`features/search/SearchView`) sits in the content area, under the top bar,
-  which stays visible; on short viewports under the floating bottom bar too, which carries the
-  menu and the chip there. On a wide screen it is a column pinned right, like the panels, and the
-  rest (the permanent drawer included) stays in sight, dimmed; a tap there closes the search. The field takes the place the panel's field had, with a ✕ that closes the
-  search. There is no Cancel button.
-- **Empty field:** the screen behind is only dimmed. A tap on the dimmed area closes the search, so
-  an accidental open is undone with one tap anywhere.
-- **Typed field:** an opaque results list covers the content area under the field.
+- **Entry:** while the lens panel (Artists, Program, Support Program) or My plan's filter panel is
+  open, a search field sits near the bottom edge, in the thumb's reach (`features/search/SearchEntry`):
+  the open field's pill and its "Search", without its accent frame, raised by half its height, so
+  it is not missed. Tapping it opens the search; the panel closes behind it.
+- **Both fields** are the same pill (`SEARCH_ENTRY`: 53 tall, its ends half that round); the open
+  one has the accent frame and a ✕.
+- **The field's place** (`features/search/SearchDock.model.ts`): the bottom of the content area,
+  where the bottom bar was; the panels' column (inset on a phone, pinned right on a wide screen).
+  The bottom bar is out of sight meanwhile (layout-and-chrome.md). The panel's card ends above the
+  entry (`searchEntryFrame`); the open field sits lower, at the bottom edge (`searchDockFrame`).
+- **The search view** (`features/search/SearchView`) covers the content area and the bottom bar,
+  under the top bar, which stays visible. On a wide screen it is a column pinned right, like the
+  panels, and the rest (the permanent drawer included) stays in sight, dimmed; a tap there closes
+  the search. The field, with a ✕ that closes the search, rises onto the keyboard. There is no
+  Cancel button.
+- **The keyboard:** the field rises with it and sits on it (`keyboardLift`: iOS reports the keyboard
+  from the screen's edge, so the safe area under the content is taken off; Android, edge-to-edge,
+  reports it above the navigation bar). On iOS the field moves with the keyboard; Android reports
+  the keyboard once it is up, so the field follows a moment later. With the keyboard down the field
+  sits at the bottom edge again.
+- **Empty field:** the screen behind is dimmed, showing through at a fifth, as behind the panels
+  (`OVERLAY_BACKDROP`). A tap on the dimmed area closes the search, so an accidental open is undone
+  with one tap anywhere.
+- **Typed field:** an opaque results list covers the area, top down, and scrolls under the field;
+  its last rows scroll clear of the field and the keyboard. A drag puts the keyboard away. A scroll
+  that started below the top and comes to rest at it (a drag, or the fling it ends with) gives
+  the field the keyboard back (`scrollRefocusesField`); a drag that starts at the top does not, as it
+  is the one that put the keyboard away.
 - **Closing:** ✕, a tap on the dimmed area, Android back, web Escape, or a landing. A tap on the top
   bar (drawer button, now pill, the chip) closes the search **and then does what it always does**.
   Leaving the screen closes it too.
@@ -83,8 +100,9 @@ Each screen's section uses the same rule the screen draws with, never a search-o
   - the name, the matched part in the accent colour;
   - the festival day, the time and the stage: `Fri · 19:00–20:00 · Marshall`. Day and time are the
     festival's (06:00 → 06:00, Europe/Prague), as everywhere.
-- A colour bar on the left in the set's category colour. Without a category (an artist with no
-  set) there is no bar, only the row's frame; the text stays where the other rows have it.
+- A plain surface, no frame or rounding, 12 apart (`SEARCH_LIST.rowGap`). A colour bar on the left in the set's category colour.
+  Without a category (an artist with no set) there is no bar; the text stays where the other rows
+  have it.
 - My star on the right (Must-see, Maybe, Don't go), as on the artist list.
 - **An artist with no set:** the name, then genre and country, the line its artist sheet shows
   under the name (`artistGenreCountry` in `ArtistDetailTitle.model.ts`, the source both follow);

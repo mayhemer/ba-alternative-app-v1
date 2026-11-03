@@ -1,4 +1,4 @@
-import { bottomBarMode } from './BottomBar.model';
+import { bottomBarInSight, bottomBarMode } from './BottomBar.model';
 
 // ── How the bottom bar is shown ───────────────────────────────────────────────
 
@@ -11,5 +11,17 @@ describe('bottomBarMode', () => {
   it('floats on a short viewport, with content or without: it carries the TopBar\'s controls', () => {
     expect(bottomBarMode({ hasContent: true, isShort: true })).toBe('floating');
     expect(bottomBarMode({ hasContent: false, isShort: true })).toBe('floating');
+  });
+});
+
+describe('bottomBarInSight', () => {
+  it('is in sight while nothing holds the bottom edge', () => {
+    expect(bottomBarInSight({ searchOpen: false, lensPanelOpen: false, planPanelOpen: false })).toBe(true);
+  });
+
+  it('gives the bottom edge to the search field while the search or either panel is open', () => {
+    expect(bottomBarInSight({ searchOpen: true, lensPanelOpen: false, planPanelOpen: false })).toBe(false);
+    expect(bottomBarInSight({ searchOpen: false, lensPanelOpen: true, planPanelOpen: false })).toBe(false);
+    expect(bottomBarInSight({ searchOpen: false, lensPanelOpen: false, planPanelOpen: true })).toBe(false);
   });
 });

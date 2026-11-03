@@ -6,7 +6,7 @@
 
 export const searchStrings = {
   entry: 'Search',
-  placeholder: 'Bands, films, workshops…',
+  placeholder: 'Search',
   close: 'Close search',
   program: 'Program',
   supportProgram: 'Support Program',

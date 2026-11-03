@@ -1,12 +1,34 @@
-import React, { useCallback, useDeferredValue, useMemo, useRef, useState } from 'react';
-import { FlatList, Keyboard, Platform, Pressable, TextInput, View, type ListRenderItem, type TextStyle } from 'react-native';
+import React, { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Animated,
+  Easing,
+  FlatList,
+  Keyboard,
+  Platform,
+  Pressable,
+  TextInput,
+  View,
+  type ListRenderItem,
+  type TextInputInstance,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  type TextStyle,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text } from '../../ui/Text';
 import { useSearch, useCurrentSearchScope } from './SearchContext';
 import { SEARCH_LIST, searchItemOffsets, searchListItems, type SearchListItem } from './SearchView.model';
 import { searchResultRowModel } from './SearchResultRow.model';
 import { SearchResultRow } from './SearchResultRow';
-import { SEARCH_ENTRY } from './SearchEntry';
+import { SEARCH_FIELD_SHADOW } from './SearchEntry';
+import {
+  SEARCH_ENTRY,
+  keyboardLift,
+  scrollRefocusesField,
+  searchDockFrame,
+  searchResultsBottomPadding,
+} from './SearchDock.model';
 import { searchStrings } from './searchStrings';
 import { searchIndex, searchLineup } from '../../lib/search';
 import { useArtistDetail } from '../artist-detail/ArtistDetailContext';
@@ -19,17 +41,19 @@ import type { InterestStatus } from '../../cache/cacheService';
 import type { DbArtist, DbEvent } from '../../types/backend';
 import {
   colors,
+  OVERLAY_BACKDROP,
   OVERLAY_PANEL_MARGIN,
   OVERLAY_PANEL_MAX_WIDTH,
-  OVERLAY_PANEL_RADIUS,
 } from '../../styling/tokens';
 
 // ── The search view ───────────────────────────────────────────────────────────
 //
-// Over the content area, under the top bar: the field where the panel's search
-// field was, with a ✕ that closes it. Empty, the screen behind is only dimmed
-// and a tap on it closes the search; typed, the results cover it
-// (SearchView.model.ts). Typing is urgent and the results deferred, so a
+// Over the content area and the bottom bar, under the top bar: the field at the
+// bottom edge, where the panel's entry was (SearchDock.model.ts), with a ✕ that
+// closes it; it rises with the keyboard and sits on it. Empty, the screen behind
+// is only dimmed and a tap on it closes the search; typed, the results cover it
+// (SearchView.model.ts), scrolling under the field. A scroll puts the keyboard
+// away; scrolling back to the top gives it back to the field. Typing is urgent and the results deferred, so a
 // keystroke shows at once and a newer one drops the results render of the last.
 //
 // A tap on a result: the screen's own section lands there (the search closes,
@@ -37,9 +61,15 @@ import {
 // section switches to that timeline, or opens the artist sheet over the results,
 // as the screen's scope says. An artist with no set always opens the sheet.
 
-const FIELD_AREA = OVERLAY_PANEL_MARGIN * 2 + SEARCH_ENTRY.height;
-/** The panels' backdrop, a little darker: the screen behind an empty search. */
-const DIM = 'rgba(0,0,0,0.5)';
+/**
+ * The field follows the keyboard. iOS announces it before it moves, so the
+ * field moves with it, on a curve close to the keyboard's; Android announces it
+ * once it is up, so the field catches up quickly.
+ */
+const RISE = Platform.OS === 'ios'
+  ? { duration: 250, easing: Easing.bezier(0.38, 0.7, 0.125, 1) }
+  : { duration: 120, easing: Easing.out(Easing.quad) };
+type ScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
 const keyOf = (item: SearchListItem): string => item.key;
 /**
  * The field's accent frame marks it already, so no browser focus ring inside it.
@@ -60,8 +90,32 @@ function OpenSearch() {
   const { close } = useSearch();
   const scope = useCurrentSearchScope();
   const { openDetail } = useArtistDetail();
-  const { isWide, bottomClearance } = useLayoutMode();
+  const { isWide } = useLayoutMode();
   const keyboardHeight = useKeyboardHeight();
+  const { bottom: safeAreaBottom } = useSafeAreaInsets();
+  const lift = keyboardLift({ platform: Platform.OS, keyboardHeight, safeAreaBottom });
+
+  // The field's rise over the bottom edge, animated to each new lift.
+  const [rise] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    Animated.timing(rise, { toValue: -lift, ...RISE, useNativeDriver: Platform.OS !== 'web' }).start();
+  }, [rise, lift]);
+
+  // Scrolling back to the top gives the field the keyboard back: where the
+  // user's drag started, until the scroll it began comes to rest.
+  const inputRef = useRef<TextInputInstance>(null);
+  const dragFrom = useRef<number | null>(null);
+  const handleScrollBeginDrag = useCallback((e: ScrollEvent): void => {
+    dragFrom.current = e.nativeEvent.contentOffset.y;
+    Keyboard.dismiss();
+  }, []);
+  const handleScrollRest = useCallback((e: ScrollEvent): void => {
+    const from = dragFrom.current;
+    if (from !== null && scrollRefocusesField({ from, to: e.nativeEvent.contentOffset.y })) {
+      dragFrom.current = null;
+      inputRef.current?.focus();
+    }
+  }, []);
 
   const [query, setQuery] = useState('');
   const deferredQuery = useDeferredValue(query);
@@ -164,13 +218,6 @@ function OpenSearch() {
     index: i,
   }), [items, offsets]);
 
-  // The column the field and the results share: the panels' own geometry, the
-  // whole width on a phone, a column pinned right on a wide screen.
-  const column = {
-    left: isWide ? undefined : OVERLAY_PANEL_MARGIN,
-    right: OVERLAY_PANEL_MARGIN,
-    width: isWide ? OVERLAY_PANEL_MAX_WIDTH : undefined,
-  };
   // Behind the results: the whole content area on a phone; on a wide screen only
   // the column, so the permanent drawer stays in sight, dimmed.
   const resultsArea = isWide
@@ -185,7 +232,7 @@ function OpenSearch() {
           onPress={close}
           accessibilityRole="button"
           accessibilityLabel={searchStrings.close}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: DIM }}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: OVERLAY_BACKDROP }}
         />
       )}
       {items !== null && (
@@ -199,34 +246,35 @@ function OpenSearch() {
             initialNumToRender={SEARCH_LIST.maxRows}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag"
-            onScrollBeginDrag={Keyboard.dismiss}
+            onScrollBeginDrag={handleScrollBeginDrag}
+            onScrollEndDrag={handleScrollRest}
+            onMomentumScrollEnd={handleScrollRest}
             style={{ flex: 1, marginHorizontal: OVERLAY_PANEL_MARGIN }}
-            // The last rows scroll clear of the keyboard, or of the floating bottom bar.
-            contentContainerStyle={{ paddingTop: FIELD_AREA - SEARCH_LIST.rowGap, paddingBottom: 16 + Math.max(keyboardHeight, bottomClearance) }}
+            // The last rows scroll clear of the field, and of the keyboard under it.
+            contentContainerStyle={{ paddingTop: OVERLAY_PANEL_MARGIN, paddingBottom: searchResultsBottomPadding(lift) }}
           />
         </View>
       )}
 
-      <View
+      <Animated.View
         style={{
           position: 'absolute',
-          top: OVERLAY_PANEL_MARGIN,
-          ...column,
-          height: SEARCH_ENTRY.height,
+          ...searchDockFrame({ isWide }),
+          transform: [{ translateY: rise }],
           flexDirection: 'row',
           alignItems: 'center',
           gap: 8,
-          paddingLeft: 12,
-          borderRadius: SEARCH_ENTRY.radius,
+          paddingLeft: 18,
           borderWidth: 1,
           borderColor: colors.accent,
           backgroundColor: colors.surfaceRaised,
-          boxShadow: '0px 4px 18px rgba(0, 0, 0, 0.6)',
+          boxShadow: SEARCH_FIELD_SHADOW,
         }}
       >
         <Ionicons name="search" size={SEARCH_ENTRY.iconSize} color={colors.textMuted} />
         <TextInput
           testID="search-input"
+          ref={inputRef}
           value={query}
           onChangeText={setQuery}
           autoFocus
@@ -245,11 +293,11 @@ function OpenSearch() {
           accessibilityRole="button"
           accessibilityLabel={searchStrings.close}
           hitSlop={8}
-          style={{ paddingHorizontal: 10, height: '100%', justifyContent: 'center', borderTopRightRadius: OVERLAY_PANEL_RADIUS }}
+          style={{ paddingHorizontal: 16, height: '100%', justifyContent: 'center' }}
         >
           <Ionicons name="close-circle" size={20} color={colors.muted} />
         </Pressable>
-      </View>
+      </Animated.View>
     </View>
   );
 }

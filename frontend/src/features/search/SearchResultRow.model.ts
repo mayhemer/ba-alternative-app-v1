@@ -14,8 +14,8 @@ import { artistGenreCountry, GENRE_COUNTRY_SEPARATOR } from '../artist-detail/Ar
 // name (artistGenreCountry); knowing neither, the line stays empty, at the same
 // height. The bar on the left
 // is the set's category colour, as its timeline block's edge; without a category
-// there is none, only the row's own frame, and the bar's width stays, so the
-// text lines up with the other rows.
+// there is none, and the bar's width stays, so the text lines up with the other
+// rows. A plain surface, no frame or rounding.
 
 export const SEARCH_ROW = {
   height: 58,
@@ -23,7 +23,6 @@ export const SEARCH_ROW = {
   nameSize: 15,
   metaSize: 13,
   starSize: 16,
-  radius: 8,
 } as const;
 
 export type SearchResultRowInputs = {

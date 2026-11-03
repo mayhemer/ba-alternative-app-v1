@@ -21,10 +21,6 @@ const ROW_STYLE: ViewStyle = {
   flexDirection: 'row',
   alignItems: 'stretch',
   backgroundColor: colors.surface,
-  borderWidth: 1,
-  borderColor: colors.border,
-  borderRadius: SEARCH_ROW.radius,
-  overflow: 'hidden',
 };
 const PRESSED_STYLE: ViewStyle = { backgroundColor: colors.surfacePressed };
 

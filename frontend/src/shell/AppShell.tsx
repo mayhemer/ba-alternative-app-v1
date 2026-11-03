@@ -82,36 +82,41 @@ export function AppShell() {
         {/* Dropped on short viewports to give the timeline back its 56 px — the
             hamburger and the lens chip move into the BottomBar there. */}
         {!isShort && <TopBar />}
+        {/* The overlays' area: the content and the bottom bar under it. The
+            panels and the search cover both, so the search field can sit at
+            the bottom edge, where the bar was (hidden meanwhile, still laid
+            out: shell/BottomBar.model.ts). */}
         <View className="flex-1">
-          <NavigationContainer
-            ref={navigationRef}
-            initialState={initialState}
-            onStateChange={handleStateChange}
-          >
-            <AppNavigator />
-          </NavigationContainer>
-          {/* Back-button history. Its position here is load-bearing: a sibling
-              immediately after NavigationContainer is what registers its back
-              handler *after* the navigator's, and so ahead of it in RN's
-              last-registered-first queue. See navigation/BackHistoryTracker. */}
-          <BackHistoryTracker />
-          {/* View/share lens panel — drops from under the TopBar over the content */}
+          <View className="flex-1">
+            <NavigationContainer
+              ref={navigationRef}
+              initialState={initialState}
+              onStateChange={handleStateChange}
+            >
+              <AppNavigator />
+            </NavigationContainer>
+            {/* Back-button history. Its position here is load-bearing: a sibling
+                immediately after NavigationContainer is what registers its back
+                handler *after* the navigator's, and so ahead of it in RN's
+                last-registered-first queue. See navigation/BackHistoryTracker. */}
+            <BackHistoryTracker />
+            {/* Short viewports: the bar floats over the content, reclaiming its
+                height for the timeline. Screens add BOTTOM_OVERLAY_CLEARANCE so
+                their last row scrolls clear of it. */}
+            {isShort && <BottomBar />}
+          </View>
+          {/* Otherwise in-flow, solid, under the content. */}
+          {!isShort && <BottomBar />}
+          {/* View/share lens panel — drops from under the TopBar over the
+              content, the search field at the bottom edge */}
           <LensPanel />
           {/* My plan's filter panel — the same kind of drop-down, in the same place */}
           <PlanFilterPanel />
-          {/* Search — over the content and the panels, under the top bar and the
-              floating bottom bar, which stay in sight and usable: their buttons
-              close the search and still do their job (features/search/SearchView) */}
+          {/* Search — over the content and the panels, under the top bar, which
+              stays in sight and usable: its buttons close the search and still
+              do their job (features/search/SearchView) */}
           <SearchView />
-          {/* Short viewports: the bar floats over the content, reclaiming its
-              height for the timeline. Screens add BOTTOM_OVERLAY_CLEARANCE so
-              their last row scrolls clear of it. */}
-          {isShort && <BottomBar />}
         </View>
-        {/* Otherwise in-flow, and kept a sibling of the content view rather than
-            nested inside it — LensPanel is `inset: 0` within that view, so
-            nesting would newly draw the lens backdrop over the DaySwitcher. */}
-        {!isShort && <BottomBar />}
       </SafeAreaView>
 
       {/* Artist detail bottom sheet — in the tree only while it has an artist to

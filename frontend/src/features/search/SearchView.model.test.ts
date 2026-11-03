@@ -145,4 +145,9 @@ describe('searchListItems', () => {
     const items = searchListItems([hit(band, 'b1')], programScope()) ?? [];
     expect(items.map((item) => item.height)).toEqual([SEARCH_LIST.headerHeight, SEARCH_LIST.rowHeight + SEARCH_LIST.rowGap]);
   });
+
+  it('spaces the rows 12 apart: a row takes its 58 and the gap under it', () => {
+    const items = searchListItems([hit(band, 'b1')], programScope()) ?? [];
+    expect(items[1].height).toBe(70);
+  });
 });

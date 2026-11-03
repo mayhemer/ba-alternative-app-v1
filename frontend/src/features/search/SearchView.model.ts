@@ -15,7 +15,7 @@ export const SEARCH_LIST = {
   maxRows: 30,
   headerHeight: 34,
   rowHeight: SEARCH_ROW.height,
-  rowGap: 6,
+  rowGap: 12,
   moreHeight: 52,
   noneHeight: 72,
 } as const;

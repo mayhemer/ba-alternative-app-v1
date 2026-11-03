@@ -51,5 +51,9 @@ export const DAY_SWITCHER_MAX_FRACTION = 0.4;
 export const OVERLAY_PANEL_MARGIN = 10;
 export const OVERLAY_PANEL_RADIUS = 14;
 
+// Behind the lens and filter panels and an empty search: the screen shows through
+// at a fifth, so the panel and the search field at the bottom edge stand out.
+export const OVERLAY_BACKDROP = 'rgba(0,0,0,0.8)';
+
 // Widest a floating overlay panel grows before it stops stretching and pins right.
 export const OVERLAY_PANEL_MAX_WIDTH = 780;

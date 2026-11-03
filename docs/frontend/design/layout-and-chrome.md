@@ -27,15 +27,24 @@ Separately, `MAX_CONTENT_WIDTH` (700) caps centred content so a desktop window s
 
 ```
 {!isShort && <TopBar />}
-<View flex-1>
-  navigator
-  <LensPanel />                 ← absolute, inset 0
-  <PlanFilterPanel />           ← absolute, inset 0
-  <SearchView />                ← absolute, inset 0, over the content and panels (search.md)
-  {isShort && <BottomBar />}    ← absolute, floats over the content and the search
+<View flex-1>                     ← the overlays' area: content + bottom bar
+  <View flex-1>
+    navigator
+    {isShort && <BottomBar />}    ← absolute, floats over the content
+  </View>
+  {!isShort && <BottomBar />}     ← in-flow, solid
+  <LensPanel />                   ← absolute, inset 0
+  <PlanFilterPanel />             ← absolute, inset 0
+  <SearchView />                  ← absolute, inset 0, over the content and panels (search.md)
 </View>
-{!isShort && <BottomBar />}     ← in-flow, solid
 ```
+
+The panels and the search cover the bottom bar's area too: while one of them is open the search
+field sits at the bottom edge, where the bar was (`features/search/SearchDock.model.ts`), and the
+bar is out of sight (`bottomBarInSight`). It stays laid out, invisible and untouchable, so the screen
+above keeps its height and does not lay out again; its slots are memoised, so hiding it renders none
+of them. Behind a panel and an empty search the screen shows through at a fifth
+(`OVERLAY_BACKDROP`).
 
 **On short viewports the TopBar is simply not rendered.** No overlay, no animation, no scroll
 coupling — the layout below it is untouched and the timeline keeps its original geometry. This buys
@@ -67,13 +76,13 @@ carry their own opaque backgrounds, but the bare hamburger and lens icons need t
 legible over a bright lane block.
 
 Note the two mount points are **not interchangeable**. The in-flow bar stays a *sibling* of the
-content view rather than being nested inside it, because `LensPanel` is `position: absolute;
-inset: 0` within that view — nesting would newly draw the lens backdrop over the DaySwitcher.
+content view, under it in the column, rather than being nested inside it: nested, it would float
+over the content.
 
 Screens whose content scrolls must clear the floating bar. `useLayoutMode().bottomClearance` gives
 `BOTTOM_OVERLAY_CLEARANCE` when short and `0` otherwise; it is added to the bottom padding of the
 four scrollers (`TimelineView`'s canvas, `ArtistListScreen`'s `SectionList`, `MyPlanScreen`'s `FlatList`,
-`SettingsScreen`) and subtracted from `LensPanel`'s `maxHeight`. It is deliberately a generous
+`SettingsScreen`). It is deliberately a generous
 constant rather than the bar's measured height — the clearance only has to be *at least* the bar
 height, and a few extra px at the end of a scroll are invisible, whereas coupling the two would
 mean either pinning the bar to a fixed height (risking a clipped `DaySwitcher`) or plumbing an
@@ -120,6 +129,7 @@ index lands on the wrong stop.
 
 - **Bottom bar** (`shell/BottomBar.model.ts`): a row under a screen with content for it, nothing
   under one without; on a short viewport it floats over the content, carrying the TopBar's controls.
+  Out of sight, still laid out, while the search or a panel is open (`bottomBarInSight`).
 - **Feedback toast** (`shell/FeedbackToast.model.ts`): where it goes, from the message's anchor
   (`toastPlacement`: in the "My schedule" heading, or under the top bar inside the band clear of the
   star column, `toastBand`), its message and icon, and whether a tap dismisses it.

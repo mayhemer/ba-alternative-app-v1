@@ -1,10 +1,13 @@
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { memo } from 'react';
+import { StyleSheet, View, type ViewProps } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useScreenUI } from './ScreenUIContext';
 import { useLayoutMode } from '../hooks/useLayoutMode';
 import { DrawerButton } from './DrawerButton';
-import { bottomBarMode } from './BottomBar.model';
+import { bottomBarInSight, bottomBarMode } from './BottomBar.model';
+import { useSearch } from '../features/search/SearchContext';
+import { useLensPanel } from '../features/social/LensContext';
+import { usePlanPanel } from '../screens/my-plan/PlanContext';
 import { colors, DAY_SWITCHER_MAX_FRACTION } from '../styling/tokens';
 
 // Reserve matching space on both sides so the screen's own content stays
@@ -14,11 +17,31 @@ const SIDE_SLOT_WIDTH = 40;
 // Room above the row for the scrim to fade in over the content behind it.
 const SCRIM_FADE_HEIGHT = 24;
 
+// The slots, memoised: hiding or showing the bar renders none of what is in it.
+const Slot = memo(function Slot({ Component }: { Component: React.ComponentType | undefined }) {
+  return Component !== undefined ? <Component /> : null;
+});
+const DrawerButtonSlot = memo(DrawerButton);
+
+// Out of sight while the search field holds the bottom edge, but still laid
+// out: the screen above keeps its height. Hidden from touch and screen readers too.
+const OUT_OF_SIGHT: Pick<ViewProps, 'pointerEvents' | 'accessibilityElementsHidden' | 'importantForAccessibility'> = {
+  pointerEvents: 'none',
+  accessibilityElementsHidden: true,
+  importantForAccessibility: 'no-hide-descendants',
+};
+
 export function BottomBar() {
   const { state } = useScreenUI();
   const { ContentComponent } = state.bottomBar;
   const { RightComponent } = state.topBar;
   const { isShort, width } = useLayoutMode();
+  const { isOpen: searchOpen } = useSearch();
+  const { isOpen: lensPanelOpen } = useLensPanel();
+  const { isOpen: planPanelOpen } = usePlanPanel();
+  const inSight = bottomBarInSight({ searchOpen, lensPanelOpen, planPanelOpen });
+  const hiding = inSight ? null : OUT_OF_SIGHT;
+  const opacity = inSight ? 1 : 0;
 
   // On short viewports the TopBar is not rendered, so this bar carries its
   // controls — which means it must appear even on screens that contribute no
@@ -31,8 +54,8 @@ export function BottomBar() {
   // Portrait: a solid row in the flex column, below the content.
   if (mode === 'row') {
     return (
-      <View className="bg-surface border-t border-border px-4 py-3">
-        {ContentComponent !== undefined ? <ContentComponent /> : null}
+      <View className="bg-surface border-t border-border px-4 py-3" style={{ opacity }} {...hiding}>
+        <Slot Component={ContentComponent} />
       </View>
     );
   }
@@ -52,7 +75,9 @@ export function BottomBar() {
         paddingTop: SCRIM_FADE_HEIGHT,
         paddingBottom: 12,
         justifyContent: 'space-between',
+        opacity,
       }}
+      {...hiding}
     >
       <LinearGradient
         colors={['transparent', colors.background]}
@@ -61,15 +86,15 @@ export function BottomBar() {
       />
 
       <View style={{ width: SIDE_SLOT_WIDTH }} className="items-start">
-        <DrawerButton />
+        <DrawerButtonSlot />
       </View>
 
       <View style={{ flex: 1, maxWidth: width * DAY_SWITCHER_MAX_FRACTION }}>
-        {ContentComponent !== undefined ? <ContentComponent /> : null}
+        <Slot Component={ContentComponent} />
       </View>
 
       <View style={{ width: SIDE_SLOT_WIDTH }} className="items-end">
-        {RightComponent !== undefined ? <RightComponent /> : null}
+        <Slot Component={RightComponent} />
       </View>
     </View>
   );

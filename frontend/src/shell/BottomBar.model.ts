@@ -13,3 +13,17 @@ export function bottomBarMode({ hasContent, isShort }: { hasContent: boolean; is
   }
   return hasContent ? 'row' : 'hidden';
 }
+
+/**
+ * Whether the bar is in sight: not while the search field holds the bottom
+ * edge, which it does while the search or the lens or filter panel is open
+ * (features/search/SearchDock.model.ts). Hidden, it keeps its place, so the
+ * screen above keeps its height and does not lay out again.
+ */
+export function bottomBarInSight({ searchOpen, lensPanelOpen, planPanelOpen }: {
+  searchOpen: boolean;
+  lensPanelOpen: boolean;
+  planPanelOpen: boolean;
+}): boolean {
+  return !searchOpen && !lensPanelOpen && !planPanelOpen;
+}

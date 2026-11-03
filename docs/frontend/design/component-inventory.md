@@ -35,7 +35,7 @@
 - `SectionSeparator` — alphabetical first-letter divider.
 
 ## Search ([search.md](search.md))
-- `SearchEntry` — the search field at the top of the lens panel and My plan's filter panel; opens the search.
+- `SearchEntry` — the search field the lens panel and My plan's filter panel show near the bottom edge, the open field's pill (`SearchDock.model`); opens the search.
 - `SearchView` — the open search over the content: field with ✕, dimmed screen or results.
 - `SearchResultRow` — two lines at a fixed height: name with the match picked out; day, time, stage; star; widening tag.
 - `LandingRing` (`ui/`) — the accent frame on the set a jump landed on (timeline block, plan row): 3 s from when it is on screen, then gone (no fade: see `LandingRing`); it ends its own landing.
