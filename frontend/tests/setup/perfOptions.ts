@@ -103,4 +103,7 @@ export const BATCH = {
   conflictEntries: 180,        // ~0.11 ms
   conflictOverlaps: 165,       // ~0.12 ms
   conflictEntriesEmpty: 870,   // ~0.023 ms
+  searchOneLetter: 1050,       // ~0.019 ms ("g": 110 hits, cut to 30 rows)
+  searchLonger: 2000,          // ~0.006–0.014 ms ("go", "gojira")
+  searchNothing: 7700,         // ~0.0026 ms ("$": nothing found)
 } as const;
