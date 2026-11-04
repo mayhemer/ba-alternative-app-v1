@@ -10,6 +10,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "cz.janbambas.ba",
+      "appleTeamId": "V47V65Z9Z7",
       "associatedDomains": [
         "applinks:ba.janbambas.cz"
       ],
@@ -65,7 +66,9 @@
             "imageWidth": 200
           }
         }
-      ]
+      ],
+      "@bacons/apple-targets",
+      "./plugins/withNowCard"
     ],
     "owner": "janbambass-team",
     "extra": {

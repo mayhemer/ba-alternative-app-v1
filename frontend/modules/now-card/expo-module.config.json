@@ -1,0 +1,10 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["NowCardModule"],
+    "appDelegateSubscribers": ["NowCardAppDelegateSubscriber"]
+  },
+  "android": {
+    "modules": ["cz.janbambas.nowcard.NowCardModule"]
+  }
+}

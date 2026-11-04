@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Status-bar icon: live (the now pill's dot). White on transparent, as the system requires. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+  android:width="24dp" android:height="24dp" android:viewportWidth="16" android:viewportHeight="16">
+  <path android:pathData="M8,2.5 a5.5,5.5 0,1 1,0 11 a5.5,5.5 0,1 1,0 -11 Z" android:fillColor="#FFFFFFFF" />
+</vector>

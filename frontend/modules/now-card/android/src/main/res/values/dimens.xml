@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Above and below every row, so the divider between rows sits in the middle. -->
+  <dimen name="nc_row_padding">6dp</dimen>
+</resources>

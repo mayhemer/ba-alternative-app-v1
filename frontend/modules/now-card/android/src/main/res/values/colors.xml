@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The now card in the system's light theme: the notification background is
+     light, so the app's yellow, red and blue are darkened to stay readable. -->
+<resources>
+  <color name="nc_text">#1B1B1B</color>
+  <color name="nc_secondary">#3C3C3C</color>
+  <color name="nc_muted">#5E5E5E</color>
+  <color name="nc_accent">#8A6D00</color>
+  <color name="nc_danger">#C62828</color>
+  <color name="nc_blue">#1A5FD1</color>
+  <color name="nc_divider">#D2D6D4</color>
+</resources>

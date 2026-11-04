@@ -1,0 +1,26 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- The card is a notification (Android 13+ asks for this at runtime). -->
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+  <!-- Re-arm the alarms after a reboot. -->
+  <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+  <!-- Switch the card at the exact minute a set starts or ends: an inexact
+       alarm can come up to ¾ of the wait late. USE_EXACT_ALARM is granted on
+       install (13+); Google Play limits it to alarm and calendar apps, which
+       matters only if the app is ever published there. 12–12L use
+       SCHEDULE_EXACT_ALARM, granted by default there. -->
+  <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+  <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" />
+
+  <application>
+    <receiver
+      android:name="cz.janbambas.nowcard.NowCardReceiver"
+      android:exported="false">
+      <intent-filter>
+        <action android:name="android.intent.action.BOOT_COMPLETED" />
+        <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+        <action android:name="android.intent.action.TIME_SET" />
+        <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+      </intent-filter>
+    </receiver>
+  </application>
+</manifest>

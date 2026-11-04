@@ -16,6 +16,8 @@ import { LensPanel } from '../features/social/LensPanel';
 import { PlanFilterPanel } from '../screens/my-plan/filter/PlanFilterPanel';
 import { SearchView } from '../features/search/SearchView';
 import { useShareLinkHandler } from '../navigation/useShareLinkHandler';
+import { useNowCardLinkHandler } from './useNowCardLinkHandler';
+import { NowCardSync } from './NowCardSync';
 import { AppNavigator, DRAWER_ROUTE_NAMES } from '../navigation/AppNavigator';
 import { sanitizeNavState } from '../navigation/navState';
 import { BackHistoryTracker } from '../navigation/BackHistoryTracker';
@@ -41,6 +43,8 @@ export function AppShell() {
 
   // Handle incoming add-friend share links (cold start + while running).
   useShareLinkHandler();
+  // A tap on the lock-screen now card: My plan at now (cold start + while running).
+  useNowCardLinkHandler();
 
   useEffect(() => {
     async function restoreState(): Promise<void> {
@@ -131,6 +135,9 @@ export function AppShell() {
 
       {/* Feedback toast — rendered last so it's always above backdrop and sheet */}
       <FeedbackToast />
+
+      {/* The lock-screen now card's hand-over to native code; draws nothing */}
+      <NowCardSync />
 
     </GestureHandlerRootView>
   );

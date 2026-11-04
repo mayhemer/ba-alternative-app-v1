@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- −28:00 › NAME ………… ⚠ +1
+     19:40–20:30 …… Stage -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:orientation="vertical"
+  android:paddingTop="@dimen/nc_row_padding"
+  android:paddingBottom="@dimen/nc_row_padding">
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+    <Chronometer
+      android:id="@+id/nc_countdown"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:fontFeatureSettings="tnum"
+      android:textColor="@color/nc_danger"
+      android:textSize="15sp"
+      android:textStyle="bold" />
+    <ImageView
+      android:layout_width="10dp"
+      android:layout_height="12dp"
+      android:layout_marginStart="7dp"
+      android:importantForAccessibility="no"
+      android:src="@drawable/nc_chevron" />
+    <TextView
+      android:id="@+id/nc_name"
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="7dp"
+      android:layout_weight="1"
+      android:ellipsize="end"
+      android:maxLines="1"
+      android:textColor="@color/nc_text"
+      android:textSize="15sp"
+      android:textStyle="bold" />
+    <LinearLayout
+      android:id="@+id/nc_more"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="6dp"
+      android:gravity="center_vertical"
+      android:orientation="horizontal">
+      <ImageView
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:contentDescription="@string/nc_clash"
+        android:src="@drawable/nc_warn" />
+      <TextView
+        android:id="@+id/nc_more_count"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="2dp"
+        android:textColor="@color/nc_danger"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+    </LinearLayout>
+  </LinearLayout>
+  <include layout="@layout/nc_time_stage" />
+</LinearLayout>

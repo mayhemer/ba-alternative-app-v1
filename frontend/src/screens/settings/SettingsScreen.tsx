@@ -1,12 +1,21 @@
 import React from 'react';
-import { ScrollView, TouchableOpacity, View, ActivityIndicator } from 'react-native';
+import { AppState, Linking, Platform, ScrollView, Switch, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import { Text } from '../../ui/Text';
 import { useTopBar, useBottomBar } from '../../shell/ScreenUIContext';
 import { useAppContext } from '../../store/AppContext';
 import { useAuth } from '../../auth/AuthContext';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
 import { getSlugs } from '../../adapters/slugAdapter';
-import { accountModel, editionRowModels } from './SettingsScreen.model';
+import { accountModel, editionRowModels, nowCardSwitchModel } from './SettingsScreen.model';
+import { colors } from '../../styling/tokens';
+import {
+  getNowCardPermission,
+  isNowCardEnabled,
+  nowCardAvailable,
+  requestNowCardPermission,
+  setNowCardEnabled,
+  type NowCardPermission,
+} from '../../../modules/now-card';
 
 // ── Account section ───────────────────────────────────────────────────────────
 
@@ -115,6 +124,74 @@ function AccountSection() {
   );
 }
 
+// ── Lock-screen now card (Android) ────────────────────────────────────────────
+//
+// On iOS the card is a Live Activity, switched in the system's settings for
+// the app, so this section is Android's only. Switching it on asks for the
+// notification permission when it can still be asked, else opens the app's
+// system settings (Android shows its dialog at most twice).
+
+function NowCardSection() {
+  const [enabled, setEnabled] = React.useState<boolean | null>(null);
+  const [permission, setPermission] = React.useState<NowCardPermission>('undetermined');
+
+  const read = React.useCallback(async () => {
+    const [on, allowed] = await Promise.all([isNowCardEnabled(), getNowCardPermission()]);
+    setEnabled(on);
+    setPermission(allowed);
+  }, []);
+
+  React.useEffect(() => {
+    void read();
+    // Back from the system settings, the permission may have changed.
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        void read();
+      }
+    });
+    return () => { sub.remove(); };
+  }, [read]);
+
+  const handleChange = React.useCallback(async (on: boolean) => {
+    await setNowCardEnabled(on);
+    setEnabled(on);
+    if (on && permission !== 'granted') {
+      const answer = await requestNowCardPermission();
+      setPermission(answer);
+      if (answer === 'denied') {
+        await Linking.openSettings();
+      }
+    }
+  }, [permission]);
+
+  if (enabled === null) {
+    return null;
+  }
+  const model = nowCardSwitchModel(enabled, permission);
+  return (
+    <View className="mb-8">
+      <Text className="text-textSecondary text-xs tracking-widest uppercase mb-4">
+        Lock screen
+      </Text>
+      <View className="py-3 flex-row items-center justify-between">
+        <View className="flex-1 pr-4">
+          <Text className="text-textPrimary text-base">Now card</Text>
+          <Text className="text-textSecondary text-sm mt-1">What is live and next, on the lock screen</Text>
+        </View>
+        <Switch
+          value={model.on}
+          onValueChange={(on) => { void handleChange(on); }}
+          trackColor={{ false: colors.borderMid, true: colors.accent }}
+          accessibilityLabel="Lock-screen now card"
+        />
+      </View>
+      {model.hint !== null && (
+        <Text className="text-textSecondary text-sm">{model.hint}</Text>
+      )}
+    </View>
+  );
+}
+
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export function SettingsScreen() {
@@ -139,6 +216,8 @@ export function SettingsScreen() {
       contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 32, paddingBottom: 32 + bottomClearance }}
     >
       <AccountSection />
+
+      {nowCardAvailable && Platform.OS === 'android' && <NowCardSection />}
 
       <Text className="text-textSecondary text-xs tracking-widest uppercase mb-4">
         Festival Edition

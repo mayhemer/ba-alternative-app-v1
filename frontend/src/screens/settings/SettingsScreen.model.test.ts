@@ -1,4 +1,4 @@
-import { accountModel, editionRowModels, type AccountInputs } from './SettingsScreen.model';
+import { accountModel, editionRowModels, nowCardSwitchModel, type AccountInputs } from './SettingsScreen.model';
 
 // ── Settings, configured ──────────────────────────────────────────────────────
 //
@@ -41,5 +41,29 @@ describe('editionRowModels', () => {
 
   it('marks none while no edition is chosen', () => {
     expect(editionRowModels(['ba2025'], null).map((r) => r.active)).toEqual([false]);
+  });
+});
+
+// ── The lock-screen now card switch (Android) ─────────────────────────────────
+//
+// Dimensions: the app's own switch (on, off); the system's notification
+// permission (granted, denied, not asked yet).
+
+describe('nowCardSwitchModel', () => {
+  it('is on while switched on and allowed', () => {
+    expect(nowCardSwitchModel(true, 'granted')).toEqual({ on: true, hint: null });
+  });
+
+  it('is on before the permission was asked: the card asks on the first festival day', () => {
+    expect(nowCardSwitchModel(true, 'undetermined')).toEqual({ on: true, hint: null });
+  });
+
+  it('is off, saying why, when the system blocks notifications', () => {
+    expect(nowCardSwitchModel(true, 'denied')).toEqual({ on: false, hint: 'Notifications are off for this app in the system settings.' });
+  });
+
+  it('is off when switched off, whatever the permission', () => {
+    expect(nowCardSwitchModel(false, 'granted')).toEqual({ on: false, hint: null });
+    expect(nowCardSwitchModel(false, 'denied')).toEqual({ on: false, hint: null });
   });
 });

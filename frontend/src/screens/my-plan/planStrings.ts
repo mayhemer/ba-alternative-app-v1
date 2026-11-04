@@ -2,7 +2,7 @@ import { DEFAULT_LANG } from '../../utils/localization';
 
 // ── My plan copy ──────────────────────────────────────────────────────────────
 //
-// Every string My plan and the now pill show lives here, except the conflict
+// Every string My plan, the now pill and the lock-screen now card show lives here, except the conflict
 // words, which come from features/conflicts/conflictStrings; so a later i18n
 // pass is a drop-in. The screen speaks through icons, numbers and bars; the few
 // words are short labels. Czech copy runs longer, so layouts truncate names and
@@ -21,6 +21,10 @@ type PlanStrings = {
   emptyConflicts: string;
   filters: string;
   close: string;
+  /** Lock-screen now card (iOS): the day's last Must-see is over. */
+  cardOver: string;
+  /** Lock-screen now card (Android): its notification channel, in the system settings. */
+  cardChannel: string;
 };
 
 const EN: PlanStrings = {
@@ -36,6 +40,8 @@ const EN: PlanStrings = {
   emptyConflicts: 'No conflicts on this day',
   filters: 'Filters',
   close: 'Close',
+  cardOver: 'Today\'s Must-sees are over',
+  cardChannel: 'Lock-screen now card',
 };
 
 const CS: PlanStrings = {
@@ -51,6 +57,8 @@ const CS: PlanStrings = {
   emptyConflicts: 'V tento den žádné konflikty',
   filters: 'Filtry',
   close: 'Zavřít',
+  cardOver: 'Dnešní plán skončil',
+  cardChannel: 'Karta na zamykací obrazovce',
 };
 
 export function planStrings(lang: string = DEFAULT_LANG): PlanStrings {

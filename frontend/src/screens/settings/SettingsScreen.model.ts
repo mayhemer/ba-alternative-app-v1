@@ -41,3 +41,21 @@ export type EditionRowModel = { key: string; label: string; active: boolean };
 export function editionRowModels(slugs: string[], selected: string | null): EditionRowModel[] {
   return slugs.map((slug) => ({ key: slug, label: slug.toUpperCase(), active: slug === selected }));
 }
+
+// ── The lock-screen now card (Android) ────────────────────────────────────────
+//
+// The app's own switch, as the system's notification permission allows it.
+// Before the permission is asked the switch reads on: the card asks for it on
+// the first festival day (shell/NowCardSync).
+
+export type NowCardSwitchModel = { on: boolean; hint: string | null };
+
+export function nowCardSwitchModel(enabled: boolean, permission: 'granted' | 'denied' | 'undetermined'): NowCardSwitchModel {
+  if (!enabled) {
+    return { on: false, hint: null };
+  }
+  if (permission === 'denied') {
+    return { on: false, hint: 'Notifications are off for this app in the system settings.' };
+  }
+  return { on: true, hint: null };
+}

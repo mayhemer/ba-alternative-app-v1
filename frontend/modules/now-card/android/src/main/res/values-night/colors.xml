@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The now card in the dark theme: the app's own tokens (styling/tokens.js). -->
+<resources>
+  <color name="nc_text">#FFFFFF</color>
+  <color name="nc_secondary">#DDDDDD</color>
+  <color name="nc_muted">#BBBBBB</color>
+  <color name="nc_accent">#E8C84A</color>
+  <color name="nc_danger">#FF4444</color>
+  <color name="nc_blue">#5B9BFF</color>
+  <color name="nc_divider">#3A4440</color>
+</resources>

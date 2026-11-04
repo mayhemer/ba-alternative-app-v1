@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ⚠ +2, right-aligned: a clash group's bands the card doesn't show, with no clash row to sit on. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:gravity="end|center_vertical"
+  android:orientation="horizontal"
+  android:paddingTop="@dimen/nc_row_padding"
+  android:paddingBottom="@dimen/nc_row_padding">
+  <ImageView
+    android:layout_width="14dp"
+    android:layout_height="14dp"
+    android:contentDescription="@string/nc_clash"
+    android:src="@drawable/nc_warn" />
+  <TextView
+    android:id="@+id/nc_more_count"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="2dp"
+    android:textColor="@color/nc_danger"
+    android:textSize="14sp"
+    android:textStyle="bold" />
+</LinearLayout>
