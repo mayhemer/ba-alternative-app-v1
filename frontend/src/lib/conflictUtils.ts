@@ -162,6 +162,14 @@ export function conflictOverlapsOf(entries: ConflictEntry[]): Map<string, Confli
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+/**
+ * Whether an upcoming Must-see clashes with one that is live now: My plan's
+ * `START −x` row, and the now card's clash row. The one rule for both.
+ */
+export function clashesWithLive(event: DbEvent, liveMusts: DbEvent[]): boolean {
+  return liveMusts.some((live) => live.eventId !== event.eventId && eventsOverlap(live, event));
+}
+
 /** Returns true if two events' time ranges intersect (strict overlap). */
 export function eventsOverlap(a: DbEvent, b: DbEvent): boolean {
   if (!isConflictEligible(a) || !isConflictEligible(b)) { return false; }

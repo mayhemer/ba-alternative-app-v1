@@ -1,4 +1,4 @@
-import { eventsOverlap, type ConflictOverlap } from '../../lib/conflictUtils';
+import { clashesWithLive, type ConflictOverlap } from '../../lib/conflictUtils';
 import type { PickLevel } from '../../lib/plan';
 import { getStageLocalized } from '../../utils/localization';
 import { formatTime } from '../../utils/festivalTime';
@@ -93,7 +93,7 @@ function statusOf(input: PlanSetInput, state: PlanSetModel['state']): SetStatus 
   }
   // Upcoming, while a Must-see it clashes with is already playing: time to move.
   // Only a Must-see clashes; an unpicked set never counts down to its start.
-  if (level === 'will_go' && liveMusts.some((live) => live.eventId !== event.eventId && eventsOverlap(live, event))) {
+  if (level === 'will_go' && clashesWithLive(event, liveMusts)) {
     return { kind: 'start', label: strings.start, time: formatRemaining(event.dateFrom - now) };
   }
   return { kind: 'none' };

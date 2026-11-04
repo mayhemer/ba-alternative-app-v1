@@ -1,4 +1,5 @@
-import { nowPillModel, nowPillSet, nowPillTap, nowPillTarget, type NowPillModel } from './NowPill.model';
+import { nowPillModel, nowPillTap, nowPillTarget, type NowPillModel } from './NowPill.model';
+import { nowPillSet } from '../lib/nowPillSet';
 import { getFestivalDayStart } from '../utils/festivalTime';
 import type { PlanInputs } from '../screens/my-plan/planUtils';
 import type { DbArtist, DbEvent, DbStage } from '../types/backend';

@@ -1,6 +1,4 @@
-import { getFestivalDayStart } from '../utils/festivalTime';
-import type { PlanInputs } from '../screens/my-plan/planUtils';
-import { BREAK_WINDOW_OFFSET_MS, liveMustSees, mustSeeSets, type PlannedSet } from '../lib/plan';
+import type { PillSet } from '../lib/nowPillSet';
 import { formatRemaining, NARROW_SPACE, planStrings } from '../screens/my-plan/planStrings';
 import { timelineJump, type TimelineJump } from '../lib/timelineJump';
 import type { DbEvent } from '../types/backend';
@@ -16,8 +14,9 @@ import type { DbEvent } from '../types/backend';
 //           finished one, or from 08:00 when none has finished yet;
 //   logo  — nothing to say: outside the festival, before 08:00, after the day's
 //           last Must-see, or no Must-see today at all.
-// One selection (nowPillSet) picks the set the pill names; nowPillTarget hands the
-// same set to a tap on My plan, which opens its timeline at now (see nowPillTap).
+// One selection (nowPillSet, in lib/ because the lock-screen now card follows it
+// too) picks the set the pill names; nowPillTarget hands the same set to a tap on
+// My plan, which opens its timeline at now (see nowPillTap).
 
 const strings = planStrings();
 
@@ -30,56 +29,6 @@ export type NowPillModel =
 export type NowPillTarget = { event: DbEvent; jump: TimelineJump };
 
 const LOGO: NowPillModel = { kind: 'logo' };
-
-type Must = PlannedSet;
-
-function todaysMusts(interests: Record<string, string>, inputs: PlanInputs, today: number): Must[] {
-  return mustSeeSets(interests, inputs).filter((m) => getFestivalDayStart(m.event.dateFrom) === today);
-}
-
-/** The set the pill names: live (the one started last) or next, or none for the logo. */
-export type PillSet =
-  | { kind: 'live'; must: Must; others: number }
-  | { kind: 'break'; must: Must }
-  | null;
-
-/**
- * The one selection the pill makes: what it shows (nowPillModel) and where a
- * tap goes (nowPillTarget) both take its result, so they never name two sets.
- */
-export function nowPillSet(
-  interests: Record<string, string>,
-  inputs: PlanInputs,
-  festivalDays: number[],
-  now: number,
-): PillSet {
-  const today = getFestivalDayStart(now);
-  if (!festivalDays.includes(today)) {
-    return null;
-  }
-  const musts = todaysMusts(interests, inputs, today);
-
-  const live = liveMustSees(musts, now)
-    .sort((a, b) => b.event.dateFrom - a.event.dateFrom || a.event.dateTo - b.event.dateTo);
-  if (live.length > 0) {
-    return { kind: 'live', must: live[0], others: live.length - 1 };
-  }
-
-  const next = musts
-    .filter((m) => m.event.dateFrom > now)
-    .sort((a, b) => a.event.dateFrom - b.event.dateFrom)[0];
-  if (next === undefined) {
-    return null;
-  }
-  const breakFrom = Math.max(
-    today + BREAK_WINDOW_OFFSET_MS,
-    ...musts.filter((m) => m.event.dateTo <= now).map((m) => m.event.dateTo),
-  );
-  if (now < breakFrom) {
-    return null;
-  }
-  return { kind: 'break', must: next };
-}
 
 export function nowPillModel(set: PillSet, now: number): NowPillModel {
   if (set === null) {

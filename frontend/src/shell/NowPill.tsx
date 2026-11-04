@@ -13,7 +13,9 @@ import { festivalToday } from '../utils/festivalTime';
 import { navigationRef } from '../navigation/navigationRef';
 import { useJumpToTimelineNow } from '../navigation/useJumpToTimeline';
 import { isPlanNowInView } from '../screens/my-plan/planNowProbe';
-import { nowPillModel, nowPillSet, nowPillTap, nowPillTarget, type NowPillModel, type NowPillTarget } from './NowPill.model';
+import { nowPillModel, nowPillTap, nowPillTarget, type NowPillModel, type NowPillTarget } from './NowPill.model';
+import { nowPillSet } from '../lib/nowPillSet';
+import { openPlanAtNow } from './openPlanAtNow';
 import { BOLD, PROGRESS_COLORS, TABULAR } from '../screens/my-plan/planStyles';
 import { colors } from '../styling/tokens';
 
@@ -164,8 +166,7 @@ function useNowPillPress(target: NowPillTarget | null, festivalDays: number[]): 
         jumpToTimelineNow(tap.target.jump);
         break;
       case 'plan':
-        store.requestNow();
-        navigationRef.navigate('MyPlan');
+        openPlanAtNow(store);
         break;
       case 'none':
         break;
