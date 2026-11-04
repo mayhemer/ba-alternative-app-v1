@@ -63,6 +63,7 @@ Status added after the fact — this was the V1 brief, and most of the list has 
 | Conflict detection — flag overlapping "Will Go" slots | **Shipped** — `conflictUtils` + `ConflictContext`, striped bars on timeline blocks and on My plan's rows, a detail sheet; the Conflicts screen was replaced by My plan's "Only conflicts" filter |
 | My plan — today / now / next of your picks | **Shipped** — the `MyPlan` screen, the now pill in the TopBar centre, per-day view with the day switcher; see [my-plan.md](../../frontend/design/my-plan.md) |
 | Push notifications / reminders before a set starts | Not built |
+| Lock-screen now card — what is live / next on the lock screen | **Built** (2026-11-04) — iOS Live Activity, Android ongoing notification, no server; see [lock-screen.md](../../frontend/design/lock-screen.md) |
 | Friends' schedules — follow another user's personal schedule | **Shipped** — share tokens, `SocialContext`, friend facepile in the artist list |
 | Overlay a friend's schedule on top of your own in the timeline | **Partial** — the lens scope switches the timeline to a friend's picks; there is no simultaneous two-schedule overlay, and no friend indicator on timeline blocks |
 | Offline mode — full local-first data layer, sync on reconnect | **Shipped** — festival cache persisted per slug and loaded before the network; interests are local-first and merge on login |

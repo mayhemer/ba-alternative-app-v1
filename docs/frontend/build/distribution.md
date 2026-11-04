@@ -8,7 +8,8 @@ Because this project uses **local credentials** (see [credentials.md](credential
 
 1. Get the UDID (`xcrun devicectl list devices`, or Finder → device → click the line under the name).
 2. Add it at <https://developer.apple.com/account/resources/devices/list>.
-3. Regenerate the ad-hoc provisioning profile so it includes the new device, re-download it, and rebuild.
+3. Regenerate **both** ad-hoc provisioning profiles (the app's and the lock-screen card extension's,
+   [credentials.md](credentials.md)) so they include the new device, re-download them, and rebuild.
 
 Testers themselves need **nothing** — no Apple Developer account, no Expo account, no team membership.
 Only their device UDID has to be in the profile.

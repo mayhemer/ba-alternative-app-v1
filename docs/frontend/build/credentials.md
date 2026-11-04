@@ -36,7 +36,13 @@ openssl pkcs12 -in dist.p12 -nokeys -passin pass:PW | openssl x509 -noout -subje
 `security export` is not a shortcut — it cannot select a single identity and dumps every one in the
 keychain.
 
-**2. App ID capabilities ⚠️ — the trap of the manual path**
+**2. App IDs and capabilities ⚠️ — the trap of the manual path**
+
+There are **two** App IDs: the app, `cz.janbambas.ba`, and the lock-screen card's widget extension,
+`cz.janbambas.ba.nowcard` (Xcode target `NowCard`, [lock-screen.md](../design/lock-screen.md)). The
+extension's App ID needs **no** capabilities: the card's content reaches it through ActivityKit, not an
+App Group. Live Activities and background fetch are Info.plist keys, not capabilities, so the app's App
+ID is unchanged by them.
 
 EAS-managed credentials sync capabilities automatically; doing this by hand you must match them yourself
 or the build fails code-signing with an entitlement mismatch. This app generates exactly two:
@@ -50,28 +56,42 @@ So the **explicit** App ID `cz.janbambas.ba` (not a wildcard) must have both **S
 **Associated Domains** enabled at
 <https://developer.apple.com/account/resources/identifiers/list>.
 
-**3. Ad Hoc provisioning profile**
+**3. Ad Hoc provisioning profiles — one per App ID**
 
 At <https://developer.apple.com/account/resources/profiles/list> → **+** → **Ad Hoc** (under
 *Distribution*) — **not** App Store, which carries no device list and cannot install on a phone. Pick the
 App ID, the distribution certificate, and every registered device. Generate, download, save next to the
-`.p12`.
+`.p12`. Do it twice: once for `cz.janbambas.ba`, once for `cz.janbambas.ba.nowcard`, with the same
+certificate and the same devices.
 
 Regenerate + re-download + rebuild whenever the device list changes. The profile expires after 12 months.
 
 **4. `credentials.json`** (project root, **gitignored** — it holds the password in plaintext)
 
+With the extension target there are two signed targets, so the file is keyed by **Xcode target name**:
+
 ```json
 {
   "ios": {
-    "provisioningProfilePath": "/absolute/path/to/sensitive/ios-distribution-cert/ba-adhoc.mobileprovision",
-    "distributionCertificate": {
-      "path": "/absolute/path/to/sensitive/ios-distribution-cert/dist.p12",
-      "password": "…"
+    "BrutalAssaultalt": {
+      "provisioningProfilePath": "/absolute/path/to/sensitive/ios-distribution-cert/ba-adhoc.mobileprovision",
+      "distributionCertificate": {
+        "path": "/absolute/path/to/sensitive/ios-distribution-cert/dist.p12",
+        "password": "…"
+      }
+    },
+    "NowCard": {
+      "provisioningProfilePath": "/absolute/path/to/sensitive/ios-distribution-cert/ba-nowcard-adhoc.mobileprovision",
+      "distributionCertificate": {
+        "path": "/absolute/path/to/sensitive/ios-distribution-cert/dist.p12",
+        "password": "…"
+      }
     }
   }
 }
 ```
+
+Also set `ios.appleTeamId` in `app.json`: `@bacons/apple-targets` needs it to sign the extension.
 
 A successful setup means `eas build -p ios` **never prompts for an Apple login**. That prompt is the
 signal that local credentials were *not* picked up.

@@ -41,6 +41,7 @@ Design
 - [layout-and-chrome.md](frontend/design/layout-and-chrome.md) — layout modes, app chrome, overlays across rotation
 - [my-plan.md](frontend/design/my-plan.md) — My plan screen
 - [search.md](frontend/design/search.md) — search on every event screen: sections, landing, highlight
+- [lock-screen.md](frontend/design/lock-screen.md) — lock-screen now card: iOS Live Activity, Android ongoing notification
 - [component-inventory.md](frontend/design/component-inventory.md) — UI components, open topics
 
 Architecture

@@ -1,5 +1,8 @@
 # Deep links
 
+`ba://my-plan/now` is the lock-screen now card's tap (iOS Live Activity, Android notification): a plain
+scheme link, no web host involved; it opens My plan at now ([lock-screen.md](../design/lock-screen.md)).
+
 `app.json` declares iOS `associatedDomains` and an Android `autoVerify` intent filter for
 `ba.janbambas.cz/add-friend`. Both require files served from the web host, which live in
 `frontend/public/.well-known/` — `expo export` copies `public/` verbatim into `dist/`, so they ship with

@@ -4,6 +4,14 @@ The project is **managed / CNG** — `ios/` and `android/` are gitignored and re
 `expo prebuild`. Never edit them by hand; the changes are thrown away. Native config lives in
 `app.json` (bundle id, package, entitlements, intent filters) and `eas.json` (build profiles).
 
+Native code of our own lives outside them and is linked in by prebuild:
+- `modules/now-card/` — a local Expo module (Swift + Kotlin), autolinked;
+- `targets/now-card/` — the iOS widget extension that draws the Live Activity, added by
+  `@bacons/apple-targets` as the Xcode target `NowCard` (bundle `cz.janbambas.ba.nowcard`);
+- `plugins/withNowCard.js` — its Info.plist keys.
+See [lock-screen.md](../design/lock-screen.md). The extension target needs `ios.appleTeamId` in
+`app.json` for signed builds, and its own App ID and profile ([credentials.md](credentials.md)).
+
 Builds run **remotely on EAS**, so no local Xcode / Android SDK / fastlane setup is needed — except
 for the local iOS builds (`test:e2e:ios`, `install:preview:ios`), which need Xcode.
 

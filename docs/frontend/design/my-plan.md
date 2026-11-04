@@ -319,6 +319,5 @@ New values this screen introduces, to add as tokens:
 ## Later phases
 
 - **Local reminders** (`expo-notifications`): "X starts in 10 min on Octagon". Offline, iOS and Android.
-- **iOS home and lock-screen widget** (`expo-widgets`, SDK 56+): needs an App Group and a widget timeline precomputed from the static schedule, so it works fully offline.
-- **Live Activity:** only if APNs push infrastructure ever exists.
-- **Android widget:** optional.
+- **Lock-screen now card:** done, as an iOS Live Activity and an Android ongoing notification, see [lock-screen.md](lock-screen.md). Its top row follows the now pill's selection, its clash row the START rule.
+- **Android home-screen widget:** optional.
