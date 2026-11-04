@@ -3,11 +3,11 @@ import { AppState, Platform } from 'react-native';
 import { useSelectedSlug } from '../store/AppContext';
 import { useArtistEventMap, useArtists, useFestivalDays, useStages } from '../store/cacheStore';
 import { useDeferredInterests } from '../features/interests/InterestContext';
-import { nowCardScript, sameNowCardScript, shouldAskNowCardPermission, type NowCardSegment } from '../lib/nowCard';
+import { nowCardScript, sameNowCardScript, shouldAskNowCardPermission, type NowCardSegment, type NowCardSet } from '../lib/nowCard';
 import { useStableValue } from '../hooks/useStableValue';
 import { planStrings } from '../screens/my-plan/planStrings';
 import { NOW_CARD_URL } from '../navigation/nowCardLink';
-import { currentTimeMs } from '../utils/clock';
+import { currentTimeMs, realTimeMs } from '../utils/clock'; // LIVE SIMULATION: realTimeMs
 import {
   getNowCardPermission,
   nowCardAvailable,
@@ -32,10 +32,31 @@ import {
 
 const strings = planStrings();
 
+// LIVE SIMULATION (testing branch): the phone switches the card and draws its
+// countdowns on the real clock, so the script's simulated times move into the
+// real week. The shift is one constant for the week; the time texts
+// ("19:00–20:00") stay the festival's, as the simulation keeps wall-clock times.
+function onRealClock(script: NowCardSegment[]): NowCardSegment[] {
+  const shift = realTimeMs() - currentTimeMs();
+  if (shift === 0) {
+    return script;
+  }
+  const moved = (s: NowCardSet): NowCardSet => ({ ...s, start: s.start + shift, end: s.end + shift });
+  return script.map((seg): NowCardSegment => {
+    const from = seg.from + shift;
+    const to = seg.to + shift;
+    if (seg.state.kind === 'break') {
+      return { from, to, state: { kind: 'break', next: moved(seg.state.next) } };
+    }
+    const next = seg.state.next !== null ? moved(seg.state.next) : null;
+    return { from, to, state: { ...seg.state, live: moved(seg.state.live), next } };
+  });
+}
+
 function payload(script: NowCardSegment[]): NowCardPayload {
   return {
     version: 2,
-    segments: script,
+    segments: onRealClock(script), // LIVE SIMULATION (testing branch)
     strings: { live: strings.live, next: strings.cardNext, nextShort: strings.cardNextShort, over: strings.cardOver, channel: strings.cardChannel },
     url: NOW_CARD_URL,
   };
