@@ -3,7 +3,7 @@
 // KEEP IDENTICAL to targets/now-card/NowCardAttributes.swift: the app (this
 // module) starts and updates the activity, the widget extension draws it, and
 // ActivityKit hands the state between them by this type. A Jest test
-// (src/features/lock-screen/nowCardNative.test.ts) fails when the copies differ.
+// (modules/now-card/nativeCopies.test.ts) fails when the copies differ.
 
 import ActivityKit
 import Foundation
@@ -33,13 +33,20 @@ struct NowCardSegment: Codable, Hashable {
 
 struct NowCardAttributes: ActivityAttributes {
   public struct ContentState: Codable, Hashable {
-    /** Shown until `current.to`, the content's stale date. */
-    var current: NowCardSegment
-    /** Shown once stale; nil when the day's last Must-see ends with `current`. */
-    var next: NowCardSegment?
+    /**
+     * The card's states from now on, in order and without gaps: the first holds
+     * the moment the content was sent, its end is the stale date. At most what
+     * fits ActivityKit's 4 KB. Each time iOS draws the card, it shows the one
+     * holding that moment.
+     */
+    var spans: [NowCardSegment]
+    /** Whether the day's card ends with the last span (then `overText`); false when the list was cut to fit. */
+    var endsDay: Bool
     /** The live row's label: "LIVE" / "HRAJE". */
     var liveLabel: String
-    /** Shown once stale with no `next`: the day is over. */
+    /** The break row's heading: "NEXT UP" / "NÁSLEDUJE". */
+    var nextLabel: String
+    /** Shown after the last span when `endsDay`: the day is over. */
     var overText: String
   }
 }

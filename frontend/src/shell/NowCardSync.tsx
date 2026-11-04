@@ -36,7 +36,7 @@ function payload(script: NowCardSegment[]): NowCardPayload {
   return {
     version: 1,
     segments: script,
-    strings: { live: strings.live, over: strings.cardOver, channel: strings.cardChannel },
+    strings: { live: strings.live, next: strings.cardNext, over: strings.cardOver, channel: strings.cardChannel },
     url: NOW_CARD_URL,
   };
 }

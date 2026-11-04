@@ -21,6 +21,8 @@ type PlanStrings = {
   emptyConflicts: string;
   filters: string;
   close: string;
+  /** Lock-screen now card (iOS): the heading over the next Must-see in a break. */
+  cardNext: string;
   /** Lock-screen now card (iOS): the day's last Must-see is over. */
   cardOver: string;
   /** Lock-screen now card (Android): its notification channel, in the system settings. */
@@ -40,6 +42,7 @@ const EN: PlanStrings = {
   emptyConflicts: 'No conflicts on this day',
   filters: 'Filters',
   close: 'Close',
+  cardNext: 'NEXT UP',
   cardOver: 'Today\'s Must-sees are over',
   cardChannel: 'Lock-screen now card',
 };
@@ -57,6 +60,7 @@ const CS: PlanStrings = {
   emptyConflicts: 'V tento den žádné konflikty',
   filters: 'Filtry',
   close: 'Zavřít',
+  cardNext: 'NÁSLEDUJE',
   cardOver: 'Dnešní plán skončil',
   cardChannel: 'Karta na zamykací obrazovce',
 };

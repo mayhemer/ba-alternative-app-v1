@@ -30,40 +30,97 @@ holds no festival logic.
 
 ## Content
 
+Two layouts: iOS uses **layout #4**, Android still **layout #1** (My plan's rows). Both show the same
+rows; the mockup switches between them (and the earlier #2 and #3).
+
+### Layout #4 (iOS)
+
+Each row: the band name, then its countdown with time and stage on the right.
+
+```
+BETWEEN THE BURIED AND ME
+● LIVE −48:00           19:00–20:00 · Jägermeister
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ (dark yellow played, yellow left)
+
+THE DILLINGER ESCAPE PLAN                       +1
+−28:00 ⚠                  19:40–20:30 · Metal Gate
+
+NEXT UP                                               (break)
+NAPALM DEATH
+−1:30:12                  14:00–14:50 · Metal Gate
+```
+
+- **Live row:** the band name (22 heavy, ellipsis), then the status line: red dot, `LIVE` (12 bold caps,
+  `planStrings.live`), the time left (14 bold, accent), and `time · stage` on the right (14; time
+  `textMuted`, stage bold `textSecondary`). Then the bar: 5 pt, dark yellow (`livePassed`) for the time
+  played from the left, yellow for the time left, as the pill's.
+- **Clash row:** the name (16 heavy, ellipsis) with `+N` (16 bold red) at its end; under it the
+  countdown to its start (14 bold red) and a red `⚠`, with `time · stage` on the right. No heading: a
+  `CONFLICT:` line would make the card 177 pt.
+- **Break row:** a grey heading `NEXT UP` (13 semibold caps, `muted`; `planStrings.cardNext`; Czech
+  "NÁSLEDUJE"),
+  the name (22 heavy), then the countdown to the next Must-see (18 bold blue) with `time · stage` on
+  the right.
+- **Time · stage:** when it doesn't fit beside its countdown, it moves under it, right-aligned.
+- **`+N` with no clash row** (every band of the group already live): at the end of the live row's name
+  line.
+- **Countdown width:** iOS draws the ticking text in its own process and can't tell the layout how wide
+  it gets, so a bare timer takes all the width offered. Each countdown sits on an invisible sample of
+  its text in the same font, chosen when the card is drawn (each refresh and the stale switch):
+  `−0:00:00` from an hour left, `−00:00` from 10 minutes, `−0:00` below. If the text gets shorter
+  before the next drawing (crossing an hour or 10 minutes), a gap opens on its right, before the
+  right-aligned `time · stage`, where it doesn't show.
+- Card padding: 16 pt at the sides, 18 on top, 20 at the bottom; 22 pt between the live and the clash
+  row, 3 pt between a row's lines, 8 pt above the bar. Live + clash come to 158 pt, under iOS's 160:
+  more space anywhere has to come out of somewhere else. The island's expanded view insets the card
+  further, so its corners don't cut the text.
+
+### Layout #1 (Android)
+
 Rows are My plan's two lines, without frame or fill.
 
 ```
 LIVE (+ CLASH)                           BREAK
 GOJIRA               ● LIVE −48:00       −1:30:12 › NAPALM DEATH
 19:00–20:00           Jägermeister       14:00–14:50       Metal Gate
-▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ (iOS: time left)
 −28:00 › BATUSHKA            ⚠ +1
 19:40–20:30             Metal Gate
 ```
 
-- **Live row:** name (15 bold, ellipsis) left; red dot, `LIVE` (11 bold caps, `planStrings.live`) and the
-  time left (14 bold, accent) right. Line 2: time range (13, `textMuted`) left, stage (13,
-  `textSecondary`) right. iOS only: a thin bar under it, yellow for the time left, on the right as the
-  pill's.
+- **Live row:** name (15 bold, ellipsis) left; red dot, `LIVE` (11 bold caps) and the time left (14 bold,
+  accent) right. Line 2: time range (13, `textMuted`) left, stage (13, `textSecondary`) right.
 - **Break row:** countdown to the next Must-see (17 bold blue), a grey chevron, the name (15 bold). Line 2
   as the live row's.
 - **Clash row:** countdown to its start (15 bold red), chevron, name (15 bold); `⚠ +N` right-aligned at
   the end of the line. Line 2 as above.
-- **`⚠ +N` with no clash row** (every band of the group already live): on a line of its own,
-  right-aligned.
+- **`⚠ +N` with no clash row:** on a line of its own, right-aligned.
+
+### Both
+
 - **Countdowns:** `−48:00`, `−1:30:12`, ticking. Not the pill's `−37 min`: only a ticking clock can be
   redrawn by the OS with no updates (see Battery). Android shows `−08:12` under an hour, iOS `−8:12`.
-- Names truncate with an ellipsis; countdowns, `LIVE`, the dot, `⚠ +N` and stages never shrink.
+  iOS sizes each countdown from a hidden sample of its longest text in the same font, so it never wraps.
+- Names truncate with an ellipsis; countdowns, `LIVE`, the dot, `+N` and stages never shrink.
 
 ### iOS (Live Activity)
 
-- Up to 160 pt tall: the live row, the clash row (or the `⚠ +N` line) fit.
-- **Dynamic Island:** not designed. iOS requires it, so it holds the minimum: a state glyph (dot, ⚠,
-  hourglass) and the countdown; expanded, the lock-screen card.
-- **Stale:** each refresh hands the card its current span and the next one, with the current span's
-  end as the stale date, so it switches once by itself. Without another refresh it then freezes on the
-  next span with its countdowns at 0:00 (iOS can't mark it old: the stale switch is spent). When the
-  day's last Must-see ends with the current span, the stale card reads "Today's Must-sees are over".
+- Up to 160 pt tall: the live row and the clash row take 158. A stage name long enough to wrap a
+  countdown line passes 160, and iOS cuts the bottom off.
+- **Dynamic Island** (`IslandState`): compact = a glyph on the left, a countdown on the right; minimal
+  = the glyph; expanded = the lock-screen card.
+  - live: red dot, the time left (yellow);
+  - clash: red ⚠, the countdown to the clashing set's start (red, the clash row's value);
+  - break: white `›` (bold), the countdown to the next Must-see (blue).
+  A live set whose clash group is all live (`+N`, no clash row) has nothing to count down to and
+  shows as live.
+- **Switching:** each refresh hands the card the spans from now on, in order, as many as fit
+  ActivityKit's 4 KB (about 10 even with long names; the controller drops spans from the end past
+  3,500 bytes). The current span's end is the stale date. Whenever iOS draws the card, it shows the
+  span holding that moment. iOS draws it at least at the stale date, so the first switch is sure;
+  later switches happen whenever iOS draws the card again on its own (not documented when, or
+  whether), else at the next refresh. Until then the card stays on its last drawn span with its
+  countdowns at 0:00. After the day's last span it reads "Today's Must-sees are over"; after the last
+  span of a list cut to fit, it stays on that span.
 - **Refreshes:** every app open (the hand-over, below), plus background refresh when iOS grants it
   (asked for at each next change; no JS runs).
 - A card lives at most 8 hours; a refresh in the front restarts one older than 7.
@@ -145,4 +202,3 @@ the copies identical.
 - Push "replayer" for iOS, only if field use shows the card goes stale too often: the device uploads
   its script and Live Activity push tokens; a scheduled Lambda sends the switches over APNs. No
   festival logic on the server.
-- Dynamic Island design.

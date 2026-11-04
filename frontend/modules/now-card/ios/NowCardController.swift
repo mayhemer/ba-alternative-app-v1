@@ -4,10 +4,12 @@ import Foundation
 // ── Showing the stored script as a Live Activity ──────────────────────────────
 //
 // refresh() makes the card match "now": starts it, updates it, or ends it.
-// Each update carries the current span and the next one, with the current
-// span's end as the stale date, so the card switches to the next span once by
-// itself (the extension draws `next` when `context.isStale`). Further switches
-// need another refresh: the next app open, or a background refresh iOS grants.
+// Each update carries the spans from now on (as many as fit ActivityKit's
+// 4 KB), with the current span's end as the stale date. iOS draws the card
+// again at least then, and the extension shows the span holding the moment of
+// drawing: so the first switch is sure, later ones happen whenever iOS draws
+// the card again on its own (not documented when, or whether), and otherwise
+// at the next refresh: the next app open, or a background refresh iOS grants.
 //
 // Starting needs the app in the foreground (canStart); a background refresh
 // can only update a running card. A card lives at most 8 hours, so a refresh
@@ -21,17 +23,18 @@ enum NowCardController {
       await endAll()
       return
     }
-    guard let span = script.spans(at: now) else {
+    guard let run = script.run(at: now) else {
       await endAll()
       return
     }
-    let state = NowCardAttributes.ContentState(
-      current: span.current,
-      next: span.next,
+    let state = fitting(NowCardAttributes.ContentState(
+      spans: run.spans,
+      endsDay: run.endsDay,
       liveLabel: script.liveLabel,
+      nextLabel: script.nextLabel,
       overText: script.overText
-    )
-    let content = ActivityContent(state: state, staleDate: span.current.to)
+    ))
+    let content = ActivityContent(state: state, staleDate: run.spans[0].to)
 
     let running = Activity<NowCardAttributes>.activities.filter {
       $0.activityState == .active || $0.activityState == .stale
@@ -52,6 +55,18 @@ enum NowCardController {
     } else {
       await card.update(content)
     }
+  }
+
+  /** ActivityKit refuses content over 4 KB: drops spans from the end until it fits, with room to spare. */
+  static let maxContentBytes = 3_500
+
+  static func fitting(_ state: NowCardAttributes.ContentState) -> NowCardAttributes.ContentState {
+    var state = state
+    while state.spans.count > 1, (try? JSONEncoder().encode(state).count) ?? Int.max > maxContentBytes {
+      state.spans.removeLast()
+      state.endsDay = false
+    }
+    return state
   }
 
   static func endAll() async {

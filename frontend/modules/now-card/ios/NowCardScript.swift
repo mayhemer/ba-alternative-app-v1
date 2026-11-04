@@ -9,22 +9,31 @@ import Foundation
 struct NowCardScript {
   var segments: [NowCardSegment]
   var liveLabel: String
+  var nextLabel: String
   var overText: String
 
-  /** The span holding `now`, and the one right after it if it follows without a gap. */
-  func spans(at now: Date) -> (current: NowCardSegment, next: NowCardSegment?)? {
+  /**
+   * The span holding `now` and those following it without a gap, up to the end
+   * of the day's card (nil when no span holds `now`). `endsDay`: the run ends
+   * there, so the card ends after its last span.
+   */
+  func run(at now: Date) -> (spans: [NowCardSegment], endsDay: Bool)? {
     guard let i = segments.firstIndex(where: { $0.from <= now && now < $0.to }) else {
       return nil
     }
-    let current = segments[i]
-    let following = i + 1 < segments.count ? segments[i + 1] : nil
-    return (current, following?.from == current.to ? following : nil)
+    var run = [segments[i]]
+    var j = i + 1
+    while j < segments.count && segments[j].from == run[run.count - 1].to {
+      run.append(segments[j])
+      j += 1
+    }
+    return (run, true)
   }
 
   /** The next moment the card changes after `now`: the end of its span, or the start of the next one. */
   func nextChange(after now: Date) -> Date? {
-    if let span = spans(at: now) {
-      return span.current.to
+    if let spans = run(at: now)?.spans {
+      return spans[0].to
     }
     return segments.first(where: { $0.from > now })?.from
   }
@@ -58,6 +67,8 @@ private struct SegmentDTO: Decodable {
 
 private struct StringsDTO: Decodable {
   let live: String
+  /** Absent in a script stored by an older app version. */
+  let next: String?
   let over: String
 }
 
@@ -117,6 +128,11 @@ enum NowCardStore {
         to: date(seg.to)
       )
     }
-    return NowCardScript(segments: segments, liveLabel: payload.strings.live, overText: payload.strings.over)
+    return NowCardScript(
+      segments: segments,
+      liveLabel: payload.strings.live,
+      nextLabel: payload.strings.next ?? "NEXT UP",
+      overText: payload.strings.over
+    )
   }
 }

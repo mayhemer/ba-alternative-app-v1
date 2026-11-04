@@ -65,7 +65,7 @@ it('hands the card its script, with its words and tap link', async () => {
   expect(setScript).toHaveBeenCalledWith({
     version: 1,
     segments: SCRIPT,
-    strings: { live: 'LIVE', over: 'Today\'s Must-sees are over', channel: 'Lock-screen now card' },
+    strings: { live: 'LIVE', next: 'NEXT UP', over: 'Today\'s Must-sees are over', channel: 'Lock-screen now card' },
     url: 'ba://my-plan/now',
   });
 });
