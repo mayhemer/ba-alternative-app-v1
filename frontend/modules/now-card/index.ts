@@ -20,7 +20,7 @@ export type NowCardPayload = {
   strings: {
     /** The live row's status label: "LIVE" / "HRAJE". */
     live: string;
-    /** iOS: the heading over the next Must-see in a break: "NEXT UP" / "NÁSLEDUJE". */
+    /** The heading over the next Must-see in a break: "NEXT UP" / "NÁSLEDUJE" (Android: expanded only). */
     next: string;
     /** iOS: shown once the day's last Must-see is over and the card has not been removed yet. */
     over: string;

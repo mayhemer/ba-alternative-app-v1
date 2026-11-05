@@ -8,4 +8,5 @@
   <color name="nc_danger">#FF4444</color>
   <color name="nc_blue">#5B9BFF</color>
   <color name="nc_divider">#3A4440</color>
+  <color name="nc_heading">#7F7F7F</color>
 </resources>

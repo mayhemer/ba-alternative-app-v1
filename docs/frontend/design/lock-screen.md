@@ -30,10 +30,10 @@ holds no festival logic.
 
 ## Content
 
-Two layouts: iOS uses **layout #4**, Android still **layout #1** (My plan's rows). Both show the same
-rows; the mockup switches between them (and the earlier #2 and #3).
+Both platforms use **layout #4**; the Android notification differs in a few points (below). The
+mockup also keeps the earlier layouts #1–#3 for comparison.
 
-### Layout #4 (iOS)
+### Layout #4
 
 Each row: the band name, then its countdown with time and stage on the right.
 
@@ -75,25 +75,15 @@ NAPALM DEATH
   more space anywhere has to come out of somewhere else. The island's expanded view insets the card
   further, so its corners don't cut the text.
 
-### Layout #1 (Android)
+### Layout #4 on Android
 
-Rows are My plan's two lines, without frame or fill.
-
-```
-LIVE (+ CLASH)                           BREAK
-GOJIRA               ● LIVE −48:00       −1:30:12 › NAPALM DEATH
-19:00–20:00           Jägermeister       14:00–14:50       Metal Gate
-−28:00 › BATUSHKA            ⚠ +1
-19:40–20:30             Metal Gate
-```
-
-- **Live row:** name (15 bold, ellipsis) left; red dot, `LIVE` (11 bold caps) and the time left (14 bold,
-  accent) right. Line 2: time range (13, `textMuted`) left, stage (13, `textSecondary`) right.
-- **Break row:** countdown to the next Must-see (17 bold blue), a grey chevron, the name (15 bold). Line 2
-  as the live row's.
-- **Clash row:** countdown to its start (15 bold red), chevron, name (15 bold); `⚠ +N` right-aligned at
-  the end of the line. Line 2 as above.
-- **`⚠ +N` with no clash row:** on a line of its own, right-aligned.
+- No bar under the live row (see Battery).
+- Names 20 sp (iOS 22), the clash name, `+N` and the countdown lines as on iOS.
+- `time · stage` can't move to a line of its own (RemoteViews has no "if it fits"), so a long stage
+  name ends in an ellipsis.
+- **Collapsed** (what the lock screen shows, about 48 dp): the top row only, without row padding. The
+  live row has a red `⚠` after its countdown when the expanded card has a clash row or `+N`, and
+  shows no `+N` itself. The break row drops its `NEXT UP` heading, so it fits on two lines.
 
 ### Both
 
@@ -132,9 +122,8 @@ GOJIRA               ● LIVE −48:00       −1:30:12 › NAPALM DEATH
 
 - Silent, ongoing, shown on the lock screen (`VISIBILITY_PUBLIC`), low-importance channel "Lock-screen
   now card".
-- **Collapsed** (about 48 dp, what the lock screen shows): the top row only, plus a red `⚠` after the
-  live countdown when the expanded card has a clash row or a `⚠ +N`.
-- **Expanded:** all rows; a 1 px line between row 1 and row 2, with equal space above and below.
+- **Collapsed** and **expanded:** see "Layout #4 on Android" above; expanded has a 1 px line between
+  the live and the clash row, with equal space above and below.
 - **No progress bar:** it can only move by reposting the notification, which costs wakeups.
 - **Status-bar icon** per state: dot (live), triangle (clash), hourglass (break).
 - **Light system theme:** the shade is light, so the yellow, red and blue are darker there

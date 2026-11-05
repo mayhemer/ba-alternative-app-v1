@@ -37,6 +37,8 @@ data class CardSegment(
 class CardScript(
   val segments: List<CardSegment>,
   val liveLabel: String,
+  /** The break row's heading: "NEXT UP" / "NÁSLEDUJE". */
+  val nextLabel: String,
   val channelName: String,
   val url: String,
 ) {
@@ -65,7 +67,14 @@ class CardScript(
         val strings = root.getJSONObject("strings")
         val list = root.getJSONArray("segments")
         val segments = (0 until list.length()).mapNotNull { i -> segment(list.getJSONObject(i)) }
-        CardScript(segments, strings.getString("live"), strings.getString("channel"), root.getString("url"))
+        CardScript(
+          segments,
+          strings.getString("live"),
+          // Absent in a script stored by an older app version.
+          strings.optString("next", "NEXT UP"),
+          strings.getString("channel"),
+          root.getString("url"),
+        )
       }
     } catch (e: Exception) {
       null

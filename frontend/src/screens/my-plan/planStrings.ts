@@ -21,7 +21,7 @@ type PlanStrings = {
   emptyConflicts: string;
   filters: string;
   close: string;
-  /** Lock-screen now card (iOS): the heading over the next Must-see in a break. */
+  /** Lock-screen now card: the heading over the next Must-see in a break. */
   cardNext: string;
   /** Lock-screen now card (iOS): the day's last Must-see is over. */
   cardOver: string;

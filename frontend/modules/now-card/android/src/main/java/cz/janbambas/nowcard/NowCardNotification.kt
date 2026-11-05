@@ -18,16 +18,18 @@ import androidx.core.content.ContextCompat
 
 // ── The card as an ongoing notification ───────────────────────────────────────
 //
-// Spec: docs/frontend/design/lock-screen.md. Rows are My plan's two lines:
-//   live   NAME ……………… ● LIVE −48:00 [⚠]   break  −1:30:12 › NAME
-//          19:00–20:00 …… Stage                    19:00–20:00 …… Stage
-//   ─────────────────────────────────── (expanded only)
-//   clash  −28:00 › NAME ………… ⚠ +1
-//          19:40–20:30 …… Stage
-// Collapsed (about 48 dp) holds the top row only; its ⚠ after the countdown
-// says the expanded card shows a clash. Silent, ongoing, shown on the lock
-// screen; the status-bar icon tells the state. No progress bar: it could only
-// move with extra wakeups.
+// Spec: docs/frontend/design/lock-screen.md, layout #4 (as the iOS card, without
+// its bar):
+//   live   BAND NAME ……………………………… [+N]       break  NEXT UP   (expanded only)
+//          ● LIVE −48:00 [⚠] … 19:00–20:00 · Stage        BAND NAME
+//   ─────────────────────────────────── (expanded only)    −1:30:12 … 14:00–14:50 · Stage
+//   clash  THE NEXT CLASHING BAND ………… [+N]
+//          −28:00 ⚠ …………… 19:40–20:30 · Stage
+// Collapsed (about 48 dp) holds the top row only, without row padding, and the
+// break row without its heading; the live row's ⚠ after the countdown says the
+// expanded card shows a clash. Silent, ongoing, shown on the lock screen; the
+// status-bar icon tells the state. No progress bar: it could only move with
+// extra wakeups.
 
 object NowCardNotification {
   private const val CHANNEL_ID = "now_card"
@@ -80,29 +82,29 @@ object NowCardNotification {
 
   private fun collapsed(context: Context, script: CardScript, span: CardSegment): RemoteViews {
     val rows = RemoteViews(context.packageName, R.layout.nc_rows)
-    rows.addView(R.id.nc_rows, topRow(context, script, span, flagClash = span.hasClash))
+    val top = topRow(context, script, span, collapsed = true)
+    top.setViewPadding(R.id.nc_row, 0, 0, 0, 0)
+    rows.addView(R.id.nc_rows, top)
     return rows
   }
 
   private fun expanded(context: Context, script: CardScript, span: CardSegment): RemoteViews {
     val rows = RemoteViews(context.packageName, R.layout.nc_rows)
-    rows.addView(R.id.nc_rows, topRow(context, script, span, flagClash = false))
-    if (span.isLive) {
-      val clash = span.clash
-      if (clash != null) {
-        rows.addView(R.id.nc_rows, RemoteViews(context.packageName, R.layout.nc_divider))
-        rows.addView(R.id.nc_rows, clashRow(context, clash, span.more))
-      } else if (span.more > 0) {
-        rows.addView(R.id.nc_rows, moreRow(context, span.more))
-      }
+    rows.addView(R.id.nc_rows, topRow(context, script, span, collapsed = false))
+    val clash = span.clash
+    if (span.isLive && clash != null) {
+      rows.addView(R.id.nc_rows, RemoteViews(context.packageName, R.layout.nc_divider))
+      rows.addView(R.id.nc_rows, clashRow(context, clash, span.more))
     }
     return rows
   }
 
-  private fun topRow(context: Context, script: CardScript, span: CardSegment, flagClash: Boolean): RemoteViews {
+  private fun topRow(context: Context, script: CardScript, span: CardSegment, collapsed: Boolean): RemoteViews {
     val set = span.top
     if (!span.isLive) {
       val row = RemoteViews(context.packageName, R.layout.nc_row_break)
+      row.setTextViewText(R.id.nc_heading, script.nextLabel)
+      row.setViewVisibility(R.id.nc_heading, if (collapsed) View.GONE else View.VISIBLE)
       countdown(row, R.id.nc_countdown, set.start)
       fill(row, set)
       return row
@@ -110,7 +112,9 @@ object NowCardNotification {
     val row = RemoteViews(context.packageName, R.layout.nc_row_live)
     row.setTextViewText(R.id.nc_label, script.liveLabel)
     countdown(row, R.id.nc_countdown, set.end)
-    row.setViewVisibility(R.id.nc_flag, if (flagClash) View.VISIBLE else View.GONE)
+    row.setViewVisibility(R.id.nc_flag, if (collapsed && span.hasClash) View.VISIBLE else View.GONE)
+    // +N on the name line only with no clash row to carry it (every clashing band live).
+    more(row, if (!collapsed && span.clash == null) span.more else 0)
     fill(row, set)
     return row
   }
@@ -118,21 +122,19 @@ object NowCardNotification {
   private fun clashRow(context: Context, set: CardSet, more: Int): RemoteViews {
     val row = RemoteViews(context.packageName, R.layout.nc_row_clash)
     countdown(row, R.id.nc_countdown, set.start)
+    more(row, more)
     fill(row, set)
-    row.setViewVisibility(R.id.nc_more, if (more > 0) View.VISIBLE else View.GONE)
-    row.setTextViewText(R.id.nc_more_count, "+$more")
     return row
   }
 
-  private fun moreRow(context: Context, more: Int): RemoteViews {
-    val row = RemoteViews(context.packageName, R.layout.nc_row_more)
-    row.setTextViewText(R.id.nc_more_count, "+$more")
-    return row
+  private fun more(row: RemoteViews, more: Int) {
+    row.setViewVisibility(R.id.nc_more, if (more > 0) View.VISIBLE else View.GONE)
+    row.setTextViewText(R.id.nc_more, "+$more")
   }
 
   private fun fill(row: RemoteViews, set: CardSet) {
     row.setTextViewText(R.id.nc_name, set.name)
-    row.setTextViewText(R.id.nc_time, set.timeText)
+    row.setTextViewText(R.id.nc_time, "${set.timeText} · ")
     row.setTextViewText(R.id.nc_stage, set.stage)
   }
 

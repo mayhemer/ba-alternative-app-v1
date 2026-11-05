@@ -1,16 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- −1:30:12 › NAME
-     19:00–20:00 …… Stage -->
+<!-- Layout #4, break:
+     NEXT UP                      (grey; expanded only, so collapsed fits)
+     BAND NAME
+     −1:30:12 ………………… 14:00–14:50 · Stage   (one baseline) -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:id="@+id/nc_row"
   android:layout_width="match_parent"
   android:layout_height="wrap_content"
   android:orientation="vertical"
   android:paddingTop="@dimen/nc_row_padding"
   android:paddingBottom="@dimen/nc_row_padding">
+  <TextView
+    android:id="@+id/nc_heading"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:fontFamily="sans-serif-medium"
+    android:letterSpacing="0.05"
+    android:maxLines="1"
+    android:textAllCaps="true"
+    android:textColor="@color/nc_heading"
+    android:textSize="13sp" />
+  <TextView
+    android:id="@+id/nc_name"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="@dimen/nc_line_gap"
+    android:ellipsize="end"
+    android:fontFamily="sans-serif-black"
+    android:maxLines="1"
+    android:textColor="@color/nc_text"
+    android:textSize="@dimen/nc_name" />
+  <!-- No gravity: the line keeps LinearLayout's baseline alignment, so the
+       18 sp countdown and the 14 sp "time · stage" share a baseline. -->
   <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:gravity="center_vertical"
+    android:layout_marginTop="@dimen/nc_line_gap"
     android:orientation="horizontal">
     <Chronometer
       android:id="@+id/nc_countdown"
@@ -18,25 +43,8 @@
       android:layout_height="wrap_content"
       android:fontFeatureSettings="tnum"
       android:textColor="@color/nc_blue"
-      android:textSize="17sp"
+      android:textSize="18sp"
       android:textStyle="bold" />
-    <ImageView
-      android:layout_width="10dp"
-      android:layout_height="12dp"
-      android:layout_marginStart="7dp"
-      android:importantForAccessibility="no"
-      android:src="@drawable/nc_chevron" />
-    <TextView
-      android:id="@+id/nc_name"
-      android:layout_width="0dp"
-      android:layout_height="wrap_content"
-      android:layout_marginStart="7dp"
-      android:layout_weight="1"
-      android:ellipsize="end"
-      android:maxLines="1"
-      android:textColor="@color/nc_text"
-      android:textSize="15sp"
-      android:textStyle="bold" />
+    <include layout="@layout/nc_time_stage" />
   </LinearLayout>
-  <include layout="@layout/nc_time_stage" />
 </LinearLayout>
