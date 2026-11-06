@@ -1,7 +1,10 @@
 # Excluded from the archive uploaded to EAS Build.
 # The native folders are regenerated remotely by prebuild (CNG), dist/ is the
 # web export, and .expo/ holds local caches and multi-MB xcodebuild logs.
+# Anchored with a leading "/": only the project's own generated ios/ and
+# android/, never a local module's (modules/*/ios, modules/*/android), whose
+# native code the build needs.
 dist/
 .expo/
-ios/
-android/
+/ios/
+/android/
