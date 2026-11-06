@@ -319,5 +319,5 @@ New values this screen introduces, to add as tokens:
 ## Later phases
 
 - **Local reminders** (`expo-notifications`): "X starts in 10 min on Octagon". Offline, iOS and Android.
-- **Lock-screen now card:** done, as an iOS Live Activity and an Android ongoing notification, see [lock-screen.md](lock-screen.md). Its top row follows the now pill's selection, its clash row the START rule.
+- **Lock-screen now card:** done, as an iOS Live Activity and an Android ongoing notification, see [lock-screen.md](lock-screen.md). Its top row follows the now pill's selection; the ⚠ on its next row follows the START rule.
 - **Android home-screen widget:** optional.

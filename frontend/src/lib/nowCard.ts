@@ -1,6 +1,6 @@
 import { formatTime, getFestivalDayStart, festivalToday } from '../utils/festivalTime';
 import { getStageLocalized } from '../utils/localization';
-import { clashesWithLive, computeConflictEntries, conflictGroupOf, type ConflictEntry, type ConflictInputs } from './conflictUtils';
+import { clashesWithLive, type ConflictInputs } from './conflictUtils';
 import { BREAK_WINDOW_OFFSET_MS, liveMustSees, mustSeeSets, type PlannedSet } from './plan';
 import { nowPillSet, todaysMusts } from './nowPillSet';
 
@@ -10,10 +10,11 @@ import { nowPillSet, todaysMusts } from './nowPillSet';
 // notification). Spec: docs/frontend/design/lock-screen.md.
 //   top row   — the now pill's set (nowPillSet): the latest live Must-see, or in
 //               a break the next one;
-//   clash row — while live, the next Must-see still to start that clashes with
-//               one live now (My plan's START rule, clashesWithLive);
-//   more      — in a clash group of three or more bands, how many of the group's
-//               unfinished bands the card doesn't show.
+//   next row  — while live, always the day's next Must-see still to start;
+//               flagged (⚠) when it clashes with one live now (My plan's START
+//               rule, clashesWithLive);
+//   more      — how many other Must-sees are live at the same moment (+N on the
+//               live row): only with two or more live; the now pill's count.
 //
 // The native side never decides anything: nowCardScript precomputes every state
 // of the whole festival with its time span, and the phone only picks the span
@@ -33,13 +34,10 @@ export type NowCardSet = {
 
 export type NowCardState =
   | { kind: 'break'; next: NowCardSet }
-  | { kind: 'live'; live: NowCardSet; clash: NowCardSet | null; more: number };
+  | { kind: 'live'; live: NowCardSet; next: NowCardSet | null; nextClashes: boolean; more: number };
 
 /** A state and the time it holds: from (inclusive) to (exclusive), Unix ms. */
 export type NowCardSegment = { from: number; to: number; state: NowCardState };
-
-/** A clash group shows `⚠ +N` only from this many bands up. */
-const MORE_FROM_GROUP_SIZE = 3;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -63,7 +61,6 @@ function stateAt(
   inputs: ConflictInputs,
   festivalDays: number[],
   now: number,
-  entries: ConflictEntry[],
   stageNames: Map<string, string>,
 ): NowCardState | null {
   const set = nowPillSet(interests, inputs, festivalDays, now);
@@ -75,21 +72,16 @@ function stateAt(
   }
   const musts = todaysMusts(interests, inputs, getFestivalDayStart(now));
   const liveEvents = liveMustSees(musts, now).map((m) => m.event);
-  const clash = musts
-    .filter((m) => m.event.dateFrom > now && clashesWithLive(m.event, liveEvents))
+  const next = musts
+    .filter((m) => m.event.dateFrom > now)
     .sort((a, b) => a.event.dateFrom - b.event.dateFrom)[0];
-
-  const group = conflictGroupOf(entries, set.must.event.eventId);
-  const shown = new Set([set.must.event.eventId, clash?.event.eventId]);
-  const more = group.length >= MORE_FROM_GROUP_SIZE
-    ? group.filter((e) => !shown.has(e.eventId) && e.dateTo > now).length
-    : 0;
 
   return {
     kind: 'live',
     live: cardSet(set.must, stageNames),
-    clash: clash !== undefined ? cardSet(clash, stageNames) : null,
-    more,
+    next: next !== undefined ? cardSet(next, stageNames) : null,
+    nextClashes: next !== undefined && clashesWithLive(next.event, liveEvents),
+    more: set.others,
   };
 }
 
@@ -100,7 +92,7 @@ export function nowCardState(
   festivalDays: number[],
   now: number,
 ): NowCardState | null {
-  return stateAt(interests, inputs, festivalDays, now, computeConflictEntries(interests, inputs), stageNamesOf(inputs));
+  return stateAt(interests, inputs, festivalDays, now, stageNamesOf(inputs));
 }
 
 function sameSet(a: NowCardSet | null, b: NowCardSet | null): boolean {
@@ -112,7 +104,7 @@ function sameState(a: NowCardState, b: NowCardState): boolean {
     return sameSet(a.next, b.next);
   }
   if (a.kind === 'live' && b.kind === 'live') {
-    return sameSet(a.live, b.live) && sameSet(a.clash, b.clash) && a.more === b.more;
+    return sameSet(a.live, b.live) && sameSet(a.next, b.next) && a.nextClashes === b.nextClashes && a.more === b.more;
   }
   return false;
 }
@@ -131,7 +123,6 @@ export function nowCardScript(
   if (festivalDays.length === 0) {
     return [];
   }
-  const entries = computeConflictEntries(interests, inputs);
   const stageNames = stageNamesOf(inputs);
   const lastDayEnd = Math.max(...festivalDays) + DAY_MS;
   const moments = new Set<number>([lastDayEnd]);
@@ -147,7 +138,7 @@ export function nowCardScript(
 
   const script: NowCardSegment[] = [];
   for (let i = 0; i < bounds.length - 1; i++) {
-    const state = stateAt(interests, inputs, festivalDays, bounds[i], entries, stageNames);
+    const state = stateAt(interests, inputs, festivalDays, bounds[i], stageNames);
     if (state === null) {
       continue;
     }

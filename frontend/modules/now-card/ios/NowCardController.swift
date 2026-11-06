@@ -32,6 +32,7 @@ enum NowCardController {
       endsDay: run.endsDay,
       liveLabel: script.liveLabel,
       nextLabel: script.nextLabel,
+      nextShortLabel: script.nextShortLabel,
       overText: script.overText
     ))
     let content = ActivityContent(state: state, staleDate: run.spans[0].to)

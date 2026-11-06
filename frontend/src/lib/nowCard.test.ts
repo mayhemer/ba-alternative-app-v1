@@ -15,10 +15,10 @@ import type { DbArtist, DbEvent, DbStage } from '../types/backend';
 //              in a break; while one, two or three clashing sets are live;
 //              after the day's last set
 //   festival — a festival day; before the festival; after it
-// The main set is the now pill's (nowPillSet); the clash row is the next
-// upcoming Must-see clashing with one that is live (My plan's START rule);
-// `more` counts the clash group's unfinished bands the card doesn't show, and
-// only in a group of three or more.
+// The main set is the now pill's (nowPillSet). While live, the second row is
+// always the day's next Must-see still to start, flagged when it clashes with
+// one that is live (My plan's START rule); `more` (+N) counts the other
+// Must-sees live at the same moment, so it shows only with two or more live.
 //
 // Expected values are written out by hand from the fixture times.
 
@@ -85,8 +85,8 @@ function brk(next: NowCardSet): NowCardState {
   return { kind: 'break', next };
 }
 
-function live(set: NowCardSet, clash: NowCardSet | null = null, more = 0): NowCardState {
-  return { kind: 'live', live: set, clash, more };
+function live(set: NowCardSet, next: NowCardSet | null, nextClashes = false, more = 0): NowCardState {
+  return { kind: 'live', live: set, next, nextClashes, more };
 }
 
 function stateAt(day: number, hm: string): NowCardState | null {
@@ -104,8 +104,8 @@ describe('nowCardState', () => {
     expect(stateAt(7, '08:00')).toEqual(brk(HOODED));
   });
 
-  it('is live from the set\'s first minute', () => {
-    expect(stateAt(7, '11:30')).toEqual(live(HOODED));
+  it('is live from the set\'s first minute, with the day\'s next Must-see under it', () => {
+    expect(stateAt(7, '11:30')).toEqual(live(HOODED, NAPALM));
   });
 
   it('is a break again at the set\'s end', () => {
@@ -116,34 +116,38 @@ describe('nowCardState', () => {
     expect(stateAt(7, '16:20')).toEqual(brk(GOJIRA));
   });
 
-  it('shows the next clashing band, and the group\'s third band as +1', () => {
-    expect(stateAt(7, '19:12')).toEqual(live(GOJIRA, BATUSHKA, 1));
+  it('flags the next band when it clashes, without +N while only one set is live', () => {
+    expect(stateAt(7, '19:12')).toEqual(live(GOJIRA, BATUSHKA, true, 0));
   });
 
-  it('shows the latest live set, the next clash, and the still-live earlier one as +1', () => {
-    expect(stateAt(7, '19:45')).toEqual(live(BATUSHKA, MGLA, 1));
+  it('shows the latest live set, the next clashing band, and the still-live earlier one as +1', () => {
+    expect(stateAt(7, '19:45')).toEqual(live(BATUSHKA, MGLA, true, 1));
   });
 
-  it('with three live and none to come, shows no clash row and +2', () => {
-    expect(stateAt(7, '19:55')).toEqual(live(MGLA, null, 2));
+  it('with the whole group live, shows the next band after it unflagged, and the other two as +2', () => {
+    expect(stateAt(7, '19:55')).toEqual(live(MGLA, MESHUGGAH, false, 2));
   });
 
-  it('stops counting a group band once it has finished', () => {
-    expect(stateAt(7, '20:10')).toEqual(live(MGLA, null, 1));
-    expect(stateAt(7, '20:35')).toEqual(live(MGLA));
+  it('stops counting a live band once it has finished', () => {
+    expect(stateAt(7, '20:10')).toEqual(live(MGLA, MESHUGGAH, false, 1));
+    expect(stateAt(7, '20:35')).toEqual(live(MGLA, MESHUGGAH));
   });
 
-  it('shows the next clash of a two-band group without +N', () => {
-    expect(stateAt(7, '22:30')).toEqual(live(MESHUGGAH, CULT, 0));
+  it('flags the next band of a two-band clash, without +N while only one set is live', () => {
+    expect(stateAt(7, '22:30')).toEqual(live(MESHUGGAH, CULT, true, 0));
   });
 
-  it('with both bands of a two-band group live, shows only the later one', () => {
-    expect(stateAt(7, '23:10')).toEqual(live(CULT));
+  it('with both bands of a two-band clash live, shows the later one, the other as +1, and the next band after midnight', () => {
+    expect(stateAt(7, '23:10')).toEqual(live(CULT, BEHEMOTH, false, 1));
   });
 
-  it('keeps a set after midnight on the day before', () => {
+  it('drops +N once the earlier band of two has finished', () => {
+    expect(stateAt(7, '23:40')).toEqual(live(CULT, BEHEMOTH));
+  });
+
+  it('keeps a set after midnight on the day before, with no next band from the next day', () => {
     expect(stateAt(8, '00:10')).toEqual(brk(BEHEMOTH));
-    expect(stateAt(8, '00:45')).toEqual(live(BEHEMOTH));
+    expect(stateAt(8, '00:45')).toEqual(live(BEHEMOTH, null));
   });
 
   it('shows nothing after the day\'s last Must-see', () => {
@@ -163,23 +167,23 @@ describe('nowCardScript', () => {
   it('lists every state with its time span, merging spans that show the same', () => {
     expect(nowCardScript(interests, inputs, DAYS)).toEqual([
       { from: at(7, '08:00'), to: at(7, '11:30'), state: brk(HOODED) },
-      { from: at(7, '11:30'), to: at(7, '12:10'), state: live(HOODED) },
+      { from: at(7, '11:30'), to: at(7, '12:10'), state: live(HOODED, NAPALM) },
       { from: at(7, '12:10'), to: at(7, '14:00'), state: brk(NAPALM) },
-      { from: at(7, '14:00'), to: at(7, '14:50'), state: live(NAPALM) },
+      { from: at(7, '14:00'), to: at(7, '14:50'), state: live(NAPALM, GOJIRA) },
       { from: at(7, '14:50'), to: at(7, '19:00'), state: brk(GOJIRA) },
-      { from: at(7, '19:00'), to: at(7, '19:40'), state: live(GOJIRA, BATUSHKA, 1) },
-      { from: at(7, '19:40'), to: at(7, '19:50'), state: live(BATUSHKA, MGLA, 1) },
-      { from: at(7, '19:50'), to: at(7, '20:00'), state: live(MGLA, null, 2) },
-      { from: at(7, '20:00'), to: at(7, '20:30'), state: live(MGLA, null, 1) },
-      { from: at(7, '20:30'), to: at(7, '20:40'), state: live(MGLA) },
+      { from: at(7, '19:00'), to: at(7, '19:40'), state: live(GOJIRA, BATUSHKA, true, 0) },
+      { from: at(7, '19:40'), to: at(7, '19:50'), state: live(BATUSHKA, MGLA, true, 1) },
+      { from: at(7, '19:50'), to: at(7, '20:00'), state: live(MGLA, MESHUGGAH, false, 2) },
+      { from: at(7, '20:00'), to: at(7, '20:30'), state: live(MGLA, MESHUGGAH, false, 1) },
+      { from: at(7, '20:30'), to: at(7, '20:40'), state: live(MGLA, MESHUGGAH) },
       { from: at(7, '20:40'), to: at(7, '22:15'), state: brk(MESHUGGAH) },
-      { from: at(7, '22:15'), to: at(7, '23:00'), state: live(MESHUGGAH, CULT, 0) },
-      // Meshuggah ends at 23:30, but the card shows the same before and after.
-      { from: at(7, '23:00'), to: at(8, '00:00'), state: live(CULT) },
+      { from: at(7, '22:15'), to: at(7, '23:00'), state: live(MESHUGGAH, CULT, true, 0) },
+      { from: at(7, '23:00'), to: at(7, '23:30'), state: live(CULT, BEHEMOTH, false, 1) },
+      { from: at(7, '23:30'), to: at(8, '00:00'), state: live(CULT, BEHEMOTH) },
       { from: at(8, '00:00'), to: at(8, '00:20'), state: brk(BEHEMOTH) },
-      { from: at(8, '00:20'), to: at(8, '01:30'), state: live(BEHEMOTH) },
+      { from: at(8, '00:20'), to: at(8, '01:30'), state: live(BEHEMOTH, null) },
       { from: at(8, '08:00'), to: at(8, '15:00'), state: brk(FRIDAY) },
-      { from: at(8, '15:00'), to: at(8, '15:40'), state: live(FRIDAY) },
+      { from: at(8, '15:00'), to: at(8, '15:40'), state: live(FRIDAY, null) },
     ]);
   });
 

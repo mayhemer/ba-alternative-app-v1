@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Layout #4 on Android, break: two lines.
+<!-- Layout #4 on Android, break, and the expanded live card's next row (there 16 / 14 sp, set in
+     NowCardNotification.nextCard): two lines.
      NEXT: BAND NAME                     ("NEXT:" the name's size, the time's colour)
-     −1:30:12 ……………… 14:00–14:50 · Stage  (the countdown 18 sp, on one baseline with the 14 sp) -->
+     −1:30:12 [⚠] …………… 14:00–14:50 · Stage  (the countdown 18 sp, on one baseline with the 14 sp;
+                                           ⚠ only on the next row, when it clashes with a live set) -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
   android:layout_width="match_parent"
   android:layout_height="wrap_content"
@@ -47,6 +49,16 @@
       android:textColor="@color/nc_blue"
       android:textSize="@dimen/nc_break_countdown"
       android:textStyle="bold" />
+    <!-- Its bottom on the line's baseline, as the texts'. -->
+    <ImageView
+      android:id="@+id/nc_flag"
+      android:layout_width="14dp"
+      android:layout_height="14dp"
+      android:layout_marginStart="5dp"
+      android:baselineAlignBottom="true"
+      android:contentDescription="@string/nc_clash"
+      android:src="@drawable/nc_warn"
+      android:visibility="gone" />
     <include layout="@layout/nc_time_stage" />
   </LinearLayout>
 </LinearLayout>

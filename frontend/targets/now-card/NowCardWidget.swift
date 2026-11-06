@@ -7,19 +7,18 @@ import WidgetKit
 // Spec: docs/frontend/design/lock-screen.md; visual reference: the mockup it
 // links (layout #4). Each row: the band name, then its countdown with time and
 // stage on the right:
-//   live   BETWEEN THE BURIED AND ME            (22)
-//          ● LIVE −48:00 ……… 19:00–20:00 · Stage
+//   live   BETWEEN THE BURIED AND ME ……… +1     (22; +N: other sets live now)
+//          ● LIVE -48 min …… 19:00–20:00 · Stage
 //          ▔▔▔▔▔▔▔▔▔▔▔▔ (dark yellow played, yellow left)
-//   clash  THE DILLINGER ESCAPE PLAN ……… +1     (16)
-//          −28:00 ⚠ ……………… 19:40–20:30 · Stage
+//   next   NEXT: THE DILLINGER ESCAPE PLAN      (16; the day's next Must-see)
+//          -28 min ⚠ ………… 19:40–20:30 · Stage   (blue; ⚠ red when it clashes)
 //   break  NEXT UP                              (grey heading)
 //          NAPALM DEATH                         (22)
-//          −1:30:12 ………………… 14:00–14:50 · Stage
-// When a status and "time · stage" don't fit on one line, "time · stage"
-// moves under the status, right-aligned.
-// Every countdown and the bar are drawn by iOS from absolute dates, so they
-// move with no updates. Which span the card shows is picked each time iOS
-// draws it (`shown`).
+//          -1 h 30 min ……… 14:00–14:50 · Stage
+// A countdown line never takes a second line: a long stage ends in "…".
+// Every countdown (Countdown.swift; a ticking clock before iOS 18) and the bar
+// are drawn by iOS from absolute dates, so they move with no updates. Which
+// span the card shows is picked each time iOS draws it (`shown`).
 
 private enum Palette {
   // styling/tokens.js
@@ -35,7 +34,7 @@ private enum Palette {
 }
 
 private enum Size {
-  // The card is cut off past 160 pt: live + clash rows must stay within it.
+  // The card is cut off past 160 pt: live + next rows must stay within it.
   static let padding: CGFloat = 16
   static let paddingTop: CGFloat = 18
   static let paddingBottom: CGFloat = 20
@@ -43,12 +42,12 @@ private enum Size {
   static let lineSpacing: CGFloat = 3
   static let meta: CGFloat = 14
   static let label: CGFloat = 12
-  /** The live and clash countdowns, the size of "time · stage". */
+  /** The live and next countdowns, the size of "time · stage". */
   static let countdown: CGFloat = 14
   /** The break countdown, alone on its line under the name. */
   static let breakCountdown: CGFloat = 18
-  /** The clash row's name and +N. */
-  static let clashName: CGFloat = 16
+  /** The next row's name, under the live row. */
+  static let nextName: CGFloat = 16
   static let heading: CGFloat = 13
   static let name: CGFloat = 22
   static let more: CGFloat = 17
@@ -141,11 +140,9 @@ struct NowCardView: View {
     if let segment = shown(state, isStale: isStale) {
       VStack(alignment: .leading, spacing: Size.rowSpacing) {
         if segment.kind == "live" {
-          // +N goes to the clash row; with no clash row (every clashing band is
-          // live), to the live row's name line.
-          LiveRow(set: segment.top, label: state.liveLabel, more: segment.clash == nil ? segment.more : 0, from: segment.from)
-          if let clash = segment.clash {
-            ClashRow(set: clash, more: segment.more, from: segment.from)
+          LiveRow(set: segment.top, label: state.liveLabel, more: segment.more, from: segment.from)
+          if let next = segment.next {
+            NextRow(set: next, prefix: state.nextShortLabel, clashes: segment.nextClashes, from: segment.from)
           }
         } else {
           BreakRow(set: segment.top, heading: state.nextLabel, from: segment.from)
@@ -157,47 +154,6 @@ struct NowCardView: View {
         .foregroundStyle(Palette.textSecondary)
         .frame(maxWidth: .infinity)
     }
-  }
-}
-
-/**
- * "−48:00", "−1:30:12": a countdown iOS draws on its own, stopping at 0:00.
- *
- * iOS draws the ticking text in its own process and can't tell this layout how
- * wide it will get, so a timer text takes all the width it's offered. It is
- * laid over an invisible sample in the same font instead, which gives it a
- * fixed width that follows the font size. The sample matches the text when the
- * card is drawn (each refresh, and the stale switch): "−0:00:00" from an hour
- * left, "−00:00" from 10 minutes, "−0:00" below. A text that gets shorter
- * before the next drawing (crossing 1 hour or 10 minutes) leaves a gap; the
- * alignment says on which side: `.trailing` keeps it away from what follows.
- */
-struct Countdown: View {
-  let to: Date
-  let from: Date
-  var alignment: Alignment = .leading
-
-  var body: some View {
-    let left = to.timeIntervalSince(min(max(from, Date()), to))
-    let sample = left >= 3600 ? "0:00:00" : (left >= 600 ? "00:00" : "0:00")
-    // Built as the countdown is (the minus a text of its own), plus 1 pt, so it is never narrower.
-    HStack(spacing: 0) {
-      Text("\u{2212}")
-      Text(sample)
-        .monospacedDigit()
-    }
-    .lineLimit(1)
-    .padding(.trailing, 1)
-    .hidden()
-    .overlay(alignment: alignment) {
-      HStack(spacing: 0) {
-        Text("\u{2212}")
-        Text(timerInterval: min(from, to)...to, countsDown: true)
-          .monospacedDigit()
-      }
-      .lineLimit(1)
-    }
-    .fixedSize()
   }
 }
 
@@ -217,8 +173,9 @@ struct TimeAndStage: View {
 
 /**
  * A row's countdown line: its status on the left, "time · stage" on the
- * right; when they don't fit side by side, "time · stage" goes under the
- * status, right-aligned.
+ * right. Always one line: the status keeps its width, and when the two don't
+ * fit, "time · stage" ends in "…" (the stage first). A second line could push
+ * the card past iOS's 160 pt.
  */
 struct StatusLine<Status: View>: View {
   let set: NowCardSet
@@ -233,34 +190,29 @@ struct StatusLine<Status: View>: View {
   }
 
   var body: some View {
-    ViewThatFits(in: .horizontal) {
-      HStack(alignment: alignment, spacing: 8) {
-        status
-        Spacer(minLength: 0)
-        TimeAndStage(set: set).fixedSize()
-      }
-      VStack(alignment: .leading, spacing: 2) {
-        status
-        HStack(spacing: 0) {
-          Spacer(minLength: 0)
-          TimeAndStage(set: set)
-        }
-      }
+    HStack(alignment: alignment, spacing: 8) {
+      status
+        .layoutPriority(1)
+      Spacer(minLength: 0)
+      TimeAndStage(set: set)
     }
   }
 }
 
-/** A row's name line: the band name (large; smaller in the clash row) and the red "+N" at its end. */
+/**
+ * A row's name line: the band name (large; smaller in the next row, after
+ * "NEXT:" in the time's grey) and the red "+N" at its end (the live row's).
+ */
 struct NameLine: View {
   let name: String
   let more: Int
   var size: CGFloat = Size.name
+  var prefix: String? = nil
 
   var body: some View {
     HStack(alignment: .firstTextBaseline, spacing: 7) {
-      Text(name)
+      nameText
         .font(.system(size: size, weight: .heavy))
-        .foregroundStyle(Palette.text)
         .lineLimit(1)
         .truncationMode(.tail)
       Spacer(minLength: 3)
@@ -272,6 +224,14 @@ struct NameLine: View {
           .fixedSize()
       }
     }
+  }
+
+  private var nameText: Text {
+    let band = Text(name).foregroundColor(Palette.text)
+    guard let prefix else {
+      return band
+    }
+    return Text(verbatim: "\(prefix): ").foregroundColor(Palette.textMuted) + band
   }
 }
 
@@ -329,22 +289,32 @@ struct LiveRow: View {
   }
 }
 
-struct ClashRow: View {
+/**
+ * Under the live row: the day's next Must-see, as the break row shows one
+ * ("NEXT:" before the name instead of a heading line; the countdown to its
+ * start blue), at the sizes the card's 160 pt leave. When it clashes with a
+ * live set, a red ⚠ after the countdown; the countdown stays blue: it is the
+ * time to its start, not a time it has been live.
+ */
+struct NextRow: View {
   let set: NowCardSet
-  let more: Int
+  let prefix: String
+  let clashes: Bool
   let from: Date
 
   var body: some View {
     VStack(alignment: .leading, spacing: Size.lineSpacing) {
-      NameLine(name: set.name, more: more, size: Size.clashName)
+      NameLine(name: set.name, more: 0, size: Size.nextName, prefix: prefix)
       StatusLine(set: set) {
         HStack(spacing: 5) {
           Countdown(to: set.start, from: from)
             .font(.system(size: Size.countdown, weight: .bold))
-            .foregroundStyle(Palette.danger)
-          Text(Image(systemName: "exclamationmark.triangle"))
-            .font(.system(size: Size.countdown, weight: .semibold))
-            .foregroundStyle(Palette.danger)
+            .foregroundStyle(Palette.breakBlue)
+          if clashes {
+            Text(Image(systemName: "exclamationmark.triangle"))
+              .font(.system(size: Size.countdown, weight: .semibold))
+              .foregroundStyle(Palette.danger)
+          }
         }
         .fixedSize()
       }
@@ -374,13 +344,12 @@ struct BreakRow: View {
 }
 
 /**
- * The Dynamic Island's compact view: a glyph and a countdown, both in the
- * state's colour.
+ * The Dynamic Island's compact view: a glyph and a countdown.
  *   live      red dot, the time left (yellow)
- *   clash     red ⚠, the countdown to the clashing set's start (red, as the clash row's)
+ *   clash     red ⚠, the countdown to the next set's start, which clashes with
+ *             a live one (blue, as the next row's)
  *   break     white ›, the countdown to the next Must-see (blue)
- * A live set whose clash group is all live (`+N`, no clash row) has no set to
- * count down to, so it shows as live.
+ * A live set whose next set doesn't clash (or with none left) shows as live.
  */
 struct IslandState {
   enum Kind { case live, clash, rest }
@@ -397,9 +366,9 @@ struct IslandState {
     if segment.kind != "live" {
       kind = .rest
       to = segment.top.start
-    } else if let clash = segment.clash {
+    } else if let next = segment.next, segment.nextClashes {
       kind = .clash
-      to = clash.start
+      to = next.start
     } else {
       kind = .live
       to = segment.top.end
@@ -409,7 +378,7 @@ struct IslandState {
   var color: Color {
     switch kind {
     case .live: return Palette.accent
-    case .clash: return Palette.danger
+    case .clash: return Palette.breakBlue
     case .rest: return Palette.breakBlue
     }
   }

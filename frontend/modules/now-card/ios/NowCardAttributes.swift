@@ -23,9 +23,11 @@ struct NowCardSegment: Codable, Hashable {
   /** "break": `top` is the next Must-see. "live": `top` is the latest live one. */
   var kind: String
   var top: NowCardSet
-  /** The next Must-see clashing with a live one; live only. */
-  var clash: NowCardSet?
-  /** The clash group's unfinished bands not on the card (`⚠ +N`); 0 shows nothing. */
+  /** Live only: the day's next Must-see still to start (the next row); nil when none is left. */
+  var next: NowCardSet?
+  /** Whether `next` clashes with a set live now: ⚠ on the next row. */
+  var nextClashes: Bool
+  /** How many other Must-sees are live at the same moment (`+N` on the live row); 0 shows nothing. */
   var more: Int
   var from: Date
   var to: Date
@@ -46,6 +48,8 @@ struct NowCardAttributes: ActivityAttributes {
     var liveLabel: String
     /** The break row's heading: "NEXT UP" / "NÁSLEDUJE". */
     var nextLabel: String
+    /** Before the next row's name, with a colon: "NEXT" / "DALŠÍ". */
+    var nextShortLabel: String
     /** Shown after the last span when `endsDay`: the day is over. */
     var overText: String
   }

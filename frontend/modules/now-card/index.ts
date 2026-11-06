@@ -15,14 +15,15 @@ import type { NowCardSegment } from '../../src/lib/nowCard';
 
 /** What crosses to native code, as JSON. Bump `version` when its shape changes. */
 export type NowCardPayload = {
-  version: 1;
+  version: 2;
   segments: NowCardSegment[];
   strings: {
     /** The live row's status label: "LIVE" / "HRAJE". */
     live: string;
     /** iOS: the heading over the next Must-see in a break: "NEXT UP" / "NÁSLEDUJE". */
     next: string;
-    /** Android: before the next Must-see's name in a break, with a colon: "NEXT:" / "DALŠÍ:". */
+    /** Before the next Must-see's name, with a colon: "NEXT:" / "DALŠÍ:". The live card's next row on
+     *  both platforms; Android's break card too. */
     nextShort: string;
     /** iOS: shown once the day's last Must-see is over and the card has not been removed yet. */
     over: string;

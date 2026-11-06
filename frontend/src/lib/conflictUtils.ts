@@ -164,7 +164,7 @@ export function conflictOverlapsOf(entries: ConflictEntry[]): Map<string, Confli
 
 /**
  * Whether an upcoming Must-see clashes with one that is live now: My plan's
- * `START −x` row, and the now card's clash row. The one rule for both.
+ * `START −x` row, and the ⚠ on the now card's next row. The one rule for both.
  */
 export function clashesWithLive(event: DbEvent, liveMusts: DbEvent[]): boolean {
   return liveMusts.some((live) => live.eventId !== event.eventId && eventsOverlap(live, event));

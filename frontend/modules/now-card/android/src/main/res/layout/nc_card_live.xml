@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Layout #4 on Android, live (and live with a clash): two lines.
-     BAND NAME ………………………………… [⚠ +N]
+<!-- Layout #4 on Android, live: two lines.
+     BAND NAME ………………………………… [⚠] [+N]
      ● LIVE −48:00 ……… 19:00–20:00 · Stage
-     ⚠ +N: the clashing bands the card doesn't name (the next clashing one and
-     the group's other unfinished ones). -->
+     ⚠: collapsed only, the next band (hidden there) clashes with a live one.
+     +N: how many other Must-sees are live at the same moment. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
   android:layout_width="match_parent"
   android:layout_height="wrap_content"

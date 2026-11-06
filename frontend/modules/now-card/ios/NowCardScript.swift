@@ -10,6 +10,7 @@ struct NowCardScript {
   var segments: [NowCardSegment]
   var liveLabel: String
   var nextLabel: String
+  var nextShortLabel: String
   var overText: String
 
   /**
@@ -53,9 +54,10 @@ private struct SetDTO: Decodable {
 
 private struct StateDTO: Decodable {
   let kind: String
+  /** In a break the set counted down to; while live the next row's set. */
   let next: SetDTO?
   let live: SetDTO?
-  let clash: SetDTO?
+  let nextClashes: Bool?
   let more: Int?
 }
 
@@ -69,6 +71,7 @@ private struct StringsDTO: Decodable {
   let live: String
   /** Absent in a script stored by an older app version. */
   let next: String?
+  let nextShort: String?
   let over: String
 }
 
@@ -111,18 +114,20 @@ enum NowCardStore {
   static func decode(_ json: String) -> NowCardScript? {
     guard let data = json.data(using: .utf8),
           let payload = try? JSONDecoder().decode(PayloadDTO.self, from: data),
-          payload.version == 1 else {
+          payload.version == 2 else {
       return nil
     }
     let segments: [NowCardSegment] = payload.segments.compactMap { seg in
-      let top = seg.state.kind == "live" ? seg.state.live : seg.state.next
+      let isLive = seg.state.kind == "live"
+      let top = isLive ? seg.state.live : seg.state.next
       guard let top else {
         return nil
       }
       return NowCardSegment(
         kind: seg.state.kind,
         top: top.set,
-        clash: seg.state.clash?.set,
+        next: isLive ? seg.state.next?.set : nil,
+        nextClashes: isLive && (seg.state.nextClashes ?? false),
         more: seg.state.more ?? 0,
         from: date(seg.from),
         to: date(seg.to)
@@ -132,6 +137,7 @@ enum NowCardStore {
       segments: segments,
       liveLabel: payload.strings.live,
       nextLabel: payload.strings.next ?? "NEXT UP",
+      nextShortLabel: payload.strings.nextShort ?? "NEXT",
       overText: payload.strings.over
     )
   }

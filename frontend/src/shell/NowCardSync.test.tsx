@@ -34,7 +34,7 @@ const DAYS = [getFestivalDayStart(at(7, '12:00'))];
 const SET = { eventId: 'e1', name: 'Gojira', stage: 'Octagon', timeText: '19:00–20:00', start: at(7, '19:00'), end: at(7, '20:00') };
 const SCRIPT: NowCardSegment[] = [
   { from: at(7, '08:00'), to: at(7, '19:00'), state: { kind: 'break', next: SET } },
-  { from: at(7, '19:00'), to: at(7, '20:00'), state: { kind: 'live', live: SET, clash: null, more: 0 } },
+  { from: at(7, '19:00'), to: at(7, '20:00'), state: { kind: 'live', live: SET, next: null, nextClashes: false, more: 0 } },
 ];
 const OTHER_SCRIPT: NowCardSegment[] = [SCRIPT[1]];
 
@@ -63,7 +63,7 @@ it('hands the card its script, with its words and tap link', async () => {
   await settle();
   expect(setScript).toHaveBeenCalledTimes(1);
   expect(setScript).toHaveBeenCalledWith({
-    version: 1,
+    version: 2,
     segments: SCRIPT,
     strings: { live: 'LIVE', next: 'NEXT UP', nextShort: 'NEXT', over: 'Today\'s Must-sees are over', channel: 'Lock-screen now card' },
     url: 'ba://my-plan/now',

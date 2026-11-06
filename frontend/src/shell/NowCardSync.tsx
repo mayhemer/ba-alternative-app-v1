@@ -34,7 +34,7 @@ const strings = planStrings();
 
 function payload(script: NowCardSegment[]): NowCardPayload {
   return {
-    version: 1,
+    version: 2,
     segments: script,
     strings: { live: strings.live, next: strings.cardNext, nextShort: strings.cardNextShort, over: strings.cardOver, channel: strings.cardChannel },
     url: NOW_CARD_URL,

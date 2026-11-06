@@ -4,13 +4,14 @@
        notification's text size. No font padding on any text, so the collapsed card's two lines fit
        its ~48 dp (about 44 dp with the 18 sp break countdown). -->
   <dimen name="nc_name">18sp</dimen>
-  <!-- The expanded clash row's name and +N, smaller than the live card's name (as on iOS). -->
-  <dimen name="nc_clash_name">16sp</dimen>
   <dimen name="nc_meta">14sp</dimen>
+  <!-- The expanded live card's next row: "NEXT:" and the name, smaller than the break card's (as on
+       iOS); its countdown takes nc_meta. -->
+  <dimen name="nc_next_name">16sp</dimen>
   <!-- The break countdown, to "time · stage" as on iOS (18 : 14). -->
   <dimen name="nc_break_countdown">18sp</dimen>
   <!-- Between the two lines. -->
   <dimen name="nc_line_gap">2dp</dimen>
-  <!-- Above and below the line between the live and the clash row (expanded). -->
+  <!-- Above and below the line between the live and the next row (expanded). -->
   <dimen name="nc_divider_gap">6dp</dimen>
 </resources>

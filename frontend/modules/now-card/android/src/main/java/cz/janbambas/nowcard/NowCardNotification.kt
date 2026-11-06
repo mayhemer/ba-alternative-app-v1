@@ -10,6 +10,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.SystemClock
+import android.util.TypedValue
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
@@ -20,13 +21,16 @@ import androidx.core.content.ContextCompat
 //
 // Spec: docs/frontend/design/lock-screen.md, layout #4 on Android: two lines at
 // the notification's text size.
-//   live   BAND NAME ……………………………… [⚠ +N]     break  NEXT: BAND NAME
+//   live   BAND NAME ……………………………… [⚠] [+N]   break  NEXT: BAND NAME
 //          ● LIVE −48:00 … 19:00–20:00 · Stage           −1:30:12 … 14:00–14:50 · Stage
-// Collapsed, a clash shows only as ⚠ +N: the clashing bands it doesn't name.
-// Expanded (where Android offers it), a clash adds iOS's clash row under a line:
-//          THE NEXT CLASHING BAND ………………… [+N]
-//          −28:00 ⚠ ……………… 19:40–20:30 · Stage
-// Colours tell the state too (yellow live, blue break, red clash). Silent, ongoing, shown on the lock
+// +N (how many other Must-sees are live now) always on the live row.
+// Expanded (where Android offers it), a live card with a Must-see still to
+// come adds the next row under a line, as the break card (iOS's next row):
+//          NEXT: THE NEXT BAND                      (16 sp, as the iPhone's next row)
+//          −28:00 [⚠] …………… 19:40–20:30 · Stage   (14 sp, blue; ⚠ red when it clashes)
+// Collapsed, the next row is hidden, so a clashing next band shows as ⚠ on the
+// live row's name line instead.
+// Colours tell the state too (yellow live, blue break and next). Silent, ongoing, shown on the lock
 // screen; the status-bar icon tells the state as the iPhone's Dynamic Island
 // does (dot, ⚠, ›). No progress bar: it could only move with extra wakeups.
 
@@ -73,48 +77,58 @@ object NowCardNotification {
     context.getSystemService(NotificationManager::class.java)?.createNotificationChannel(channel)
   }
 
-  /** As the iPhone's Dynamic Island: ⚠ only with a clashing set to come, else the live dot; › in a break. */
+  /** As the iPhone's Dynamic Island: ⚠ only when the next set clashes, else the live dot; › in a break. */
   private fun smallIcon(span: CardSegment): Int = when {
-    span.isLive && span.clash != null -> R.drawable.ic_nowcard_clash
+    span.isLive && span.nextClashes -> R.drawable.ic_nowcard_clash
     span.isLive -> R.drawable.ic_nowcard_live
     else -> R.drawable.ic_nowcard_break
   }
 
-  /** The expanded card when there is a clash to name; null leaves Android's default (the card). */
+  /** The expanded card when live with a Must-see still to come; null leaves Android's default (the card). */
   private fun expanded(context: Context, script: CardScript, span: CardSegment): RemoteViews? {
-    val clash = span.clash
-    if (!span.isLive || clash == null) {
+    val next = span.next
+    if (!span.isLive || next == null) {
       return null
     }
     val rows = RemoteViews(context.packageName, R.layout.nc_rows)
     rows.addView(R.id.nc_rows, card(context, script, span, flagClash = false))
     rows.addView(R.id.nc_rows, RemoteViews(context.packageName, R.layout.nc_divider))
-    val row = RemoteViews(context.packageName, R.layout.nc_card_clash_row)
-    countdown(row, R.id.nc_countdown, clash.start)
-    row.setViewVisibility(R.id.nc_more, if (span.more > 0) View.VISIBLE else View.GONE)
-    row.setTextViewText(R.id.nc_more, "+${span.more}")
-    fill(row, clash)
-    rows.addView(R.id.nc_rows, row)
+    rows.addView(R.id.nc_rows, nextCard(context, script, next, flagClash = span.nextClashes, asRow = true))
     return rows
   }
 
-  /** The two-line card; `flagClash`: ⚠ +N on the name line (off when the clash row names the band). */
+  /** The two-line card; `flagClash`: ⚠ on the live row's name line for a clashing next band it hides. */
   private fun card(context: Context, script: CardScript, span: CardSegment, flagClash: Boolean): RemoteViews {
     val set = span.top
     if (!span.isLive) {
-      val card = RemoteViews(context.packageName, R.layout.nc_card_break)
-      card.setTextViewText(R.id.nc_heading, "${script.nextLabel}:")
-      countdown(card, R.id.nc_countdown, set.start)
-      fill(card, set)
-      return card
+      return nextCard(context, script, set, flagClash = false, asRow = false)
     }
     val card = RemoteViews(context.packageName, R.layout.nc_card_live)
     card.setTextViewText(R.id.nc_label, script.liveLabel)
     countdown(card, R.id.nc_countdown, set.end)
-    val unnamed = if (flagClash) span.unnamedClashes else 0
-    card.setViewVisibility(R.id.nc_flag, if (unnamed > 0) View.VISIBLE else View.GONE)
-    card.setViewVisibility(R.id.nc_more, if (unnamed > 0) View.VISIBLE else View.GONE)
-    card.setTextViewText(R.id.nc_more, "+$unnamed")
+    card.setViewVisibility(R.id.nc_flag, if (flagClash && span.nextClashes) View.VISIBLE else View.GONE)
+    card.setViewVisibility(R.id.nc_more, if (span.more > 0) View.VISIBLE else View.GONE)
+    card.setTextViewText(R.id.nc_more, "+${span.more}")
+    fill(card, set)
+    return card
+  }
+
+  /**
+   * "NEXT: BAND", then the blue countdown to its start: the break card, and the expanded live card's
+   * next row (`asRow`), which takes the iPhone next row's smaller sizes: "NEXT:" and the name 16 sp,
+   * the countdown 14 sp, as "time · stage".
+   */
+  private fun nextCard(context: Context, script: CardScript, set: CardSet, flagClash: Boolean, asRow: Boolean): RemoteViews {
+    val card = RemoteViews(context.packageName, R.layout.nc_card_break)
+    if (asRow) {
+      val res = context.resources
+      card.setTextViewTextSize(R.id.nc_heading, TypedValue.COMPLEX_UNIT_PX, res.getDimension(R.dimen.nc_next_name))
+      card.setTextViewTextSize(R.id.nc_name, TypedValue.COMPLEX_UNIT_PX, res.getDimension(R.dimen.nc_next_name))
+      card.setTextViewTextSize(R.id.nc_countdown, TypedValue.COMPLEX_UNIT_PX, res.getDimension(R.dimen.nc_meta))
+    }
+    card.setTextViewText(R.id.nc_heading, "${script.nextLabel}:")
+    countdown(card, R.id.nc_countdown, set.start)
+    card.setViewVisibility(R.id.nc_flag, if (flagClash) View.VISIBLE else View.GONE)
     fill(card, set)
     return card
   }

@@ -23,15 +23,16 @@ data class CardSegment(
   /** "break": `top` is the next Must-see. "live": `top` is the latest live one. */
   val kind: String,
   val top: CardSet,
-  val clash: CardSet?,
-  /** The clash group's unfinished bands not on the card (`⚠ +N`). */
+  /** Live only: the day's next Must-see still to start (the expanded card's next row). */
+  val next: CardSet?,
+  /** Whether `next` clashes with a set live now: ⚠. */
+  val nextClashes: Boolean,
+  /** How many other Must-sees are live at the same moment (`+N` on the live row). */
   val more: Int,
   val from: Long,
   val to: Long,
 ) {
   val isLive: Boolean get() = kind == "live"
-  /** The clashing bands the card doesn't name (`⚠ +N`): the next clashing one and the group's others. */
-  val unnamedClashes: Int get() = if (isLive) (if (clash != null) 1 else 0) + more else 0
 }
 
 class CardScript(
@@ -61,7 +62,7 @@ class CardScript(
   companion object {
     fun parse(json: String): CardScript? = try {
       val root = JSONObject(json)
-      if (root.getInt("version") != 1) {
+      if (root.getInt("version") != 2) {
         null
       } else {
         val strings = root.getJSONObject("strings")
@@ -83,11 +84,13 @@ class CardScript(
     private fun segment(json: JSONObject): CardSegment? {
       val state = json.getJSONObject("state")
       val kind = state.getString("kind")
-      val top = cardSet(state.optJSONObject(if (kind == "live") "live" else "next")) ?: return null
+      val isLive = kind == "live"
+      val top = cardSet(state.optJSONObject(if (isLive) "live" else "next")) ?: return null
       return CardSegment(
         kind = kind,
         top = top,
-        clash = cardSet(state.optJSONObject("clash")),
+        next = if (isLive) cardSet(state.optJSONObject("next")) else null,
+        nextClashes = isLive && state.optBoolean("nextClashes", false),
         more = state.optInt("more", 0),
         from = json.getLong("from"),
         to = json.getLong("to"),
