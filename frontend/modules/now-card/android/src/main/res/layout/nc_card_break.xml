@@ -3,62 +3,79 @@
      NowCardNotification.nextCard): two lines.
      NEXT: BAND NAME                     ("NEXT:" the name's size, the time's colour)
      −1:30:12 [⚠] …………… 14:00–14:50 · Stage  (the countdown 18 sp, on one baseline with the 14 sp;
-                                           ⚠ only on the next row, when it clashes with a live set) -->
+                                           ⚠ only on the next row, when it clashes with a live set)
+     The next row, when it clashes, also gets My plan's striped clash bar on its right edge
+     (nc_clash_edge): Android has no live bar to stripe, as iOS does. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
   android:layout_width="match_parent"
   android:layout_height="wrap_content"
-  android:orientation="vertical">
+  android:orientation="horizontal">
   <LinearLayout
-    android:layout_width="match_parent"
+    android:layout_width="0dp"
     android:layout_height="wrap_content"
-    android:gravity="center_vertical"
-    android:orientation="horizontal">
-    <TextView
-      android:includeFontPadding="false"
-      android:id="@+id/nc_heading"
-      android:layout_width="wrap_content"
+    android:layout_weight="1"
+    android:orientation="vertical">
+    <LinearLayout
+      android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:maxLines="1"
-      android:textColor="@color/nc_muted"
-      android:textSize="@dimen/nc_name" />
-    <TextView
-      android:includeFontPadding="false"
-      android:id="@+id/nc_name"
-      android:layout_width="0dp"
+      android:gravity="center_vertical"
+      android:orientation="horizontal">
+      <TextView
+        android:includeFontPadding="false"
+        android:id="@+id/nc_heading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxLines="1"
+        android:textColor="@color/nc_muted"
+        android:textSize="@dimen/nc_name" />
+      <TextView
+        android:includeFontPadding="false"
+        android:id="@+id/nc_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:layout_weight="1"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="@color/nc_text"
+        android:textSize="@dimen/nc_name"
+        android:textStyle="bold" />
+    </LinearLayout>
+    <!-- No gravity: the line keeps LinearLayout's baseline alignment. -->
+    <LinearLayout
+      android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:layout_marginStart="6dp"
-      android:layout_weight="1"
-      android:ellipsize="end"
-      android:maxLines="1"
-      android:textColor="@color/nc_text"
-      android:textSize="@dimen/nc_name"
-      android:textStyle="bold" />
+      android:layout_marginTop="@dimen/nc_line_gap"
+      android:orientation="horizontal">
+      <Chronometer
+        android:includeFontPadding="false"
+        android:id="@+id/nc_countdown"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFeatureSettings="tnum"
+        android:textColor="@color/nc_blue"
+        android:textSize="@dimen/nc_break_countdown"
+        android:textStyle="bold" />
+      <!-- Its bottom on the line's baseline, as the texts'. -->
+      <ImageView
+        android:id="@+id/nc_flag"
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:layout_marginStart="5dp"
+        android:baselineAlignBottom="true"
+        android:contentDescription="@string/nc_clash"
+        android:src="@drawable/nc_warn"
+        android:visibility="gone" />
+      <include layout="@layout/nc_time_stage" />
+    </LinearLayout>
   </LinearLayout>
-  <!-- No gravity: the line keeps LinearLayout's baseline alignment. -->
-  <LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginTop="@dimen/nc_line_gap"
-    android:orientation="horizontal">
-    <Chronometer
-      android:includeFontPadding="false"
-      android:id="@+id/nc_countdown"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:fontFeatureSettings="tnum"
-      android:textColor="@color/nc_blue"
-      android:textSize="@dimen/nc_break_countdown"
-      android:textStyle="bold" />
-    <!-- Its bottom on the line's baseline, as the texts'. -->
-    <ImageView
-      android:id="@+id/nc_flag"
-      android:layout_width="14dp"
-      android:layout_height="14dp"
-      android:layout_marginStart="5dp"
-      android:baselineAlignBottom="true"
-      android:contentDescription="@string/nc_clash"
-      android:src="@drawable/nc_warn"
-      android:visibility="gone" />
-    <include layout="@layout/nc_time_stage" />
-  </LinearLayout>
+  <ImageView
+    android:id="@+id/nc_clash_edge"
+    android:layout_width="6dp"
+    android:layout_height="match_parent"
+    android:layout_marginStart="8dp"
+    android:importantForAccessibility="no"
+    android:scaleType="centerCrop"
+    android:src="@drawable/nc_clash_stripes"
+    android:visibility="gone" />
 </LinearLayout>

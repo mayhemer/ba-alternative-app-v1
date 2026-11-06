@@ -9,7 +9,8 @@ import WidgetKit
 // stage on the right:
 //   live   BETWEEN THE BURIED AND ME ……… +1     (22; +N: other sets live now)
 //          ● LIVE -48 min …… 19:00–20:00 · Stage
-//          ▔▔▔▔▔▔▔▔▔▔▔▔ (dark yellow played, yellow left)
+//          ▔▔▔▔▔▔▔▔▔▨▨▨ (dark yellow played, yellow left; ▨ red stripes:
+//                        the stretch a clashing next band overlaps)
 //   next   NEXT: THE DILLINGER ESCAPE PLAN      (16; the day's next Must-see)
 //          -28 min ⚠ ………… 19:40–20:30 · Stage   (blue; ⚠ red when it clashes)
 //   break  NEXT UP                              (grey heading)
@@ -39,6 +40,8 @@ private enum Size {
   static let paddingTop: CGFloat = 18
   static let paddingBottom: CGFloat = 20
   static let rowSpacing: CGFloat = 22
+  /** Between the rows in the island's expanded view, which cuts the card's bottom off at 22. */
+  static let islandRowSpacing: CGFloat = 12
   static let lineSpacing: CGFloat = 3
   static let meta: CGFloat = 14
   static let label: CGFloat = 12
@@ -90,8 +93,9 @@ struct NowCardLiveActivity: Widget {
       let island = IslandState(shown(context.state, isStale: context.isStale))
       return DynamicIsland {
         DynamicIslandExpandedRegion(.bottom) {
-          // Inset, so the island's round corners don't cut into the text.
-          NowCardView(state: context.state, isStale: context.isStale)
+          // Inset, so the island's round corners don't cut into the text; the
+          // rows closer together, so the card fits the island's height.
+          NowCardView(state: context.state, isStale: context.isStale, rowSpacing: Size.islandRowSpacing)
             .padding(.horizontal, 8)
             .padding(.vertical, 6)
         }
@@ -135,12 +139,19 @@ func shown(_ state: NowCardAttributes.ContentState, isStale: Bool, now: Date = D
 struct NowCardView: View {
   let state: NowCardAttributes.ContentState
   let isStale: Bool
+  var rowSpacing: CGFloat = Size.rowSpacing
 
   var body: some View {
     if let segment = shown(state, isStale: isStale) {
-      VStack(alignment: .leading, spacing: Size.rowSpacing) {
+      VStack(alignment: .leading, spacing: rowSpacing) {
         if segment.kind == "live" {
-          LiveRow(set: segment.top, label: state.liveLabel, more: segment.more, from: segment.from)
+          LiveRow(
+            set: segment.top,
+            label: state.liveLabel,
+            more: segment.more,
+            from: segment.from,
+            clashFrom: segment.nextClashes ? segment.next?.start : nil
+          )
           if let next = segment.next {
             NextRow(set: next, prefix: state.nextShortLabel, clashes: segment.nextClashes, from: segment.from)
           }
@@ -243,6 +254,8 @@ struct NameLine: View {
  */
 struct LiveBar: View {
   let set: NowCardSet
+  /** When the next set clashes: its start. The bar stripes from there to the set's end. */
+  var clashFrom: Date? = nil
 
   var body: some View {
     ZStack {
@@ -253,9 +266,52 @@ struct LiveBar: View {
           .tint(.white)
           .scaleEffect(x: -1, y: Size.barHeight / 4)
       }
-      .clipShape(Capsule())
+      if let zone = clashZone {
+        GeometryReader { geo in
+          ClashStripes()
+            .stroke(Palette.danger, lineWidth: ClashStripes.width)
+            .frame(width: geo.size.width * (zone.upperBound - zone.lowerBound))
+            .clipped()
+            .offset(x: geo.size.width * zone.lowerBound)
+        }
+      }
     }
+    .clipShape(Capsule())
     .frame(height: Size.barHeight)
+  }
+
+  /** The stretch the next set overlaps, as fractions of the set: its start to the set's end. */
+  private var clashZone: ClosedRange<CGFloat>? {
+    guard let clashFrom, set.end > set.start, clashFrom < set.end else {
+      return nil
+    }
+    let length = set.end.timeIntervalSince(set.start)
+    let from = max(0, clashFrom.timeIntervalSince(set.start) / length)
+    return CGFloat(from)...1
+  }
+}
+
+/**
+ * The app's clash hatch (src/ui/stripes.ts): rising 45° lines ("/"), as clash
+ * stripes are everywhere (ux-principles.md), 2 pt wide, bands and gaps equally
+ * wide. Stroked in red only, so the gaps show
+ * what is under them: on the live bar, the time played and the time left run
+ * through.
+ */
+struct ClashStripes: Shape {
+  static let width: CGFloat = 2
+  /** Horizontal spacing between line starts: at 45° the gap equals the band. */
+  static let step: CGFloat = width * 2 * 2.squareRoot()
+
+  func path(in rect: CGRect) -> Path {
+    var path = Path()
+    var x = rect.minX - rect.height
+    while x < rect.maxX {
+      path.move(to: CGPoint(x: x, y: rect.maxY))
+      path.addLine(to: CGPoint(x: x + rect.height, y: rect.minY))
+      x += Self.step
+    }
+    return path
   }
 }
 
@@ -264,6 +320,8 @@ struct LiveRow: View {
   let label: String
   let more: Int
   let from: Date
+  /** The next set's start when it clashes: the bar stripes from there. */
+  var clashFrom: Date? = nil
 
   var body: some View {
     VStack(alignment: .leading, spacing: Size.lineSpacing) {
@@ -283,7 +341,7 @@ struct LiveRow: View {
         }
         .fixedSize()
       }
-      LiveBar(set: set)
+      LiveBar(set: set, clashFrom: clashFrom)
         .padding(.top, Size.barGap - Size.lineSpacing)
     }
   }

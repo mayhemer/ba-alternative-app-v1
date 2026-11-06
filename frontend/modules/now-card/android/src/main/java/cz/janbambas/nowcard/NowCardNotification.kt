@@ -26,8 +26,10 @@ import androidx.core.content.ContextCompat
 // +N (how many other Must-sees are live now) always on the live row.
 // Expanded (where Android offers it), a live card with a Must-see still to
 // come adds the next row under a line, as the break card (iOS's next row):
-//          NEXT: THE NEXT BAND                      (16 sp, as the iPhone's next row)
-//          −28:00 [⚠] …………… 19:40–20:30 · Stage   (14 sp, blue; ⚠ red when it clashes)
+//          NEXT: THE NEXT BAND                    ▨ (16 sp, as the iPhone's next row)
+//          −28:00 [⚠] …………… 19:40–20:30 · Stage ▨ (14 sp, blue; ⚠ red when it clashes)
+// ▨: when the next band clashes, My plan's striped clash bar on the row's right
+// edge (iOS stripes the overlap on its live bar; Android has no bar).
 // Collapsed, the next row is hidden, so a clashing next band shows as ⚠ on the
 // live row's name line instead.
 // Colours tell the state too (yellow live, blue break and next). Silent, ongoing, shown on the lock
@@ -129,6 +131,8 @@ object NowCardNotification {
     card.setTextViewText(R.id.nc_heading, "${script.nextLabel}:")
     countdown(card, R.id.nc_countdown, set.start)
     card.setViewVisibility(R.id.nc_flag, if (flagClash) View.VISIBLE else View.GONE)
+    // My plan's striped clash bar on the row's right edge: iOS stripes its live bar instead.
+    card.setViewVisibility(R.id.nc_clash_edge, if (asRow && flagClash) View.VISIBLE else View.GONE)
     fill(card, set)
     return card
   }
