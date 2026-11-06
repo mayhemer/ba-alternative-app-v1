@@ -30,14 +30,14 @@ data class CardSegment(
   val to: Long,
 ) {
   val isLive: Boolean get() = kind == "live"
-  /** Whether the expanded card shows a clash: the collapsed one marks it with ⚠. */
-  val hasClash: Boolean get() = isLive && (clash != null || more > 0)
+  /** The clashing bands the card doesn't name (`⚠ +N`): the next clashing one and the group's others. */
+  val unnamedClashes: Int get() = if (isLive) (if (clash != null) 1 else 0) + more else 0
 }
 
 class CardScript(
   val segments: List<CardSegment>,
   val liveLabel: String,
-  /** The break row's heading: "NEXT UP" / "NÁSLEDUJE". */
+  /** Before the next Must-see's name in a break, with a colon: "NEXT" / "DALŠÍ". */
   val nextLabel: String,
   val channelName: String,
   val url: String,
@@ -71,7 +71,7 @@ class CardScript(
           segments,
           strings.getString("live"),
           // Absent in a script stored by an older app version.
-          strings.optString("next", "NEXT UP"),
+          strings.optString("nextShort", "NEXT"),
           strings.getString("channel"),
           root.getString("url"),
         )

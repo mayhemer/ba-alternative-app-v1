@@ -11,6 +11,7 @@
   android:gravity="end"
   android:orientation="horizontal">
   <TextView
+    android:includeFontPadding="false"
     android:id="@+id/nc_time"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
@@ -19,6 +20,7 @@
     android:textColor="@color/nc_muted"
     android:textSize="@dimen/nc_meta" />
   <TextView
+    android:includeFontPadding="false"
     android:id="@+id/nc_stage"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"

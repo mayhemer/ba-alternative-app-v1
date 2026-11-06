@@ -77,13 +77,43 @@ NAPALM DEATH
 
 ### Layout #4 on Android
 
-- No bar under the live row (see Battery).
-- Names 20 sp (iOS 22), the clash name, `+N` and the countdown lines as on iOS.
-- `time · stage` can't move to a line of its own (RemoteViews has no "if it fits"), so a long stage
-  name ends in an ellipsis.
-- **Collapsed** (what the lock screen shows, about 48 dp): the top row only, without row padding. The
-  live row has a red `⚠` after its countdown when the expanded card has a clash row or `+N`, and
-  shows no `+N` itself. The break row drops its `NEXT UP` heading, so it fits on two lines.
+Two lines: the first 18 sp (the band name bold), the second at the notification's text size (14 sp),
+every text without font padding (`includeFontPadding="false"`), so the collapsed card stays near
+44 dp, under the ~48 dp Android gives it. Collapsed is what the lock
+screen shows, and on older Androids (the Nokia 3, Android 9) the only view; where Android offers an
+expanded view, a clash adds iOS's clash row there.
+
+```
+BETWEEN THE BURIED AND ME                    ⚠ +2      live (+ clash), collapsed
+● LIVE −48:00 (yellow)  19:00–20:00 · Jägermeister
+
+BETWEEN THE BURIED AND ME                              live + clash, expanded
+● LIVE −48:00 (yellow)  19:00–20:00 · Jägermeister
+──────────────────────────────────────────────────
+THE DILLINGER ESCAPE PLAN                       +1
+−28:00 ⚠ (red)            19:40–20:30 · Metal Gate
+
+NEXT: HOODED MENACE                                    break
+−1:30:00 (blue)               11:30–12:10 · Octagon
+```
+
+- **Live:** the name (18 bold); then the red dot, `LIVE`, the time left (14 bold, accent) and
+  `time · stage` on the right (stage bold).
+- **Clash, collapsed:** the live card with `⚠ +N` at the end of the name line: N = the clashing bands
+  it doesn't name (the next clashing Must-see, plus the group's other unfinished ones).
+- **Clash, expanded:** the live card without `⚠ +N`, a 1 px line with 6 dp above and below, then the
+  clash row as on iOS: the name (16 bold, smaller than the live name) with `+N` (the group's other unfinished bands) at its end;
+  the countdown to its start (14 bold red), `⚠`, `time · stage`.
+- **Break:** `NEXT:` (`planStrings.cardNextShort` with a colon, "DALŠÍ:" in Czech; Android only, iOS
+  keeps `NEXT UP`; the name's size, the time range's colour), the name (18 bold); then the countdown (18 bold blue, to `time · stage` as on iOS)
+  on one baseline with `time · stage`.
+- Live and break have no expanded view of their own: Android shows the same card, in its larger
+  expanded frame, which makes it a little taller (open).
+- No bar (see Battery). A long stage name ends in an ellipsis: RemoteViews can't move it to a line of
+  its own.
+- **Colours** tell the state as on iOS. The shade follows the system's dark mode on Android 10+ and is
+  light on older ones, so `values/colors.xml` darkens the yellow, red and blue; `values-night` uses
+  the app's tokens.
 
 ### Both
 
@@ -122,10 +152,10 @@ NAPALM DEATH
 
 - Silent, ongoing, shown on the lock screen (`VISIBILITY_PUBLIC`), low-importance channel "Lock-screen
   now card".
-- **Collapsed** and **expanded:** see "Layout #4 on Android" above; expanded has a 1 px line between
-  the live and the clash row, with equal space above and below.
+- **Content:** see "Layout #4 on Android" above.
 - **No progress bar:** it can only move by reposting the notification, which costs wakeups.
-- **Status-bar icon** per state: dot (live), triangle (clash), hourglass (break).
+- **Status-bar icon** per state, as the iPhone's Dynamic Island: dot (live), triangle (a clashing set
+  to come), `›` (break).
 - **Light system theme:** the shade is light, so the yellow, red and blue are darker there
   (`values/colors.xml`); the dark theme uses the app's tokens (`values-night`).
 - **Swiped away:** hidden until that day's card would end; the next day it is back.

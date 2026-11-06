@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 1 px between the live and the clash row, equal space above and below. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
   android:layout_width="match_parent"
-  android:layout_height="1dp"
-  android:background="@color/nc_divider" />
+  android:layout_height="wrap_content"
+  android:paddingTop="@dimen/nc_divider_gap"
+  android:paddingBottom="@dimen/nc_divider_gap">
+  <View
+    android:layout_width="match_parent"
+    android:layout_height="1px"
+    android:background="@color/nc_divider" />
+</FrameLayout>

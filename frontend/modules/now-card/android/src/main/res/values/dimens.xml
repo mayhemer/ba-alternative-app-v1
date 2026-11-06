@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <!-- Above and below every row, so the divider between rows sits in the middle.
-       The collapsed card sets it to 0 to fit its ~48 dp. -->
-  <dimen name="nc_row_padding">6dp</dimen>
-  <!-- Between a row's lines. -->
-  <dimen name="nc_line_gap">2dp</dimen>
-  <!-- Layout #4 sizes (iOS: 22 / 16 / 14; the notification is a little narrower). -->
-  <dimen name="nc_name">20sp</dimen>
+  <!-- Layout #4 on Android: the first line (band name, "next up:") 18 sp, the second at the
+       notification's text size. No font padding on any text, so the collapsed card's two lines fit
+       its ~48 dp (about 44 dp with the 18 sp break countdown). -->
+  <dimen name="nc_name">18sp</dimen>
+  <!-- The expanded clash row's name and +N, smaller than the live card's name (as on iOS). -->
   <dimen name="nc_clash_name">16sp</dimen>
-  <dimen name="nc_more">16sp</dimen>
   <dimen name="nc_meta">14sp</dimen>
+  <!-- The break countdown, to "time · stage" as on iOS (18 : 14). -->
+  <dimen name="nc_break_countdown">18sp</dimen>
+  <!-- Between the two lines. -->
+  <dimen name="nc_line_gap">2dp</dimen>
+  <!-- Above and below the line between the live and the clash row (expanded). -->
+  <dimen name="nc_divider_gap">6dp</dimen>
 </resources>
