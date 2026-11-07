@@ -216,8 +216,10 @@ NEXT: HOODED MENACE                                    break
 
 `ba://my-plan/now` (`NOW_CARD_URL`, `navigation/nowCardLink.ts`; Live Activity `widgetURL`, Android
 content intent). `shell/useNowCardLinkHandler` opens My plan on today, scrolled to now, the same step
-as the now pill off My plan (`shell/openPlanAtNow.ts`); an open search closes first. On a cold start it
-waits for the navigator's restored state, then lands on top of it.
+as the now pill off My plan (`shell/openPlanAtNow.ts`). First, as for the pill, everything open over
+the screen closes (`utils/overlayHub` `closeAll`: the search, a panel, the drawer, the artist or conflict
+sheet, the star selector). On a cold start it waits for the navigator's restored state, then closes
+and lands on top of it.
 
 ## Hand-over and switching
 

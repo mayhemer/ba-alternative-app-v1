@@ -29,3 +29,19 @@ export function useExclusiveOverlay(close: () => void): () => void {
 
   return useCallback((): void => { onOpening(idRef.current); }, []);
 }
+
+/**
+ * Joins the hub as a close-only member for the component's lifetime: closed by
+ * closeAll (a tap on the lock-screen now card), never by another overlay
+ * opening — for overlays that may sit over the exclusive ones, like the artist
+ * sheet over the search results.
+ */
+export function useCloseOnlyOverlay(close: () => void): void {
+  const closeRef = useRef(close);
+  closeRef.current = close;
+
+  useEffect(
+    () => register({}, { close: () => { closeRef.current(); }, closeOnly: true }),
+    [],
+  );
+}

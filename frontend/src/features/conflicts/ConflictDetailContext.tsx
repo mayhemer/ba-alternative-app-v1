@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import type { DbEvent } from '../../types/backend';
+import { useCloseOnlyOverlay } from '../../hooks/useExclusiveOverlay';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -28,6 +29,10 @@ export function ConflictDetailProvider({ children }: { children: React.ReactNode
   const closeConflict = useCallback((): void => {
     setConflictState({ event: null });
   }, []);
+
+  // Closed with everything else by a tap on the lock-screen now card; closes
+  // nothing itself (utils/overlayHub).
+  useCloseOnlyOverlay(closeConflict);
 
   const value = useMemo(
     () => ({ conflictState, openConflict, closeConflict }),

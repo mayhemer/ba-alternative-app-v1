@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useInterestCycle, type InterestStatus } from './InterestContext';
+import { useCloseOnlyOverlay } from '../../hooks/useExclusiveOverlay';
 import {
   starSelectorCapsule,
   touchesCapsule,
@@ -81,6 +82,10 @@ export function StarSelectorProvider({ children }: { children: React.ReactNode }
     heldRef.current = false;
     if (openRef.current !== null) { update(null); }
   }, [clearTimer, update]);
+
+  // Closed with everything else by a tap on the lock-screen now card; opens
+  // from the sheets' stars, so it closes nothing itself (utils/overlayHub).
+  useCloseOnlyOverlay(close);
 
   /** Starts the wait again from now, unless a finger is down or the save failed. */
   const restartTimer = useCallback((): void => {

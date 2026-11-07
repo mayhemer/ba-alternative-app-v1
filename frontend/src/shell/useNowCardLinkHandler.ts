@@ -3,35 +3,38 @@ import * as Linking from 'expo-linking';
 import { navigationRef } from '../navigation/navigationRef';
 import { isNowCardLink } from '../navigation/nowCardLink';
 import { usePlanStore } from '../screens/my-plan/PlanContext';
-import { useSearch } from '../features/search/SearchContext';
 import { openPlanAtNow } from './openPlanAtNow';
+import { closeAll } from '../utils/overlayHub';
 
 // ── A tap on the lock-screen now card ─────────────────────────────────────────
 //
 // Opens My plan on today, scrolled to now, as the now pill does off My plan;
-// an open search closes first, as it does for the pill. The link comes either
-// as the one that launched the app or while it runs. On a cold start the
-// navigator restores its saved state before it is ready, so the request waits
-// for that and then lands on top of the restored screen.
+// first, as for the pill, everything open over the screen closes: the search,
+// a panel, the drawer, a sheet, the star selector (utils/overlayHub closeAll).
+// The link comes either as the one that launched the app or while it runs. On
+// a cold start the navigator restores its saved state before it is ready, so
+// the request waits for that, then closes and lands on top of the restored
+// screen (the drawer can only be closed once the navigator is ready).
 //
 // Mounted in AppShell, next to the share-link handler.
 
 export function useNowCardLinkHandler(): void {
   const store = usePlanStore();
-  const { close: closeSearch } = useSearch();
-  // Refs keep the listeners stable, so they subscribe once.
+  // A ref keeps the listeners stable, so they subscribe once.
   const storeRef = useRef(store);
   storeRef.current = store;
-  const closeSearchRef = useRef(closeSearch);
-  closeSearchRef.current = closeSearch;
 
   useEffect(() => {
     let stopWaiting: (() => void) | null = null;
 
+    function land(): void {
+      closeAll();
+      openPlanAtNow(storeRef.current);
+    }
+
     function open(): void {
-      closeSearchRef.current();
       if (navigationRef.isReady()) {
-        openPlanAtNow(storeRef.current);
+        land();
         return;
       }
       if (stopWaiting !== null) {
@@ -40,7 +43,7 @@ export function useNowCardLinkHandler(): void {
       stopWaiting = navigationRef.addListener('ready', () => {
         stopWaiting?.();
         stopWaiting = null;
-        openPlanAtNow(storeRef.current);
+        land();
       });
     }
 

@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import type { DbArtist } from '../../types/backend';
+import { useCloseOnlyOverlay } from '../../hooks/useExclusiveOverlay';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -34,6 +35,10 @@ export function ArtistDetailProvider({ children }: { children: React.ReactNode }
   const closeDetail = useCallback((): void => {
     setDetailState({ artist: null, presentation: 'collapsed' });
   }, []);
+
+  // Closed with everything else by a tap on the lock-screen now card; opens
+  // over the search results, so it closes nothing itself (utils/overlayHub).
+  useCloseOnlyOverlay(closeDetail);
 
   const expandDetail = useCallback((): void => {
     setDetailState((prev) => ({ ...prev, presentation: 'expanded' }));

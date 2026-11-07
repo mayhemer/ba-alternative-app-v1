@@ -6,7 +6,6 @@ import { Text } from '../ui/Text';
 import { useSelectedSlug } from '../store/AppContext';
 import { useArtistEventMap, useArtists, useFestivalDays, useStages } from '../store/cacheStore';
 import { useDeferredInterests } from '../features/interests/InterestContext';
-import { useSearch } from '../features/search/SearchContext';
 import { shownPlanDay, usePlanStore } from '../screens/my-plan/PlanContext';
 import { minuteNow, useMinuteNow } from '../hooks/useMinuteNow';
 import { festivalToday } from '../utils/festivalTime';
@@ -16,6 +15,7 @@ import { isPlanNowInView } from '../screens/my-plan/planNowProbe';
 import { nowPillModel, nowPillTap, nowPillTarget, type NowPillModel, type NowPillTarget } from './NowPill.model';
 import { nowPillSet } from '../lib/nowPillSet';
 import { openPlanAtNow } from './openPlanAtNow';
+import { closeAll } from '../utils/overlayHub';
 import { BOLD, PROGRESS_COLORS, TABULAR } from '../screens/my-plan/planStyles';
 import { colors } from '../styling/tokens';
 
@@ -151,10 +151,10 @@ export const NowPillView = memo(NowPillViewBase);
 function useNowPillPress(target: NowPillTarget | null, festivalDays: number[]): () => void {
   const store = usePlanStore();
   const jumpToTimelineNow = useJumpToTimelineNow();
-  const { close: closeSearch } = useSearch();
   return useCallback((): void => {
-    // A tap on the top bar closes an open search, then does what it always does.
-    closeSearch();
+    // Clears the screen first — the search, a panel, the drawer, a sheet, the
+    // star selector (utils/overlayHub) — then does what it always does.
+    closeAll();
     if (!navigationRef.isReady()) {
       return;
     }
@@ -171,7 +171,7 @@ function useNowPillPress(target: NowPillTarget | null, festivalDays: number[]): 
       case 'none':
         break;
     }
-  }, [target, festivalDays, store, jumpToTimelineNow, closeSearch]);
+  }, [target, festivalDays, store, jumpToTimelineNow]);
 }
 
 export function NowPill() {

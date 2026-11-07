@@ -13,6 +13,10 @@ import { setCurrentTimeMs } from '../../utils/clock';
 import { setPlanFilters, setScroll, type PlanLevel } from '../../store/uiStatePersistence';
 import { getFestivalDayStart } from '../../utils/festivalTime';
 import { rendersSinceReset, resetRenders } from '../../../tests/setup/countRenders';
+import { useSearch } from '../../features/search/SearchContext';
+import { useLensPanel } from '../../features/social/LensContext';
+import { useArtistDetail } from '../../features/artist-detail/ArtistDetailContext';
+import { useOpenStarSelector, useStarSelectorActions } from '../../features/interests/StarSelectorContext';
 import type { DbArtist, DbCategory, DbEvent, DbStage } from '../../types/backend';
 
 // ── My plan reacts to every input ─────────────────────────────────────────────
@@ -816,5 +820,64 @@ describe('the now pill per minute', () => {
 
     expect(mockMustSeeScans).toBe(1);
     expect(pill()).toBe('Gojira LIVE −36\u202Fmin');
+  });
+});
+
+// ── A tap on the now pill clears the screen first ─────────────────────────────
+//
+// Whatever is open in the overlay hub closes (utils/overlayHub closeAll): an
+// exclusive overlay (the search, a panel), a sheet over it, the star selector.
+// Then the tap does what it always does.
+
+describe('a tap on the now pill', () => {
+  let overlays: {
+    search: ReturnType<typeof useSearch>;
+    lensPanel: ReturnType<typeof useLensPanel>;
+    artistDetail: ReturnType<typeof useArtistDetail>;
+    starActions: ReturnType<typeof useStarSelectorActions>;
+    openStar: ReturnType<typeof useOpenStarSelector>;
+  };
+
+  function OverlayProbe() {
+    overlays = {
+      search: useSearch(),
+      lensPanel: useLensPanel(),
+      artistDetail: useArtistDetail(),
+      starActions: useStarSelectorActions(),
+      openStar: useOpenStarSelector(),
+    };
+    return null;
+  }
+
+  async function mountWithProbe(): Promise<void> {
+    await render(<PerfProviders><><OverlayProbe /><Subject /></></PerfProviders>);
+  }
+
+  it('closes the search, an artist sheet over it and the star selector', async () => {
+    await mountWithProbe();
+    await act(async () => { overlays.search.open(); });
+    await act(async () => { overlays.artistDetail.openDetail(ARTISTS[2], 'expanded'); });
+    await act(async () => {
+      overlays.starActions.pressStar({ artistId: 'gojira', size: 'large', star: { measureInWindow: (cb) => { cb(322, 300, 26, 30); } } });
+    });
+    expect(overlays.search.isOpen).toBe(true);
+    expect(overlays.artistDetail.detailState.artist).not.toBeNull();
+    expect(overlays.openStar).not.toBeNull();
+
+    await act(async () => { fireEvent.press(screen.getByTestId('now-pill')); });
+
+    expect(overlays.search.isOpen).toBe(false);
+    expect(overlays.artistDetail.detailState.artist).toBeNull();
+    expect(overlays.openStar).toBeNull();
+  });
+
+  it('closes an open lens panel', async () => {
+    await mountWithProbe();
+    await act(async () => { overlays.lensPanel.toggle(); });
+    expect(overlays.lensPanel.isOpen).toBe(true);
+
+    await act(async () => { fireEvent.press(screen.getByTestId('now-pill')); });
+
+    expect(overlays.lensPanel.isOpen).toBe(false);
   });
 });

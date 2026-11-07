@@ -41,7 +41,9 @@ document wins over the mock wherever they differ.
   bar (drawer button, now pill, the chip) closes the search **and then does what it always does**.
   Leaving the screen closes it too.
 - The search is in the screen-exclusivity hub (`utils/overlayHub`) with the drawer and the two
-  panels: opening one closes the others.
+  panels: opening one closes the others. The artist and conflict sheets and the star selector are
+  close-only members: they open over these without closing them, and only `closeAll` closes them,
+  together with everything else (a now pill tap, a lock-screen now card tap).
 - It opens empty every time. Opening it is not a back-history position; a landing is.
 
 ## What is searched

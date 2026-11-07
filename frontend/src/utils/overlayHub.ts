@@ -6,6 +6,11 @@
 // That keeps the "not myself" rule in one place, and adding a third overlay
 // costs one registration rather than edits to all the existing ones.
 //
+// Close-only members (the detail sheets, the star selector) may sit over the
+// exclusive ones — the artist sheet opens over the search results — so an
+// opening leaves them alone. closeAll closes both kinds: a tap on the
+// lock-screen now card clears the screen with it.
+//
 // Deliberately not a React context: the hub holds no rendering state, only
 // callbacks, so it needs no provider and causes no re-renders. Membership is
 // keyed by object identity, so two overlays can never collide.
@@ -13,6 +18,8 @@
 export type ExclusiveOverlay = {
   /** Must be idempotent — it is called whenever any sibling opens. */
   close: () => void;
+  /** Closed only by closeAll, never by another member opening. */
+  closeOnly?: boolean;
 };
 
 const registry = new Map<object, ExclusiveOverlay>();
@@ -27,13 +34,21 @@ export function register(id: object, overlay: ExclusiveOverlay): () => void {
 }
 
 /**
- * Announce that `opening` is about to be shown: closes every other member and
- * leaves `opening` untouched. Pass `null` to close all of them.
+ * Announce that `opening` is about to be shown: closes every other exclusive
+ * member and leaves `opening` and the close-only members untouched. Pass `null`
+ * to close all the exclusive members.
  */
 export function onOpening(opening: object | null): void {
   for (const [id, overlay] of registry) {
-    if (id !== opening) {
+    if (id !== opening && overlay.closeOnly !== true) {
       overlay.close();
     }
+  }
+}
+
+/** Closes every member, close-only ones included. */
+export function closeAll(): void {
+  for (const overlay of registry.values()) {
+    overlay.close();
   }
 }
