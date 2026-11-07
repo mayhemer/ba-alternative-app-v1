@@ -14,7 +14,7 @@ import { colors } from '../styling/tokens';
 // both leave the same room to the right of the now pill.
 //
 // While its panel is open a chip is drawn open: an accent background with
-// rounded corners, reaching 4 pt past the glyphs on either side without moving
+// rounded corners, reaching 6 pt past the glyphs on either side without moving
 // them (the glyphs turn black in the chip's model).
 //
 // Dimensions: which chip (lens, filter); what its state slot holds (a star, a
@@ -61,9 +61,9 @@ function chipStyle(): ChipStyle {
 it.each([
   ['the lens chip', <LensChipView key="lens" item={LENS_OPEN} onPress={NO_OP} />],
   ['the filter chip', <PlanFilterChipView key="filter" item={{ ...FILTER, expanded: true }} onPress={NO_OP} />],
-])('%s, open: an accent background with rounded corners, 4 pt past the glyphs', async (_name, chip) => {
+])('%s, open: an accent background with rounded corners, 6 pt past the glyphs', async (_name, chip) => {
   await render(chip);
-  expect(chipStyle()).toMatchObject({ backgroundColor: colors.accent, borderRadius: 8, paddingHorizontal: 4, marginHorizontal: -4 });
+  expect(chipStyle()).toMatchObject({ backgroundColor: colors.accent, borderRadius: 2, paddingHorizontal: 6, marginHorizontal: -6 });
 });
 
 it.each([
@@ -73,5 +73,5 @@ it.each([
   await render(chip);
   const style = chipStyle();
   expect(style.backgroundColor ?? 'transparent').toBe('transparent');
-  expect(style).toMatchObject({ paddingHorizontal: 4, marginHorizontal: -4 });
+  expect(style).toMatchObject({ paddingHorizontal: 6, marginHorizontal: -6 });
 });

@@ -105,7 +105,7 @@ describe('DrawerButton label', () => {
 //
 // While the drawer is open the hamburger is drawn open, as the lens and filter
 // chips are for their panels: black on an accent background with rounded
-// corners, reaching 4 pt past the icon without moving it.
+// corners, reaching 6 pt past the icon without moving it.
 
 type ButtonStyle = { backgroundColor?: unknown; borderRadius?: unknown; paddingHorizontal?: unknown; marginHorizontal?: unknown };
 
@@ -121,7 +121,7 @@ describe('DrawerButton look', () => {
   it('is black on an accent, rounded background while the drawer is open', async () => {
     mockNav.history = [ROUTE, DRAWER];
     await renderButton();
-    expect(buttonStyle()).toMatchObject({ backgroundColor: colors.accent, borderRadius: 8, paddingHorizontal: 4, marginHorizontal: -4 });
+    expect(buttonStyle()).toMatchObject({ backgroundColor: colors.accent, borderRadius: 2, paddingHorizontal: 6, marginHorizontal: -6 });
     expect(iconColor()).toBe(colors.black);
   });
 
@@ -129,7 +129,7 @@ describe('DrawerButton look', () => {
     await renderButton();
     const style = buttonStyle();
     expect(style.backgroundColor ?? 'transparent').toBe('transparent');
-    expect(style).toMatchObject({ paddingHorizontal: 4, marginHorizontal: -4 });
+    expect(style).toMatchObject({ paddingHorizontal: 6, marginHorizontal: -6 });
     expect(iconColor()).toBe('#f0f0f0');
   });
 });

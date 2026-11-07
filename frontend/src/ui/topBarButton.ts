@@ -12,8 +12,8 @@ import { colors } from '../styling/tokens';
 /** What a button draws on its open background. */
 export const TOPBAR_BUTTON_OPEN_CONTENT = colors.black;
 
-const BUTTON_BLEED = 4;
-const BUTTON_RADIUS = 8;
+const BUTTON_BLEED = 6;
+const BUTTON_RADIUS = 2;
 
 const CLOSED: ViewStyle = { paddingHorizontal: BUTTON_BLEED, marginHorizontal: -BUTTON_BLEED, borderRadius: BUTTON_RADIUS };
 const OPEN: ViewStyle = { ...CLOSED, backgroundColor: colors.accent };
