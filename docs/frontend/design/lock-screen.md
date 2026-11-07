@@ -144,9 +144,26 @@ NEXT: HOODED MENACE                                    break
     since the switch (the dimmed screen until it wakes): accepted for a short, readable countdown.
     iOS redraws the dimmed screen rarely: it trims a text whose parts are labelled (hours, minutes)
     and blanks the digits of any other; this format's attributed output labels its parts and changes
-    once a minute (under test on a device). Rejected: `Date.ComponentsFormatStyle` (no labels: dashes
-    or no minutes when dimmed); Apple's timer at minute precision (`-1 hour, 20 minutes`: too long for
-    one line); a dimmed-only branch (drew the two texts over each other).
+    once a minute (seen on a device, 2026-11-06: shown each minute, dimmed and woken).
+  - **No short countdown stops at zero** (checked against the iOS 27.2 SDK, 2026-11-07). The options:
+    - `Text(.dateRange(endingAt:), format: Date.ComponentsFormatStyle(...))`: short and stops at
+      zero (the range is `min(end, now)..<end`, empty after the end). But its output is a plain
+      string with no labelled parts, so iOS blanks it to dashes when dimmed (seen on a device).
+      `Date.IntervalFormatStyle`, the only other format taking a date range, prints times, not a
+      duration.
+    - Apple's timer, `Text(.currentDate, format: .timer(countingDownIn: from..<to, maxPrecision:
+      .seconds(60)))`: stops at zero and labels its parts (hours, minutes) like the current format,
+      so it should survive the dimmed screen (not tried on a device). But it **only writes wide
+      words**: `1 hour, 59 minutes`, `59 minutes`, `1 minute`, `0 minutes` (en_GB); Czech
+      `1 hodina a 20 minut`. It rounds down, so `0 minutes` shows for the last minute and stays after
+      the end. No width option. The minus would be the card's own. About 8 characters wider than
+      `-1 h 59 min`: the line still never wraps, the stage loses the space.
+    - A format of our own wrapped around one of these, to clamp or shorten it: custom formats don't
+      draw in a Live Activity.
+    - The units format with `.durationOffset(to:)`, as used: short and dimmed-safe, counts up.
+    So the choice is short words or stopping at zero. Kept the short words: the overrun only shows
+    when the card fails to switch, which push updates or a redesign would fix.
+  - Rejected as well: a dimmed-only branch (drew the two texts over each other).
   - **iOS 16.4–17 and Android:** a ticking clock, `−48:00`, `−1:30:12`, stopping at 0:00, the minus
     the card's own (U+2212). Android shows `−08:12` under an hour, iOS `−8:12`.
   iOS sizes each countdown from a hidden sample of its longest text in the same font.
