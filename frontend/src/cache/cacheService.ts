@@ -164,8 +164,8 @@ export function getCategories(slug: string): DbCategory[] {
  * True when this edition has categories to lay out a timeline of artists with
  * the given `isPlayable` (main program: true, support program: false) — i.e. at
  * least one such artist has an event in a known category. The single place that
- * decides whether a timeline can be built at all, so a later fallback (e.g.
- * deriving lanes from stages) changes only this.
+ * decides whether a timeline can be built at all. An edition published without
+ * categories gets one per stage in buildCacheData, so it passes here too.
  *
  * Returns a boolean, so it is safe as a useSyncExternalStore snapshot; the scan
  * stops at the first match.
@@ -467,7 +467,8 @@ async function evictBiosExcept(slug: string): Promise<void> {
 // fetch (collector.build) and by a restore from AsyncStorage — so restored data
 // can never differ in shape from fetched data.
 function buildCacheData(raw: FestivalRawData): CacheData {
-  const { artists, categories, stages, events } = raw;
+  const { artists, stages } = raw;
+  const { categories, events } = withCategories(raw);
   const festivalDays = deriveFestivalDays(events);
 
   const artistEventMap: DbArtistEventMap = {};
@@ -479,6 +480,32 @@ function buildCacheData(raw: FestivalRawData): CacheData {
   }
 
   return { artists, categories, stages, events, artistEventMap, festivalDays };
+}
+
+// The colour value the source data uses for "no colour".
+const NO_CATEGORY_COLOR = -1;
+
+/**
+ * Some older editions publish no categories, and their events point at a
+ * category that does not exist, so neither timeline could be laid out. There
+ * each stage stands in for a category, with the same id and names and no
+ * colour, and each event is filed under its stage's. An edition that has
+ * categories is returned as published.
+ */
+function withCategories(
+  raw: FestivalRawData,
+): Pick<FestivalRawData, 'categories' | 'events'> {
+  if (raw.categories.length > 0) {
+    return { categories: raw.categories, events: raw.events };
+  }
+  const categories: DbCategory[] = raw.stages.map((stage) => ({
+    slug: stage.slug,
+    categoryId: stage.stageId,
+    color: NO_CATEGORY_COLOR,
+    localized: stage.localized.map((l) => ({ language: l.language, title: l.name })),
+  }));
+  const events = raw.events.map((event) => ({ ...event, categoryId: event.stageId }));
+  return { categories, events };
 }
 
 // ── DataCollector factory ─────────────────────────────────────────────────────

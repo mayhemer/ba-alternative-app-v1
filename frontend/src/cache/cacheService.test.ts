@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   createDataCollector,
   getArtistEventMap,
@@ -10,6 +11,7 @@ import {
   getSyncWatermark,
   hasBios,
   hasCachedData,
+  hasTimelineCategories,
   hydrateFestivalCache,
   invalidateBiosIfStale,
   populateCache,
@@ -232,6 +234,91 @@ describe('derived structures', () => {
     expect(getCategories(slug)).toHaveLength(CATEGORIES.length);
     expect(getStages(slug)).toHaveLength(STAGES.length);
     expect(getEvents(slug)).toHaveLength(EVENTS.length);
+  });
+});
+
+// ── Editions without categories ───────────────────────────────────────────────
+// Some older editions publish stages but no categories, and their events point
+// at a category that does not exist. Each stage then stands in for a category,
+// so the timelines can be laid out by stage.
+
+describe('an edition without categories', () => {
+  const STAGE_A: DbStage = {
+    slug: 'old', stageId: '11', imageUrl: 'a.jpg', thumbUrl: 'a-thumb.jpg',
+    localized: [{ language: 'cs', name: 'Hlavní stage' }, { language: 'en', name: 'Main stage' }],
+  };
+  const STAGE_B: DbStage = {
+    slug: 'old', stageId: '12', imageUrl: 'b.jpg', thumbUrl: 'b-thumb.jpg',
+    localized: [{ language: 'en', name: 'Tent' }],
+  };
+  const BAND: DbArtist = { ...ARTISTS[0], artistId: '501', isPlayable: true };
+  const SUPPORT: DbArtist = { ...ARTISTS[0], artistId: '502', isPlayable: false };
+  const BAND_SET: DbEvent = {
+    slug: 'old', eventId: '901', dateFrom: 1_700_000_000, dateTo: 1_700_003_600,
+    artistId: '501', stageId: '11', categoryId: 'undefined',
+  };
+  const SUPPORT_SET: DbEvent = {
+    slug: 'old', eventId: '902', dateFrom: 1_700_010_000, dateTo: 1_700_013_600,
+    artistId: '502', stageId: '12', categoryId: 'undefined',
+  };
+
+  function populateWithoutCategories(slug: string): void {
+    const collector = createDataCollector();
+    collector.setArtists([BAND, SUPPORT]);
+    collector.setCategories([]);
+    collector.setStages([STAGE_A, STAGE_B]);
+    collector.setEvents([BAND_SET, SUPPORT_SET]);
+    populateCache(slug, collector.build(), SYNCED_AT);
+  }
+
+  it('gets one category per stage, with its id and names and no colour', () => {
+    const slug = freshSlug();
+    populateWithoutCategories(slug);
+
+    expect(getCategories(slug)).toEqual([
+      {
+        slug: 'old', categoryId: '11', color: -1,
+        localized: [{ language: 'cs', title: 'Hlavní stage' }, { language: 'en', title: 'Main stage' }],
+      },
+      { slug: 'old', categoryId: '12', color: -1, localized: [{ language: 'en', title: 'Tent' }] },
+    ]);
+  });
+
+  it('files each event under the category of its stage', () => {
+    const slug = freshSlug();
+    populateWithoutCategories(slug);
+
+    expect(getEvents(slug).map((e) => [e.eventId, e.categoryId])).toEqual([['901', '11'], ['902', '12']]);
+    expect(getArtistEventMap(slug)['502'].map((e) => e.categoryId)).toEqual(['12']);
+  });
+
+  it('can lay out both the program and the support program', () => {
+    const slug = freshSlug();
+    populateWithoutCategories(slug);
+
+    expect(hasTimelineCategories(slug, true)).toBe(true);
+    expect(hasTimelineCategories(slug, false)).toBe(true);
+  });
+
+  it('gets them on a restore of an edition stored without categories', async () => {
+    const slug = freshSlug();
+    // Written as a build before this fallback stored it: no categories at all.
+    await AsyncStorage.setItem(`festival:data:${slug}`, JSON.stringify({
+      version: 2, syncedAt: SYNCED_AT,
+      artists: [BAND, SUPPORT], categories: [], stages: [STAGE_A, STAGE_B], events: [BAND_SET, SUPPORT_SET],
+    }));
+
+    expect(await hydrateFestivalCache(slug)).toBe(true);
+    expect(getCategories(slug).map((c) => c.categoryId)).toEqual(['11', '12']);
+    expect(getEvents(slug).map((e) => e.categoryId)).toEqual(['11', '12']);
+  });
+
+  it('leaves an edition with categories as published', () => {
+    const slug = freshSlug();
+    populate(slug);
+
+    expect(getCategories(slug)).toEqual(CATEGORIES);
+    expect(getEvents(slug)).toEqual(EVENTS);
   });
 });
 
