@@ -31,6 +31,7 @@ private enum Palette {
   static let accent = Color(hex: 0xE8C84A)
   static let livePassed = Color(hex: 0x4A3F17)
   static let danger = Color(hex: 0xFF4444)
+  static let dangerSecondary = Color(hex: 0x7E2222)
   static let breakBlue = Color(hex: 0x5B9BFF)
 }
 
@@ -268,8 +269,11 @@ struct LiveBar: View {
       }
       if let zone = clashZone {
         GeometryReader { geo in
-          ClashStripes()
-            .stroke(Palette.danger, lineWidth: ClashStripes.width)
+          // Opaque: the two reds alternate, so the bar's progress doesn't show in the stretch.
+          ZStack {
+            Palette.danger
+            ClashStripes().stroke(Palette.dangerSecondary, lineWidth: ClashStripes.width)
+          }
             .frame(width: geo.size.width * (zone.upperBound - zone.lowerBound))
             .clipped()
             .offset(x: geo.size.width * zone.lowerBound)
@@ -294,9 +298,7 @@ struct LiveBar: View {
 /**
  * The app's clash hatch (src/ui/stripes.ts): rising 45° lines ("/"), as clash
  * stripes are everywhere (ux-principles.md), 2 pt wide, bands and gaps equally
- * wide. Stroked in red only, so the gaps show
- * what is under them: on the live bar, the time played and the time left run
- * through.
+ * wide. Only the lines; the live bar lays them over a red fill.
  */
 struct ClashStripes: Shape {
   static let width: CGFloat = 2

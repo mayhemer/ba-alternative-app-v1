@@ -59,8 +59,7 @@ NAPALM DEATH
   dark yellow (`livePassed`) for the time played from the left, yellow for the time left, as the pill's.
   When the next band clashes, the bar also stripes the stretch it overlaps, from its start to the
   live set's end (what going there costs): the app's clash hatch (`src/ui/stripes.ts`; rising 45°, as
-  everywhere, ux-principles.md; 2 pt; `ClashStripes`), red lines only, so the played and left colours show through the gaps as
-  the bar runs into it. Only the next band's overlap, not every overlap of the live set (My plan's
+  everywhere, ux-principles.md; 2 pt; `ClashStripes`), red (`danger`) and dark red (`dangerSecondary`) alternating. The stretch is opaque: the bar's played and left colours don't show inside it. Only the next band's overlap, not every overlap of the live set (My plan's
   clash bar shows those): the card is about what comes next.
 - **Next row** (under the live row, when the day has a Must-see still to start): as the break row,
   with `NEXT:` before the name instead of a heading line (`planStrings.cardNextShort` with a colon,
