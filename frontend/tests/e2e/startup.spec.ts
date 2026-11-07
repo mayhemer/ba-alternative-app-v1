@@ -29,7 +29,7 @@ test('reaches every main section', async ({ appPage }) => {
     ['Program', 'Marshall'],
     ['Support Program', 'Exhibition'],
     ['My plan', 'Nothing planned for this day'],
-    ['Settings', 'Active'],
+    ['Settings', 'Festival Edition'],
   ];
   for (const [label, proof] of sections) {
     await appPage.getByText(label, { exact: true }).first().click();
@@ -65,6 +65,8 @@ test('persists the chosen edition across a reload', async ({ appPage }) => {
   await expect(appPage.getByText('LOADING ARTISTS…')).toHaveCount(0, { timeout: 20_000 });
 
   await appPage.getByText('Settings', { exact: true }).first().click();
+  // The editions are a dropdown: open it from the field showing the active one.
+  await appPage.getByText('BA2025', { exact: true }).click();
   await appPage.getByText('BA2024', { exact: true }).click();
   await appPage.getByText('Artists', { exact: true }).first().click();
   // A name only the 2024 lineup has.

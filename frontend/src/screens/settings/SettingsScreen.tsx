@@ -1,12 +1,13 @@
 import React from 'react';
 import { AppState, Linking, Platform, ScrollView, Switch, TouchableOpacity, View, ActivityIndicator } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text } from '../../ui/Text';
 import { useTopBar, useBottomBar } from '../../shell/ScreenUIContext';
 import { useAppContext } from '../../store/AppContext';
 import { useAuth } from '../../auth/AuthContext';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
 import { getSlugs } from '../../adapters/slugAdapter';
-import { accountModel, editionRowModels, nowCardSwitchModel } from './SettingsScreen.model';
+import { accountModel, editionDropdownModel, nowCardSwitchModel } from './SettingsScreen.model';
 import { colors } from '../../styling/tokens';
 import {
   getNowCardPermission,
@@ -192,25 +193,85 @@ function NowCardSection() {
   );
 }
 
+// ── Festival edition ──────────────────────────────────────────────────────────
+//
+// A dropdown: the field shows the active edition; tapping it opens the list of
+// editions just below, and picking one switches to it and closes the list.
+
+function EditionSection() {
+  const { state, setSelectedSlug } = useAppContext();
+  const { selectedSlug } = state;
+  const [slugs, setSlugs] = React.useState<string[]>([]);
+  const [isOpen, setIsOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    getSlugs().then(setSlugs);
+  }, []);
+
+  const toggle = React.useCallback(() => {
+    setIsOpen((open) => !open);
+  }, []);
+
+  const pick = React.useCallback((slug: string) => {
+    setIsOpen(false);
+    setSelectedSlug(slug);
+  }, [setSelectedSlug]);
+
+  const model = editionDropdownModel(slugs, selectedSlug);
+
+  return (
+    <View>
+      <Text className="text-textSecondary text-xs tracking-widest uppercase mb-4">
+        Festival Edition
+      </Text>
+      <TouchableOpacity
+        onPress={toggle}
+        accessibilityRole="button"
+        accessibilityLabel={model.accessibilityLabel}
+        accessibilityState={{ expanded: isOpen }}
+        className="py-3 px-4 bg-surface border border-borderMid rounded-lg flex-row items-center justify-between"
+      >
+        <Text className="text-textPrimary text-base font-semibold">{model.fieldLabel}</Text>
+        <Ionicons name={isOpen ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textMuted} />
+      </TouchableOpacity>
+      {isOpen && (
+        <View className="mt-1 bg-surfaceRaised border border-borderMid rounded-lg overflow-hidden">
+          {model.options.map((row, index) => (
+            <TouchableOpacity
+              key={row.key}
+              onPress={() => pick(row.key)}
+              accessibilityRole="button"
+              accessibilityLabel={row.label}
+              accessibilityState={{ selected: row.active }}
+              className={
+                index > 0
+                  ? 'py-3 px-4 border-t border-border flex-row items-center justify-between'
+                  : 'py-3 px-4 flex-row items-center justify-between'
+              }
+            >
+              <Text className={row.active ? 'text-accent text-base font-semibold' : 'text-textPrimary text-base'}>
+                {row.label}
+              </Text>
+              {row.active && <Ionicons name="checkmark" size={18} color={colors.accent} />}
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export function SettingsScreen() {
   useTopBar({ title: 'Settings' });
   useBottomBar({});
 
-  const { state, setSelectedSlug } = useAppContext();
-  const { selectedSlug } = state;
   const { bottomClearance } = useLayoutMode();
 
-  const [slugs, setSlugs] = React.useState<string[]>([]);
-
-  React.useEffect(() => {
-    getSlugs().then(setSlugs);
-  }, []);
-
   return (
-    // Scrollable: the account block, sign-in buttons and edition list already
-    // fill a portrait phone, and overflow well past a landscape one.
+    // Scrollable: the account block, sign-in buttons and the open edition list
+    // already fill a portrait phone, and overflow well past a landscape one.
     <ScrollView
       className="flex-1 bg-background"
       contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 32, paddingBottom: 32 + bottomClearance }}
@@ -219,32 +280,7 @@ export function SettingsScreen() {
 
       {nowCardAvailable && Platform.OS === 'android' && <NowCardSection />}
 
-      <Text className="text-textSecondary text-xs tracking-widest uppercase mb-4">
-        Festival Edition
-      </Text>
-
-      {editionRowModels(slugs, selectedSlug).map((row) => (
-        <TouchableOpacity
-          key={row.key}
-          onPress={() => setSelectedSlug(row.key)}
-          className="py-4 border-b border-border flex-row items-center justify-between"
-        >
-          <Text
-            className={
-              row.active
-                ? 'text-accent text-base font-semibold'
-                : 'text-textPrimary text-base'
-            }
-          >
-            {row.label}
-          </Text>
-          {row.active && (
-            <Text className="text-accent text-xs tracking-widest uppercase">
-              Active
-            </Text>
-          )}
-        </TouchableOpacity>
-      ))}
+      <EditionSection />
     </ScrollView>
   );
 }

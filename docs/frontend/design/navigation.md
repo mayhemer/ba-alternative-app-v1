@@ -96,4 +96,4 @@ when the festival edition changes, since ids are scoped to an edition.
 | Lens chip | `features/social/LensChip.model.ts` (drawn by `LensChipView`) | the lens and the focused friend; the panel's open state |
 | Lens panel | `features/social/LensPanel.model.ts` (each source a `LensScopeRow`) | the lens, the followed friends, the friend armed for removal |
 | "My schedule" (ends the lens panel and My plan's filter panel) | `features/social/MyScheduleShare.model.ts` (drawn by `MyScheduleShareView`) | the session and the share |
-| Settings | `screens/settings/SettingsScreen.model.ts` | the session (restoring, signed in, signed out, busy, error) and the editions |
+| Settings | `screens/settings/SettingsScreen.model.ts` | the session (restoring, signed in, signed out, busy, error) and the edition dropdown (the field shows the active edition; the open list marks it) |

@@ -27,9 +27,9 @@ name: reaches every section from the drawer
 - runFlow:
     file: common/open-section.yaml
     env: { SECTION: "Settings" }
-# The active edition's row is labelled "BA2025, ACTIVE" — asserting that exact
-# label also proves the e2e build started on the edition its fixtures cover.
-- assertVisible: "BA2025, ACTIVE"
+# The edition dropdown's field is labelled "Festival edition, BA2025" — asserting
+# that exact label also proves the e2e build started on the edition its fixtures cover.
+- assertVisible: "Festival edition, BA2025"
 - runFlow:
     file: common/open-section.yaml
     env: { SECTION: "Artists" }

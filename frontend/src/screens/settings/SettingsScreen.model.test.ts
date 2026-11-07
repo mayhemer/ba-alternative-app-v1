@@ -1,4 +1,4 @@
-import { accountModel, editionRowModels, nowCardSwitchModel, type AccountInputs } from './SettingsScreen.model';
+import { accountModel, editionDropdownModel, nowCardSwitchModel, type AccountInputs } from './SettingsScreen.model';
 
 // ── Settings, configured ──────────────────────────────────────────────────────
 //
@@ -31,16 +31,27 @@ describe('accountModel', () => {
   });
 });
 
-describe('editionRowModels', () => {
-  it('lists the editions in capitals, the active one marked', () => {
-    expect(editionRowModels(['ba2025', 'ba2027'], 'ba2027')).toEqual([
-      { key: 'ba2025', label: 'BA2025', active: false },
-      { key: 'ba2027', label: 'BA2027', active: true },
-    ]);
+describe('editionDropdownModel', () => {
+  it('shows the active edition in the field and lists every edition in capitals, the active one marked', () => {
+    expect(editionDropdownModel(['ba2025', 'ba2027'], 'ba2027')).toEqual({
+      fieldLabel: 'BA2027',
+      accessibilityLabel: 'Festival edition, BA2027',
+      options: [
+        { key: 'ba2025', label: 'BA2025', active: false },
+        { key: 'ba2027', label: 'BA2027', active: true },
+      ],
+    });
   });
 
-  it('marks none while no edition is chosen', () => {
-    expect(editionRowModels(['ba2025'], null).map((r) => r.active)).toEqual([false]);
+  it('asks to choose, marking none, while no edition is chosen', () => {
+    const model = editionDropdownModel(['ba2025'], null);
+    expect(model.fieldLabel).toBe('Choose an edition');
+    expect(model.accessibilityLabel).toBe('Festival edition, Choose an edition');
+    expect(model.options.map((r) => r.active)).toEqual([false]);
+  });
+
+  it('asks to choose when the chosen edition is not among those offered', () => {
+    expect(editionDropdownModel(['ba2025'], 'ba2018').fieldLabel).toBe('Choose an edition');
   });
 });
 

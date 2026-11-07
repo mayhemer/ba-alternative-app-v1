@@ -5,6 +5,8 @@ name: switching edition reloads the lineup
 - runFlow:
     file: common/open-section.yaml
     env: { SECTION: "Settings" }
+# The editions are a dropdown: open it, then pick.
+- tapOn: "Festival edition, .*"
 - tapOn: "BA2024"
 - runFlow:
     file: common/open-section.yaml

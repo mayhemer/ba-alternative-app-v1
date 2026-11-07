@@ -3,7 +3,8 @@
 // The account: a spinner while the session is being restored; signed in, the
 // name over the email (or the email alone); signed out, the two sign-in
 // buttons, which read "Signing in…" while busy, and the last error. Then the
-// editions, the active one marked.
+// editions as a dropdown: the field shows the active one, the open list every
+// edition with the active one marked.
 
 export type AccountModel =
   | { kind: 'restoring' }
@@ -38,8 +39,17 @@ export function accountModel({ isRestoringSession, isLoggedIn, name, email, isBu
 
 export type EditionRowModel = { key: string; label: string; active: boolean };
 
-export function editionRowModels(slugs: string[], selected: string | null): EditionRowModel[] {
-  return slugs.map((slug) => ({ key: slug, label: slug.toUpperCase(), active: slug === selected }));
+export type EditionDropdownModel = {
+  /** The active edition, or a prompt while none of those offered is chosen. */
+  fieldLabel: string;
+  accessibilityLabel: string;
+  options: EditionRowModel[];
+};
+
+export function editionDropdownModel(slugs: string[], selected: string | null): EditionDropdownModel {
+  const options = slugs.map((slug) => ({ key: slug, label: slug.toUpperCase(), active: slug === selected }));
+  const fieldLabel = options.find((option) => option.active)?.label ?? 'Choose an edition';
+  return { fieldLabel, accessibilityLabel: `Festival edition, ${fieldLabel}`, options };
 }
 
 // ── The lock-screen now card (Android) ────────────────────────────────────────
