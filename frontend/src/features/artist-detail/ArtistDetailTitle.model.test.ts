@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { artistDetailTitleModel, type ArtistDetailTitleInputs } from './ArtistDetailTitle.model';
 import type { DbArtist } from '../../types/backend';
 
@@ -7,7 +8,7 @@ import type { DbArtist } from '../../types/backend';
 // (web) or not; genre and country known or not. The title's room is the
 // content width less the padding, its own 8 px margin and the controls drawn:
 // the star 32, the ⚠ 24 + 4, the ✕ 30. A name shrinks to 80% when its estimate
-// (characters × 24 × 0.55, over 3 lines) does not fit.
+// (characters × 24 × the platform's ratio, over 3 lines) does not fit.
 
 function artist(name: string, localized: DbArtist['localized'] = []): DbArtist {
   return { slug: 't', artistId: 'a1', name, isPlayable: true, imageUrl: '', thumbUrl: '', url: '', localized };
@@ -17,8 +18,17 @@ function title(overrides: Partial<ArtistDetailTitleInputs> = {}) {
   return artistDetailTitleModel({ artist: artist('GOJIRA'), status: 'none', hasConflict: false, innerWidth: 400, padding: 16, isWeb: false, ...overrides });
 }
 
-// 57 characters: 57 × 13.2 / 3 = 250.8 px of estimated width.
-const LONG = 'A'.repeat(57);
+// A name long enough to fit 268 px but not 240 or 238 (see the tests below).
+// The size estimate differs per platform (CHAR_WIDTH_RATIO in ui/textFit), so
+// its length is picked per platform, each worked out by hand.
+const LONG = 'A'.repeat(Platform.select({
+  // 24 × 0.9625 = 23.1 px a character: 33 × 23.1 / 3 = 254.1 px.
+  ios: 33,
+  // 24 × 0.9625 = 23.1 px a character: 33 × 23.1 / 3 = 254.1 px.
+  android: 33,
+  // 24 × 0.9625 = 23.1 px a character: 33 × 23.1 / 3 = 254.1 px.
+  default: 33,
+}));
 
 describe('artistDetailTitleModel', () => {
   it('keeps a name that fits at 24', () => {
@@ -27,7 +37,7 @@ describe('artistDetailTitleModel', () => {
 
   it('shrinks a name only once the ⚠ takes its room', () => {
     // At 340 wide the room is 340 − 32 − 8 − 32 = 268 without the ⚠ and 240
-    // with it: 250.8 fits only without.
+    // with it: LONG fits only without.
     expect(title({ artist: artist(LONG), innerWidth: 340 }).fontSize).toBe(24);
     expect(title({ artist: artist(LONG), innerWidth: 340, hasConflict: true }).fontSize).toBeCloseTo(19.2);
   });

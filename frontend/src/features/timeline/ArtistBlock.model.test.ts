@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { artistBlockModel, blockSpan, type ArtistBlockInputs } from './ArtistBlock.model';
 import type { DbArtist, DbEvent } from '../../types/backend';
 
@@ -15,6 +16,25 @@ import type { DbArtist, DbEvent } from '../../types/backend';
 //   length — a block longer than the label repeat gap (repeated labels)
 //   clash  — none, an overlap inside the block, one reaching past its start
 // Expected values are worked out by hand.
+
+// The label's size estimate differs per platform (CHAR_WIDTH_RATIO in
+// ui/textFit), so the names either side of a limit are picked per platform,
+// each worked out by hand against the 35-minute block's label: 99.17 − 3 − 16 =
+// 80.17 px, 69.17 with the star.
+const NAMES = Platform.select({
+  // 12 × 0.9625 = 11.55 px a character.
+  //   GOJIRA       6 × 11.55 =  69.30 — fits 80.17, not 69.17
+  //   CRYSTALLAKE 11 × 11.55 = 127.05 — does not fit 80.17
+  ios: { fitsOnlyWithoutStar: 'GOJIRA', tooLong: 'CRYSTALLAKE' },
+  // 12 × 0.9625 = 11.55 px a character.
+  //   GOJIRA       6 × 11.55 =  69.30 — fits 80.17, not 69.17
+  //   CRYSTALLAKE 11 × 11.55 = 127.05 — does not fit 80.17
+  android: { fitsOnlyWithoutStar: 'GOJIRA', tooLong: 'CRYSTALLAKE' },
+  // 12 × 0.9625 = 11.55 px a character.
+  //   GOJIRA       6 × 11.55 =  69.30 — fits 80.17, not 69.17
+  //   CRYSTALLAKE 11 × 11.55 = 127.05 — does not fit 80.17
+  default: { fitsOnlyWithoutStar: 'GOJIRA', tooLong: 'CRYSTALLAKE' },
+});
 
 const WED = Date.parse('2025-08-06T06:00:00+02:00');
 const at = (hm: string): number => Date.parse(`2025-08-06T${hm}:00+02:00`);
@@ -85,17 +105,17 @@ describe('its label', () => {
   });
 
   it('shrinks to 80% when the name is estimated not to fit', () => {
-    // Label width 99.17 − 3 − 16 = 80.17. GOJIRA (6 × 6.6 = 39.6) fits;
-    // EXORCIZPHOBIA (13 × 6.6 = 85.8) does not.
-    expect(model({ name: 'GOJIRA' }).label?.fontSize).toBe(12);
-    expect(model({ name: 'EXORCIZPHOBIA' }).label?.fontSize).toBeCloseTo(9.6);
+    // Without the star the label has 80.17 px; see NAMES.
+    expect(model({ name: NAMES.fitsOnlyWithoutStar }).label?.fontSize).toBe(12);
+    expect(model({ name: NAMES.tooLong }).label?.fontSize).toBeCloseTo(9.6);
   });
 
   it('gives up the star\'s 11 px only when the star is drawn', () => {
-    // CRYSTALLAKE: 11 × 6.6 = 72.6 — fits 80.17, not 69.17.
-    expect(model({ name: 'CRYSTALLAKE', status: 'none' }).label?.fontSize).toBe(12);
-    expect(model({ name: 'CRYSTALLAKE', status: 'dont_go' }).label?.fontSize).toBe(12);
-    expect(model({ name: 'CRYSTALLAKE', status: 'maybe' }).label?.fontSize).toBeCloseTo(9.6);
+    // 80.17 px without the star, 69.17 with it; see NAMES.
+    const name = NAMES.fitsOnlyWithoutStar;
+    expect(model({ name, status: 'none' }).label?.fontSize).toBe(12);
+    expect(model({ name, status: 'dont_go' }).label?.fontSize).toBe(12);
+    expect(model({ name, status: 'maybe' }).label?.fontSize).toBeCloseTo(9.6);
   });
 
   it('does not repeat on a block shorter than the repeat gap', () => {

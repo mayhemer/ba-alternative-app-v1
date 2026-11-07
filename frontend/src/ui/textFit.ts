@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { TEXT_SHRINK_SCALE } from '../styling/tokens';
 
 // Font-size fitting for single- and few-line labels in a known-width box.
@@ -12,9 +13,15 @@ import { TEXT_SHRINK_SCALE } from '../styling/tokens';
 // still parsed into ParagraphAttributes but never read; only the old
 // architecture derived the floor from it.
 
-// Mean glyph advance as a fraction of font size, for Work Sans Bold. Only an
-// estimate — a label of unusually wide glyphs may ellipsize rather than shrink.
-const CHAR_WIDTH_RATIO = 0.55;
+// Glyph advance as a fraction of font size, for Work Sans Bold, tuned by eye
+// per platform. Deliberately above the font's mean advance (about 0.55): a
+// larger value shrinks labels sooner, so more of a long name shows. A label of
+// unusually wide glyphs may still ellipsize rather than shrink.
+const CHAR_WIDTH_RATIO = Platform.select({
+  ios: 0.9625,
+  android: 0.9625,
+  default: 0.9625,
+});
 
 /**
  * `baseFontSize`, or `TEXT_SHRINK_SCALE` of it when the label is estimated not

@@ -15,7 +15,7 @@ export const MAX_CONTENT_WIDTH = 700;
 export const FLOATING_SHADOW = '0px 8px 24px rgba(0, 0, 0, 0.85), 0px 0px 0px 1px rgba(0, 0, 0, 0.6)';
 
 // Single step-down applied to a label that will not fit its box at full size.
-// The one scale every fitted label shares — see utils/textFit.
+// The one scale every fitted label shares — see ui/textFit.
 export const TEXT_SHRINK_SCALE = 0.8;
 
 // ── Layout mode breakpoints ───────────────────────────────────────────────────

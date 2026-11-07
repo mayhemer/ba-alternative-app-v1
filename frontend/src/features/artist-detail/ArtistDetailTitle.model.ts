@@ -1,7 +1,7 @@
 import type { DbArtist } from '../../types/backend';
 import type { InterestStatus } from '../interests/InterestContext';
 import { getArtistLocalized } from '../../utils/localization';
-import { fitFontSize } from '../../utils/textFit';
+import { fitFontSize } from '../../ui/textFit';
 
 // ── The artist sheet's title row: what it shows ───────────────────────────────
 //
