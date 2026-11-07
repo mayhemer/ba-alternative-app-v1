@@ -1,12 +1,15 @@
 import React from 'react';
 import { Pressable, View, type AccessibilityState } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { topBarButtonFrame } from './topBarButton';
 
 // ── A "state + ⋮" chip in the top bar ─────────────────────────────────────────
 //
 // The frame the lens chip (Artists, Program) and My plan's filter chip share:
 // the state glyph on the left, a three-dot handle right against it. One frame,
 // so both chips look alike and leave the same room right of the now pill.
+// While its panel is open the chip is drawn open (ui/topBarButton); its model
+// draws the glyphs black then.
 
 /** Fits a 22 pt friend avatar or a 20 pt star. */
 const STATE_SLOT = 24;
@@ -20,6 +23,8 @@ const DOTS_SLOT = 14;
 const CHIP_HEIGHT = 32;
 
 const CHIP_STYLE = { flexDirection: 'row' as const, alignItems: 'center' as const, height: CHIP_HEIGHT };
+const CLOSED_STYLE = [CHIP_STYLE, topBarButtonFrame(false)];
+const OPEN_STYLE = [CHIP_STYLE, topBarButtonFrame(true)];
 const STATE_STYLE = { width: STATE_SLOT, height: STATE_SLOT, alignItems: 'center' as const, justifyContent: 'center' as const };
 const DOTS_STYLE = { width: DOTS_SLOT, alignItems: 'center' as const };
 
@@ -28,11 +33,13 @@ type Props = {
   accessibilityLabel: string;
   accessibilityState?: AccessibilityState;
   dotsColor: string;
+  /** Its panel is open: drawn on the open background. */
+  open: boolean;
   /** The state glyph: a star, an icon or a friend's avatar. */
   children: React.ReactNode;
 };
 
-export function TopBarChip({ onPress, accessibilityLabel, accessibilityState, dotsColor, children }: Props) {
+export function TopBarChip({ onPress, accessibilityLabel, accessibilityState, dotsColor, open, children }: Props) {
   return (
     <Pressable
       onPress={onPress}
@@ -40,7 +47,7 @@ export function TopBarChip({ onPress, accessibilityLabel, accessibilityState, do
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       accessibilityState={accessibilityState}
-      style={CHIP_STYLE}
+      style={open ? OPEN_STYLE : CLOSED_STYLE}
     >
       <View testID="topbar-chip-state" style={STATE_STYLE}>{children}</View>
       <View testID="topbar-chip-dots" style={DOTS_STYLE}>

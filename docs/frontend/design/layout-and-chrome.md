@@ -92,7 +92,10 @@ mean either pinning the bar to a fixed height (risking a clipped `DaySwitcher`) 
 than duplicated: it carries the coupling that opening the drawer dismisses the lens panel — the
 counterpart to the same rule in `LensChip`. It closes the drawer when it is open, and its label
 ("Open menu" / "Close menu") follows the drawer through `useIsDrawerOpen`, which re-renders it only
-when the drawer opens or closes, not on every navigation change. It renders nothing when `isWide`,
+when the drawer opens or closes, not on every navigation change. Its look follows the drawer too:
+while it is open the hamburger is drawn open, as the lens and filter chips are for their panels
+(`ui/topBarButton`, [my-plan.md](my-plan.md) › Filter chip): black on an accent background with
+rounded corners. It renders nothing when `isWide`,
 where the drawer is permanent.
 
 `LeftComponent` exists in `TopBarConfig` but no screen sets it; the BottomBar ignores it.

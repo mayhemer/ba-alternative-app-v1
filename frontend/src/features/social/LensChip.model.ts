@@ -2,13 +2,15 @@ import type { LensScope } from '../../lib/interestUtils';
 import type { InterestStatus } from '../interests/InterestContext';
 import { STAR_CONFIG, type StarIconName } from '../interests/StarButton.model';
 import { colors } from '../../styling/tokens';
+import { TOPBAR_BUTTON_OPEN_CONTENT } from '../../ui/topBarButton';
 
 // ── The lens chip: what it shows ──────────────────────────────────────────────
 //
 // "State + menu": the state slot shows whose schedule is shown — the grey empty
 // star for everything, the gold star for my picks (half when narrowed to
-// Maybe), the friend's avatar with a full star for a friend — and the three
-// dots turn accent while the lens panel is open.
+// Maybe), the friend's avatar with a full star for a friend. While the lens
+// panel is open the chip is drawn open (ui/topBarButton): the star and the dots
+// black on the accent; a friend's avatar stays as it is.
 
 export type LensChipModel = {
   key: 'lens-chip';
@@ -16,6 +18,8 @@ export type LensChipModel = {
     | { kind: 'star'; icon: StarIconName; color: string }
     | { kind: 'friend'; label: string; avatarUrl?: string };
   dotsColor: string;
+  /** The panel is open: drawn on the open background. */
+  open: boolean;
 };
 
 // A non-friend scope in the star vocabulary shared with the artist rows.
@@ -31,7 +35,8 @@ export function lensChipModel({ scope, friend, isOpen }: { scope: LensScope; fri
     key: 'lens-chip',
     state: friend !== undefined
       ? { kind: 'friend', label: friend.label, avatarUrl: friend.avatarUrl }
-      : { kind: 'star', icon: star.icon, color: star.color },
-    dotsColor: isOpen ? colors.accent : colors.textPrimary,
+      : { kind: 'star', icon: star.icon, color: isOpen ? TOPBAR_BUTTON_OPEN_CONTENT : star.color },
+    dotsColor: isOpen ? TOPBAR_BUTTON_OPEN_CONTENT : colors.textPrimary,
+    open: isOpen,
   };
 }

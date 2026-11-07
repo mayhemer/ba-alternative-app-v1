@@ -24,6 +24,7 @@ function PlanFilterChipViewBase({ item, onPress }: Props) {
       accessibilityLabel={strings.filters}
       accessibilityState={{ expanded: item.expanded }}
       dotsColor={item.dotsColor}
+      open={item.expanded}
     >
       <Ionicons testID={item.state.testID} name={item.state.icon} size={ICON_SIZE} color={item.state.color} />
     </TopBarChip>

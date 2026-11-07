@@ -24,8 +24,25 @@ describe('lensChipModel', () => {
       .toEqual({ kind: 'friend', label: 'Anna', avatarUrl: undefined });
   });
 
-  it('turns the dots accent while the panel is open', () => {
-    expect(lensChipModel({ scope: { kind: 'all' }, friend: undefined, isOpen: true }).dotsColor).toBe(colors.accent);
-    expect(lensChipModel({ scope: { kind: 'all' }, friend: undefined, isOpen: false }).dotsColor).toBe(colors.textPrimary);
+  it('is drawn open while the panel is open: the star and the dots black', () => {
+    expect(lensChipModel({ scope: { kind: 'all' }, friend: undefined, isOpen: true })).toEqual({
+      key: 'lens-chip',
+      state: { kind: 'star', icon: 'star-outline', color: colors.black },
+      dotsColor: colors.black,
+      open: true,
+    });
+    expect(lensChipModel({ scope: { kind: 'me', level: null }, friend: undefined, isOpen: true }).state)
+      .toEqual({ kind: 'star', icon: 'star', color: colors.black });
+  });
+
+  it('is drawn closed, with white dots, while the panel is closed', () => {
+    const closed = lensChipModel({ scope: { kind: 'all' }, friend: undefined, isOpen: false });
+    expect(closed.dotsColor).toBe(colors.textPrimary);
+    expect(closed.open).toBe(false);
+  });
+
+  it("keeps a friend's avatar as it is while the panel is open", () => {
+    expect(lensChipModel({ scope: { kind: 'friend', token: 't', level: null }, friend: { label: 'Anna' }, isOpen: true }).state)
+      .toEqual({ kind: 'friend', label: 'Anna', avatarUrl: undefined });
   });
 });

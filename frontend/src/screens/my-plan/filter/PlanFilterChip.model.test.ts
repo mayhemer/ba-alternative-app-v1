@@ -35,9 +35,15 @@ describe('planFilterChipModel', () => {
     });
   });
 
-  it('turns the dots accent while the panel is open', () => {
-    const open = planFilterChipModel({ level: 'must', isOpen: true });
-    expect(open.dotsColor).toBe(colors.accent);
-    expect(open.expanded).toBe(true);
+  it('is drawn open while the panel is open: the glyph and the dots black', () => {
+    expect(planFilterChipModel({ level: 'must', isOpen: true })).toEqual({
+      key: 'plan-filter-chip',
+      state: { testID: 'plan-filter-state-must', icon: 'star', color: colors.black },
+      dotsColor: colors.black,
+      expanded: true,
+    });
+    expect(planFilterChipModel({ level: 'conflicts', isOpen: true }).state).toEqual({
+      testID: 'plan-filter-state-conflicts', icon: 'warning-outline', color: colors.black,
+    });
   });
 });

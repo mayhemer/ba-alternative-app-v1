@@ -87,6 +87,7 @@ On every screen that has a top bar. On festival days it replaces the logo while 
 ### Filter chip (right, My plan only)
 
 - **Shape:** the same "state + ⋮" frame as the lens chip on Artists and Program (`TopBarChip`): a 24 pt state slot right against a 14 pt slot for the dots, 38 pt in all. The dots slot is narrower than the 20 pt glyph, whose dots are a thin column in its middle; 14 pt keeps them clear of a friend avatar's star badge.
+- **Open:** while its panel is open the chip is drawn open, as the lens chip and the hamburger are for theirs (`ui/topBarButton`): an accent background with 8 pt corners, reaching 4 pt past the glyphs on either side (padding cancelled by a negative margin, so nothing moves), and the glyph and the dots black on it, as on the selected day button. A friend's avatar in the lens chip stays as it is.
 - **One filter, four states.** The state slot shows the current one, with the same glyph as its button in the panel:
 
   | Filter | Glyph | Lists |
