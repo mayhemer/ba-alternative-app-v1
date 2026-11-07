@@ -5,7 +5,7 @@ import {
   eventsOverlap,
   type ConflictInputs,
 } from './conflictUtils';
-import { isConflictEligible } from './plan';
+import { isPlanEligible } from './plan';
 import type { DbArtist, DbEvent, DbStage } from '../types/backend';
 
 // Real captured data, normalized through the backend's own functions — see
@@ -43,10 +43,8 @@ describe('eventsOverlap', () => {
     expect(eventsOverlap(event('1', 0, 1), event('2', 1, 2))).toBe(false);
   });
 
-  it('ignores events longer than the conflict eligibility window', () => {
-    // A set running over two hours is something like an all-day installation,
-    // which should never be reported as clashing with a band.
-    expect(eventsOverlap(event('1', 0, 3), event('2', 0.5, 1))).toBe(false);
+  it('is the time test alone: which sets may clash is isPlanEligible\'s, applied before', () => {
+    expect(eventsOverlap(event('1', 0, 3), event('2', 0.5, 1))).toBe(true);
   });
 });
 
@@ -54,16 +52,26 @@ describe('eventsOverlap', () => {
 // ── Eligibility ───────────────────────────────────────────────────────────────
 //
 // The one rule deciding which sets the conflict calculation considers — and,
-// through the same predicate, which sets My plan lists.
+// through the same predicate, which sets My plan lists: a band's set of any
+// length, a support-programme set up to two hours.
 
-describe('isConflictEligible', () => {
-  it('takes sets up to two hours long, the boundary included', () => {
-    expect(isConflictEligible(event('1', 0, 1))).toBe(true);
-    expect(isConflictEligible(event('1', 0, 2))).toBe(true);
+describe('isPlanEligible', () => {
+  const band = { artistId: 'band', name: 'band', isPlayable: true } as DbArtist;
+  const support = { artistId: 'support', name: 'support', isPlayable: false } as DbArtist;
+
+  it('takes a band\'s set of any length', () => {
+    expect(isPlanEligible(event('1', 0, 1), band)).toBe(true);
+    expect(isPlanEligible(event('1', 0, 2.5), band)).toBe(true);
+    expect(isPlanEligible(event('1', 0, 8), band)).toBe(true);
   });
 
-  it('leaves out anything longer', () => {
-    expect(isConflictEligible(event('1', 0, 2.5))).toBe(false);
+  it('takes a support-programme set up to two hours long, the boundary included', () => {
+    expect(isPlanEligible(event('1', 0, 1), support)).toBe(true);
+    expect(isPlanEligible(event('1', 0, 2), support)).toBe(true);
+  });
+
+  it('leaves out a longer support-programme set', () => {
+    expect(isPlanEligible(event('1', 0, 2.5), support)).toBe(false);
   });
 });
 
@@ -88,8 +96,10 @@ const INPUTS: ConflictInputs = {
 // A genuinely clashing pair, found in the real schedule rather than invented —
 // so these cases exercise the same shapes the app sees.
 function findClashingPair(): [string, string] {
-  for (const a of EVENTS) {
-    for (const b of EVENTS) {
+  const artistById = new Map(ARTISTS.map((a) => [a.artistId, a]));
+  const eligible = EVENTS.filter((e) => isPlanEligible(e, artistById.get(e.artistId)!));
+  for (const a of eligible) {
+    for (const b of eligible) {
       if (a.artistId !== b.artistId && eventsOverlap(a, b)) {
         return [a.artistId, b.artistId];
       }
@@ -180,11 +190,11 @@ describe('conflictGroupOf', () => {
 
 // ── Sets over two hours in the full calculation ──────────────────────────────
 //
-// The eligibility rule applied by the pairing itself, not just by eventsOverlap:
-// a long set the user starred clashes with nothing, and the sets it covers clash
-// only with each other.
+// The eligibility rule applied by the pairing itself: a support-programme set
+// over two hours the user starred clashes with nothing, and the sets it covers
+// clash only with each other; a band's set over two hours clashes as any other.
 
-describe('sets over two hours', () => {
+describe('support-programme sets over two hours', () => {
   // 1: all-day exhibition (8 h) over everything. 2 and 3 clash with each other.
   // 4 sits under the exhibition alone. Artist 5 has a long set and a short one
   // that clashes with 3.
@@ -192,7 +202,7 @@ describe('sets over two hours', () => {
     ['1', 'a1', 0, 8], ['2', 'a2', 1, 2], ['3', 'a3', 1.5, 2.5], ['4', 'a4', 5, 6],
     ['5', 'a5', 0, 3], ['6', 'a5', 2.25, 3],
   ];
-  const artists = ['a1', 'a2', 'a3', 'a4', 'a5'].map((artistId) => ({ artistId, name: artistId } as DbArtist));
+  const artists = ['a1', 'a2', 'a3', 'a4', 'a5'].map((artistId) => ({ artistId, name: artistId, isPlayable: false } as DbArtist));
   const artistEvents: Record<string, DbEvent[]> = {};
   for (const [id, artistId, from, to] of specs) {
     (artistEvents[artistId] ??= []).push({ ...event(id, from, to), artistId });
@@ -222,6 +232,27 @@ describe('sets over two hours', () => {
     const overlaps = computeConflictOverlaps(interests, inputs);
     expect([...overlaps.keys()].sort()).toEqual(['2', '3', '6']);
     expect(overlaps.get('2')).toEqual([{ from: T0 + 1.5 * HOUR, to: T0 + 2 * HOUR }]);
+  });
+});
+
+describe("a band's set over two hours", () => {
+  // 1: a band's 3 h set. 2 starts under it, 3 after it ends.
+  const specs: [string, number, number][] = [['1', 0, 3], ['2', 1, 2], ['3', 3, 4]];
+  const artists = specs.map(([id]) => ({ artistId: `a${id}`, name: `A${id}`, isPlayable: true } as DbArtist));
+  const artistEvents = Object.fromEntries(specs.map(([id, from, to]) => [`a${id}`, [event(id, from, to)]]));
+  const inputs: ConflictInputs = { artists, stages: [], artistEvents };
+  const interests = mustSee('a1', 'a2', 'a3');
+
+  it('clashes with the set it covers, and with nothing after it ends', () => {
+    const byId = new Map(computeConflictEntries(interests, inputs).map((e) => [e.event.eventId, e]));
+    expect([...byId.keys()]).toEqual(['1', '2']);
+    expect(byId.get('1')?.overlappingEvents.map((e) => e.eventId)).toEqual(['2']);
+    expect(byId.get('2')?.overlappingEvents.map((e) => e.eventId)).toEqual(['1']);
+  });
+
+  it('gets an overlap bar where it covers the other set', () => {
+    const overlaps = computeConflictOverlaps(interests, inputs);
+    expect(overlaps.get('1')).toEqual([{ from: T0 + 1 * HOUR, to: T0 + 2 * HOUR }]);
   });
 });
 

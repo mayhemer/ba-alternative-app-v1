@@ -1,7 +1,7 @@
 import type { DbArtistEventMap } from '../cache/cacheService';
 import { getStageLocalized } from '../utils/localization';
 import type { DbArtist, DbEvent, DbStage } from '../types/backend';
-import { isConflictEligible, mustSeeSets } from './plan';
+import { mustSeeSets } from './plan';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -47,10 +47,9 @@ export function computeConflictEntries(
   const artistById = Object.fromEntries(artists.map((a) => [a.artistId, a]));
 
   // The Must-sees' sets that can clash at all, from the plan's one rule
-  // (lib/plan.ts). Eligibility is checked there, once per set, rather than by
-  // eventsOverlap twice per pair below: under
-  // an interpreter (Hermes; Reassure's --max-opt=1) every call in the pairing
-  // loop is paid in full.
+  // (isPlanEligible, lib/plan.ts), checked there once per set rather than
+  // twice per pair below: under an interpreter (Hermes; Reassure's
+  // --max-opt=1) every call in the pairing loop is paid in full.
   // TODO: may want a filter that will include "maybe" into the conflict list
   const markedEvents = mustSeeSets(interests, { artists, artistEvents }).map((s) => s.event);
 
@@ -170,8 +169,11 @@ export function clashesWithLive(event: DbEvent, liveMusts: DbEvent[]): boolean {
   return liveMusts.some((live) => live.eventId !== event.eventId && eventsOverlap(live, event));
 }
 
-/** Returns true if two events' time ranges intersect (strict overlap). */
+/**
+ * Returns true if two events' time ranges intersect (strict overlap). The time
+ * test alone: which sets may clash at all is isPlanEligible's (lib/plan.ts),
+ * applied once when the picked sets are built, so callers pass only those.
+ */
 export function eventsOverlap(a: DbEvent, b: DbEvent): boolean {
-  if (!isConflictEligible(a) || !isConflictEligible(b)) { return false; }
   return a.dateFrom < b.dateTo && b.dateFrom < a.dateTo;
 }

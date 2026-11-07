@@ -42,7 +42,7 @@ You are a senior engineer with experience in writing expo/react native/aws fulls
 - Unit tests for each element's model function, boundaries included.
 - Configuration tests for each element and screen. Define the dimensions that affect it at the top of the test file, then test their corner cases (not the whole product). Typical dimensions:
   - filter state: the lens, Show Maybe, conflicts only;
-  - the data: sets with different interests (Must-see, Maybe, none, don't go), in the orders that matter (a Maybe before the first Must-see, overlapping sets, sets over 2 h);
+  - the data: sets with different interests (Must-see, Maybe, none, don't go), in the orders that matter (a Maybe before the first Must-see, overlapping sets, a support set over 2 h, a band's set over 2 h);
   - time: another day; today with now before 08:00, at and around each set's start and end, in a gap, after the last set;
   - festival: a festival day, before the festival, after it.
 - Write each expected value by hand. Never compute it with the code under test.

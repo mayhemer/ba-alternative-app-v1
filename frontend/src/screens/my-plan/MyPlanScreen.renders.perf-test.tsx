@@ -12,7 +12,7 @@ import { PlanProvider, usePlanFilters, usePlanStore } from './PlanContext';
 import { useInterestCycle } from '../../features/interests/InterestContext';
 import { createDataCollector, getFestivalDays, hydrateInterests, populateCache, setInterest } from '../../cache/cacheService';
 import { setPlanFilters, type PlanLevel } from '../../store/uiStatePersistence';
-import { isConflictEligible } from '../../lib/plan';
+import { isPlanEligible } from '../../lib/plan';
 import { setCurrentTimeMs } from '../../utils/clock';
 import { getFestivalDayStart } from '../../utils/festivalTime';
 import type { DbArtist, DbCategory, DbEvent, DbStage } from '../../types/backend';
@@ -24,8 +24,8 @@ import scheduleFixture from '../../../tests/fixtures/generated/ba2025/schedule.j
 
 // ── Render counts for My plan ─────────────────────────────────────────────────
 //
-// The screen and the now pill on a realistic day: of Wednesday's 55 sets of up
-// to two hours, every third is a Must-see and the one after it a Maybe. The
+// The screen and the now pill on a realistic day: of Wednesday's 55 sets on the
+// plan (isPlanEligible), every third is a Must-see and the one after it a Maybe. The
 // count is per commit of the whole tree, so it gates a memo or a context that
 // starts committing more often; which rows re-render inside a commit is checked
 // by the render counts in MyPlanScreen.test.tsx.
@@ -37,9 +37,11 @@ const NOW = Date.parse('2025-08-06T15:00:00+02:00');
 const WEDNESDAY = getFestivalDayStart(NOW);
 
 const EVENTS = scheduleFixture as unknown as DbEvent[];
+const ARTIST_BY_ID = new Map((artistsFixture as unknown as DbArtist[]).map((a) => [a.artistId, a]));
+const onPlan = (e: DbEvent): boolean => isPlanEligible(e, ARTIST_BY_ID.get(e.artistId)!);
 
 const DAY_SETS = EVENTS
-  .filter((e) => getFestivalDayStart(e.dateFrom) === WEDNESDAY && isConflictEligible(e))
+  .filter((e) => getFestivalDayStart(e.dateFrom) === WEDNESDAY && onPlan(e))
   .sort((a, b) => a.dateFrom - b.dateFrom || a.eventId.localeCompare(b.eventId));
 
 const PICKS: Record<string, 'will_go' | 'maybe'> = {};
@@ -55,7 +57,7 @@ DAY_SETS.forEach((e, i) => {
 const THURSDAY = WEDNESDAY + 24 * 60 * 60 * 1000;
 const THURSDAY_PICKS: Record<string, 'will_go' | 'maybe'> = {};
 EVENTS
-  .filter((e) => getFestivalDayStart(e.dateFrom) === THURSDAY && isConflictEligible(e))
+  .filter((e) => getFestivalDayStart(e.dateFrom) === THURSDAY && onPlan(e))
   .sort((a, b) => a.dateFrom - b.dateFrom || a.eventId.localeCompare(b.eventId))
   .forEach((e, i) => {
     if (PICKS[e.artistId] !== undefined) {

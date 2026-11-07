@@ -6,7 +6,7 @@ import type { DbArtist, DbEvent } from '../../types/backend';
 //
 // Dimensions: the filter it is on (Only conflicts … All sets); a set's level on
 // the plan (Must-see, clashing or not; Maybe; an unpicked band) or none at all
-// (an unpicked support set, a "don't go", a set over 2 h: not in planPicks); an
+// (an unpicked support set, a "don't go", a support set over 2 h: not in planPicks); an
 // artist with no set. And what a landing widens first.
 
 const SLUG = 'plscopetest';

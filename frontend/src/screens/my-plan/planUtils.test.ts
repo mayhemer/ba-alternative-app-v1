@@ -34,8 +34,9 @@ import type { DbArtist, DbEvent, DbStage } from '../../types/backend';
 //              Must-see; a Maybe ending after a clash group (shortens the gap
 //              after it); a Maybe before the first Must-see; a day of Maybes
 //              only; a clash group under a gap, back to back with the set above
-//              (no gap), and right under the start cap; sets over 2 h and of
-//              exactly 2 h; a set after midnight; unpicked and "don't go" sets;
+//              (no gap), and right under the start cap; support-programme sets
+//              over 2 h and of exactly 2 h; a band's set over 2 h, in a clash
+//              group; a set after midnight; unpicked and "don't go" sets;
 //              a support-programme set, picked or not; a day whose first set is
 //              unpicked; a day with unpicked sets only; an empty day
 //   time     — another day (future, past); today before 08:00; in the
@@ -127,25 +128,31 @@ const B2B: Spec[] = [
   ['5', 'E', 's2', at(10, '12:30'), at(10, '13:30'), 'will_go'],
 ];
 
-/** The day plus sets over 2 h (never listed), one of exactly 2 h, and an early Maybe. */
+/** The day plus support-programme sets over 2 h (never listed), one of exactly 2 h, and an early Maybe. */
 const LONG: Spec[] = [
   ...DAY,
-  ['20', 'All-day exhibition', 's2', at(7, '12:00'), at(7, '20:00'), 'will_go'],
-  ['21', 'Long maybe', 's2', at(7, '18:00'), at(7, '21:00'), 'maybe'],
-  ['22', 'Exactly two hours', 's2', at(8, '14:00'), at(8, '16:00'), 'will_go'],
+  ['20', 'All-day exhibition', 's2', at(7, '12:00'), at(7, '20:00'), 'will_go', 'support'],
+  ['21', 'Long maybe', 's2', at(7, '18:00'), at(7, '21:00'), 'maybe', 'support'],
+  ['22', 'Exactly two hours', 's2', at(8, '14:00'), at(8, '16:00'), 'will_go', 'support'],
   ['23', 'Early maybe', 's3', at(7, '13:00'), at(7, '13:40'), 'maybe'],
+];
+
+/** The day plus a band's 3 h set over Emperor and Wolves in the Throne Room. */
+const LONG_BAND: Spec[] = [
+  ...DAY,
+  ['24', 'Night-long band', 's2', at(7, '22:00'), at(8, '01:00'), 'will_go'],
 ];
 
 /**
  * Thursday's day plus sets you haven't picked: a band between Blood Incantation
- * and Dark Funeral, and one over 2 h; Friday's support programme (a picked
+ * and Dark Funeral, and a picked support-programme set over 2 h; Friday's support programme (a picked
  * signing, an unpicked film) and an unpicked band; Saturday a day opening with
  * an unpicked band; Sunday a day of unpicked sets only.
  */
 const ALL: Spec[] = [
   ...DAY,
   ['30', 'Afternoon band', 's3', at(7, '16:30'), at(7, '16:50'), 'none'],
-  ['31', 'Unpicked marathon', 's3', at(7, '12:00'), at(7, '20:00'), 'none'],
+  ['31', 'Support marathon', 's3', at(7, '12:00'), at(7, '20:00'), 'will_go', 'support'],
   ['32', 'Signing session', 's2', at(8, '15:00'), at(8, '15:30'), 'will_go', 'support'],
   ['33', 'Film screening', 's3', at(8, '14:00'), at(8, '14:40'), 'none', 'support'],
   ['34', 'Late band', 's1', at(8, '16:00'), at(8, '16:40'), 'none'],
@@ -403,7 +410,7 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
   ]],
 
   // All sets
-  ['All sets: unpicked sets listed too, never a "don\'t go" pick or a set over 2 h', ALL, { now: at(7, '19:23'), filter: 'all' }, [
+  ['All sets: unpicked sets listed too, never a "don\'t go" pick or a support set over 2 h', ALL, { now: at(7, '19:23'), filter: 'all' }, [
     'cap start',
     'must Hooded Menace — past "done"',
     'gap "50 min"',
@@ -519,7 +526,7 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
   ]],
 
   // Sets over two hours
-  ['sets over 2 h: not listed, and the gaps and clashes stay as they are', LONG, { now: at(7, '19:23'), filter: 'maybe' }, [
+  ['support sets over 2 h: not listed, and the gaps and clashes stay as they are', LONG, { now: at(7, '19:23'), filter: 'maybe' }, [
     'cap start',
     'maybe Early maybe — past',
     'gap "20 min"',
@@ -530,11 +537,20 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
     ...WITH_MAYBES_AHEAD.slice(11),
     'cap end',
   ]],
-  ['sets over 2 h do not start the day: the break counts to the first listed set', LONG, { now: at(7, '11:00'), filter: 'maybe' }, [
+  ['support sets over 2 h do not start the day: the break counts to the first listed set', LONG, { now: at(7, '11:00'), filter: 'maybe' }, [
     'gap now "−2 h" opening to Maybe', 'maybe Early maybe — upcoming', 'gap "20 min"', ...WITH_MAYBES_AHEAD, 'cap end',
   ]],
-  ['a set of exactly 2 h is listed', LONG, { day: FRI, now: at(7, '19:23') }, [
+  ['a support set of exactly 2 h is listed', LONG, { day: FRI, now: at(7, '19:23') }, [
     'cap start', 'must Spectral Wound — upcoming', 'gap "50 min"', 'must Exactly two hours — upcoming', 'cap end',
+  ]],
+  ["a band's set over 2 h is listed, heading the clash group it covers", LONG_BAND, { now: at(7, '07:00') }, [
+    'cap start',
+    ...MUSTS_AHEAD.slice(0, 8),
+    'gap "1 h 30"',
+    'must Night-long band ⚠ — upcoming',
+    'must Emperor — upcoming',
+    'must Wolves in the Throne Room — upcoming',
+    'cap end',
   ]],
 
   // Other days

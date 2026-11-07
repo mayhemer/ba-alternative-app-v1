@@ -3,12 +3,12 @@ import type { DbArtist, DbEvent } from '../types/backend';
 
 // ── The sets a pick puts on the plan ──────────────────────────────────────────
 //
-// One rule for the conflict calculation, My plan's list and the now pill: which
-// of a pick's sets count at all. They all start here, so whatever one counts or
+// One rule for the conflict calculation, My plan's list, the now pill and the
+// now card: which of a pick's sets count at all. They all start here, so whatever one counts or
 // leaves out, the others do the same.
 
 const HOUR_MS = 60 * 60 * 1000;
-const EVENT_DURATION_MAX_FOR_CONFLICT_ELIGIBILITY_MS = 2 * HOUR_MS;
+const SUPPORT_SET_DURATION_MAX_FOR_PLAN_MS = 2 * HOUR_MS;
 
 /**
  * A day's break window opens two hours after the 06:00 day boundary: 08:00. My
@@ -17,15 +17,16 @@ const EVENT_DURATION_MAX_FOR_CONFLICT_ELIGIBILITY_MS = 2 * HOUR_MS;
 export const BREAK_WINDOW_OFFSET_MS = 2 * HOUR_MS;
 
 /**
- * Whether a set takes part in conflicts at all: no longer than two hours. Longer
- * ones are things like all-day exhibitions, which clash with everything.
+ * Whether a set is on the plan at all: a band's set of any length, a support-
+ * programme set up to two hours. Longer support sets are things like all-day
+ * exhibitions, which would clash with everything.
  *
- * The one eligibility rule shared by the conflict calculation, My plan's list
- * and the now pill: the plan lists exactly the sets considered here, so they
- * never disagree. Change it here, for all of them.
+ * The one eligibility rule shared by the conflict calculation, My plan's list,
+ * the now pill and the now card: the plan lists exactly the sets considered
+ * here, so they never disagree. Change it here, for all of them.
  */
-export function isConflictEligible(event: DbEvent): boolean {
-  return event.dateTo - event.dateFrom <= EVENT_DURATION_MAX_FOR_CONFLICT_ELIGIBILITY_MS;
+export function isPlanEligible(event: DbEvent, artist: DbArtist): boolean {
+  return artist.isPlayable || event.dateTo - event.dateFrom <= SUPPORT_SET_DURATION_MAX_FOR_PLAN_MS;
 }
 
 /** How a set is on the plan: a Must-see, a Maybe, or (All sets) a band not picked. */
@@ -47,7 +48,7 @@ function plannedSets(
       continue;
     }
     for (const event of artistEvents[artist.artistId] ?? []) {
-      if (isConflictEligible(event)) {
+      if (isPlanEligible(event, artist)) {
         sets.push({ event, artist, level });
       }
     }

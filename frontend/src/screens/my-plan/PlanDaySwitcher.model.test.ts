@@ -13,7 +13,8 @@ import type { DbArtist, DbEvent, DbStage } from '../../types/backend';
 // Dimensions, and the corner cases tested for each:
 //   filters  — Show only conflicts off / on (Show Maybe never changes the buttons)
 //   data     — a Must-see clash; a Maybe over a Must-see; a "don't go" over a
-//              Must-see; a set over 2 h over a Must-see; sets back to back; a
+//              Must-see; a support set over 2 h over a Must-see; a band's set
+//              over 2 h over a Must-see; sets back to back; a
 //              clash across 06:00, whose sets start on two festival days
 //   time     — now on a festival day; the 05:59 before the next day
 //   festival — a festival day; before the festival; after it
@@ -28,10 +29,11 @@ const SAT = at('2025-08-09T06:00:00+02:00');
 const DAYS = [WED, THU, FRI, SAT];
 
 type Pick = 'will_go' | 'maybe' | 'dont_go';
-type Set = { id: string; from: string; to: string; pick: Pick };
+/** `support`: an item of the support programme, not a band of the Program. */
+type Set = { id: string; from: string; to: string; pick: Pick; support?: true };
 
 function inputs(sets: Set[], overrides: Partial<PlanDaySwitcherInputs> = {}): PlanDaySwitcherInputs {
-  const artists: DbArtist[] = sets.map((s) => ({ slug: 't', artistId: s.id, name: s.id, isPlayable: true, imageUrl: '', thumbUrl: '', url: '', localized: [] }));
+  const artists: DbArtist[] = sets.map((s) => ({ slug: 't', artistId: s.id, name: s.id, isPlayable: s.support !== true, imageUrl: '', thumbUrl: '', url: '', localized: [] }));
   const events: DbEvent[] = sets.map((s) => ({ slug: 't', eventId: `e${s.id}`, artistId: s.id, stageId: 's', categoryId: 'c', dateFrom: at(s.from), dateTo: at(s.to) }));
   const stages: DbStage[] = [{ slug: 't', stageId: 's', imageUrl: '', thumbUrl: '', localized: [] }];
   return {
@@ -81,11 +83,18 @@ describe('the clash stripes', () => {
     ])))).toEqual([]);
   });
 
-  it('skip a Must-see over 2 h, which clashes with nothing', () => {
+  it('skip a support Must-see over 2 h, which clashes with nothing', () => {
     expect(striped(planDaySwitcherModel(inputs([
-      { id: 'exhibition', from: '2025-08-09T12:00:00+02:00', to: '2025-08-09T14:01:00+02:00', pick: 'will_go' },
+      { id: 'exhibition', from: '2025-08-09T12:00:00+02:00', to: '2025-08-09T14:01:00+02:00', pick: 'will_go', support: true },
       { id: 'a', from: '2025-08-09T13:00:00+02:00', to: '2025-08-09T13:45:00+02:00', pick: 'will_go' },
     ])))).toEqual([]);
+  });
+
+  it("mark a band's Must-see over 2 h over a Must-see: it clashes as any other", () => {
+    expect(striped(planDaySwitcherModel(inputs([
+      { id: 'long', from: '2025-08-09T12:00:00+02:00', to: '2025-08-09T14:01:00+02:00', pick: 'will_go' },
+      { id: 'a', from: '2025-08-09T13:00:00+02:00', to: '2025-08-09T13:45:00+02:00', pick: 'will_go' },
+    ])))).toEqual(['Sat']);
   });
 
   it('skip Must-sees back to back: one ending as the next starts is no clash', () => {

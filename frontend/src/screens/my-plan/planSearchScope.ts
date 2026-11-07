@@ -12,7 +12,7 @@ import { planStrings } from './planStrings';
 // filter from where it is out to All sets, each listing by planLevelLists, the
 // rule buildPlanDay lists by. A landing widens the filter to the first that
 // lists the set, then asks the screen to land on its row (requestSet). Anything
-// else (an unpicked support set, a "don't go", a set over 2 h) goes under where
+// else (an unpicked support set, a "don't go", a support set over 2 h) goes under where
 // it is and opens the artist sheet.
 
 /** The filters from the narrowest out. */

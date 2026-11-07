@@ -48,7 +48,7 @@ Related: [overview.md](../../general/design/overview.md) (app-wide design), [lay
 └──────────────────────────────────────────┘
 ```
 
-- **Same sets as the conflict calculation.** My plan lists exactly the sets the conflict calculation considers, through one shared source in `lib/plan.ts`: the eligibility rule (`isConflictEligible`) and the picked sets built on it (`mustSeeSets` for the conflicts and the now pill, `planPicks` for the list). Sets longer than 2 hours (all-day exhibitions, say) are out of both: not listed, not in the now pill, never clashing. The plan and the conflict logic must stay on one source feed and one rule. A change to either goes through the shared logic, never a plan-only or conflict-only filter or count. Under the **All sets** filter the list also shows sets you haven't picked; the same rule decides which of them can be listed.
+- **Same sets as the conflict calculation.** My plan lists exactly the sets the conflict calculation considers, through one shared source in `lib/plan.ts`: the eligibility rule (`isPlanEligible`) and the picked sets built on it (`mustSeeSets` for the conflicts, the now pill and the now card, `planPicks` for the list). A band's set counts whatever its length; a support-programme set counts only up to 2 hours, so longer ones (all-day exhibitions, say) are out of all of them: not listed, not in the now pill or on the now card, never clashing. The plan and the conflict logic must stay on one source feed and one rule. A change to either goes through the shared logic, never a plan-only or conflict-only filter or count. Under the **All sets** filter the list also shows sets you haven't picked; the same rule decides which of them can be listed.
 - **One model per element.** Every element (set row, gap, cap, spacer, empty day, now pill) has a pure model next to its component (`screens/my-plan/<Element>.model.ts`). The model computes everything the element shows: height, texts, progress, where the now arrow sits. It works from the raw inputs that element depends on, and the component draws only the model. `buildPlanDay` decides only which elements a day lists, and in what order. Height and label can't disagree because they come from the same inputs: a gap drawn as 2 h says `2 h`.
 - **One festival day per view.**
 - Festival days run **06:00 → 06:00** (`DAY_BOUNDARY_HOUR`), so a 00:30 set belongs to the previous day.
@@ -202,7 +202,7 @@ What each element shows comes from its own model (see Principles), built from th
 
 ## Conflicts
 
-- **Which sets clash:** Must-see × Must-see only, using the same calculation as the timeline (`computeConflictOverlaps`). Sets over 2 h never clash (`eventsOverlap`).
+- **Which sets clash:** Must-see × Must-see only, using the same calculation as the timeline (`computeConflictOverlaps`). Support-programme sets over 2 h never clash: `isPlanEligible` leaves them out before the pairing, and `eventsOverlap` is the time test alone. A band's set over 2 h clashes as any other.
 - **Clash bar:** on the row's **right edge**, 9.75 pt wide.
   - Each overlap interval is drawn at its place along the row's start → end, top to bottom.
   - Same stripes as the timeline's conflict bar: `danger` / `dangerMuted`, 2 pt each, at 45°.
