@@ -126,6 +126,10 @@ NEXT: HOODED MENACE                                    break
   the same card, in its larger expanded frame, which makes it a little taller (open).
 - No bar (see Battery). A long stage name ends in an ellipsis: RemoteViews can't move it to a line of
   its own.
+- The layouts use only the views RemoteViews can draw (`FrameLayout`, `LinearLayout`, `TextView`,
+  `ImageView`, `Chronometer`, …), never a plain `View`: with one, the system can't draw the card and
+  silently removes it (reason 4 in the `notification_canceled` event log).
+  `modules/now-card/androidLayouts.test.ts` checks every layout file.
 - **Colours** tell the state as on iOS. The shade follows the system's dark mode on Android 10+ and is
   light on older ones, so `values/colors.xml` darkens the yellow, red and blue; `values-night` uses
   the app's tokens.
