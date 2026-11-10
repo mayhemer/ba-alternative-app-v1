@@ -12,7 +12,7 @@ language chosen in Settings wins over the system's.
 | Every string the app shows, English and Czech | `src/i18n/strings.ts` |
 | Which language the app shows, and the rule that picks it | `src/i18n/language.ts` |
 | Where its inputs come from: the system language (`expo-localization`) and the choice stored from Settings (AsyncStorage, `app:language`) | `src/i18n/languageSources.ts` |
-| The Settings rows | `screens/settings/SettingsScreen.model.ts` (`languageOptionsModel`) |
+| The Settings dropdown | `screens/settings/SettingsScreen.model.ts` (`languageDropdownModel`) |
 | Picking the API's localized entries (bios, genre, country, stage, category names) | `src/utils/localization.ts` |
 | The Android now card's screen-reader label for its clash icon | `modules/now-card/android/src/main/res/values*/strings.xml` |
 
@@ -67,7 +67,7 @@ gives English). `language.ts` holds both inputs and the result; `languageSources
 2. `hydrateLocalState` (store/uiStatePersistence) restores the choice stored from Settings
    (`loadLanguageChoice`), and StartupGate waits for it, so the app opens in that language. Only
    the splash's "Loading…" can show in the system's language first, for the moment the read takes.
-3. Picking a row in Settings (`saveLanguageChoice`) switches at once and stores the choice.
+3. Picking a language in Settings' dropdown (`saveLanguageChoice`) switches at once and stores the choice.
 4. While the app runs, `useAppLanguage()` in `App` follows a change of the system language
    (`useLocales()`) and of the choice. `App` keys `AppContent` by the language, so every screen
    remounts in the new one. The session (`AuthProvider`), the data cache and `StartupGate` stay
@@ -85,7 +85,7 @@ gives English). `language.ts` holds both inputs and the result; `languageSources
 ## Adding a language
 
 Add its dictionary to `strings.ts` (typed `Strings`) and its name to `LANGUAGE_NAMES`; the code to
-`Language`, `LANGUAGE_CHOICES` and `chooseLanguage`, and a row to `languageOptionsModel`; the locale
+`Language`, `LANGUAGE_CHOICES` and `chooseLanguage`, and an option to `languageDropdownModel`; the locale
 to `supportedLocales` in `app.json`; and a `values-<code>` folder for the Android resource.
 
 ## Tests
@@ -94,7 +94,7 @@ to `supportedLocales` in `app.json`; and a `values-<code>` folder for the Androi
 - `i18n/languageSources.test.tsx`: the stored choice at launch, choosing in Settings, following a
   system change while the app runs.
 - `store/uiStatePersistence.test.ts`: the choice restored before the app shows.
-- `screens/settings/SettingsScreen.model.test.ts`: the Settings rows.
+- `screens/settings/SettingsScreen.model.test.ts`: the Settings dropdown.
 - `i18n/strings.test.ts`: both dictionaries complete, the plural forms, weekdays.
 - `utils/localization.test.ts`: the API's entries by language, with the fallbacks.
 - In Czech, rendered: the artist sheet (Czech bio, day labels, the clash line) and the drawer.

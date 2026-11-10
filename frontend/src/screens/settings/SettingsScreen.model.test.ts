@@ -1,4 +1,4 @@
-import { accountModel, editionDropdownModel, languageOptionsModel, nowCardSwitchModel, type AccountInputs } from './SettingsScreen.model';
+import { accountModel, editionDropdownModel, languageDropdownModel, nowCardSwitchModel, type AccountInputs } from './SettingsScreen.model';
 import { setLanguageChoice } from '../../i18n/language';
 
 // ── Settings, configured ──────────────────────────────────────────────────────
@@ -85,21 +85,34 @@ describe('nowCardSwitchModel', () => {
 // Dimensions: the choice (the system's, English, Czech); the language the app
 // shows (English, Czech).
 
-describe('languageOptionsModel', () => {
+describe('languageDropdownModel', () => {
   afterEach(() => { setLanguageChoice('system'); });
 
-  it('offers the system\'s language, English and Czech, the choice marked', () => {
-    expect(languageOptionsModel('system')).toEqual([
-      { key: 'system', label: 'System default', active: true },
-      { key: 'en', label: 'English', active: false },
-      { key: 'cs', label: 'Čeština', active: false },
-    ]);
-    expect(languageOptionsModel('cs').map((row) => row.active)).toEqual([false, false, true]);
-    expect(languageOptionsModel('en').map((row) => row.active)).toEqual([false, true, false]);
+  it('shows the choice in the field and offers the system\'s language, English and Czech, the choice marked', () => {
+    expect(languageDropdownModel('system')).toEqual({
+      fieldLabel: 'System default',
+      accessibilityLabel: 'Language, System default',
+      options: [
+        { key: 'system', label: 'System default', active: true },
+        { key: 'en', label: 'English', active: false },
+        { key: 'cs', label: 'Čeština', active: false },
+      ],
+    });
+  });
+
+  it('shows a chosen language in the field, marked in the list', () => {
+    const czech = languageDropdownModel('cs');
+    expect(czech.fieldLabel).toBe('Čeština');
+    expect(czech.accessibilityLabel).toBe('Language, Čeština');
+    expect(czech.options.map((row) => row.active)).toEqual([false, false, true]);
+    expect(languageDropdownModel('en').options.map((row) => row.active)).toEqual([false, true, false]);
   });
 
   it('names each language in itself, whatever the app shows', () => {
     setLanguageChoice('cs');
-    expect(languageOptionsModel('cs').map((row) => row.label)).toEqual(['Podle systému', 'English', 'Čeština']);
+    const model = languageDropdownModel('en');
+    expect(model.fieldLabel).toBe('English');
+    expect(model.accessibilityLabel).toBe('Jazyk, English');
+    expect(model.options.map((row) => row.label)).toEqual(['Podle systému', 'English', 'Čeština']);
   });
 });

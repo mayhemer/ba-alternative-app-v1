@@ -22,10 +22,11 @@ name: the app shows the system's language, unless Settings chose one
 # English chosen in Settings wins over the Czech system.
 - tapOn: "Nastavení"
 - scrollUntilVisible:
-    element: "English"
+    element: "Jazyk, .*"
+- tapOn: "Jazyk, .*"
 - tapOn: "English"
 - extendedWaitUntil:
-    visible: "System default"
+    visible: "Language, English"
     timeout: 10000
 - stopApp
 - launchApp:

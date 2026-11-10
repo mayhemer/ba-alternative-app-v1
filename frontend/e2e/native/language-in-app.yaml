@@ -5,19 +5,20 @@ name: choosing Czech in Settings switches the app, and it stays Czech
 - runFlow:
     file: common/open-section.yaml
     env: { SECTION: "Settings" }
-# The last section; each language is named in itself.
+# The last section, a dropdown like the edition's; each language is named in itself.
 - scrollUntilVisible:
-    element: "Čeština"
+    element: "Language, .*"
+- tapOn: "Language, .*"
 - tapOn: "Čeština"
 # The app remounts in Czech, back on Settings.
 - extendedWaitUntil:
-    visible: "Podle systému"
+    visible: "Jazyk, Čeština"
     timeout: 10000
 - assertVisible: "Přihlásit přes Google"
 # Still Czech after a restart, though the system's language is English.
 - runFlow: common/relaunch.yaml
 - extendedWaitUntil:
-    visible: "Otevřít menu"
+    visible: "Jazyk, Čeština"
     timeout: 30000
 - tapOn: "Otevřít menu"
 - assertVisible: "Doprovodný program"

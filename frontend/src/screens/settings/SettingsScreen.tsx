@@ -8,7 +8,7 @@ import { useAppContext } from '../../store/AppContext';
 import { useAuth } from '../../auth/AuthContext';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
 import { getSlugs } from '../../adapters/slugAdapter';
-import { accountModel, editionDropdownModel, languageOptionsModel, nowCardSwitchModel } from './SettingsScreen.model';
+import { accountModel, editionDropdownModel, languageDropdownModel, nowCardSwitchModel, type DropdownModel } from './SettingsScreen.model';
 import { saveLanguageChoice, useLanguageChoice } from '../../i18n/languageSources';
 import { colors } from '../../styling/tokens';
 import {
@@ -195,76 +195,32 @@ function NowCardSection() {
   );
 }
 
-// ── App language ──────────────────────────────────────────────────────────────
+// ── Dropdown ──────────────────────────────────────────────────────────────────
 //
-// Three rows, always open: the system's language, English, Czech. Picking one
-// switches the app at once; it remounts in the new language, back on this
-// screen (App.tsx).
+// The edition and the language: the field shows the active option; tapping it
+// opens the list of options just below, and picking one applies it and closes
+// the list.
 
-function LanguageSection() {
-  const choice = useLanguageChoice();
-  const rows = languageOptionsModel(choice);
-
-  return (
-    <View className="mt-8">
-      <Text className="text-textSecondary text-xs tracking-widest uppercase mb-4">
-        {strings().settingsScreen.language}
-      </Text>
-      <View className="bg-surfaceRaised border border-borderMid rounded-lg overflow-hidden">
-        {rows.map((row, index) => (
-          <TouchableOpacity
-            key={row.key}
-            onPress={() => saveLanguageChoice(row.key)}
-            accessibilityRole="button"
-            accessibilityLabel={row.label}
-            accessibilityState={{ selected: row.active }}
-            className={
-              index > 0
-                ? 'py-3 px-4 border-t border-border flex-row items-center justify-between'
-                : 'py-3 px-4 flex-row items-center justify-between'
-            }
-          >
-            <Text className={row.active ? 'text-accent text-base font-semibold' : 'text-textPrimary text-base'}>
-              {row.label}
-            </Text>
-            {row.active && <Ionicons name="checkmark" size={18} color={colors.accent} />}
-          </TouchableOpacity>
-        ))}
-      </View>
-    </View>
-  );
-}
-
-// ── Festival edition ──────────────────────────────────────────────────────────
-//
-// A dropdown: the field shows the active edition; tapping it opens the list of
-// editions just below, and picking one switches to it and closes the list.
-
-function EditionSection() {
-  const { state, setSelectedSlug } = useAppContext();
-  const { selectedSlug } = state;
-  const [slugs, setSlugs] = React.useState<string[]>([]);
+function SettingsDropdown<K extends string>({ heading, model, onPick }: {
+  heading: string;
+  model: DropdownModel<K>;
+  onPick: (key: K) => void;
+}) {
   const [isOpen, setIsOpen] = React.useState(false);
-
-  React.useEffect(() => {
-    getSlugs().then(setSlugs);
-  }, []);
 
   const toggle = React.useCallback(() => {
     setIsOpen((open) => !open);
   }, []);
 
-  const pick = React.useCallback((slug: string) => {
+  const pick = React.useCallback((key: K) => {
     setIsOpen(false);
-    setSelectedSlug(slug);
-  }, [setSelectedSlug]);
-
-  const model = editionDropdownModel(slugs, selectedSlug);
+    onPick(key);
+  }, [onPick]);
 
   return (
     <View>
       <Text className="text-textSecondary text-xs tracking-widest uppercase mb-4">
-        {strings().settingsScreen.festivalEdition}
+        {heading}
       </Text>
       <TouchableOpacity
         onPress={toggle}
@@ -299,6 +255,44 @@ function EditionSection() {
           ))}
         </View>
       )}
+    </View>
+  );
+}
+
+// ── Festival edition ──────────────────────────────────────────────────────────
+
+function EditionSection() {
+  const { state, setSelectedSlug } = useAppContext();
+  const { selectedSlug } = state;
+  const [slugs, setSlugs] = React.useState<string[]>([]);
+
+  React.useEffect(() => {
+    getSlugs().then(setSlugs);
+  }, []);
+
+  return (
+    <SettingsDropdown
+      heading={strings().settingsScreen.festivalEdition}
+      model={editionDropdownModel(slugs, selectedSlug)}
+      onPick={setSelectedSlug}
+    />
+  );
+}
+
+// ── App language ──────────────────────────────────────────────────────────────
+//
+// The system's language, English, Czech. Picking one switches the app at once;
+// it remounts in the new language, back on this screen (App.tsx).
+
+function LanguageSection() {
+  const choice = useLanguageChoice();
+  return (
+    <View className="mt-8">
+      <SettingsDropdown
+        heading={strings().settingsScreen.language}
+        model={languageDropdownModel(choice)}
+        onPick={saveLanguageChoice}
+      />
     </View>
   );
 }

@@ -209,6 +209,7 @@ const en = {
     editionAccessibilityLabel: (edition: string): string => `Festival edition, ${edition}`,
     language: 'Language',
     languageSystem: 'System default',
+    languageAccessibilityLabel: (language: string): string => `Language, ${language}`,
   },
 };
 
@@ -394,6 +395,7 @@ const cs: Strings = {
     editionAccessibilityLabel: (edition) => `Ročník festivalu, ${edition}`,
     language: 'Jazyk',
     languageSystem: 'Podle systému',
+    languageAccessibilityLabel: (language) => `Jazyk, ${language}`,
   },
 };
 
