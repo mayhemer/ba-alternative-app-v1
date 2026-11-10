@@ -1,4 +1,5 @@
-import { strings } from '../../i18n/strings';
+import { LANGUAGE_NAMES, strings } from '../../i18n/strings';
+import type { LanguageChoice } from '../../i18n/language';
 
 
 // ── Settings: what it shows ───────────────────────────────────────────────────
@@ -7,7 +8,8 @@ import { strings } from '../../i18n/strings';
 // name over the email (or the email alone); signed out, the two sign-in
 // buttons, which read "Signing in…" while busy, and the last error. Then the
 // editions as a dropdown: the field shows the active one, the open list every
-// edition with the active one marked.
+// edition with the active one marked. Last, the app language: the system's,
+// English, Czech, the choice marked.
 
 export type AccountModel =
   | { kind: 'restoring' }
@@ -54,6 +56,21 @@ export function editionDropdownModel(slugs: string[], selected: string | null): 
   const options = slugs.map((slug) => ({ key: slug, label: slug.toUpperCase(), active: slug === selected }));
   const fieldLabel = options.find((option) => option.active)?.label ?? strings().settingsScreen.chooseEdition;
   return { fieldLabel, accessibilityLabel: strings().settingsScreen.editionAccessibilityLabel(fieldLabel), options };
+}
+
+// ── The app language ──────────────────────────────────────────────────────────
+//
+// Each language is named in itself (LANGUAGE_NAMES), so it reads the same in
+// either; only the system's option is in the language the app shows.
+
+export type LanguageRowModel = { key: LanguageChoice; label: string; active: boolean };
+
+export function languageOptionsModel(choice: LanguageChoice): LanguageRowModel[] {
+  return [
+    { key: 'system', label: strings().settingsScreen.languageSystem, active: choice === 'system' },
+    { key: 'en', label: LANGUAGE_NAMES.en, active: choice === 'en' },
+    { key: 'cs', label: LANGUAGE_NAMES.cs, active: choice === 'cs' },
+  ];
 }
 
 // ── The lock-screen now card (Android) ────────────────────────────────────────

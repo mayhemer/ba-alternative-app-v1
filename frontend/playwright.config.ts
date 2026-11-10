@@ -34,6 +34,9 @@ export default defineConfig({
     // The festival's own zone, so CI and a laptop run the same browser. The app
     // shows festival time in any zone; timeline.spec.ts proves that from New York.
     timezoneId: 'Europe/Prague',
+    // English, whatever the machine's language: the specs read English text.
+    // The app follows the browser's language (i18n/languageSources.ts).
+    locale: 'en-US',
   },
 
   // Desktop runs everything. The two phone projects run only the tests tagged

@@ -19,7 +19,7 @@ import { SearchProvider } from './src/features/search/SearchContext';
 import { AppShell } from './src/shell/AppShell';
 import { Image as ExpoImage } from 'expo-image';
 import * as SplashScreen from 'expo-splash-screen';
-import { applySystemLanguage, useAppLanguage } from './src/i18n/systemLanguage';
+import { applySystemLanguage, useAppLanguage } from './src/i18n/languageSources';
 
 // Module scope on purpose. The native splash auto-hides as soon as the root view
 // renders — before any effect could run — which is what left a white window while
@@ -27,8 +27,10 @@ import { applySystemLanguage, useAppLanguage } from './src/i18n/systemLanguage';
 // up until StartupGate has painted; StartupGate owns the handover.
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
-// Module scope too: the language must be set before anything renders. Nothing
-// reads strings at import (i18n/language.ts), so this is early enough.
+// Module scope too: the system's language must be set before anything renders.
+// Nothing reads strings at import (i18n/language.ts), so this is early enough.
+// A language chosen in Settings is restored with the rest of the local state,
+// before StartupGate lets the app show (store/uiStatePersistence).
 applySystemLanguage();
 
 // ── App content: full provider tree, mounted once startup hydration completes ─
@@ -64,8 +66,9 @@ function AppContent() {
 // ── Root ──────────────────────────────────────────────────────────────────────
 
 export default function App() {
-  // A change of the system language while the app runs (Android, web) remounts
-  // the content in the new one; the session and the data cache stay.
+  // A language chosen in Settings, or a change of the system language while the
+  // app runs (Android, web), remounts the content in the new one; the session,
+  // the data cache and the open screen (AppShell restores it) stay.
   const language = useAppLanguage();
 
   useEffect(() => {

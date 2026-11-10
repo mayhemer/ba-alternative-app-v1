@@ -1,4 +1,4 @@
-import { setAppLanguage } from '../i18n/language';
+import { setLanguageChoice } from '../i18n/language';
 import { getArtistBioLocalized, getArtistLocalized, getCategoryLocalized, getStageLocalized } from './localization';
 import type { DbArtistBioLocalized, DbArtistLocalized } from '../types/backend';
 
@@ -8,7 +8,7 @@ import type { DbArtistBioLocalized, DbArtistLocalized } from '../types/backend';
 // (both, Czech listed first as the API sends them, only one, none), and how the
 // API writes the code (upper case).
 
-afterEach(() => { setAppLanguage('en'); });
+afterEach(() => { setLanguageChoice('system'); });
 
 const BIO_CS_FIRST: DbArtistBioLocalized[] = [
   { language: 'CS', content: '<p>Česky</p>' },
@@ -26,12 +26,12 @@ describe('the bio', () => {
   });
 
   it('is Czech in Czech', () => {
-    setAppLanguage('cs');
+    setLanguageChoice('cs');
     expect(getArtistBioLocalized(BIO_CS_FIRST)).toBe('<p>Česky</p>');
   });
 
   it('falls back to English when the app language has none', () => {
-    setAppLanguage('cs');
+    setLanguageChoice('cs');
     expect(getArtistBioLocalized([{ language: 'EN', content: 'only English' }, { language: 'DE', content: 'Deutsch' }])).toBe('only English');
   });
 
@@ -46,7 +46,7 @@ describe('the bio', () => {
 
 describe('the other localized fields', () => {
   it('follow the app language: artist genre and country, stage name, category title', () => {
-    setAppLanguage('cs');
+    setLanguageChoice('cs');
     expect(getArtistLocalized(ARTIST_CS_FIRST, 'genre')).toBe('death metal (cs)');
     expect(getArtistLocalized(ARTIST_CS_FIRST, 'country')).toBe('USA (cs)');
     expect(getStageLocalized([{ language: 'EN', name: 'Octagon' }, { language: 'CS', name: 'Osmiúhelník' }], 'name')).toBe('Osmiúhelník');

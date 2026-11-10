@@ -6,9 +6,8 @@ name: a star survives an app restart
 - tapOn:
     text: "Toggle interest"
     index: 0
-- stopApp
 # No clearState: this is the cold start a user gets.
-- launchApp
+- runFlow: common/relaunch.yaml
 - extendedWaitUntil:
     visible: ".*3 INCHES OF BLOOD.*"
     timeout: 30000

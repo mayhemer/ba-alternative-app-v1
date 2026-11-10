@@ -1,4 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { appLanguage, languageChoice, setLanguageChoice } from '../i18n/language';
+import { saveLanguageChoice } from '../i18n/languageSources';
 import {
   getScroll,
   getSelectedDay,
@@ -255,5 +257,21 @@ describe('My plan\'s filter', () => {
     await hydrateLocalState('ba2025');
 
     expect(getUiState('planFilters')).toEqual({ level: 'must' });
+  });
+});
+
+// ── The app language ──────────────────────────────────────────────────────────
+
+describe('the language chosen in Settings', () => {
+  afterEach(() => { setLanguageChoice('system'); });
+
+  it('is restored at startup, before the app shows', async () => {
+    saveLanguageChoice('cs');
+    setLanguageChoice('system'); // a new launch: nothing in memory yet
+
+    await hydrateLocalState('ba2025');
+
+    expect(languageChoice()).toBe('cs');
+    expect(appLanguage()).toBe('cs');
   });
 });

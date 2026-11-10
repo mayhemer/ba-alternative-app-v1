@@ -8,7 +8,8 @@ import { useAppContext } from '../../store/AppContext';
 import { useAuth } from '../../auth/AuthContext';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
 import { getSlugs } from '../../adapters/slugAdapter';
-import { accountModel, editionDropdownModel, nowCardSwitchModel } from './SettingsScreen.model';
+import { accountModel, editionDropdownModel, languageOptionsModel, nowCardSwitchModel } from './SettingsScreen.model';
+import { saveLanguageChoice, useLanguageChoice } from '../../i18n/languageSources';
 import { colors } from '../../styling/tokens';
 import {
   getNowCardPermission,
@@ -194,6 +195,46 @@ function NowCardSection() {
   );
 }
 
+// ── App language ──────────────────────────────────────────────────────────────
+//
+// Three rows, always open: the system's language, English, Czech. Picking one
+// switches the app at once; it remounts in the new language, back on this
+// screen (App.tsx).
+
+function LanguageSection() {
+  const choice = useLanguageChoice();
+  const rows = languageOptionsModel(choice);
+
+  return (
+    <View className="mt-8">
+      <Text className="text-textSecondary text-xs tracking-widest uppercase mb-4">
+        {strings().settingsScreen.language}
+      </Text>
+      <View className="bg-surfaceRaised border border-borderMid rounded-lg overflow-hidden">
+        {rows.map((row, index) => (
+          <TouchableOpacity
+            key={row.key}
+            onPress={() => saveLanguageChoice(row.key)}
+            accessibilityRole="button"
+            accessibilityLabel={row.label}
+            accessibilityState={{ selected: row.active }}
+            className={
+              index > 0
+                ? 'py-3 px-4 border-t border-border flex-row items-center justify-between'
+                : 'py-3 px-4 flex-row items-center justify-between'
+            }
+          >
+            <Text className={row.active ? 'text-accent text-base font-semibold' : 'text-textPrimary text-base'}>
+              {row.label}
+            </Text>
+            {row.active && <Ionicons name="checkmark" size={18} color={colors.accent} />}
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+}
+
 // ── Festival edition ──────────────────────────────────────────────────────────
 //
 // A dropdown: the field shows the active edition; tapping it opens the list of
@@ -282,6 +323,8 @@ export function SettingsScreen() {
       {nowCardAvailable && Platform.OS === 'android' && <NowCardSection />}
 
       <EditionSection />
+
+      <LanguageSection />
     </ScrollView>
   );
 }

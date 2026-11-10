@@ -1,4 +1,5 @@
-import { accountModel, editionDropdownModel, nowCardSwitchModel, type AccountInputs } from './SettingsScreen.model';
+import { accountModel, editionDropdownModel, languageOptionsModel, nowCardSwitchModel, type AccountInputs } from './SettingsScreen.model';
+import { setLanguageChoice } from '../../i18n/language';
 
 // ── Settings, configured ──────────────────────────────────────────────────────
 //
@@ -76,5 +77,29 @@ describe('nowCardSwitchModel', () => {
   it('is off when switched off, whatever the permission', () => {
     expect(nowCardSwitchModel(false, 'granted')).toEqual({ on: false, hint: null });
     expect(nowCardSwitchModel(false, 'denied')).toEqual({ on: false, hint: null });
+  });
+});
+
+// ── The app language ──────────────────────────────────────────────────────────
+//
+// Dimensions: the choice (the system's, English, Czech); the language the app
+// shows (English, Czech).
+
+describe('languageOptionsModel', () => {
+  afterEach(() => { setLanguageChoice('system'); });
+
+  it('offers the system\'s language, English and Czech, the choice marked', () => {
+    expect(languageOptionsModel('system')).toEqual([
+      { key: 'system', label: 'System default', active: true },
+      { key: 'en', label: 'English', active: false },
+      { key: 'cs', label: 'Čeština', active: false },
+    ]);
+    expect(languageOptionsModel('cs').map((row) => row.active)).toEqual([false, false, true]);
+    expect(languageOptionsModel('en').map((row) => row.active)).toEqual([false, true, false]);
+  });
+
+  it('names each language in itself, whatever the app shows', () => {
+    setLanguageChoice('cs');
+    expect(languageOptionsModel('cs').map((row) => row.label)).toEqual(['Podle systému', 'English', 'Čeština']);
   });
 });

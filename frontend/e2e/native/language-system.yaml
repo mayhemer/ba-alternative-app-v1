@@ -1,0 +1,38 @@
+appId: cz.janbambas.ba
+name: the app shows the system's language, unless Settings chose one
+---
+# English system.
+- runFlow: common/launch-fresh.yaml
+- tapOn: "Open menu"
+- assertVisible: "Support Program"
+- tapOn: "Artists"
+# The system's language turns Czech. iOS restarts an app whenever its language
+# changes, for the whole system or for the app alone, and the app reads the new
+# one at launch. -AppleLanguages hands it that list (common/launch-fresh.yaml);
+# the simulator itself is left alone.
+- stopApp
+- launchApp:
+    arguments:
+      AppleLanguages: "(cs)"
+- extendedWaitUntil:
+    visible: ".*3 INCHES OF BLOOD.*"
+    timeout: 30000
+- tapOn: "Otevřít menu"
+- assertVisible: "Doprovodný program"
+# English chosen in Settings wins over the Czech system.
+- tapOn: "Nastavení"
+- scrollUntilVisible:
+    element: "English"
+- tapOn: "English"
+- extendedWaitUntil:
+    visible: "System default"
+    timeout: 10000
+- stopApp
+- launchApp:
+    arguments:
+      AppleLanguages: "(cs)"
+- extendedWaitUntil:
+    visible: "Open menu"
+    timeout: 30000
+- tapOn: "Open menu"
+- assertVisible: "Support Program"

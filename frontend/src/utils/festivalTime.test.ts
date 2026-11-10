@@ -12,7 +12,7 @@ import {
   toFestivalClock,
 } from './festivalTime';
 import type { DbEvent } from '../types/backend';
-import { setAppLanguage } from '../i18n/language';
+import { setLanguageChoice } from '../i18n/language';
 
 // ── Festival time against the time-zone database ──────────────────────────────
 //
@@ -151,10 +151,10 @@ describe('festivalToday', () => {
 });
 
 describe('formatting in Czech', () => {
-  afterEach(() => { setAppLanguage('en'); });
+  afterEach(() => { setLanguageChoice('system'); });
 
   it('names the weekday in Czech and dots the day of the month', () => {
-    setAppLanguage('cs');
+    setLanguageChoice('cs');
     expect(formatWeekday(WED)).toBe('St');
     expect(formatDayLabel(WED)).toBe('St 6.');
     expect(formatDayMonth(WED)).toBe('6.8.');

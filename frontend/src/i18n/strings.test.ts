@@ -1,4 +1,4 @@
-import { setAppLanguage } from './language';
+import { setLanguageChoice } from './language';
 import { strings, stringsFor } from './strings';
 
 // ── The app's strings ─────────────────────────────────────────────────────────
@@ -6,7 +6,7 @@ import { strings, stringsFor } from './strings';
 // Dimensions: the language (English, Czech, the one currently set) and, for
 // counted phrases, the count across each language's plural forms.
 
-afterEach(() => { setAppLanguage('en'); });
+afterEach(() => { setLanguageChoice('system'); });
 
 /** Every key path in a strings tree, functions and arrays as leaves. */
 function keyPaths(tree: object, prefix = ''): string[] {
@@ -45,7 +45,7 @@ describe('stringsFor', () => {
 describe('strings', () => {
   it('follows the app language', () => {
     expect(strings().screens.settings).toBe('Settings');
-    setAppLanguage('cs');
+    setLanguageChoice('cs');
     expect(strings().screens.settings).toBe('Nastavení');
   });
 });

@@ -8,7 +8,7 @@ import { createDataCollector, hydrateInterests, populateCache, setInterest } fro
 import { rendersSinceReset, resetRenders } from '../../../tests/setup/countRenders';
 import type { DbArtist, DbCategory, DbEvent, DbStage } from '../../types/backend';
 import { putArtistBios } from '../../cache/cacheService';
-import { setAppLanguage } from '../../i18n/language';
+import { setLanguageChoice } from '../../i18n/language';
 
 // ── The artist sheet reacts to every input ────────────────────────────────────
 //
@@ -192,7 +192,7 @@ describe('render counts', () => {
 
 describe('in Czech', () => {
   beforeEach(() => {
-    setAppLanguage('cs');
+    setLanguageChoice('cs');
     putArtistBios(SLUG, [{
       artistId: 'bastion',
       localized: [
@@ -201,7 +201,7 @@ describe('in Czech', () => {
       ],
     }], at('2025-08-06T09:00:00+02:00'));
   });
-  afterEach(() => { setAppLanguage('en'); });
+  afterEach(() => { setLanguageChoice('system'); });
 
   it('shows the Czech bio, Czech day labels and the English stage name the API has no Czech for', async () => {
     await openSheet();

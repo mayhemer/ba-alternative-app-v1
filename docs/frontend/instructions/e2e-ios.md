@@ -19,7 +19,14 @@ erases the test simulator to factory state (every app on it, not just this one),
 local and downloaded simulator builds, Maestro's debug output and the last reports. The next run
 rebuilds all of it, at the cost of a slower first boot and a from-scratch build.
 
-Two things to know when writing flows:
+Things to know when writing flows:
+
+- **The flows read English, whatever the Mac's or the simulator's language.** Launch the app through
+  `common/launch-fresh.yaml` (cleared) or `common/relaunch.yaml` (a restart), never with a bare
+  `launchApp`: both pass `arguments: { AppleLanguages: "(en)" }`, which iOS reads as the app's
+  preferred languages for that launch, as its per-app language setting would; the simulator's own
+  settings stay as they are. The two `language-*.yaml` flows launch in Czech on purpose (a system
+  language change on iOS restarts the app, so a launch with another list is that change).
 
 - **A touchable is one accessibility element on iOS.** Its children's text is merged into a single
   label, so an artist row reads "3 INCHES OF BLOOD, HEAVY METAL, …", not just the name. Match names as

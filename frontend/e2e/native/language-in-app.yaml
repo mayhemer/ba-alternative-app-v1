@@ -1,0 +1,23 @@
+appId: cz.janbambas.ba
+name: choosing Czech in Settings switches the app, and it stays Czech
+---
+- runFlow: common/launch-fresh.yaml
+- runFlow:
+    file: common/open-section.yaml
+    env: { SECTION: "Settings" }
+# The last section; each language is named in itself.
+- scrollUntilVisible:
+    element: "Čeština"
+- tapOn: "Čeština"
+# The app remounts in Czech, back on Settings.
+- extendedWaitUntil:
+    visible: "Podle systému"
+    timeout: 10000
+- assertVisible: "Přihlásit přes Google"
+# Still Czech after a restart, though the system's language is English.
+- runFlow: common/relaunch.yaml
+- extendedWaitUntil:
+    visible: "Otevřít menu"
+    timeout: 30000
+- tapOn: "Otevřít menu"
+- assertVisible: "Doprovodný program"

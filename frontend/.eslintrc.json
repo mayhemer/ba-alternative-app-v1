@@ -214,7 +214,7 @@
         "src/i18n/**"
       ],
       "excludedFiles": [
-        "src/i18n/systemLanguage.ts",
+        "src/i18n/languageSources.ts",
         "src/i18n/*.test.ts"
       ],
       "rules": {

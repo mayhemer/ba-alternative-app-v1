@@ -207,6 +207,8 @@ const en = {
     festivalEdition: 'Festival Edition',
     chooseEdition: 'Choose an edition',
     editionAccessibilityLabel: (edition: string): string => `Festival edition, ${edition}`,
+    language: 'Language',
+    languageSystem: 'System default',
   },
 };
 
@@ -390,7 +392,16 @@ const cs: Strings = {
     festivalEdition: 'Ročník festivalu',
     chooseEdition: 'Vyberte ročník',
     editionAccessibilityLabel: (edition) => `Ročník festivalu, ${edition}`,
+    language: 'Jazyk',
+    languageSystem: 'Podle systému',
   },
+};
+
+// Each language named in itself, the same whatever the app shows: Settings
+// offers them so that someone who can't read the current language finds theirs.
+export const LANGUAGE_NAMES: Record<Language, string> = {
+  en: 'English',
+  cs: 'Čeština',
 };
 
 const BY_LANGUAGE: Record<Language, Strings> = { en, cs };
