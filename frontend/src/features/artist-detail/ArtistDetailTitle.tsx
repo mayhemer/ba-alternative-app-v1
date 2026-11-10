@@ -1,3 +1,4 @@
+import { strings } from '../../i18n/strings';
 import React, { memo } from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import { Text } from '../../ui/Text';
@@ -45,7 +46,7 @@ function ArtistDetailTitleBase({ item, onStar, onExpand, onClose }: Props) {
         </Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: TITLE_LAYOUT.gap }}>
           {item.showConflict && <ExclamationTouchable onPress={onExpand} />}
-          <StarButton status={item.status} onPress={onStar} label="Toggle interest" size="large" />
+          <StarButton status={item.status} onPress={onStar} label={strings().starButton.accessibilityLabel} size="large" />
           {item.showClose && (
             <TouchableOpacity onPress={onClose} hitSlop={8} style={{ marginLeft: 16 }}>
               <Text style={{ fontSize: 20, color: colors.textSecondary, lineHeight: 36 }}>✕</Text>

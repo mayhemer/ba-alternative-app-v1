@@ -1,3 +1,4 @@
+import { strings } from '../../i18n/strings';
 import React from 'react';
 import { AppState, Linking, Platform, ScrollView, Switch, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -44,7 +45,7 @@ function AccountSection() {
           if (__DEV__) { console.error('[settings] sign-in error', provider, err); }
           // Show the real reason only in dev; a generic message in release builds.
           const detail = err instanceof Error ? err.message : String(err);
-          setError(__DEV__ ? detail : 'Sign-in failed. Please try again.');
+          setError(__DEV__ ? detail : strings().settingsScreen.signInFailed);
         }
       } finally {
         setIsBusy(false);
@@ -64,7 +65,7 @@ function AccountSection() {
     return (
       <View className="mb-8">
         <Text className="text-textSecondary text-xs tracking-widest uppercase mb-4">
-          Account
+          {strings().settingsScreen.account}
         </Text>
         <ActivityIndicator color="#888" />
       </View>
@@ -75,7 +76,7 @@ function AccountSection() {
     return (
       <View className="mb-8">
         <Text className="text-textSecondary text-xs tracking-widest uppercase mb-4">
-          Account
+          {strings().settingsScreen.account}
         </Text>
         <View className="py-4 border-b border-border">
           <Text className={account.subtitle !== null ? 'text-textPrimary text-base font-semibold' : 'text-textPrimary text-base'}>
@@ -89,7 +90,7 @@ function AccountSection() {
           onPress={handleSignOut}
           className="mt-4 py-3 px-4 border border-border rounded-lg items-center"
         >
-          <Text className="text-textSecondary text-sm">Sign Out</Text>
+          <Text className="text-textSecondary text-sm">{strings().settingsScreen.signOut}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -98,7 +99,7 @@ function AccountSection() {
   return (
     <View className="mb-8">
       <Text className="text-textSecondary text-xs tracking-widest uppercase mb-4">
-        Account
+        {strings().settingsScreen.account}
       </Text>
       {account.error !== null && (
         <Text className="text-red-400 text-sm mb-3">{account.error}</Text>
@@ -172,18 +173,18 @@ function NowCardSection() {
   return (
     <View className="mb-8">
       <Text className="text-textSecondary text-xs tracking-widest uppercase mb-4">
-        Lock screen
+        {strings().settingsScreen.lockScreen}
       </Text>
       <View className="py-3 flex-row items-center justify-between">
         <View className="flex-1 pr-4">
-          <Text className="text-textPrimary text-base">Now card</Text>
-          <Text className="text-textSecondary text-sm mt-1">What is live and next, on the lock screen</Text>
+          <Text className="text-textPrimary text-base">{strings().settingsScreen.nowCardTitle}</Text>
+          <Text className="text-textSecondary text-sm mt-1">{strings().settingsScreen.nowCardHint}</Text>
         </View>
         <Switch
           value={model.on}
           onValueChange={(on) => { void handleChange(on); }}
           trackColor={{ false: colors.borderMid, true: colors.accent }}
-          accessibilityLabel="Lock-screen now card"
+          accessibilityLabel={strings().nowCard.name}
         />
       </View>
       {model.hint !== null && (
@@ -222,7 +223,7 @@ function EditionSection() {
   return (
     <View>
       <Text className="text-textSecondary text-xs tracking-widest uppercase mb-4">
-        Festival Edition
+        {strings().settingsScreen.festivalEdition}
       </Text>
       <TouchableOpacity
         onPress={toggle}
@@ -264,7 +265,7 @@ function EditionSection() {
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export function SettingsScreen() {
-  useTopBar({ title: 'Settings' });
+  useTopBar({ title: strings().screens.settings });
   useBottomBar({});
 
   const { bottomClearance } = useLayoutMode();

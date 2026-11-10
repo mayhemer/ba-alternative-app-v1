@@ -1,3 +1,4 @@
+import { strings } from '../i18n/strings';
 import React, { memo, useCallback, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
@@ -74,7 +75,7 @@ function Logo() {
       source={require('../../assets/logo-ba.png')}
       style={LOGO_STYLE}
       contentFit="contain"
-      accessibilityLabel="Brutal Assault"
+      accessibilityLabel={strings().app.name}
     />
   );
 }

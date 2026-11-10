@@ -1,4 +1,5 @@
 import { drawerItemModels } from './SideDrawerContent.model';
+import { setAppLanguage } from '../i18n/language';
 
 // ── The navigation drawer, configured ─────────────────────────────────────────
 //
@@ -35,5 +36,16 @@ describe('drawerItemModels', () => {
     const [plan, ...others] = drawerItemModels({ ...base, conflictCount: 2 });
     expect([plan.marker, plan.accessibilityLabel]).toEqual([2, 'My plan, 2 conflicts']);
     expect(others.every((i) => i.marker === null)).toBe(true);
+  });
+});
+
+describe('drawerItemModels in Czech', () => {
+  afterEach(() => { setAppLanguage('en'); });
+
+  it('names the screens and reads out the clash count in Czech', () => {
+    setAppLanguage('cs');
+    const items = drawerItemModels({ ...base, conflictCount: 2 });
+    expect(items.map((i) => i.label)).toEqual(['Můj plán', 'Kapely', 'Program', 'Doprovodný program', 'Nastavení']);
+    expect(items[0].accessibilityLabel).toBe('Můj plán, 2 konflikty');
   });
 });

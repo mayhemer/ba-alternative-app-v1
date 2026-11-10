@@ -1,5 +1,6 @@
 import type { PillSet } from '../lib/nowPillSet';
-import { formatRemaining, NARROW_SPACE, planStrings } from '../screens/my-plan/planStrings';
+import { formatRemaining, NARROW_SPACE } from '../screens/my-plan/planDurations';
+import { strings } from '../i18n/strings';
 import { timelineJump, type TimelineJump } from '../lib/timelineJump';
 import type { DbEvent } from '../types/backend';
 
@@ -17,8 +18,6 @@ import type { DbEvent } from '../types/backend';
 // One selection (nowPillSet, in lib/ because the lock-screen now card follows it
 // too) picks the set the pill names; nowPillTarget hands the same set to a tap on
 // My plan, which opens its timeline at now (see nowPillTap).
-
-const strings = planStrings();
 
 export type NowPillModel =
   | { kind: 'logo' }
@@ -43,7 +42,7 @@ export function nowPillModel(set: PillSet, now: number): NowPillModel {
       time,
       progress: (now - event.dateFrom) / (event.dateTo - event.dateFrom),
       more: set.others,
-      accessibilityLabel: `${artist.name} ${strings.live} ${time}`,
+      accessibilityLabel: `${artist.name} ${strings().setStatus.live} ${time}`,
     };
   }
   const time = formatRemaining(event.dateFrom - now, NARROW_SPACE);
@@ -51,7 +50,7 @@ export function nowPillModel(set: PillSet, now: number): NowPillModel {
     kind: 'break',
     artistName: artist.name,
     time,
-    accessibilityLabel: `${artist.name} ${strings.start} ${time}`,
+    accessibilityLabel: `${artist.name} ${strings().setStatus.start} ${time}`,
   };
 }
 

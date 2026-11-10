@@ -1,3 +1,4 @@
+import { strings } from '../i18n/strings';
 import React from 'react';
 import { TouchableOpacity } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -34,7 +35,7 @@ export function DrawerButton() {
       onPress={toggleDrawer}
       hitSlop={8}
       accessibilityRole="button"
-      accessibilityLabel={isOpen ? 'Close menu' : 'Open menu'}
+      accessibilityLabel={isOpen ? strings().drawerButton.close : strings().drawerButton.open}
       style={isOpen ? OPEN_STYLE : CLOSED_STYLE}
     >
       <Ionicons testID="drawer-button-icon" name="menu-outline" size={ICON_SIZE} color={isOpen ? TOPBAR_BUTTON_OPEN_CONTENT : ICON_COLOR} />

@@ -2,7 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Pressable, View } from 'react-native';
 import { usePlanFilters, usePlanPanel } from '../PlanContext';
 import { useLayoutMode } from '../../../hooks/useLayoutMode';
-import { planStrings } from '../planStrings';
+import { strings } from '../../../i18n/strings';
 import { PlanFilterLevel } from './PlanFilterLevel';
 import { MyScheduleShare } from '../../../features/social/MyScheduleShare';
 import { SearchEntry } from '../../../features/search/SearchEntry';
@@ -26,7 +26,6 @@ import {
 // that filter and closes the panel, back to the list. Below them, the lens
 // panel's "My schedule" section (MyScheduleShare), passed in as children.
 
-const strings = planStrings();
 
 type ViewProps = {
   levels: PlanFilterLevelModel[];
@@ -46,7 +45,7 @@ export function PlanFilterPanelView({ levels, onPick, onClose, dock, children }:
       <Pressable
         onPress={onClose}
         accessibilityRole="button"
-        accessibilityLabel={strings.close}
+        accessibilityLabel={strings().planFilter.close}
         style={{ position: 'absolute', inset: 0, backgroundColor: OVERLAY_BACKDROP }}
       />
       {/* The frame ends above the search field; the card shrinks to fit it. */}

@@ -1,3 +1,4 @@
+import { strings } from '../../i18n/strings';
 import type { LensScope } from '../../lib/interestUtils';
 
 // ── The lens panel: what it shows ─────────────────────────────────────────────
@@ -31,8 +32,8 @@ export type LensPanelInputs = {
 
 export function lensPanelModel({ scope, friends, pendingRemove }: LensPanelInputs): LensPanelModel {
   const rows: LensScopeRowModel[] = [
-    { key: 'all', scope: { kind: 'all' }, label: 'Everything', friend: null, active: scope.kind === 'all' },
-    { key: 'me', scope: { kind: 'me', level: null }, label: 'My picks', friend: null, active: scope.kind === 'me' },
+    { key: 'all', scope: { kind: 'all' }, label: strings().lensPanel.everything, friend: null, active: scope.kind === 'all' },
+    { key: 'me', scope: { kind: 'me', level: null }, label: strings().lensPanel.myPicks, friend: null, active: scope.kind === 'me' },
     ...friends.map((f) => ({
       key: f.token,
       scope: { kind: 'friend', token: f.token, level: null } as LensScope,

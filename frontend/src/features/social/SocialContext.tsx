@@ -1,3 +1,4 @@
+import { strings } from '../../i18n/strings';
 import React, {
   createContext,
   useCallback,
@@ -157,7 +158,7 @@ export function SocialProvider({ children }: { children: React.ReactNode }) {
     }
     const token = await getAccessToken();
     if (token === null) {
-      throw new Error('Sign in to share your schedule');
+      throw new Error(strings().myScheduleShare.signInRequired);
     }
     const created = await createShareLink(slug, token);
     const share: MyShare = {

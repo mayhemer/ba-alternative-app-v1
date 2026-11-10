@@ -160,6 +160,15 @@
             "target": "./src/utils",
             "from": "./src/navigation",
             "message": "utils/ holds plain helpers: no React, no rules about picks or sets. Imports point downward: shell → screens → features → lib / ui → hooks → utils (docs/frontend/design/architecture/overview.md, Where a file goes)."
+          },
+          {
+            "target": "./src/i18n",
+            "from": "./src",
+            "except": [
+              "./i18n",
+              "./types"
+            ],
+            "message": "i18n/ is a leaf every layer reads (the strings, the app language): it imports only types/. See docs/frontend/design/architecture/localization.md."
           }
         ]
       }
@@ -170,6 +179,43 @@
       "files": [
         "src/lib/**",
         "src/utils/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "react",
+                "message": "No React here: see overview.md, Where a file goes."
+              },
+              {
+                "name": "react-native",
+                "message": "No React Native here: see overview.md, Where a file goes."
+              }
+            ],
+            "patterns": [
+              {
+                "group": [
+                  "react-native-*",
+                  "@react-native*/*",
+                  "expo-*",
+                  "@react-navigation/*"
+                ],
+                "message": "No UI libraries here: see overview.md, Where a file goes."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/i18n/**"
+      ],
+      "excludedFiles": [
+        "src/i18n/systemLanguage.ts",
+        "src/i18n/*.test.ts"
       ],
       "rules": {
         "no-restricted-imports": [

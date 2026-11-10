@@ -1,3 +1,4 @@
+import { strings } from '../../i18n/strings';
 import React, { useEffect } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { Easing, ReduceMotion, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
@@ -92,7 +93,7 @@ function OpenSelector({ open }: { open: OpenStarSelector }) {
     <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
       <View
         testID="star-selector"
-        accessibilityLabel="Interest"
+        accessibilityLabel={strings().starSelector.accessibilityLabel}
         // A finger on it holds it open; a touch on it is its own, so it never
         // reaches the row under it.
         onTouchStart={hold}
@@ -172,7 +173,7 @@ function InfoBox({ info, windowHeight }: { info: StarSelectorModel['info']; wind
           {/* The tick says the press already set it; a failed save gets none. */}
           {!info.failed && <Text style={{ ...INFO_TEXT_STYLE, color: colors.infoSuccess, marginLeft: 5 }}>✓</Text>}
         </View>
-        {info.failed && <Text style={{ ...INFO_TEXT_STYLE, color: colors.infoDanger }}>⚠ not saved</Text>}
+        {info.failed && <Text style={{ ...INFO_TEXT_STYLE, color: colors.infoDanger }}>{strings().starSelector.notSaved}</Text>}
       </View>
     </View>
   );

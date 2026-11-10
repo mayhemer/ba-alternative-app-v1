@@ -51,6 +51,7 @@ Architecture
 - [background-sync.md](frontend/design/architecture/background-sync.md) — sync runs, intervals, error handling
 - [startup.md](frontend/design/architecture/startup.md) — startup gate, UI state persistence, splash
 - [responsiveness.md](frontend/design/architecture/responsiveness.md) — urgent vs deferred updates, narrow subscriptions, list rendering
+- [localization.md](frontend/design/architecture/localization.md) — English and Czech by the system language, the strings file, API-localized data
 - [known-gaps.md](frontend/design/architecture/known-gaps.md) — deferred items and known gaps
 
 Build

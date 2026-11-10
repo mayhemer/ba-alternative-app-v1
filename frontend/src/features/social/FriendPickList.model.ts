@@ -1,3 +1,4 @@
+import { strings } from '../../i18n/strings';
 import type { FriendPick } from './SocialContext';
 
 // ── Friends who picked an artist: what the list shows ─────────────────────────
@@ -15,7 +16,7 @@ export type FriendPickListModel = {
 export function friendPickListModel(friends: FriendPick[]): FriendPickListModel {
   return {
     shown: friends.length > 0,
-    summary: friends.length === 1 ? `${friends[0].label} picked this` : `${friends.length} friends picked this`,
+    summary: friends.length === 1 ? strings().friendPickList.pickedByOne(friends[0].label) : strings().friendPickList.pickedByMany(friends.length),
     rows: friends.map((f) => ({ key: f.token, label: f.label, avatarUrl: f.avatarUrl, star: f.status === 'will_go' ? 'star' : 'star-half' })),
   };
 }

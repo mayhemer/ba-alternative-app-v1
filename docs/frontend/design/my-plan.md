@@ -252,21 +252,21 @@ What each element shows comes from its own model (see Principles), built from th
 | Spaces in the pill's times | narrow no-break spaces (U+202F): `−37 min`, `−1 h 30` |
 | Times | `19:00–20:00` (en dash), tabular figures |
 
-All My plan strings live in one module, so a later i18n pass is a drop-in. Current EN / CS pairs:
+My plan's strings live with the rest of the app's in `src/i18n/strings.ts` (see [localization.md](architecture/localization.md)), the app showing Czech when the system language is Czech. Current EN / CS pairs (group.key):
 
 | Key | EN | CS |
 |---|---|---|
-| live | LIVE | HRAJE |
-| done | done | odehráno |
-| start | START | ZAČÍNÁ |
-| conflict | Conflict | Konflikt |
-| filterAll (a11y) | All sets | Všechna vystoupení |
-| filterMaybe (a11y) | Must-see and Maybe | Musím vidět a Možná |
-| filterMust (a11y) | Must-see only | Jen Musím vidět |
-| filterConflicts (a11y) | Only conflicts | Jen konflikty |
-| empty | Nothing planned for this day | Na tento den nic v plánu |
-| emptyConflicts | No conflicts on this day | V tento den žádné konflikty |
-| filterMenu (a11y) | Filters | Filtry |
+| setStatus.live | LIVE | HRAJE |
+| setStatus.done | done | odehráno |
+| setStatus.start | START | ZAČÍNÁ |
+| conflict.conflict | Conflict | Konflikt |
+| planFilter.all (a11y) | All sets | Všechna vystoupení |
+| planFilter.maybe (a11y) | Must-see and Maybe | Musím vidět a Možná |
+| planFilter.must (a11y) | Must-see only | Jen Musím vidět |
+| planFilter.conflicts (a11y) | Only conflicts | Jen konflikty |
+| myPlanScreen.empty | Nothing planned for this day | Na tento den nic v plánu |
+| myPlanScreen.emptyConflicts | No conflicts on this day | V tento den žádné konflikty |
+| planFilter.chip (a11y) | Filters | Filtry |
 
 ---
 

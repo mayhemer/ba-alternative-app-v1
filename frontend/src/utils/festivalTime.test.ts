@@ -12,6 +12,7 @@ import {
   toFestivalClock,
 } from './festivalTime';
 import type { DbEvent } from '../types/backend';
+import { setAppLanguage } from '../i18n/language';
 
 // ── Festival time against the time-zone database ──────────────────────────────
 //
@@ -146,5 +147,17 @@ describe('festivalToday', () => {
 
   it('is null for an edition with no days', () => {
     expect(festivalToday([], at('2025-08-07T15:00:00+02:00'))).toBeNull();
+  });
+});
+
+describe('formatting in Czech', () => {
+  afterEach(() => { setAppLanguage('en'); });
+
+  it('names the weekday in Czech and dots the day of the month', () => {
+    setAppLanguage('cs');
+    expect(formatWeekday(WED)).toBe('St');
+    expect(formatDayLabel(WED)).toBe('St 6.');
+    expect(formatDayMonth(WED)).toBe('6.8.');
+    expect(formatTime(at('2025-08-07T00:30:00+02:00'))).toBe('00:30');
   });
 });

@@ -1,3 +1,4 @@
+import { strings } from '../../i18n/strings';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { PanelSectionLabel } from '../../ui/PanelSectionLabel';
@@ -138,7 +139,7 @@ export function LensPanel() {
         >
           <ScrollView keyboardShouldPersistTaps="handled" style={{ flexGrow: 0 }}>
             {/* ── SHOW ─────────────────────────────────────────────── */}
-            <PanelSectionLabel>Show</PanelSectionLabel>
+            <PanelSectionLabel>{strings().lensPanel.show}</PanelSectionLabel>
 
             {model.rows.map((row) => (
               <LensScopeRow

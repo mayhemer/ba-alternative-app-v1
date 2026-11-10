@@ -19,12 +19,17 @@ import { SearchProvider } from './src/features/search/SearchContext';
 import { AppShell } from './src/shell/AppShell';
 import { Image as ExpoImage } from 'expo-image';
 import * as SplashScreen from 'expo-splash-screen';
+import { applySystemLanguage, useAppLanguage } from './src/i18n/systemLanguage';
 
 // Module scope on purpose. The native splash auto-hides as soon as the root view
 // renders — before any effect could run — which is what left a white window while
 // the JS bundle was still being evaluated. Holding it here means the BA image stays
 // up until StartupGate has painted; StartupGate owns the handover.
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
+
+// Module scope too: the language must be set before anything renders. Nothing
+// reads strings at import (i18n/language.ts), so this is early enough.
+applySystemLanguage();
 
 // ── App content: full provider tree, mounted once startup hydration completes ─
 
@@ -59,6 +64,10 @@ function AppContent() {
 // ── Root ──────────────────────────────────────────────────────────────────────
 
 export default function App() {
+  // A change of the system language while the app runs (Android, web) remounts
+  // the content in the new one; the session and the data cache stay.
+  const language = useAppLanguage();
+
   useEffect(() => {
     // On web: if this render is happening inside the OAuth popup window,
     // this reads the code from the URL, posts it to the parent window, and
@@ -82,7 +91,7 @@ export default function App() {
       <AppProvider>
         <AuthProvider>
           <StartupGate>
-            <AppContent />
+            <AppContent key={language} />
           </StartupGate>
         </AuthProvider>
       </AppProvider>

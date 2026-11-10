@@ -3,6 +3,7 @@
 - Rendered as a modal overlay above the navigator stack.
 - Reused from both Artist List and Timeline contexts.
 - Contains: artist info, genre, country, photo, set time and stage/category (when timeline data is available), StarButton.
+- Genre, country, stage names and the bio are in the app language (Czech or English, by the system language), falling back to English where the API has no Czech; see [localization.md](architecture/localization.md).
 - The BottomTray is a specific collapsed state of ArtistDetailScreen — same component, different presentation state.
 
 ## States

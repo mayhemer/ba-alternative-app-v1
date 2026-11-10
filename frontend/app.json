@@ -68,7 +68,22 @@
         }
       ],
       "@bacons/apple-targets",
-      "./plugins/withNowCard"
+      "./plugins/withNowCard",
+      [
+        "expo-localization",
+        {
+          "supportedLocales": {
+            "ios": [
+              "en",
+              "cs"
+            ],
+            "android": [
+              "en",
+              "cs"
+            ]
+          }
+        }
+      ]
     ],
     "owner": "janbambass-team",
     "extra": {

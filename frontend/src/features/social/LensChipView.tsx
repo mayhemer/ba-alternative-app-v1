@@ -1,3 +1,4 @@
+import { strings } from '../../i18n/strings';
 import React, { memo } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { FriendAvatar } from './FriendAvatar';
@@ -15,7 +16,7 @@ const STAR_SIZE = 20;
 
 function LensChipViewBase({ item, onPress }: { item: LensChipModel; onPress: () => void }) {
   return (
-    <TopBarChip onPress={onPress} accessibilityLabel="View and share schedules" dotsColor={item.dotsColor} open={item.open}>
+    <TopBarChip onPress={onPress} accessibilityLabel={strings().lensChip.accessibilityLabel} dotsColor={item.dotsColor} open={item.open}>
       {item.state.kind === 'friend' ? (
         <FriendAvatar label={item.state.label} avatarUrl={item.state.avatarUrl} size={AVATAR_SIZE} status="will_go" />
       ) : (

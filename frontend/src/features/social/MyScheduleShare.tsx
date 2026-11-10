@@ -1,3 +1,4 @@
+import { strings } from '../../i18n/strings';
 import React, { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -39,7 +40,7 @@ export function MyScheduleShareView({ item, busy, onSignIn, onShare, onCopy, onR
       {/* The toast floats over the heading's line, centred on it, so showing it
           moves nothing in the panel. */}
       <View style={{ zIndex: 1 }}>
-        <PanelSectionLabel>My schedule</PanelSectionLabel>
+        <PanelSectionLabel>{strings().myScheduleShare.heading}</PanelSectionLabel>
         <View
           pointerEvents="box-none"
           style={{ position: 'absolute', top: -20, bottom: -20, left: 0, right: 0, flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center' }}
@@ -62,14 +63,14 @@ export function MyScheduleShareView({ item, busy, onSignIn, onShare, onCopy, onR
             onPress={onSignIn}
             hitSlop={20}
             accessibilityRole="link"
-            accessibilityLabel="Sign in"
+            accessibilityLabel={strings().myScheduleShare.signIn}
           >
             <Text style={{ color: colors.accent, fontSize: 13, fontFamily: 'Bold-Default' }}>
-              Sign in
+              {strings().myScheduleShare.signIn}
             </Text>
           </Pressable>
           <Text style={{ color: colors.notInterested, fontSize: 13 }}>
-            {' to share your schedule.'}
+            {strings().myScheduleShare.signInRest}
           </Text>
         </View>
       ) : (
@@ -89,10 +90,10 @@ export function MyScheduleShareView({ item, busy, onSignIn, onShare, onCopy, onR
           {item.canCopyOrRevoke && (
             <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8 }}>
               <Pressable onPress={onCopy} style={{ paddingVertical: 8, paddingRight: 16 }}>
-                <Text style={{ color: colors.accent, fontSize: 14 }}>Copy link</Text>
+                <Text style={{ color: colors.accent, fontSize: 14 }}>{strings().myScheduleShare.copyLink}</Text>
               </Pressable>
               <Pressable onPress={onRevoke} style={{ paddingVertical: 8 }}>
-                <Text style={{ color: colors.danger, fontSize: 14 }}>Revoke</Text>
+                <Text style={{ color: colors.danger, fontSize: 14 }}>{strings().myScheduleShare.revoke}</Text>
               </Pressable>
             </View>
           )}
@@ -130,10 +131,10 @@ export function MyScheduleShare({ onClose }: { onClose: () => void }) {
     setBusy(true);
     try {
       const share = await shareMine();
-      const result = await shareLink(share.url, 'Check out my festival schedule');
-      if (result === 'copied') { showFeedback('Link copied', 'confirmation', IN_SECTION); }
+      const result = await shareLink(share.url, strings().myScheduleShare.shareMessage);
+      if (result === 'copied') { showFeedback(strings().myScheduleShare.linkCopied, 'confirmation', IN_SECTION); }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Could not create link';
+      const message = err instanceof Error ? err.message : strings().myScheduleShare.createFailed;
       showFeedback(message, 'warning', IN_SECTION);
     } finally {
       setBusy(false);
@@ -150,7 +151,7 @@ export function MyScheduleShare({ onClose }: { onClose: () => void }) {
     setBusy(true);
     try {
       await revokeMine();
-      showFeedback('Share link revoked', 'confirmation', IN_SECTION);
+      showFeedback(strings().myScheduleShare.revoked, 'confirmation', IN_SECTION);
     } finally {
       setBusy(false);
     }

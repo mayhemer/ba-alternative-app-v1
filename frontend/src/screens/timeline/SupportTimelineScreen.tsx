@@ -1,3 +1,4 @@
+import { strings } from '../../i18n/strings';
 import React from 'react';
 import type { DbArtist } from '../../types/backend';
 import { BaseTimelineScreen } from './BaseTimelineScreen';
@@ -12,7 +13,7 @@ function SupportBottomBar() {
 export function SupportTimelineScreen() {
   return (
     <BaseTimelineScreen
-      title="Support"
+      title={strings().screens.supportProgram}
       screenKey="support"
       filterArtist={filterArtist}
       useSubRows

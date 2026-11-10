@@ -29,7 +29,7 @@ import {
   searchDockFrame,
   searchResultsBottomPadding,
 } from './SearchDock.model';
-import { searchStrings } from './searchStrings';
+import { strings } from '../../i18n/strings';
 import { searchIndex, searchLineup } from '../../lib/search';
 import { useArtistDetail } from '../artist-detail/ArtistDetailContext';
 import { useDeferredInterests } from '../interests/InterestContext';
@@ -231,7 +231,7 @@ function OpenSearch() {
           testID="search-dim"
           onPress={close}
           accessibilityRole="button"
-          accessibilityLabel={searchStrings.close}
+          accessibilityLabel={strings().search.close}
           style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: OVERLAY_BACKDROP }}
         />
       )}
@@ -282,7 +282,7 @@ function OpenSearch() {
           autoCapitalize="none"
           returnKeyType="search"
           onSubmitEditing={Keyboard.dismiss}
-          placeholder={searchStrings.placeholder}
+          placeholder={strings().search.placeholder}
           placeholderTextColor={colors.muted}
           selectionColor={colors.accent}
           style={[{ flex: 1, height: '100%', fontSize: 16, color: colors.textPrimary, fontFamily: 'Regular-Default', padding: 0 }, NO_FOCUS_RING]}
@@ -291,7 +291,7 @@ function OpenSearch() {
           testID="search-close"
           onPress={close}
           accessibilityRole="button"
-          accessibilityLabel={searchStrings.close}
+          accessibilityLabel={strings().search.close}
           hitSlop={8}
           style={{ paddingHorizontal: 16, height: '100%', justifyContent: 'center' }}
         >

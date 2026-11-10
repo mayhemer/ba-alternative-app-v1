@@ -7,6 +7,8 @@ import { useInterestCycle } from '../interests/InterestContext';
 import { createDataCollector, hydrateInterests, populateCache, setInterest } from '../../cache/cacheService';
 import { rendersSinceReset, resetRenders } from '../../../tests/setup/countRenders';
 import type { DbArtist, DbCategory, DbEvent, DbStage } from '../../types/backend';
+import { putArtistBios } from '../../cache/cacheService';
+import { setAppLanguage } from '../../i18n/language';
 
 // ── The artist sheet reacts to every input ────────────────────────────────────
 //
@@ -185,5 +187,33 @@ describe('render counts', () => {
     // none → Maybe: BASTION's own star, no clash either way.
     await act(async () => { cycle('bastion'); });
     expect(mockPartRenders).toEqual({ header: 1 });
+  });
+});
+
+describe('in Czech', () => {
+  beforeEach(() => {
+    setAppLanguage('cs');
+    putArtistBios(SLUG, [{
+      artistId: 'bastion',
+      localized: [
+        { language: 'CS', content: '<p>Životopis česky</p>' },
+        { language: 'EN', content: '<p>Biography in English</p>' },
+      ],
+    }], at('2025-08-06T09:00:00+02:00'));
+  });
+  afterEach(() => { setAppLanguage('en'); });
+
+  it('shows the Czech bio, Czech day labels and the English stage name the API has no Czech for', async () => {
+    await openSheet();
+    expect(screen.getByText('Životopis česky')).toBeTruthy();
+    expect(screen.queryByText('Biography in English')).toBeNull();
+    expect(screen.getAllByText('St 6.')).toHaveLength(1);
+    expect(screen.getAllByText('Čt 7.')).toHaveLength(2);
+    expect(screen.getAllByText('Octagon')).toHaveLength(3);
+  });
+
+  it('says the clash in Czech', async () => {
+    await openSheet({ bastion: 'will_go', rival: 'will_go' });
+    expect(screen.getAllByText('Překrývá se s jiným vystoupením').length).toBeGreaterThan(0);
   });
 });

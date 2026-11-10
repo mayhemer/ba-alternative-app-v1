@@ -1,5 +1,4 @@
-import { planStrings } from '../screens/my-plan/planStrings';
-import { conflictStrings } from '../features/conflicts/conflictStrings';
+import { strings } from '../i18n/strings';
 
 // ── The navigation drawer: what it lists ──────────────────────────────────────
 //
@@ -20,13 +19,16 @@ export type DrawerItemModel = {
   accessibilityLabel: string;
 };
 
-const ITEMS = [
-  { label: planStrings().title, screen: 'MyPlan' },
-  { label: 'Artists', screen: 'ArtistList' },
-  { label: 'Program', screen: 'Timeline' },
-  { label: 'Support Program', screen: 'SupportTimeline' },
-  { label: 'Settings', screen: 'Settings' },
-];
+function items(): { label: string; screen: string }[] {
+  const { screens } = strings();
+  return [
+    { label: screens.myPlan, screen: 'MyPlan' },
+    { label: screens.artists, screen: 'ArtistList' },
+    { label: screens.program, screen: 'Timeline' },
+    { label: screens.supportProgram, screen: 'SupportTimeline' },
+    { label: screens.settings, screen: 'Settings' },
+  ];
+}
 
 export type DrawerInputs = {
   activeRoute: string | undefined;
@@ -36,7 +38,7 @@ export type DrawerInputs = {
 };
 
 export function drawerItemModels({ activeRoute, hasProgram, hasSupportProgram, conflictCount }: DrawerInputs): DrawerItemModel[] {
-  return ITEMS
+  return items()
     .filter((item) => {
       if (item.screen === 'Timeline') { return hasProgram; }
       if (item.screen === 'SupportTimeline') { return hasSupportProgram; }
@@ -50,7 +52,7 @@ export function drawerItemModels({ activeRoute, hasProgram, hasSupportProgram, c
         label: item.label,
         active: item.screen === activeRoute,
         marker,
-        accessibilityLabel: marker !== null ? `${item.label}, ${conflictStrings().conflictsLabel(marker)}` : item.label,
+        accessibilityLabel: marker !== null ? `${item.label}, ${strings().conflict.conflictsLabel(marker)}` : item.label,
       };
     });
 }

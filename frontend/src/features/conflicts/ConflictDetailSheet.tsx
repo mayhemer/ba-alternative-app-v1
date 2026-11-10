@@ -13,7 +13,7 @@ import { useBottomSheetMount } from '../../hooks/useBottomSheetMount';
 import { conflictGroupOf } from '../../lib/conflictUtils';
 import { ConflictTimeline } from './ConflictTimeline';
 import { conflictHeaderWhen } from './ConflictDetailHeader.model';
-import { conflictStrings } from './conflictStrings';
+import { strings } from '../../i18n/strings';
 import { colors, MAX_CONTENT_WIDTH } from '../../styling/tokens';
 import type { DbArtist, DbEvent } from '../../types/backend';
 
@@ -33,7 +33,6 @@ const SNAP_POINTS = ['100%'];
 // 10 pt sideways, and starts only after 10 pt up or down.
 const SIDEWAYS_FAIL: [number, number] = [-10, 10];
 const VERTICAL_START: [number, number] = [-10, 10];
-const strings = conflictStrings();
 
 // ── Backdrop ──────────────────────────────────────────────────────────────────
 
@@ -66,14 +65,14 @@ function ConflictDetailHeader({ group, onClose }: { group: DbEvent[]; onClose: (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <Ionicons name="warning-outline" size={20} color={colors.danger} />
             <Text style={{ fontSize: 20, fontWeight: '700', fontFamily: 'Bold-Default', color: colors.textPrimary }}>
-              {strings.conflict}
+              {strings().conflict.conflict}
             </Text>
           </View>
           <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 2 }}>
             {when}
           </Text>
         </View>
-        <TouchableOpacity onPress={onClose} hitSlop={8} accessibilityRole="button" accessibilityLabel="Close conflict">
+        <TouchableOpacity onPress={onClose} hitSlop={8} accessibilityRole="button" accessibilityLabel={strings().conflictDetailSheet.close}>
           <Text style={{ fontSize: 20, color: colors.textSecondary, lineHeight: 28 }}>✕</Text>
         </TouchableOpacity>
       </View>

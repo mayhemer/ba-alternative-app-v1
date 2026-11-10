@@ -54,7 +54,7 @@ NAPALM DEATH
 ```
 
 - **Live row:** the band name (22 heavy, ellipsis) with `+N` (17 bold red; other sets live now) at its end, then the status
-  line: red dot, `LIVE` (12 bold caps, `planStrings.live`), the time left (14 bold, accent), and
+  line: red dot, `LIVE` (12 bold caps, `strings().setStatus.live`), the time left (14 bold, accent), and
   `time · stage` on the right (14; time `textMuted`, stage bold `textSecondary`). Then the bar: 5 pt,
   dark yellow (`livePassed`) for the time played from the left, yellow for the time left, as the pill's.
   When the next band clashes, the bar also stripes the stretch it overlaps, from its start to the
@@ -62,12 +62,12 @@ NAPALM DEATH
   everywhere, ux-principles.md; 2 pt; `ClashStripes`), red (`danger`) and dark red (`dangerSecondary`) alternating. The stretch is opaque: the bar's played and left colours don't show inside it. Only the next band's overlap, not every overlap of the live set (My plan's
   clash bar shows those): the card is about what comes next.
 - **Next row** (under the live row, when the day has a Must-see still to start): as the break row,
-  with `NEXT:` before the name instead of a heading line (`planStrings.cardNextShort` with a colon,
+  with `NEXT:` before the name instead of a heading line (`strings().nowCard.nextShort` with a colon,
   `textMuted`; "DALŠÍ:" in Czech); the name (16 heavy, ellipsis), then the countdown to its start
   (14 bold **blue**) with `time · stage` on the right. When it clashes with a live set, a red `⚠`
   after the countdown; the countdown stays blue: it is the time to its start, not a time it has been
   live. The break row's sizes (22, 18) would make the card 170 pt, past iOS's 160.
-- **Break row:** a grey heading `NEXT UP` (13 semibold caps, `muted`; `planStrings.cardNext`; Czech
+- **Break row:** a grey heading `NEXT UP` (13 semibold caps, `muted`; `strings().nowCard.next`; Czech
   "NÁSLEDUJE"),
   the name (22 heavy), then the countdown to the next Must-see (18 bold blue) with `time · stage` on
   the right.
@@ -119,7 +119,7 @@ NEXT: HOODED MENACE                                    break
   `time · stage`), with a red `⚠` after the countdown when it clashes. A clashing next row also
   gets a striped clash bar on its right edge (6 dp, `nc_clash_stripes`, the same rising hatch): Android has no
   live bar to stripe, as iOS does.
-- **Break:** `NEXT:` (`planStrings.cardNextShort` with a colon, "DALŠÍ:" in Czech; iOS's break row
+- **Break:** `NEXT:` (`strings().nowCard.nextShort` with a colon, "DALŠÍ:" in Czech; iOS's break row
   keeps `NEXT UP`; the name's size, the time range's colour), the name (18 bold); then the countdown
   (18 bold blue, to `time · stage` as on iOS) on one baseline with `time · stage`.
 - A live card with no next band, and the break card, have no expanded view of their own: Android shows

@@ -14,6 +14,7 @@
 // ever stop changing clocks, that test is what fails.
 
 import type { DbEvent } from '../types/backend';
+import { strings } from '../i18n/strings';
 
 export const FESTIVAL_TIME_ZONE = 'Europe/Prague';
 
@@ -128,11 +129,9 @@ export function formatTime(timestampMs: number): string {
   return `${String(wall.getUTCHours()).padStart(2, '0')}:${String(wall.getUTCMinutes()).padStart(2, '0')}`;
 }
 
-const WEEKDAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-/** Short weekday of a timestamp, e.g. "Wed". */
+/** Short weekday of a timestamp in the app language, e.g. "Wed" / "St". */
 export function formatWeekday(timestampMs: number): string {
-  return WEEKDAY_NAMES[toFestivalClock(timestampMs).getUTCDay()];
+  return strings().weekdays.short[toFestivalClock(timestampMs).getUTCDay()];
 }
 
 /** Day and month of a timestamp, e.g. "6.8.". */
@@ -141,6 +140,7 @@ export function formatDayMonth(timestampMs: number): string {
   return `${wall.getUTCDate()}.${wall.getUTCMonth() + 1}.`;
 }
 
+/** A festival day in the app language, e.g. "Wed 6" / "St 6.". */
 export function formatDayLabel(dayStartMs: number): string {
-  return `${formatWeekday(dayStartMs)} ${toFestivalClock(dayStartMs).getUTCDate()}`;
+  return strings().weekdays.dayLabel(formatWeekday(dayStartMs), toFestivalClock(dayStartMs).getUTCDate());
 }

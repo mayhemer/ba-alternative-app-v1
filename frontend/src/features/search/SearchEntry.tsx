@@ -4,7 +4,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text } from '../../ui/Text';
 import { useSearch } from './SearchContext';
 import { SEARCH_ENTRY, searchEntryFrame } from './SearchDock.model';
-import { searchStrings } from './searchStrings';
+import { strings } from '../../i18n/strings';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
 import { colors } from '../../styling/tokens';
 
@@ -28,7 +28,7 @@ export function SearchEntry() {
       testID="search-entry"
       onPress={handlePress}
       accessibilityRole="search"
-      accessibilityLabel={searchStrings.entry}
+      accessibilityLabel={strings().search.entry}
       style={{
         position: 'absolute',
         ...searchEntryFrame({ isWide }),
@@ -43,7 +43,7 @@ export function SearchEntry() {
       }}
     >
       <Ionicons name="search" size={SEARCH_ENTRY.iconSize} color={colors.textMuted} />
-      <Text style={{ fontSize: 16, color: colors.muted }}>{searchStrings.entry}</Text>
+      <Text style={{ fontSize: 16, color: colors.muted }}>{strings().search.entry}</Text>
     </Pressable>
   );
 }

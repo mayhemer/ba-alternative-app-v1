@@ -1,3 +1,4 @@
+import { strings } from '../../i18n/strings';
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { LoadingScreen } from '../../ui/LoadingScreen';
 import type { DbArtist, DbEvent } from '../../types/backend';
@@ -91,7 +92,7 @@ export function BaseTimelineScreen({ title, screenKey, BottomBarComponent, filte
   // ── Render ──────────────────────────────────────────────────────────────────
 
   if (dayToShow === 0) {
-    return <LoadingScreen message="Loading schedule…" />;
+    return <LoadingScreen message={strings().timelineScreen.loading} />;
   }
 
   return (

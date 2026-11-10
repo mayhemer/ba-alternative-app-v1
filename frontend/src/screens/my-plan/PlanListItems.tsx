@@ -3,7 +3,7 @@ import { Pressable } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { Text } from '../../ui/Text';
-import { conflictStrings } from '../../features/conflicts/conflictStrings';
+import { strings } from '../../i18n/strings';
 import { CAP_GLYPH, LIST_GUTTER, PROGRESS_BAR_WIDTH } from './planStyles';
 import type { DbEvent } from '../../types/backend';
 import { colors } from '../../styling/tokens';
@@ -14,7 +14,6 @@ import { colors } from '../../styling/tokens';
 // arrow (which sits in the left gutter) and the conflict title stay inside their
 // own cell: on Android a touch outside a cell's bounds never reaches it.
 
-const strings = conflictStrings();
 
 // ── Now arrow ─────────────────────────────────────────────────────────────────
 
@@ -59,11 +58,11 @@ export function ConflictGroupTitle({ event, onPress }: {
       onPress={() => { onPress(event); }}
       hitSlop={CONFLICT_TITLE_HIT_SLOP}
       accessibilityRole="button"
-      accessibilityLabel={strings.conflict}
+      accessibilityLabel={strings().conflict.conflict}
       style={{ position: 'absolute', right: LIST_GUTTER + 2, bottom: 0, flexDirection: 'row', alignItems: 'center', gap: 6 }}
     >
       <Ionicons name="warning-outline" size={14} color={colors.danger} />
-      <Text style={{ fontSize: 13, lineHeight: 16, color: colors.danger }}>{strings.conflict}</Text>
+      <Text style={{ fontSize: 13, lineHeight: 16, color: colors.danger }}>{strings().conflict.conflict}</Text>
     </Pressable>
   );
 }

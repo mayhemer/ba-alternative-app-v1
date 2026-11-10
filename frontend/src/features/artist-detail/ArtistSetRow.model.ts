@@ -1,3 +1,4 @@
+import { strings } from '../../i18n/strings';
 import type { DbArtist, DbCategory, DbEvent, DbStage } from '../../types/backend';
 import type { ConflictEntry } from '../../lib/conflictUtils';
 import { decodeCategoryColor } from '../../utils/color';
@@ -51,7 +52,7 @@ export function artistSetRowModel({ event, artist, stage, category, conflict, pa
     day: formatDayLabel(event.dateFrom),
     time: `${formatTime(event.dateFrom)}–${formatTime(event.dateTo)}`,
     borderColor: category !== undefined ? decodeCategoryColor(category.color) : colors.textPrimary,
-    conflict: conflict !== undefined ? `Overlaps with ${conflict.overlapCount} other event(s)` : null,
+    conflict: conflict !== undefined ? strings().artistSetRow.overlaps(conflict.overlapCount) : null,
     jump: timelineJump(artist, event),
     margin: padding,
   };

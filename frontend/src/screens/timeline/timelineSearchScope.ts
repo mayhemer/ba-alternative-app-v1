@@ -1,5 +1,5 @@
 import type { SearchScope, SetRef } from '../../features/search/searchScope';
-import { searchStrings } from '../../features/search/searchStrings';
+import { strings } from '../../i18n/strings';
 import { isRemovedByLens, type LensScope } from '../../lib/interestUtils';
 import { onSupportProgram, timelineJump, type TimelineJump } from '../../lib/timelineJump';
 import type { InterestStatus } from '../../cache/cacheService';
@@ -42,15 +42,16 @@ export function timelineSearchScope({ support, lens, interests, hidden, setLens,
     jump(event, timelineJump(artist, event));
   };
 
+  const { screens, search, lensPanel } = strings();
   return {
-    title: support ? searchStrings.supportProgram : searchStrings.program,
+    title: support ? screens.supportProgram : screens.program,
     hereOpens: 'land',
     elsewhereOpens: 'switch',
     contains: (ref) => onSupportProgram(ref.artist) === support,
     views: [
       { shows: (ref) => !inHiddenLane(ref) && !removed(ref), tag: null },
-      { shows: (ref) => !removed(ref), tag: searchStrings.tagLane },
-      { shows: () => true, tag: searchStrings.tagLens },
+      { shows: (ref) => !removed(ref), tag: search.tagLane },
+      { shows: () => true, tag: search.tagLens(lensPanel.everything) },
     ],
     reveal: ({ artist, event }) => { widenAndJump(artist, event); },
     openElsewhere: ({ artist, event }) => { widenAndJump(artist, event); },

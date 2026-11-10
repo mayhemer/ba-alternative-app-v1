@@ -1,4 +1,4 @@
-import { formatDuration, formatRemaining, NARROW_SPACE, planStrings } from './planStrings';
+import { formatDuration, formatRemaining, NARROW_SPACE } from './planDurations';
 
 const MIN = 60 * 1000;
 
@@ -28,19 +28,5 @@ describe('formatRemaining', () => {
     expect(formatRemaining(37 * MIN, NARROW_SPACE)).toBe('−37\u202Fmin');
     expect(formatRemaining(80 * MIN, NARROW_SPACE)).toBe('−1\u202Fh\u202F20');
     expect(formatRemaining(180 * MIN, NARROW_SPACE)).toBe('−3\u202Fh');
-  });
-});
-
-describe('planStrings', () => {
-  it('has every English string in Czech too', () => {
-    const en = planStrings('en');
-    const cs = planStrings('cs');
-    expect(Object.keys(cs).sort()).toEqual(Object.keys(en).sort());
-    expect(en.live).toBe('LIVE');
-    expect(cs.live).toBe('HRAJE');
-  });
-
-  it('falls back to English for an unknown language', () => {
-    expect(planStrings('de')).toEqual(planStrings('en'));
   });
 });

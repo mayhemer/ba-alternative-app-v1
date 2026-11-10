@@ -48,6 +48,7 @@ src/
   ui/             # Generic React elements, no festival logic (Text, chip frame, panel section label, toast card, stripes, sameProps)
   hooks/          # Generic React hooks (layout mode, minute clock, overlays, bottom sheets, stable value)
   utils/          # Plain helpers, no React (festival clock and days, colour, text fit, perf marks)
+  i18n/           # Every string the app shows (EN + CS) and the app language; see localization.md
 
   adapters/       # API-specific fetchers (swappable)
   auth/           # Cognito config, token storage, sign-in/out, AuthContext
@@ -79,8 +80,8 @@ src/
    ```
 
    `lib/` and `ui/` / `hooks/` never import each other: `lib/` has no React (nor React Native,
-   Expo or navigation), and `ui/` / `hooks/` have no festival logic. `styling/` and `types/` are
-   leaves anyone may import; `lib/` may import data types from `cache/` and `adapters/`.
+   Expo or navigation), and `ui/` / `hooks/` have no festival logic. `styling/`, `types/` and `i18n/`
+   ([localization.md](localization.md)) are leaves anyone may import; `lib/` may import data types from `cache/` and `adapters/`.
    Exceptions:
    - the app's two APIs, which any layer above `lib/` may use: `shell/ScreenUIContext` (set the
      bars, show feedback) and `navigation/`'s helpers (`navigationRef`, jumping to the timeline);

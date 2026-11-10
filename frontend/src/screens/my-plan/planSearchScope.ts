@@ -1,9 +1,8 @@
 import type { SearchScope } from '../../features/search/searchScope';
-import { searchStrings } from '../../features/search/searchStrings';
 import { planLevelLists, type PickLevel } from '../../lib/plan';
 import type { PlanLevel } from '../../store/uiStatePersistence';
 import type { DbEvent } from '../../types/backend';
-import { planStrings } from './planStrings';
+import { strings } from '../../i18n/strings';
 
 // ── What My plan tells search ─────────────────────────────────────────────────
 //
@@ -17,14 +16,6 @@ import { planStrings } from './planStrings';
 
 /** The filters from the narrowest out. */
 const LADDER: PlanLevel[] = ['conflicts', 'must', 'maybe', 'all'];
-
-const strings = planStrings();
-const FILTER_NAMES: Record<PlanLevel, string> = {
-  conflicts: strings.filterConflicts,
-  must: strings.filterMust,
-  maybe: strings.filterMaybe,
-  all: strings.filterAll,
-};
 
 export type PlanSearchInputs = {
   level: PlanLevel;
@@ -40,7 +31,7 @@ export type PlanSearchInputs = {
 export function planSearchScope({ level, listable, clashing, setLevel, land }: PlanSearchInputs): SearchScope {
   const ladder = LADDER.slice(LADDER.indexOf(level));
   return {
-    title: strings.title,
+    title: strings().screens.myPlan,
     hereOpens: 'land',
     elsewhereOpens: 'details',
     contains: (ref) => ref.event !== null && listable.has(ref.event.eventId),
@@ -52,7 +43,7 @@ export function planSearchScope({ level, listable, clashing, setLevel, land }: P
         const pick = listable.get(ref.event.eventId);
         return pick !== undefined && planLevelLists(step, pick, clashing.has(ref.event.eventId));
       },
-      tag: i === 0 ? null : searchStrings.tagFilter(FILTER_NAMES[step]),
+      tag: i === 0 ? null : strings().search.tagFilter(strings().planFilter[step]),
     })),
     reveal: ({ event }, view) => {
       if (view > 0) {

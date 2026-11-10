@@ -5,7 +5,7 @@ import { useArtistEventMap, useArtists, useFestivalDays, useStages } from '../st
 import { useDeferredInterests } from '../features/interests/InterestContext';
 import { nowCardScript, sameNowCardScript, shouldAskNowCardPermission, type NowCardSegment } from '../lib/nowCard';
 import { useStableValue } from '../hooks/useStableValue';
-import { planStrings } from '../screens/my-plan/planStrings';
+import { strings } from '../i18n/strings';
 import { NOW_CARD_URL } from '../navigation/nowCardLink';
 import { currentTimeMs } from '../utils/clock';
 import {
@@ -30,13 +30,12 @@ import {
 // On Android it also asks for the notification permission, once, on the first
 // app open of a festival day that still has a Must-see to show.
 
-const strings = planStrings();
-
 function payload(script: NowCardSegment[]): NowCardPayload {
+  const { setStatus, nowCard } = strings();
   return {
     version: 2,
     segments: script,
-    strings: { live: strings.live, next: strings.cardNext, nextShort: strings.cardNextShort, over: strings.cardOver, channel: strings.cardChannel },
+    strings: { live: setStatus.live, next: nowCard.next, nextShort: nowCard.nextShort, over: nowCard.over, channel: nowCard.name },
     url: NOW_CARD_URL,
   };
 }

@@ -1,4 +1,4 @@
-import { planStrings } from '../planStrings';
+import { strings } from '../../../i18n/strings';
 import { filterGlyph, type IconName } from './PlanFilterChip.model';
 import type { PlanLevel } from '../../../store/uiStatePersistence';
 
@@ -18,22 +18,13 @@ export type PlanFilterLevelModel = {
   selected: boolean;
 };
 
-const strings = planStrings();
-
 const ORDER: readonly PlanLevel[] = ['all', 'maybe', 'must', 'conflicts'];
-
-const LABELS: Record<PlanLevel, string> = {
-  all: strings.filterAll,
-  maybe: strings.filterMaybe,
-  must: strings.filterMust,
-  conflicts: strings.filterConflicts,
-};
 
 export function planFilterLevelModels(current: PlanLevel): PlanFilterLevelModel[] {
   return ORDER.map((level) => ({
     key: `level-${level}`,
     level,
-    label: LABELS[level],
+    label: strings().planFilter[level],
     ...filterGlyph(level),
     selected: level === current,
   }));

@@ -1,5 +1,5 @@
 import { placeResult, type Placement, type SearchScope } from './searchScope';
-import { searchStrings } from './searchStrings';
+import { strings } from '../../i18n/strings';
 import { SEARCH_ROW } from './SearchResultRow.model';
 import type { SearchHit } from '../../lib/search';
 
@@ -31,10 +31,10 @@ const SECTIONS: Section[] = ['here', 'program', 'support'];
 
 function header(section: Section, scope: SearchScope): { title: string; note: string } {
   if (section === 'here') {
-    return { title: scope.title, note: scope.hereOpens === 'details' ? searchStrings.opensDetails : '' };
+    return { title: scope.title, note: scope.hereOpens === 'details' ? strings().search.opensDetails : '' };
   }
-  const note = scope.elsewhereOpens === 'switch' ? searchStrings.opensThere : searchStrings.opensDetails;
-  return { title: section === 'program' ? searchStrings.inProgram : searchStrings.inSupportProgram, note };
+  const note = scope.elsewhereOpens === 'switch' ? strings().search.opensThere : strings().search.opensDetails;
+  return { title: section === 'program' ? strings().search.inProgram : strings().search.inSupportProgram, note };
 }
 
 function hitKey(hit: SearchHit): string {
@@ -46,7 +46,7 @@ export function searchListItems(hits: SearchHit[] | null, scope: SearchScope, qu
     return null;
   }
   if (hits.length === 0) {
-    return [{ kind: 'none', key: 'none', text: searchStrings.nothingFound(query.trim()), height: SEARCH_LIST.noneHeight }];
+    return [{ kind: 'none', key: 'none', text: strings().search.nothingFound(query.trim()), height: SEARCH_LIST.noneHeight }];
   }
   const placed = hits.map((hit) => ({ hit, placement: placeResult(scope, { artist: hit.artist, event: hit.event }) }));
   const items: SearchListItem[] = [];
@@ -66,7 +66,7 @@ export function searchListItems(hits: SearchHit[] | null, scope: SearchScope, qu
   }
   const rest = hits.length - SEARCH_LIST.maxRows;
   if (rest > 0) {
-    items.push({ kind: 'more', key: 'more', count: rest, text: searchStrings.more(rest), height: SEARCH_LIST.moreHeight });
+    items.push({ kind: 'more', key: 'more', count: rest, text: strings().search.more(rest), height: SEARCH_LIST.moreHeight });
   }
   return items;
 }

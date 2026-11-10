@@ -1,3 +1,6 @@
+import { strings } from '../../i18n/strings';
+
+
 // ── Settings: what it shows ───────────────────────────────────────────────────
 //
 // The account: a spinner while the session is being restored; signed in, the
@@ -28,12 +31,13 @@ export function accountModel({ isRestoringSession, isLoggedIn, name, email, isBu
   if (isLoggedIn) {
     return name !== null ? { kind: 'signed-in', title: name, subtitle: email ?? '' } : { kind: 'signed-in', title: email ?? '', subtitle: null };
   }
+  const s = strings().settingsScreen;
   return {
     kind: 'signed-out',
     error,
     busy: isBusy,
-    googleLabel: isBusy ? 'Signing in…' : 'Sign in with Google',
-    appleLabel: isBusy ? 'Signing in…' : 'Sign in with Apple',
+    googleLabel: isBusy ? s.signingIn : s.signInWithGoogle,
+    appleLabel: isBusy ? s.signingIn : s.signInWithApple,
   };
 }
 
@@ -48,8 +52,8 @@ export type EditionDropdownModel = {
 
 export function editionDropdownModel(slugs: string[], selected: string | null): EditionDropdownModel {
   const options = slugs.map((slug) => ({ key: slug, label: slug.toUpperCase(), active: slug === selected }));
-  const fieldLabel = options.find((option) => option.active)?.label ?? 'Choose an edition';
-  return { fieldLabel, accessibilityLabel: `Festival edition, ${fieldLabel}`, options };
+  const fieldLabel = options.find((option) => option.active)?.label ?? strings().settingsScreen.chooseEdition;
+  return { fieldLabel, accessibilityLabel: strings().settingsScreen.editionAccessibilityLabel(fieldLabel), options };
 }
 
 // ── The lock-screen now card (Android) ────────────────────────────────────────
@@ -65,7 +69,7 @@ export function nowCardSwitchModel(enabled: boolean, permission: 'granted' | 'de
     return { on: false, hint: null };
   }
   if (permission === 'denied') {
-    return { on: false, hint: 'Notifications are off for this app in the system settings.' };
+    return { on: false, hint: strings().settingsScreen.notificationsOff };
   }
   return { on: true, hint: null };
 }

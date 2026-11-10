@@ -1,4 +1,4 @@
-import { formatDuration, formatRemaining } from './planStrings';
+import { formatDuration, formatRemaining } from './planDurations';
 import { CAP_GLYPH, ITEM_SPACING } from './planStyles';
 import type { PlanSetLevel } from './PlanSetRow.model';
 import type { DbEvent } from '../../types/backend';

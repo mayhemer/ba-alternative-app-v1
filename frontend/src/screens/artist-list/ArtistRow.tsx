@@ -1,3 +1,4 @@
+import { strings } from '../../i18n/strings';
 import React, { useCallback } from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
@@ -86,7 +87,7 @@ function ArtistRowBase({ item, onPress }: Props) {
       </TouchableOpacity>
 
       {/* Star */}
-      <StarButton status={item.status} onPress={handleStarPress} label="Toggle interest" />
+      <StarButton status={item.status} onPress={handleStarPress} label={strings().starButton.accessibilityLabel} />
     </View>
   );
 }

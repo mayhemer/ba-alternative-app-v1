@@ -27,7 +27,7 @@ import { PlanGap } from './PlanGap';
 import { PlanSpacer } from './PlanSpacer';
 import { PlanFilterChip } from './filter/PlanFilterChip';
 import { PlanDaySwitcher } from './PlanDaySwitcher';
-import { planStrings } from './planStrings';
+import { strings } from '../../i18n/strings';
 import type { DbArtist, DbEvent } from '../../types/backend';
 import { colors } from '../../styling/tokens';
 
@@ -83,10 +83,9 @@ function landingOffset(
 
 /** Cells per batch before the screen is measured: FlatList's own default. */
 const DEFAULT_CELL_BATCH = 10;
-const strings = planStrings();
 
 export function MyPlanScreen() {
-  useTopBar({ title: strings.title, RightComponent: PlanFilterChip });
+  useTopBar({ title: strings().screens.myPlan, RightComponent: PlanFilterChip });
   useBottomBar({ ContentComponent: PlanDaySwitcher });
 
   const slug = useSelectedSlug();

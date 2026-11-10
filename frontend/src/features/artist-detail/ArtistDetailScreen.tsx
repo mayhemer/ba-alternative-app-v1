@@ -1,3 +1,4 @@
+import { strings } from '../../i18n/strings';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Linking, TouchableOpacity, View } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
@@ -209,7 +210,7 @@ export function ArtistDetailBody({ artist }: Props) {
         {bio.state === 'unavailable' && (
           <View style={{ paddingHorizontal: hPad, paddingTop: 16, paddingBottom: 32 }}>
             <Text style={{ fontSize: 13, color: colors.textSecondary }}>
-              Biography unavailable offline.
+              {strings().artistDetail.bioOffline}
             </Text>
           </View>
         )}

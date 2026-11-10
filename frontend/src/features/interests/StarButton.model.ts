@@ -1,3 +1,4 @@
+import { strings } from '../../i18n/strings';
 import type { InterestStatus } from './InterestContext';
 import { colors } from '../../styling/tokens';
 
@@ -5,8 +6,8 @@ import { colors } from '../../styling/tokens';
 //
 // One table for every place a pick is drawn — the star button, the indicator
 // beside names, the star selector, the filter controls: each status's
-// icon, colour, strike-through and feedback label. And the star button's size
-// and reach, which the toast keeps clear of.
+// icon, colour and strike-through; its feedback label is i18n/strings.ts'
+// `interest`. And the star button's size and reach, which the toast keeps clear of.
 
 export type StarIconName = 'star' | 'star-half' | 'star-outline';
 
@@ -15,14 +16,13 @@ type StarConfig = {
   color: string;
   /** Drawn with a diagonal bar across it. */
   struck: boolean;
-  feedbackLabel: string;
 };
 
 export const STAR_CONFIG: Record<InterestStatus, StarConfig> = {
-  none:     { icon: 'star-outline', color: colors.notInterested,   struck: false, feedbackLabel: 'Not marked' },
-  maybe:    { icon: 'star-half',    color: colors.accent,          struck: false, feedbackLabel: 'Maybe'      },
-  will_go:  { icon: 'star',         color: colors.accent,          struck: false, feedbackLabel: 'Must see!'  },
-  dont_go:  { icon: 'star-outline', color: colors.dontGo,          struck: true,  feedbackLabel: "Don't go"   },
+  none:     { icon: 'star-outline', color: colors.notInterested,   struck: false },
+  maybe:    { icon: 'star-half',    color: colors.accent,          struck: false },
+  will_go:  { icon: 'star',         color: colors.accent,          struck: false },
+  dont_go:  { icon: 'star-outline', color: colors.dontGo,          struck: true  },
 };
 
 export type StarStrike = { left: number; top: number; length: number; thickness: number };
@@ -52,7 +52,7 @@ export function starGlyphModel(status: InterestStatus, size: number, color?: str
 }
 
 export function getFeedbackLabel(status: InterestStatus): string {
-  return STAR_CONFIG[status].feedbackLabel;
+  return strings().interest[status];
 }
 
 export const STAR_ICON_SIZE = { small: 26, large: 32 } as const;

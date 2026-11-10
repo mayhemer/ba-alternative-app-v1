@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Czech for values/strings.xml. The app's own strings are in src/i18n/strings.ts;
+     this one is an Android resource because the notification layout reads it. -->
+<resources>
+  <string name="nc_clash">Konflikt</string>
+</resources>

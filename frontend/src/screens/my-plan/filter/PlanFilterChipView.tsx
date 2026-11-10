@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { planStrings } from '../planStrings';
+import { strings } from '../../../i18n/strings';
 import { TopBarChip } from '../../../ui/TopBarChip';
 import { sameProps } from '../../../ui/sameProps';
 import type { PlanFilterChipModel } from './PlanFilterChip.model';
@@ -13,7 +13,6 @@ import type { PlanFilterChipModel } from './PlanFilterChip.model';
 
 const ICON_SIZE = 20;
 
-const strings = planStrings();
 
 type Props = { item: PlanFilterChipModel; onPress: () => void };
 
@@ -21,7 +20,7 @@ function PlanFilterChipViewBase({ item, onPress }: Props) {
   return (
     <TopBarChip
       onPress={onPress}
-      accessibilityLabel={strings.filters}
+      accessibilityLabel={strings().planFilter.chip}
       accessibilityState={{ expanded: item.expanded }}
       dotsColor={item.dotsColor}
       open={item.expanded}

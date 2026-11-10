@@ -1,3 +1,4 @@
+import { strings } from '../i18n/strings';
 import { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 import * as Linking from 'expo-linking';
@@ -38,9 +39,9 @@ export function useShareLinkHandler(): void {
         if (navigationRef.isReady()) {
           navigationRef.navigate('ArtistList');
         }
-        feedbackRef.current(`Viewing ${friend.label}'s schedule`, 'confirmation');
+        feedbackRef.current(strings().shareLinkHandler.viewing(friend.label), 'confirmation');
       } catch {
-        feedbackRef.current('Could not open that link', 'warning');
+        feedbackRef.current(strings().shareLinkHandler.openFailed, 'warning');
       }
 
       // On web, strip the token from the address bar so a refresh won't re-add it.

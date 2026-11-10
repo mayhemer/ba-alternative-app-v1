@@ -2,7 +2,8 @@ import { clashesWithLive, type ConflictOverlap } from '../../lib/conflictUtils';
 import type { PickLevel } from '../../lib/plan';
 import { getStageLocalized } from '../../utils/localization';
 import { formatTime } from '../../utils/festivalTime';
-import { formatRemaining, planStrings } from './planStrings';
+import { formatRemaining } from './planDurations';
+import { strings } from '../../i18n/strings';
 import type { DbArtist, DbEvent, DbStage } from '../../types/backend';
 
 // ── One set in My plan: what it shows ─────────────────────────────────────────
@@ -17,7 +18,6 @@ import type { DbArtist, DbEvent, DbStage } from '../../types/backend';
 /** How the set is picked: Must-see, Maybe, or not at all (listed only under All sets). */
 export type PlanSetLevel = PickLevel;
 
-const strings = planStrings();
 
 /** A Must-see's row, which an unpicked set shares, and a Maybe's. */
 export const SET_ROW_HEIGHT = { must: 58, maybe: 26 } as const;
@@ -86,15 +86,15 @@ function statusOf(input: PlanSetInput, state: PlanSetModel['state']): SetStatus 
     return { kind: 'none' };
   }
   if (state === 'live') {
-    return { kind: 'live', label: strings.live, time: formatRemaining(event.dateTo - now) };
+    return { kind: 'live', label: strings().setStatus.live, time: formatRemaining(event.dateTo - now) };
   }
   if (state === 'past') {
-    return { kind: 'done', label: strings.done };
+    return { kind: 'done', label: strings().setStatus.done };
   }
   // Upcoming, while a Must-see it clashes with is already playing: time to move.
   // Only a Must-see clashes; an unpicked set never counts down to its start.
   if (level === 'will_go' && clashesWithLive(event, liveMusts)) {
-    return { kind: 'start', label: strings.start, time: formatRemaining(event.dateFrom - now) };
+    return { kind: 'start', label: strings().setStatus.start, time: formatRemaining(event.dateFrom - now) };
   }
   return { kind: 'none' };
 }

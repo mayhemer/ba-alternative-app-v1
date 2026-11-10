@@ -11,7 +11,7 @@ import { useSelectedSlug } from '../../store/AppContext';
 import { useArtists } from '../../store/cacheStore';
 import { useSearchScope } from '../../features/search/SearchContext';
 import type { SearchScope } from '../../features/search/searchScope';
-import { searchStrings } from '../../features/search/searchStrings';
+import { strings } from '../../i18n/strings';
 import { onSupportProgram } from '../../lib/timelineJump';
 import { useTopBar, useBottomBar } from '../../shell/ScreenUIContext';
 import { useStarSelectorActions } from '../../features/interests/StarSelectorContext';
@@ -64,13 +64,17 @@ const renderSectionHeader = ({ section }: { section: Section }): React.ReactElem
   <SectionSeparator letter={section.title} />
 );
 
-const EMPTY_LIST = (
-  <View className="flex-1 items-center justify-center py-16">
-    <Text className="text-textSecondary text-sm tracking-widest uppercase">
-      No artists found
-    </Text>
-  </View>
-);
+// A component, not an element built at import, so its text is read in the
+// language of the moment (i18n/language.ts).
+function EmptyList(): React.ReactElement {
+  return (
+    <View className="flex-1 items-center justify-center py-16">
+      <Text className="text-textSecondary text-sm tracking-widest uppercase">
+        {strings().artistListScreen.empty}
+      </Text>
+    </View>
+  );
+}
 
 const ArtistSectionList = React.memo(function ArtistSectionList({ sections, renderItem, scrollProps, bottomClearance }: ListProps) {
   const contentContainerStyle = useMemo(() => ({ paddingBottom: bottomClearance }), [bottomClearance]);
@@ -80,7 +84,7 @@ const ArtistSectionList = React.memo(function ArtistSectionList({ sections, rend
       keyExtractor={keyExtractor}
       renderItem={renderItem}
       renderSectionHeader={renderSectionHeader}
-      ListEmptyComponent={EMPTY_LIST}
+      ListEmptyComponent={EmptyList}
       {...scrollProps}
       stickySectionHeadersEnabled
       className="flex-1 bg-background"
@@ -89,9 +93,13 @@ const ArtistSectionList = React.memo(function ArtistSectionList({ sections, rend
   );
 });
 
-/** What the artist list tells search: its bands, every result opening details. */
+/**
+ * What the artist list tells search: its bands, every result opening details.
+ * One object for the app's life (its identity is what search compares); the
+ * title is a getter, so it is read in the language of the moment.
+ */
 const ARTIST_SEARCH_SCOPE: SearchScope = {
-  title: searchStrings.bands,
+  get title() { return strings().search.bands; },
   hereOpens: 'details',
   elsewhereOpens: 'details',
   contains: (ref) => !onSupportProgram(ref.artist),
@@ -124,7 +132,7 @@ export function ArtistListScreen() {
   // copied into state, so there is no second source of truth to fall behind.
   const artists = useArtists(selectedSlug);
 
-  useTopBar({ title: 'Artists', RightComponent: ArtistListTopBarRight });
+  useTopBar({ title: strings().screens.artists, RightComponent: ArtistListTopBarRight });
   // Every result opens the artist sheet over the results (SearchView); bands are
   // this list's own.
   useSearchScope(ARTIST_SEARCH_SCOPE);
@@ -150,7 +158,7 @@ export function ArtistListScreen() {
   // while its days are still being derived. Filters only ever narrow the loaded
   // lineup, so an empty list after them is ListEmptyComponent.
   if (loading) {
-    return <LoadingScreen message="Loading artists…" />;
+    return <LoadingScreen message={strings().artistListScreen.loading} />;
   }
 
   return (

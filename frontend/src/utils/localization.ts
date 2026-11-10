@@ -4,63 +4,53 @@ import type {
   DbCategoryLocalized,
   DbStageLocalized,
 } from '../types/backend';
+import { appLanguage, FALLBACK_LANGUAGE } from '../i18n/language';
 
-export const DEFAULT_LANG = 'en';
+// ── Picking the API's localized entries ───────────────────────────────────────
+//
+// The API sends some fields once per language (artist genre and country, stage
+// and category names, bios). These pick the entry in the language the app shows
+// (i18n/language.ts), else the English one, else the first. The API writes the
+// codes upper case ('EN', 'CS') and lists Czech first, so the match ignores case
+// and never relies on the order.
 
-// The API serves language codes upper-case ('EN', 'CS'), so an exact comparison
-// against DEFAULT_LANG never matched and every lookup fell through to the first
-// entry — which is 'CS'. Compare case-insensitively instead.
 function pickLanguage<T extends { language: string }>(
   localized: T[],
   lang: string,
 ): T | undefined {
-  const wanted = lang.toLowerCase();
-  return localized.find((l) => l.language.toLowerCase() === wanted);
+  const matches = (wanted: string) => (l: T) => l.language.toLowerCase() === wanted;
+  return localized.find(matches(lang.toLowerCase()))
+    ?? localized.find(matches(FALLBACK_LANGUAGE))
+    ?? localized[0];
 }
 
 export function getArtistLocalized(
   localized: DbArtistLocalized[],
   field: keyof Omit<DbArtistLocalized, 'language'>,
-  lang: string = DEFAULT_LANG,
+  lang: string = appLanguage(),
 ): string {
-  const match = pickLanguage(localized, lang);
-  if (match !== undefined) {
-    return match[field];
-  }
-  return localized[0]?.[field] ?? '';
+  return pickLanguage(localized, lang)?.[field] ?? '';
 }
 
 export function getCategoryLocalized(
   localized: DbCategoryLocalized[],
   field: keyof Omit<DbCategoryLocalized, 'language'>,
-  lang: string = DEFAULT_LANG,
+  lang: string = appLanguage(),
 ): string {
-  const match = pickLanguage(localized, lang);
-  if (match !== undefined) {
-    return match[field];
-  }
-  return localized[0]?.[field] ?? '';
+  return pickLanguage(localized, lang)?.[field] ?? '';
 }
 
 export function getStageLocalized(
   localized: DbStageLocalized[],
   field: keyof Omit<DbStageLocalized, 'language'>,
-  lang: string = DEFAULT_LANG,
+  lang: string = appLanguage(),
 ): string {
-  const match = pickLanguage(localized, lang);
-  if (match !== undefined) {
-    return match[field];
-  }
-  return localized[0]?.[field] ?? '';
+  return pickLanguage(localized, lang)?.[field] ?? '';
 }
 
 export function getArtistBioLocalized(
   localized: DbArtistBioLocalized[],
-  lang: string = DEFAULT_LANG,
+  lang: string = appLanguage(),
 ): string {
-  const match = pickLanguage(localized, lang);
-  if (match !== undefined) {
-    return match.content;
-  }
-  return localized[0]?.content ?? '';
+  return pickLanguage(localized, lang)?.content ?? '';
 }

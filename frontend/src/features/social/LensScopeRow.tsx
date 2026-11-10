@@ -1,3 +1,4 @@
+import { strings } from '../../i18n/strings';
 import React, { memo } from 'react';
 import { Pressable, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -66,11 +67,11 @@ function LensScopeRowBase({ item, onPress, onArm, onDisarm, onRemove }: Props) {
               }}
             >
               <Pressable onPress={onDisarm} hitSlop={8} style={{ paddingHorizontal: 10 }}>
-                <Text style={{ color: colors.textSecondary, fontSize: 13 }}>Cancel</Text>
+                <Text style={{ color: colors.textSecondary, fontSize: 13 }}>{strings().lensScopeRow.cancel}</Text>
               </Pressable>
               <Pressable onPress={() => onRemove(friend.token)} hitSlop={8} style={{ paddingLeft: 10 }}>
                 <Text style={{ color: colors.danger, fontSize: 13, fontFamily: 'Bold-Default' }}>
-                  Remove
+                  {strings().lensScopeRow.remove}
                 </Text>
               </Pressable>
             </View>
@@ -80,7 +81,7 @@ function LensScopeRowBase({ item, onPress, onArm, onDisarm, onRemove }: Props) {
               hitSlop={8}
               style={{ marginLeft: 10 }}
               accessibilityRole="button"
-              accessibilityLabel={`Remove ${item.label}`}
+              accessibilityLabel={strings().lensScopeRow.removeFriend(item.label)}
             >
               <Ionicons name="close-circle-outline" size={20} color={colors.notInterested} />
             </Pressable>

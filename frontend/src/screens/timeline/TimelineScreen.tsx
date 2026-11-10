@@ -1,3 +1,4 @@
+import { strings } from '../../i18n/strings';
 import React from 'react';
 import type { DbArtist } from '../../types/backend';
 import { BaseTimelineScreen } from './BaseTimelineScreen';
@@ -12,7 +13,7 @@ function TimelineBottomBar() {
 export function TimelineScreen() {
   return (
     <BaseTimelineScreen
-      title="Timeline"
+      title={strings().screens.program}
       screenKey="timeline"
       filterArtist={filterArtist}
       BottomBarComponent={TimelineBottomBar}

@@ -1,3 +1,4 @@
+import { strings } from '../../i18n/strings';
 import React from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import { Text } from '../../ui/Text';
@@ -10,7 +11,7 @@ type Props = {
 
 export function SplashScreen({ error, onRetry }: Props) {
   if (error === null) {
-    return <LoadingScreen message="Loading brutal data" />;
+    return <LoadingScreen message={strings().splashScreen.loading} />;
   }
 
   return (
@@ -23,7 +24,7 @@ export function SplashScreen({ error, onRetry }: Props) {
         className="border border-border px-6 py-3"
       >
         <Text className="text-textPrimary text-sm tracking-widest uppercase">
-          Retry
+          {strings().splashScreen.retry}
         </Text>
       </TouchableOpacity>
     </View>
