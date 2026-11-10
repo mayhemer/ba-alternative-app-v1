@@ -1,4 +1,3 @@
-import { Platform } from 'react-native';
 import { artistDetailTitleModel, type ArtistDetailTitleInputs } from './ArtistDetailTitle.model';
 import type { DbArtist } from '../../types/backend';
 
@@ -19,16 +18,12 @@ function title(overrides: Partial<ArtistDetailTitleInputs> = {}) {
 }
 
 // A name long enough to fit 268 px but not 240 or 238 (see the tests below).
-// The size estimate differs per platform (CHAR_WIDTH_RATIO in ui/textFit), so
-// its length is picked per platform, each worked out by hand.
-const LONG = 'A'.repeat(Platform.select({
-  // 24 × 0.9625 = 23.1 px a character: 33 × 23.1 / 3 = 254.1 px.
-  ios: 33,
-  // 24 × 0.9625 = 23.1 px a character: 33 × 23.1 / 3 = 254.1 px.
-  android: 33,
-  // 24 × 0.9625 = 23.1 px a character: 33 × 23.1 / 3 = 254.1 px.
-  default: 33,
-}));
+// The glyph width is empirical and differs per platform (ui/charWidthRatio);
+// fixed here at 0.75, so a character is 18 px at the title's 24, over 3 lines:
+// 41 × 18 / 3 = 246 px (328 without the ratio).
+jest.mock('../../ui/charWidthRatio', () => ({ CHAR_WIDTH_RATIO: 0.75 }));
+
+const LONG = 'A'.repeat(41);
 
 describe('artistDetailTitleModel', () => {
   it('keeps a name that fits at 24', () => {

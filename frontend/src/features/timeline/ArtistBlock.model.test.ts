@@ -1,4 +1,3 @@
-import { Platform } from 'react-native';
 import { artistBlockModel, blockSpan, type ArtistBlockInputs } from './ArtistBlock.model';
 import type { DbArtist, DbEvent } from '../../types/backend';
 
@@ -17,24 +16,15 @@ import type { DbArtist, DbEvent } from '../../types/backend';
 //   clash  — none, an overlap inside the block, one reaching past its start
 // Expected values are worked out by hand.
 
-// The label's size estimate differs per platform (CHAR_WIDTH_RATIO in
-// ui/textFit), so the names either side of a limit are picked per platform,
-// each worked out by hand against the 35-minute block's label: 99.17 − 3 − 16 =
-// 80.17 px, 69.17 with the star.
-const NAMES = Platform.select({
-  // 12 × 0.9625 = 11.55 px a character.
-  //   GOJIRA       6 × 11.55 =  69.30 — fits 80.17, not 69.17
-  //   CRYSTALLAKE 11 × 11.55 = 127.05 — does not fit 80.17
-  ios: { fitsOnlyWithoutStar: 'GOJIRA', tooLong: 'CRYSTALLAKE' },
-  // 12 × 0.9625 = 11.55 px a character.
-  //   GOJIRA       6 × 11.55 =  69.30 — fits 80.17, not 69.17
-  //   CRYSTALLAKE 11 × 11.55 = 127.05 — does not fit 80.17
-  android: { fitsOnlyWithoutStar: 'GOJIRA', tooLong: 'CRYSTALLAKE' },
-  // 12 × 0.9625 = 11.55 px a character.
-  //   GOJIRA       6 × 11.55 =  69.30 — fits 80.17, not 69.17
-  //   CRYSTALLAKE 11 × 11.55 = 127.05 — does not fit 80.17
-  default: { fitsOnlyWithoutStar: 'GOJIRA', tooLong: 'CRYSTALLAKE' },
-});
+// The label's glyph width is empirical and differs per platform
+// (ui/charWidthRatio); fixed here at 0.75, so a character is 9 px at the
+// block's 12. The names either side of a limit are worked out by hand against
+// the 35-minute block's label: 99.17 − 3 − 16 = 80.17 px, 69.17 with the star.
+//   MASTODON     8 × 9 = 72 — fits 80.17, not 69.17 (96 without the ratio)
+//   CRYSTALLAKE 11 × 9 = 99 — does not fit 80.17
+jest.mock('../../ui/charWidthRatio', () => ({ CHAR_WIDTH_RATIO: 0.75 }));
+
+const NAMES = { fitsOnlyWithoutStar: 'MASTODON', tooLong: 'CRYSTALLAKE' };
 
 const WED = Date.parse('2025-08-06T06:00:00+02:00');
 const at = (hm: string): number => Date.parse(`2025-08-06T${hm}:00+02:00`);
