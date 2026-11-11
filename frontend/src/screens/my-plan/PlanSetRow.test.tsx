@@ -1,11 +1,12 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { processColor, StyleSheet } from 'react-native';
 import { fireEvent, render, screen, within } from '@testing-library/react-native';
 import { PlanSetRow } from './PlanSetRow';
 import { ConflictGroupTitle, NowArrow } from './PlanListItems';
 import { buildPlanDay, type PlanInputs } from './planUtils';
 import { computeConflictEntries, conflictOverlapsOf } from '../../lib/conflictUtils';
 import type { PlanSetModel } from './PlanSetRow.model';
+import type { PlanFilterLevel } from '../../lib/plan';
 import { getFestivalDayStart } from '../../utils/festivalTime';
 import { colors } from '../../styling/tokens';
 import type { DbArtist, DbEvent } from '../../types/backend';
@@ -13,7 +14,9 @@ import type { DbArtist, DbEvent } from '../../types/backend';
 // ── A set in the plan ─────────────────────────────────────────────────────────
 //
 // Built through buildPlanDay rather than by hand, so the row is tested against
-// the items the screen really gets.
+// the items the screen really gets. The dimensions: the pick level (Must-see,
+// Maybe, unpicked, don't go), All sets or another filter, and now (before,
+// during, after a set).
 
 function at(hm: string): number {
   return Date.parse(`2025-08-07T${hm}:00+02:00`);
@@ -28,6 +31,7 @@ function setup(): { inputs: PlanInputs; interests: Record<string, string> } {
     ['6', 'Batushka', at('19:40'), at('20:30'), 'will_go'],
     ['7', 'Paysage', at('20:10'), at('21:00'), 'maybe'],
     ['8', 'Ulcerate', at('21:00'), at('21:45'), 'none'],
+    ['9', 'Spectral', at('21:50'), at('22:30'), 'dont_go'],
   ];
   const artists: DbArtist[] = [];
   const artistEvents: Record<string, DbEvent[]> = {};
@@ -41,10 +45,10 @@ function setup(): { inputs: PlanInputs; interests: Record<string, string> } {
   return { inputs: { artists, stages, artistEvents }, interests };
 }
 
-function item(name: string, now: string): PlanSetModel {
+function item(name: string, now: string, level: PlanFilterLevel = 'all'): PlanSetModel {
   const { inputs, interests } = setup();
   const entries = computeConflictEntries(interests, inputs);
-  const items = buildPlanDay(interests, inputs, { entries, overlaps: conflictOverlapsOf(entries) }, { dayStart: THU, now: at(now), duringFestival: true, level: 'all' });
+  const items = buildPlanDay(interests, inputs, { entries, overlaps: conflictOverlapsOf(entries) }, { dayStart: THU, now: at(now), duringFestival: true, level });
   const found = items.find((i): i is PlanSetModel => i.kind === 'set' && i.artist.name === name);
   if (found === undefined) {
     throw new Error(`no ${name}`);
@@ -142,84 +146,192 @@ it('gives every clash bar its own clip id: on web, SVG ids are global to the pag
   expect(new Set(ids).size).toBe(2);
 });
 
-// ── Category colours ──────────────────────────────────────────────────────────
+// ── The box: category colours, left edge, corners ────────────────────────────
 //
 // A row takes its category's colours from the timeline (categoryBlockColors):
-// a Must-see its background and border, a Maybe its border only.
+// a Must-see its background. A Maybe and an unpicked row are the raised
+// surface, a "don't go" has no background. Under every filter a row has no
+// border; a Must-see has a solid 3 pt left edge in the category's brighter
+// colour and a Maybe a dotted one in one grey whatever its category, each drawn
+// by its own element (PlanRowEdge); the others have none, their own background
+// showing there. Every live set's progress bar starts 3 pt in, past the edge.
+// No accent border while live. The content keeps its inset: 18 pt from the
+// left side, 23 pt from the right.
 
-const BG = 'rgb(10, 20, 30)';
-const BORDER = 'rgb(40, 50, 60)';
+const CATEGORY = { bg: 'rgb(10, 20, 30)', border: 'rgb(40, 50, 60)' };
 
-async function rowStyle(row: PlanSetModel, colours: { background?: string; border?: string }) {
-  await render(<PlanSetRow item={row} onPressArtist={jest.fn()} {...colours} />);
+async function rowStyle(row: PlanSetModel) {
+  await render(<PlanSetRow item={row} onPressArtist={jest.fn()} category={CATEGORY} />);
   return StyleSheet.flatten(screen.getByRole('button').props.style);
 }
 
-it('gives a Must-see row its category\'s background and border', async () => {
-  const style = await rowStyle(item('Batushka', '19:23'), { background: BG, border: BORDER });
-  expect(style.backgroundColor).toBe(BG);
-  expect(style.borderColor).toBe(BORDER);
+/** The grey #595959 as the SVG host gets it: processed for the platform (its ARGB number, signed on Android). */
+const GREY = { type: 0, payload: processColor('#595959') };
+
+/** The dots of a compact (26 pt) and a tall (58 pt) row's dotted edge. */
+const DOTS = {
+  26: 'M0 2h3v3h-3zM0 8h3v3h-3zM0 14h3v3h-3zM0 20h3v3h-3z',
+  58: 'M0 3h3v3h-3zM0 9h3v3h-3zM0 15h3v3h-3zM0 21h3v3h-3zM0 27h3v3h-3zM0 33h3v3h-3zM0 39h3v3h-3zM0 45h3v3h-3zM0 51h3v3h-3z',
+};
+
+/** The left edge the row draws: solid with its colour, dotted with its colour and dots, or null. */
+function rowEdge(): { edge: 'solid'; color: unknown } | { edge: 'dotted'; color: unknown; dots: string } | null {
+  const solid = screen.queryByTestId('plan-row-edge-solid');
+  if (solid !== null) {
+    return { edge: 'solid', color: StyleSheet.flatten(solid.props.style).backgroundColor };
+  }
+  const dots = screen.queryByTestId('plan-row-edge-dots');
+  if (dots !== null) {
+    return { edge: 'dotted', color: dots.props.fill, dots: dots.props.d };
+  }
+  return null;
+}
+
+const ROWS = [
+  ['a Must-see under All sets', 'Batushka', 'all'],
+  ['a Must-see under Must-see only', 'Batushka', 'must'],
+  ['a Maybe under All sets', 'Paysage', 'all'],
+  ['a compact Maybe under Must-see and Maybe', 'Paysage', 'maybe'],
+  ['an unpicked set', 'Ulcerate', 'all'],
+  ['a "don\'t go" set', 'Spectral', 'all'],
+] as const;
+
+it.each(ROWS)('rounds the corners of %s by 4', async (_kind, name, level) => {
+  expect((await rowStyle(item(name, '19:23', level))).borderRadius).toBe(4);
 });
 
-it('gives a live Must-see row the full accent border, over its category\'s', async () => {
-  const style = await rowStyle(item('Gojira', '19:23'), { background: BG, border: BORDER });
-  expect(style.backgroundColor).toBe(BG);
-  expect(style.borderColor).toBe(colors.accent);
+it.each(ROWS)('gives %s no border, its content 18 pt in from the left and 23 pt from the right', async (_kind, name, level) => {
+  const style = await rowStyle(item(name, '19:23', level));
+  expect(style.borderWidth ?? 0).toBe(0);
+  expect(style.borderLeftWidth ?? 0).toBe(0);
+  expect(style.paddingLeft).toBe(18);
+  expect(style.paddingRight).toBe(23);
 });
 
-it('gives a Maybe row its category\'s border and no background', async () => {
-  const style = await rowStyle(item('Paysage', '19:23'), { background: BG, border: BORDER });
-  expect(style.borderColor).toBe(BORDER);
-  expect(style.borderStyle).toBe('dashed');
-  expect(style.backgroundColor).toBeUndefined();
-  expect(screen.queryByTestId('plan-maybe-live-dot')).toBeNull();
+it.each([
+  ['All sets', 'all'],
+  ['Must-see only', 'must'],
+] as const)('fills a Must-see row under %s with its category\'s colour, with a solid left edge in the brighter one', async (_filter, level) => {
+  const style = await rowStyle(item('Batushka', '19:23', level));
+  expect(style.backgroundColor).toBe('rgb(10, 20, 30)');
+  expect(rowEdge()).toEqual({ edge: 'solid', color: 'rgb(40, 50, 60)' });
 });
 
-it('gives a live Maybe row a solid full accent border and a red dot before its name', async () => {
-  const style = await rowStyle(item('Paysage', '20:30'), { background: BG, border: BORDER });
-  expect(style.borderColor).toBe(colors.accent);
-  expect(style.borderStyle).toBe('solid');
+it.each([
+  ['All sets', 'all'],
+  ['Must-see only', 'must'],
+] as const)('outlines a live Must-see row under %s in a 1 pt accent border, over its category\'s edge, without moving its content', async (_filter, level) => {
+  const style = await rowStyle(item('Gojira', '19:23', level));
+  expect(rowEdge()).toEqual({ edge: 'solid', color: 'rgb(40, 50, 60)' });
+  expect(StyleSheet.flatten(screen.getByTestId('plan-live-border').props.style)).toMatchObject({
+    position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, borderWidth: 1, borderRadius: 4, borderColor: colors.accent,
+  });
+  expect(style.borderWidth ?? 0).toBe(0);
+  expect(style.paddingLeft).toBe(18);
+});
+
+it.each([
+  ['an upcoming Must-see', 'Batushka', '19:23', 'all'],
+  ['a live Maybe under All sets', 'Paysage', '20:30', 'all'],
+  ['a live compact Maybe', 'Paysage', '20:30', 'maybe'],
+  ['a live unpicked set', 'Ulcerate', '21:20', 'all'],
+  ['a live "don\'t go" set', 'Spectral', '22:10', 'all'],
+] as const)('draws no accent border on %s', async (_kind, name, now, level) => {
+  await rowStyle(item(name, now, level));
+  expect(screen.queryByTestId('plan-live-border')).toBeNull();
+});
+
+it.each([
+  ['All sets', 'all', 58],
+  ['Must-see and Maybe', 'maybe', 26],
+] as const)('fills a Maybe row under %s with the raised surface, with a dotted grey left edge the row\'s height, the same in every category', async (_filter, level, height) => {
+  const style = await rowStyle(item('Paysage', '19:23', level));
+  expect(style.backgroundColor).toBe(colors.surfaceRaised);
+  expect(style.height).toBe(height);
+  expect(rowEdge()).toEqual({ edge: 'dotted', color: GREY, dots: DOTS[height] });
+});
+
+it('keeps a live compact Maybe\'s dotted edge, with a red dot before its name', async () => {
+  await rowStyle(item('Paysage', '20:30', 'maybe'));
+  expect(rowEdge()?.edge).toBe('dotted');
   expect(StyleSheet.flatten(screen.getByTestId('plan-maybe-live-dot').props.style).backgroundColor).toBe(colors.danger);
 });
 
-it('writes a Maybe row in the muted text colour, readable in sunlight', async () => {
-  await renderRow(item('Paysage', '19:23'));
+it('gives a live Maybe under All sets the LIVE status line rather than a dot before its name', async () => {
+  await rowStyle(item('Paysage', '20:30'));
+  expect(rowEdge()?.edge).toBe('dotted');
+  expect(screen.getByText('LIVE')).toBeTruthy();
+  expect(screen.queryByTestId('plan-maybe-live-dot')).toBeNull();
+});
+
+it.each([
+  ['a Must-see', 'Gojira', '19:23', 'all'],
+  ['a compact Maybe', 'Paysage', '20:30', 'maybe'],
+  ['an unpicked set', 'Ulcerate', '21:20', 'all'],
+  ['a "don\'t go" set', 'Spectral', '22:10', 'all'],
+] as const)('starts the progress bar of %s 3 pt in, past the left edge, while live', async (_kind, name, now, level) => {
+  const row = item(name, now, level);
+  expect(row.state).toBe('live');
+  await rowStyle(row);
+  expect(StyleSheet.flatten(screen.getByTestId('plan-live-progress').props.style).left).toBe(3);
+});
+
+it('writes a compact Maybe row in the muted text colour, readable in sunlight', async () => {
+  await renderRow(item('Paysage', '19:23', 'maybe'));
   for (const text of ['20:10–21:00', 'Paysage', 'Octagon']) {
     expect(StyleSheet.flatten(screen.getByText(text).props.style).color).toBe(colors.textMuted);
   }
 });
 
-it('falls back to the surface and a grey border without category colours', async () => {
-  const style = await rowStyle(item('Batushka', '19:23'), {});
-  expect(style.backgroundColor).toBe(colors.surface);
-  expect(style.borderColor).toBe(colors.borderMid);
-});
-
-it('gives an unpicked row its category\'s border and no background', async () => {
-  await render(<PlanSetRow item={item('Ulcerate', '19:23')} onPressArtist={jest.fn()} background="rgb(10, 20, 30)" border="rgb(40, 50, 60)" />);
-  const style = StyleSheet.flatten(screen.getByRole('button').props.style);
-  expect(style.borderColor).toBe('rgb(40, 50, 60)');
-  expect(style.borderStyle ?? 'solid').toBe('solid');
-  expect(style.backgroundColor).toBeUndefined();
+it('fills an unpicked row with the raised surface, with no left edge', async () => {
+  const style = await rowStyle(item('Ulcerate', '19:23'));
+  expect(style.backgroundColor).toBe(colors.surfaceRaised);
+  expect(rowEdge()).toBeNull();
   expect(style.height).toBe(58);
 });
 
-it('puts no star on a Must-see', async () => {
-  await renderRow(item('Gojira', '19:23'));
-  expect(screen.getByText('Gojira')).toBeTruthy();
-  expect(screen.queryByTestId(/^plan-star/)).toBeNull();
+it('gives a "don\'t go" row no background and no left edge, its texts in the muted grey', async () => {
+  const style = await rowStyle(item('Spectral', '19:23'));
+  expect(style.backgroundColor).toBeUndefined();
+  expect(rowEdge()).toBeNull();
+  expect(style.height).toBe(58);
+  for (const text of ['21:50–22:30', 'Spectral', 'Octagon']) {
+    expect(StyleSheet.flatten(screen.getByText(text).props.style).color).toBe(colors.muted);
+  }
 });
 
-it('puts an empty star at the right end of an unpicked set\'s name line, the name taking the room before it', async () => {
+it('writes an unpicked row\'s name in the primary text colour, not the muted grey', async () => {
   await renderRow(item('Ulcerate', '19:23'));
-  const name = screen.getByText('Ulcerate');
-  expect(within(name.parent!).getByTestId('plan-star-empty')).toBeTruthy();
-  expect(StyleSheet.flatten(name.props.style).flexGrow).toBe(1);
+  expect(StyleSheet.flatten(screen.getByText('Ulcerate').props.style).color).toBe(colors.textPrimary);
+  expect(StyleSheet.flatten(screen.getByText('Octagon').props.style).color).toBe(colors.textSecondary);
 });
 
-it('puts no star on a Maybe', async () => {
-  await renderRow(item('Paysage', '19:23'));
-  expect(screen.getByText('Paysage')).toBeTruthy();
+it('falls back to the surface without category colours', async () => {
+  await renderRow(item('Batushka', '19:23'));
+  const style = StyleSheet.flatten(screen.getByRole('button').props.style);
+  expect(style.backgroundColor).toBe(colors.surface);
+});
+
+// ── The star ──────────────────────────────────────────────────────────────────
+
+it.each([
+  ['a Must-see', 'Gojira', 'will_go'],
+  ['a Maybe', 'Paysage', 'maybe'],
+  ['an unpicked set', 'Ulcerate', 'none'],
+  ['a "don\'t go" set', 'Spectral', 'dont_go'],
+] as const)('puts the star of %s at the right end of its name line under All sets, the name taking the room before it', async (_kind, name, status) => {
+  await renderRow(item(name, '19:23'));
+  const text = screen.getByText(name);
+  expect(within(text.parent!).getByTestId(`plan-star-${status}`)).toBeTruthy();
+  expect(StyleSheet.flatten(text.props.style).flexGrow).toBe(1);
+});
+
+it.each([
+  ['a Must-see', 'Gojira'],
+  ['a Maybe', 'Paysage'],
+])('puts no star on %s under another filter', async (_kind, name) => {
+  await renderRow(item(name, '19:23', 'maybe'));
+  expect(screen.getByText(name)).toBeTruthy();
   expect(screen.queryByTestId(/^plan-star/)).toBeNull();
 });
 
@@ -228,7 +340,7 @@ it('cuts a long name off before the star, which never shrinks', async () => {
   const name = screen.getByText('Ulcerate');
   expect(name.props.numberOfLines).toBe(1);
   expect(StyleSheet.flatten(name.props.style).flexShrink).toBe(1);
-  expect(StyleSheet.flatten(screen.getByTestId('plan-star-empty').props.style).flexShrink).toBe(0);
+  expect(StyleSheet.flatten(screen.getByTestId('plan-star-none').props.style).flexShrink).toBe(0);
 });
 
 // ── A past row: slightly dimmed, with faint grey stripes ──────────────────────
@@ -243,6 +355,7 @@ it.each([
   ['a Must-see', 'Mgła', '19:23'],
   ['a Maybe', 'Paysage', '21:30'],
   ['an unpicked set', 'Ulcerate', '22:00'],
+  ['a "don\'t go" set', 'Spectral', '22:40'],
 ])('dims a past row, %s, only slightly and stripes it', async (_kind, name, now) => {
   const row = item(name, now);
   expect(row.state).toBe('past');

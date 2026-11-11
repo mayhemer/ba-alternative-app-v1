@@ -2,9 +2,9 @@ import React, { memo } from 'react';
 import { View } from 'react-native';
 import Svg, { Line } from 'react-native-svg';
 import { Text } from '../../ui/Text';
-import { ConflictGroupTitle, NowArrow, RAIL_WIDTH, RAIL_X, RailEnd } from './PlanListItems';
+import { ConflictGroupTitle, NowArrow, PROGRESS_BAR_X, RAIL_WIDTH, RAIL_X, RailEnd } from './PlanListItems';
 import { sameProps } from '../../ui/sameProps';
-import { BOLD, LIST_GUTTER, PROGRESS_BAR_WIDTH, PROGRESS_COLORS, TABULAR } from './planStyles';
+import { BOLD, PROGRESS_BAR_WIDTH, PROGRESS_COLORS, TABULAR } from './planStyles';
 import type { PlanGapModel } from './PlanGap.model';
 import type { DbEvent } from '../../types/backend';
 import { colors } from '../../styling/tokens';
@@ -13,9 +13,9 @@ import { colors } from '../../styling/tokens';
 //
 // A dotted rail and its label; the current one adds the blue fill and the now
 // arrow, and counts down in bold, or, to a set that isn't a Must-see, smaller in
-// a box shaped like that set's outline (dashed for a Maybe, solid for an
-// unpicked set), so it reads apart from the pill's countdown to the next
-// Must-see. The one above a clash group carries its "Conflict" title. Draws its
+// a box (dotted for a Maybe, as its row's edge, solid for an unpicked or "don't
+// go" set), so it reads apart from the pill's countdown to the next Must-see.
+// Its bar starts where a live row's does. The one above a clash group carries its "Conflict" title. Draws its
 // model (PlanGap.model.ts) and computes nothing itself.
 
 type Props = { item: PlanGapModel; onPressConflict?: (event: DbEvent) => void };
@@ -54,7 +54,7 @@ function PlanGapBase({ item, onPressConflict = NO_OP }: Props) {
         <View
           testID="plan-gap-progress"
           pointerEvents="none"
-          style={{ position: 'absolute', left: LIST_GUTTER, top: item.barTop, bottom: 0, width: PROGRESS_BAR_WIDTH, borderRadius: 3, overflow: 'hidden', backgroundColor: PROGRESS_COLORS.break.remaining }}
+          style={{ position: 'absolute', left: PROGRESS_BAR_X, top: item.barTop, bottom: 0, width: PROGRESS_BAR_WIDTH, borderRadius: 3, overflow: 'hidden', backgroundColor: PROGRESS_COLORS.break.remaining }}
         >
           <View testID="plan-gap-fill" style={{ width: PROGRESS_BAR_WIDTH, height: `${item.progress * 100}%`, backgroundColor: PROGRESS_COLORS.break.passed }} />
         </View>

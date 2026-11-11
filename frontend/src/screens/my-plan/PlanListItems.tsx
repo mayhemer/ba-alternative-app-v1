@@ -4,7 +4,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { Text } from '../../ui/Text';
 import { strings } from '../../i18n/strings';
-import { CAP_GLYPH, LIST_GUTTER, PROGRESS_BAR_WIDTH } from './planStyles';
+import { CAP_GLYPH, LIST_GUTTER, PROGRESS_BAR_WIDTH, ROW_EDGE_WIDTH } from './planStyles';
 import type { DbEvent } from '../../types/backend';
 import { colors } from '../../styling/tokens';
 
@@ -20,11 +20,22 @@ import { colors } from '../../styling/tokens';
 const ARROW_WIDTH = 20;
 const ARROW_HEIGHT = 30;
 const ARROW_PATH = 'M2 3L18 15L2 27z';
+/** The tip's x in the arrow's own box (ARROW_PATH). */
+const ARROW_TIP_X = 18;
+
+/**
+ * Where a progress bar starts across the whole list width: a live row's (inside
+ * the row's left edge) and the current gap's, so they line up.
+ */
+export const PROGRESS_BAR_X = LIST_GUTTER + ROW_EDGE_WIDTH;
+
+/** The arrow's left: its tip halfway across the progress bar. */
+const ARROW_LEFT = PROGRESS_BAR_X + PROGRESS_BAR_WIDTH / 2 - ARROW_TIP_X;
 
 /**
  * The red "you are here" triangle, its centre at `y` within the item. Drawn
- * from the gutter's edge, its tip reaching about 4 pt into the row, halfway
- * across the progress bar; a 1 pt white outline keeps it distinct over the bar.
+ * from the gutter, its tip reaching halfway across the progress bar; a 1 pt
+ * white outline keeps it distinct over the bar.
  */
 export function NowArrow({ y }: { y: number }) {
   return (
@@ -33,7 +44,7 @@ export function NowArrow({ y }: { y: number }) {
       pointerEvents="none"
       width={ARROW_WIDTH}
       height={ARROW_HEIGHT}
-      style={{ position: 'absolute', left: -2, top: y - ARROW_HEIGHT / 2, zIndex: 2 }}
+      style={{ position: 'absolute', left: ARROW_LEFT, top: y - ARROW_HEIGHT / 2, zIndex: 2 }}
     >
       <Path d={ARROW_PATH} fill={colors.danger} stroke={colors.white} strokeWidth={1} strokeLinejoin="round" />
     </Svg>
@@ -72,7 +83,7 @@ export function ConflictGroupTitle({ event, onPress }: {
 // The dotted line down the left of gaps and caps, and its two ends.
 
 export const RAIL_WIDTH = 2;
-export const RAIL_X = LIST_GUTTER + PROGRESS_BAR_WIDTH;
+export const RAIL_X = PROGRESS_BAR_X + PROGRESS_BAR_WIDTH;
 
 /** The day's start (a ring) or end (a filled square), centred on the rail at the cell's top or bottom. */
 export function RailEnd({ edge, height }: { edge: 'start' | 'end'; height: number }) {

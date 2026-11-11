@@ -12,8 +12,14 @@ export const STATUS_LABEL: TextStyle = { ...BOLD, fontSize: 11, letterSpacing: 0
 /** Tabular figures, so times and countdowns do not jitter as they change. */
 export const TABULAR: TextStyle = { fontVariant: ['tabular-nums'] };
 
-/** A live set's border, Must-see or Maybe: the full accent, to hold up in sunlight. */
+/** A live Must-see's 1 pt border: the full accent, to hold up in sunlight. */
 export const LIVE_BORDER = colors.accent;
+
+/** Every set row's corner radius. */
+export const ROW_RADIUS = 4;
+
+/** Every set row's left edge: a live set's progress bar, and the current gap's, start this far in. */
+export const ROW_EDGE_WIDTH = 3;
 
 /**
  * Every progress bar's two colours: the passed part dark, what remains light,
@@ -23,7 +29,7 @@ export const LIVE_BORDER = colors.accent;
 export const PROGRESS_COLORS = {
   /** A live Must-see: its row and the now pill. */
   live: { passed: colors.livePassed, remaining: colors.accent },
-  /** A live Maybe. */
+  /** Every other live set: a Maybe, an unpicked or a "don't go" set. */
   maybeLive: { passed: colors.borderMid, remaining: colors.maybeText },
   /** The current gap and the day-start break. */
   break: { passed: colors.breakPassed, remaining: colors.breakBlue },

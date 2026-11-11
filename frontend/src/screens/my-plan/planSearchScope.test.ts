@@ -5,8 +5,9 @@ import type { DbArtist, DbEvent } from '../../types/backend';
 // ── What My plan tells search ─────────────────────────────────────────────────
 //
 // Dimensions: the filter it is on (Only conflicts … All sets); a set's level on
-// the plan (Must-see, clashing or not; Maybe; an unpicked band) or none at all
-// (an unpicked support set, a "don't go", a support set over 2 h: not in planPicks); an
+// the plan (Must-see, clashing or not; Maybe; an unpicked or "don't go" band) or
+// none at all (an unpicked or "don't go" support set, a support set over 2 h:
+// not in planPicks); an
 // artist with no set. And what a landing widens first.
 
 const SLUG = 'plscopetest';
@@ -47,6 +48,11 @@ describe('planSearchScope', () => {
     expect(scope.views[1].tag).toBe('Filter → Must-see and Maybe');
     expect(placeResult(scope, ref('band'))).toEqual({ section: 'here', view: 2 });
     expect(scope.views[2].tag).toBe('Filter → All sets');
+  });
+
+  it('widens to All sets for a "don\'t go" band', () => {
+    const scope = planSearchScope(inputs({ listable: new Map([['dontgo', 'dont_go']]) }));
+    expect(placeResult(scope, ref('dontgo'))).toEqual({ section: 'here', view: 2 });
   });
 
   it('steps out of Only conflicts to Must-see only for a Must-see that does not clash', () => {

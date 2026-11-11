@@ -78,9 +78,10 @@ Each result is placed by the screen it was opened on (`features/search/searchSco
     My picks (the only set the lens removes there) turns the lens to Everything.
   - My plan: the filter steps out from where it is: Only conflicts → Must-see only → Must-see and
     Maybe → All sets, to the first that lists the set.
-- **The other sections** are named by where the set is, never by what is missing. On My plan
-  "In the Program" holds my "don't go" bands; "In the Support Program" holds support sets I
-  haven't picked and those over 2 h. A band's set over 2 h is on My plan as any other.
+- **The other sections** are named by where the set is, never by what is missing. On My plan,
+  where All sets lists my "don't go" bands too, "In the Support Program" holds support sets I
+  haven't picked or marked "don't go", and those over 2 h. A band's set over 2 h is on My plan as
+  any other.
 - **An artist with no set** goes to the section where the artist belongs, and a tap opens only the
   artist sheet: there is nothing to land on.
 - **Details:** the artist sheet opens **over the results**, expanded, as from the artist list (a

@@ -92,7 +92,7 @@ On every screen that has a top bar. On festival days it replaces the logo while 
 
   | Filter | Glyph | Lists |
   |---|---|---|
-  | **All sets** | ☆ grey outline star (`muted`) | every set of the day by a Program band, plus any support-programme set you picked; never a "don't go" pick |
+  | **All sets** | ☆ grey outline star (`muted`) | every set of the day by a Program band, your "don't go" bands too (so a pick changed by mistake is easy to undo), plus any support-programme set you picked; never an unpicked or "don't go" support-programme set |
   | **Must-see and Maybe** | ½ star, accent | your Must-see and Maybe picks |
   | **Must-see only** (default) | ★ full star, accent | your Must-see picks |
   | **Only conflicts** | ⚠ red | your clashing Must-sees (see [Conflicts](#conflicts)) |
@@ -112,7 +112,7 @@ What each element shows comes from its own model (see Principles), built from th
 
 | Element | Built from | Shows |
 |---|---|---|
-| Set row | the set, its artist and stage, its pick level (Must-see, Maybe, none), now, its overlaps with other Must-sees, the Must-sees live now, whether it heads a clash group | time range, stage, status (`LIVE −x`, `START −x`, `done`), the empty star of an unpicked set, progress, now arrow, clash bars |
+| Set row | the set, its artist and stage, its pick level (Must-see, Maybe, none, don't go), whether the list shows All sets, now, its overlaps with other Must-sees, the Must-sees live now, whether it heads a clash group | its look (tall or compact, fill, left edge, dimmed text), time range, stage, status (`LIVE −x`, `START −x`, `done`), its pick's star under All sets, progress, now arrow, clash bars |
 | Gap | where it starts (the end of everything listed above) and the set listed right under it with its pick level, now | length or countdown (boxed when it counts to a set that isn't a Must-see), height, fill, now arrow, the conflict title of the group under it |
 | Day-start break | a gap from 08:00 to the first **listed** set | as a gap, with the start ring |
 | Cap / spacer | its edge, or the clash group under it; the end cap also the end of everything listed, the shown day, now | the rail end, the conflict title of the group under it; the end cap the now arrow once the day's listed sets are over |
@@ -122,34 +122,50 @@ What each element shows comes from its own model (see Principles), built from th
 
 - The list has no day title: the day switcher already names the shown day, and a title at the top of the list only repeated it and made it harder to find your place. The list opens with the start cap, or with the day-start break while it runs.
 
+### Two row styles: All sets, and every other filter
+
+The rows look different under **All sets** and under the other filters (Must-see and Maybe, Must-see only, Only conflicts).
+
+- **Every filter:** every row has **4 pt rounded corners** (`ROW_RADIUS`) and **no border**. A Must-see and a Maybe have a **3 pt left edge** (`ROW_EDGE_WIDTH`), drawn by its own element (`PlanRowEdge`) over the row's background: **solid** in the category's brighter colour (`categoryBlockColors().border`, the timeline block's edge) on a Must-see; **dotted** in a single grey (`maybeBorder`), whatever its category, on a Maybe. The dots are 3 pt squares 3 pt apart, as many as fit with 2 pt clear at each end, centred on whole points (`rowEdgeDots`): 4 on the compact row, 9 on the tall one, both ends whole dots clear of the rounded corners. (A native dotted border was tried: on iOS it is one dotted stroke around the whole rounded box, so the dots on the left side were cut at the corners and fell by the row's width, which showed on the compact row.) An unpicked or "don't go" row has no edge, its own background showing there (the raised surface, or the list). Every live set's progress bar starts 3 pt in, past the edge. Only a live Must-see gets an accent border (see below); no other row, live or not.
+- **All sets:** every row is the tall two-line row (58 pt) and shows its pick's star at the right end of line 1, the same place whatever the name's length; a name too long for the line cuts off before it. The star is the star button's glyph at 15 pt (`StarGlyph`): ★ Must-see, ½ Maybe, ☆ unpicked, struck red ☆ "don't go".
+- **Every other filter:** no row has a star, and a Maybe is the compact one-line row (26 pt).
+
 ### Must-see row
 
-- **Box:** 58 pt tall, square corners, in its **category's colours, as on the timeline** (`categoryBlockColors`): the block's background, and a 1 px border in the brighter colour of the block's left edge. A live row's border is the full accent (`LIVE_BORDER`), as a live Maybe's, to hold up in sunlight.
-- **Fixed inset for every row type and state:** content starts 18 pt from the left edge (1 + 17) and ends 23 pt from the right (1 + 22). The time, name and stage columns always line up, clear of the left progress bar and the right clash bar.
-- **Line 1:** `HH:MM–HH:MM` (13, `textMuted`, tabular figures), then the band name (15 bold, ellipsis). No star: the fill already says it is a pick.
+- **Box:** 58 pt tall, filled with its **category's colour, as on the timeline** (`categoryBlockColors().bg`, the block's background), with the solid left edge in the category's brighter colour. A live Must-see is outlined in a **1 pt accent border** (`LIVE_BORDER`), to hold up in sunlight, under every filter. It is laid over the row (over the left edge and the progress bar), so nothing in the row moves.
+- **Fixed inset for every row type and state:** content starts 18 pt from the row's left side and ends 23 pt from its right. The time, name and stage columns always line up, clear of the left progress bar and the right clash bar.
+- **Line 1:** `HH:MM–HH:MM` (13, `textMuted`, tabular figures), then the band name (15 bold, ellipsis). Under All sets, the accent ★ at the right end; under the other filters no star.
 - **Line 2:** the status on the left, the stage right-aligned (13, `textSecondary`, ellipsis). Statuses:
   - *live*: `● LIVE` (red dot, 11 bold caps), then `−37 min` (14 bold accent).
   - *upcoming, clashing with a Must-see that is live now*: `START` (11 bold caps), then `−17 min` (14 bold **red**). It tells you how long you can stay at the live band.
-  - *past*: `done` (12, `textMuted`); the whole row only slightly dimmed, to 75% opacity, so it stays readable in sunlight, with **faint grey stripes** behind its text (`PAST_ROW`: white at 8%, 2 pt lines 8 pt apart, falling "\", the other way from the red clash stripes, so they never read as a clash). Every row type, past, gets them: Must-see, Maybe and unpicked. Only during the festival: outside it (before or after) every set reads as upcoming, with no live bars, current gaps or arrows.
+  - *past*: `done` (12, `textMuted`); the whole row only slightly dimmed, to 75% opacity, so it stays readable in sunlight, with **faint grey stripes** behind its text (`PAST_ROW`: white at 8%, 2 pt lines 8 pt apart, falling "\", the other way from the red clash stripes, so they never read as a clash). Every row type, past, gets them: Must-see, Maybe, unpicked and "don't go". Only during the festival: outside it (before or after) every set reads as upcoming, with no live bars, current gaps or arrows.
   - *upcoming otherwise*: empty. The countdown lives in the gap and the pill.
 - **Live progress:** a 6.5 pt bar on the left edge: accent for what remains, dark `#4a3f17` growing top → bottom with the elapsed fraction. Every progress bar (now pill, live rows, current gap) reads the same way: passed dark, remaining light (`PROGRESS_COLORS`).
 - **Tap behaviour:** see [Taps](#taps).
 
 ### Unpicked row
 
-- Only under **All sets**: a set you haven't picked (no interest, never "don't go").
-- **Look:** a Must-see row without the fill: the same 58 pt, two lines, insets and texts, with a 1 px border in its category's border colour and **no background**. Filled = picked, outlined = not.
-- **Star:** an empty grey **star** (15, the "Not marked" outline star) at the right end of line 1, the same place whatever the name's length; a name too long for the line cuts off before it. The only star on any plan row.
+- Only under **All sets**: a band's set you haven't picked (no interest).
+- **Look:** the same 58 pt, two lines, insets and texts as a Must-see row, filled with the raised surface (`surfaceRaised`), with no left edge and no category colour. Only Must-see rows are filled with their category's colour, so they stand out among the rest; a Maybe shares the unpicked row's fill and is told apart by its dotted grey edge and its ½ star.
+- **Star:** the grey ☆ ("Not marked").
 - **Status line:** `● LIVE −37 min` while it plays and `done` once it's over (dimmed and striped as any past row), as a Must-see's. Never `START`, and never clash bars or a `⚠ Conflict` title: clashes are Must-see × Must-see only.
-- **Live:** the full accent border, the yellow left bar and the now arrow, as a live Must-see.
+- **Live:** a grey 6.5 pt left bar (`#8a8a8a` for what remains, `#333` filling it for the elapsed fraction), 3 pt in as on a picked row, and the now arrow; no accent border.
+
+### "Don't go" row
+
+- Only under **All sets**: a band you marked "don't go". It stays listed so that a pick changed by mistake is easy to find and undo. A "don't go" support-programme set is not listed, as an unpicked one isn't.
+- **Look:** the same 58 pt, two lines and insets, with **no background** (the list shows through) and no left edge; the time, name and stage in the muted grey (`muted`).
+- **Star:** the struck red ☆.
+- **Status line and live:** as an unpicked row's. Never a clash.
 
 ### Maybe row
 
 - Shown under **Must-see and Maybe** and **All sets**.
-- **Look:** 26 pt tall, one line: `time · name · stage` (13, `textMuted`), no star; a long name cuts off. Muted, but bright enough to read in sunlight.
-- **Box:** a **1 px dashed** border in the category's border colour (as Must-see rows) and no background, with the same fixed insets as Must-see rows.
+- **Box:** filled with the raised surface (`surfaceRaised`), as an unpicked row, with the same fixed insets as Must-see rows. Under every filter, the **3 pt dotted** left edge in one grey for every category (`maybeBorder` `#595959`: the luminance of the Octagon stage's border colour, `rgb(95, 89, 72)`). A Maybe row shows no category colour.
+- **Under Must-see and Maybe:** the compact row, 26 pt tall, one line: `time · name · stage` (13, `textMuted`), no star and no status; a long name cuts off. Muted, but bright enough to read in sunlight.
+- **Under All sets:** the tall two-line row, with the accent ½ star, and the status line of an unpicked row (`● LIVE −37 min`, `done`).
 - Never marked as a clash, and never part of conflict logic.
-- **Live:** a solid border in the full accent (`LIVE_BORDER`) instead of the dashed one, a red dot (7 pt) right before the name, a grey 6.5 pt left bar (`#8a8a8a` for what remains, `#333` filling it for the elapsed fraction) and the now arrow. The dot moves only that row's name, by its width and gap.
+- **Live:** the dotted edge stays, a grey 6.5 pt left bar (`#8a8a8a` for what remains, `#333` filling it for the elapsed fraction) and the now arrow. The compact row also gets a red dot (7 pt) right before the name; it moves only that row's name, by its width and gap. The tall row shows `● LIVE` on its status line instead.
 
 ### Gaps
 
@@ -158,13 +174,13 @@ What each element shows comes from its own model (see Principles), built from th
   - Every non-zero gap is at least 20 pt, so its label always fits.
   - Above that the height is linear, so 35 min (38 pt) and 2 h (80 pt) read clearly differently. Compressing curves (√, ln) were tried and rejected: they made 35 min look almost like 2 h.
 - **Label:** the duration, centred (12, `muted`): `45 min`, `2 h 25`.
-- **Rail:** a 2 pt **dotted** `#333` line, offset 6.5 pt from the left (the width of the row's left bar).
+- **Rail:** a 2 pt **dotted** `#333` line, just right of where the progress bars run: 3 pt (the row's left edge) + 6.5 pt (the bar) in from the rows' left side.
 - **The current gap** (now falls inside it):
   - at least 44 pt tall;
-  - a blue 6.5 pt left bar (`#5b9bff` for what remains, `#1c2f52` filling it for the elapsed fraction);
+  - a blue 6.5 pt left bar (`#5b9bff` for what remains, `#1c2f52` filling it for the elapsed fraction), 3 pt in from the rows' left side, in line with a live row's bar (`PROGRESS_BAR_X`);
   - the now arrow;
   - a centred countdown `−1 h 20` (15 bold blue);
-  - counting down to a set that **isn't a Must-see**, the countdown is 13 regular blue in a 1 pt blue box (radius 4, 8 pt side padding) shaped like that set's own outline: **dashed** for a Maybe, **solid** for an unpicked set. It tells the list's countdown apart from the now pill's, which always counts to the next Must-see.
+  - counting down to a set that **isn't a Must-see**, the countdown is 13 regular blue in a 1 pt blue box (radius 4, 8 pt side padding): **dotted** for a Maybe, as its row's left edge, **solid** for an unpicked or "don't go" set. It tells the list's countdown apart from the now pill's, which always counts to the next Must-see.
 
 ### Day caps
 
@@ -185,7 +201,7 @@ What each element shows comes from its own model (see Principles), built from th
 
 ### Now arrow
 
-- A red (`danger`) triangle, 16 × 24 pt, with a 1 pt white outline. Its tip reaches about 4 pt into the row, halfway across the 6.5 pt progress bar, and it is drawn over the row. Red is the now colour across the app (the timeline's now line, the live dot).
+- A red (`danger`) triangle, 16 × 24 pt, with a 1 pt white outline. Its tip reaches halfway across the 6.5 pt progress bar (about 6 pt into the row, past the 3 pt left edge), and it is drawn over the row. Red is the now colour across the app (the timeline's now line, the live dot).
 - Its centre sits at the **tip of the progress fill**: on a live row (Must-see or Maybe), in the current gap, or in the day-start break. Once the last listed set has ended it sits on the end cap's square instead, as there is no fill left.
 - With two live sets there are two arrows. Rows aren't on a shared time scale, so each arrow means "this far into this set".
 - No arrow before the festival.
@@ -299,7 +315,11 @@ New values this screen introduces, to add as tokens:
 | break / future blue | `#5b9bff` |
 | break progress, passed part (`breakPassed`) | `#1c2f52` |
 | Maybe live progress, remaining part (`maybeText`) | `#8a8a8a` |
-| row background and border | the set's category, as timeline blocks (`categoryBlockColors`) |
+| Must-see row background | the set's category, as timeline blocks (`categoryBlockColors().bg`) |
+| Must-see row left edge, 3 pt | solid, `categoryBlockColors().border` |
+| Maybe row left edge, 3 pt (`maybeBorder`) | dotted, `#595959` |
+| Maybe and unpicked row background | `surfaceRaised` |
+| "don't go" row | no background; texts in `muted` |
 | past row stripes (`PAST_ROW`) | white at 8 % |
 
 ---
@@ -308,7 +328,7 @@ New values this screen introduces, to add as tokens:
 
 | Element | Tap |
 |---|---|
-| Row (Must-see or Maybe), anywhere | The existing **artist detail sheet**. It already offers "stage/time → jump to the timeline slot" and the conflict warning line → conflict detail. |
+| Row (any kind), anywhere | The existing **artist detail sheet**. It already offers "stage/time → jump to the timeline slot" and the conflict warning line → conflict detail. |
 | `⚠ Conflict` group title | The **conflict detail sheet** (`ConflictDetailSheet`) for that group, with a 44 pt tap area. It shows the whole group, and only it, on the timeline's own lanes, bands and support programme alike. |
 | Clash bar (right edge) | Nothing separate: it's too thin, so a tap there counts as a row tap. |
 | Gap | Nothing. |

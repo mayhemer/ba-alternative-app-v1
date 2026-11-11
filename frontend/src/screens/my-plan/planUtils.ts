@@ -113,6 +113,7 @@ export function buildPlanDay(
       overlaps: overlaps.get(event.eventId) ?? [],
       liveMusts,
       conflictHead: leaders.has(event.eventId),
+      allSets: level === 'all',
     });
 
     // A clash group's "Conflict" title is drawn by the cell right above its

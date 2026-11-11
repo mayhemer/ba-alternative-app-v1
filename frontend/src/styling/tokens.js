@@ -37,6 +37,7 @@ const colors = {
   breakBlue:      '#5b9bff',   // current gap / break: progress, countdown
   breakPassed:    '#1c2f52',   // the passed part of the break's progress, over the break blue
   maybeText:      '#8a8a8a',   // Maybe rows, and a live Maybe's progress
+  maybeBorder:    '#595959',   // a Maybe row's dashed border under All sets: as light as the Octagon stage's category border, rgb(95, 89, 72)
   // ── Feedback toast ──────────────────────────────────────────────────────────
   toastSurface:   '#2f2f2f',   // lighter than every other surface, so it reads as floating above them
   toastBorder:    'rgba(255,255,255,0.24)',

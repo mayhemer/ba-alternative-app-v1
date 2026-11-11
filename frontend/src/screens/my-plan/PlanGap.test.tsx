@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet } from 'react-native';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { PlanGap } from './PlanGap';
+import { RAIL_X } from './PlanListItems';
 import { planGapModel } from './PlanGap.model';
 import type { DbEvent } from '../../types/backend';
 import { colors } from '../../styling/tokens';
@@ -9,7 +10,10 @@ import { colors } from '../../styling/tokens';
 // ── A gap between sets, as drawn ──────────────────────────────────────────────
 //
 // The component draws its model and nothing else: the label, the height, the
-// fill and the arrow all come from planGapModel.
+// fill and the arrow all come from planGapModel. Its bar lines up with a live
+// row's: 3 pt in from the row's left side (the row's left edge), 15 pt from the
+// list's (the 12 pt gutter + 3); the rail runs just right of it; the arrow's
+// tip reaches halfway across it.
 
 function at(hm: string): number {
   return Date.parse(`2025-08-07T${hm}:00+02:00`);
@@ -36,17 +40,27 @@ it('while current, shows the countdown, the fill and the arrow at the tip of the
   expect(StyleSheet.flatten(screen.getByTestId('plan-now-arrow').props.style).top).toBe(gap.nowY! - 15);
 });
 
+it('starts the current gap\'s bar where a live row\'s starts, the rail just right of it, the arrow\'s tip halfway across it', async () => {
+  await render(<PlanGap item={planGapModel('g', at('20:30'), setAt('22:30'), at('21:10'), false)} />);
+  const bar = StyleSheet.flatten(screen.getByTestId('plan-gap-progress').props.style);
+  expect(bar.left).toBe(15);
+  expect(bar.width).toBe(6.5);
+  expect(RAIL_X).toBe(21.5);
+  // The arrow is 18 pt wide to its tip: 0.25 + 18 = 15 + 6.5 / 2.
+  expect(StyleSheet.flatten(screen.getByTestId('plan-now-arrow').props.style).left).toBe(0.25);
+});
+
 it('fills the current gap\'s bar dark blue for the time passed, over the break blue for what remains', async () => {
   await render(<PlanGap item={planGapModel('g', at('20:30'), setAt('22:30'), at('21:10'), false)} />);
   expect(StyleSheet.flatten(screen.getByTestId('plan-gap-progress').props.style).backgroundColor).toBe(colors.breakBlue);
   expect(StyleSheet.flatten(screen.getByTestId('plan-gap-fill').props.style).backgroundColor).toBe(colors.breakPassed);
 });
 
-it('draws a countdown to a Maybe at regular size, in a dashed box in the break blue', async () => {
+it('draws a countdown to a Maybe at regular size, in a dotted box in the break blue, as a Maybe row\'s edge', async () => {
   const gap = planGapModel('g', at('20:30'), setAt('22:30'), at('21:10'), false, 'maybe');
   await render(<PlanGap item={gap} />);
   const box = StyleSheet.flatten(screen.getByTestId('plan-gap-countdown-box').props.style);
-  expect(box.borderStyle).toBe('dashed');
+  expect(box.borderStyle).toBe('dotted');
   expect(box.borderWidth).toBe(1);
   expect(box.borderColor).toBe(colors.breakBlue);
   const text = StyleSheet.flatten(screen.getByText('−1 h 20').props.style);

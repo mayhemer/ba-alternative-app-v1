@@ -7,7 +7,8 @@ import type { DbArtist, DbEvent } from '../types/backend';
 // One rule for the conflicts, My plan and the now pill: a pick's sets that can
 // clash at all (a band's of any length, a support-programme one up to two
 // hours). The dimensions: each status (Must-see, Maybe, none, don't go), a band
-// vs a support-programme artist (unpicked ones are listed only for bands), a
+// vs a support-programme artist (unpicked and "don't go" ones are listed only
+// for bands), a
 // set over two hours of each, and the order (the lineup's for the Must-sees, by
 // start for the plan).
 
@@ -21,12 +22,13 @@ function set(eventId: string, artistId: string, from: string, to: string): DbEve
   return { slug: SLUG, eventId, artistId, stageId: 's1', categoryId: 'c1', dateFrom: at(from), dateTo: at(to) };
 }
 
-// The lineup's order: must, maybe, nope, band, support, expo, late.
+// The lineup's order: must, maybe, nope, band, support, expo, late, skip.
 // "must" has a late set listed before an early one. "expo" is a picked
 // support-programme item running all day; "late" and the unpicked "band" each
-// have a band's set over two hours.
+// have a band's set over two hours. "nope" is a band and "skip" a
+// support-programme artist, both "don't go".
 const INPUTS: ConflictInputs = {
-  artists: [artist('must'), artist('maybe'), artist('nope'), artist('band'), artist('support', false), artist('expo', false), artist('late')],
+  artists: [artist('must'), artist('maybe'), artist('nope'), artist('band'), artist('support', false), artist('expo', false), artist('late'), artist('skip', false)],
   stages: [],
   artistEvents: {
     must: [set('must-late', 'must', '20:00', '21:00'), set('must-early', 'must', '13:00', '14:00')],
@@ -36,9 +38,10 @@ const INPUTS: ConflictInputs = {
     support: [set('support-1', 'support', '09:00', '10:00')],
     expo: [set('expo-allday', 'expo', '10:00', '18:00')],
     late: [set('late-1', 'late', '12:30', '13:30'), set('late-long', 'late', '21:00', '23:30')],
+    skip: [set('skip-1', 'skip', '14:00', '15:00')],
   },
 };
-const INTERESTS = { must: 'will_go', maybe: 'maybe', nope: 'dont_go', expo: 'will_go', late: 'will_go' };
+const INTERESTS = { must: 'will_go', maybe: 'maybe', nope: 'dont_go', expo: 'will_go', late: 'will_go', skip: 'dont_go' };
 
 describe('mustSeeSets', () => {
   it("lists the Must-sees' sets that can clash, in the lineup's order: a band's over 2 h, never a support item's", () => {
@@ -57,9 +60,10 @@ describe('planPicks', () => {
     ]);
   });
 
-  it('adds the bands you have not picked when asked, their sets over 2 h too, never an unpicked support-programme artist', () => {
+  it('adds the bands you have not picked or marked "don\'t go" when asked, their sets over 2 h too, never such a support-programme artist', () => {
     expect(planPicks(INTERESTS, INPUTS, true).map((s) => [s.event.eventId, s.level])).toEqual([
       ['band-1', 'none'],
+      ['nope-1', 'dont_go'],
       ['late-1', 'will_go'],
       ['must-early', 'will_go'],
       ['maybe-1', 'maybe'],
@@ -107,6 +111,10 @@ describe('planLevelLists', () => {
     ['all',       'will_go', false, true],
     ['all',       'maybe',   false, true],
     ['all',       'none',    false, true],
+    ['conflicts', 'dont_go', false, false],
+    ['must',      'dont_go', false, false],
+    ['maybe',     'dont_go', false, false],
+    ['all',       'dont_go', false, true],
   ] as const)('%s lists a %s set (clashing: %s): %s', (level, pick, clashing, listed) => {
     expect(planLevelLists(level, pick, clashing)).toBe(listed);
   });

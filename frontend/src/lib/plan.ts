@@ -29,8 +29,8 @@ export function isPlanEligible(event: DbEvent, artist: DbArtist): boolean {
   return artist.isPlayable || event.dateTo - event.dateFrom <= SUPPORT_SET_DURATION_MAX_FOR_PLAN_MS;
 }
 
-/** How a set is on the plan: a Must-see, a Maybe, or (All sets) a band not picked. */
-export type PickLevel = 'will_go' | 'maybe' | 'none';
+/** How a set is on the plan: a Must-see, a Maybe, or (All sets) a band not picked or marked "don't go". */
+export type PickLevel = 'will_go' | 'maybe' | 'none' | 'dont_go';
 
 export type PlannedSet = { event: DbEvent; artist: DbArtist; level: PickLevel };
 
@@ -63,8 +63,9 @@ export function mustSeeSets(interests: Record<string, string>, inputs: PickInput
 
 /**
  * The sets My plan can list, by start: your Must-see and Maybe picks, and with
- * `unpicked` also every band's set you haven't picked (All sets). Never a
- * "don't go" pick, and never an unpicked support-programme item.
+ * `unpicked` also every other band's set (All sets): not picked, or marked
+ * "don't go", listed so that a pick changed by mistake is easy to undo. Never
+ * an unpicked or "don't go" support-programme item.
  */
 export function planPicks(interests: Record<string, string>, inputs: PickInputs, unpicked: boolean): PlannedSet[] {
   const sets = plannedSets(inputs, (artist) => {
@@ -72,7 +73,10 @@ export function planPicks(interests: Record<string, string>, inputs: PickInputs,
     if (status === 'will_go' || status === 'maybe') {
       return status;
     }
-    return unpicked && status !== 'dont_go' && artist.isPlayable ? 'none' : null;
+    if (!unpicked || !artist.isPlayable) {
+      return null;
+    }
+    return status === 'dont_go' ? 'dont_go' : 'none';
   });
   return sets.sort((a, b) => a.event.dateFrom - b.event.dateFrom);
 }
@@ -92,6 +96,7 @@ export function planLevelLists(level: PlanFilterLevel, pick: PickLevel, clashing
   if (pick === 'maybe') {
     return level === 'maybe' || level === 'all';
   }
+  // An unpicked or "don't go" set: under All sets only.
   return pick === 'will_go' || level === 'all';
 }
 

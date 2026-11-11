@@ -265,8 +265,7 @@ export function MyPlanScreen() {
           <PlanSetRow
             item={item}
             onPressArtist={handleArtist}
-            background={rowColors.get(item.event.categoryId)?.bg}
-            border={rowColors.get(item.event.categoryId)?.border}
+            category={rowColors.get(item.event.categoryId)}
           />
         );
         break;

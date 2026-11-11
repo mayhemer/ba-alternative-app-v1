@@ -5,22 +5,33 @@ import { formatTime } from '../../utils/festivalTime';
 import { formatRemaining } from './planDurations';
 import { strings } from '../../i18n/strings';
 import type { DbArtist, DbEvent, DbStage } from '../../types/backend';
+import type { InterestStatus } from '../../cache/cacheService';
 
 // ── One set in My plan: what it shows ─────────────────────────────────────────
 //
 // Its state, its texts (time range, stage, status and countdown), the left
 // progress fill, where the now arrow sits and its clash bars all come from the
 // set and "now", plus what the plan knows about the other sets: where this one
-// overlaps other Must-sees, and which Must-sees are live. Its pick level decides
-// its shape: a Must-see is a filled two-line row, a set you haven't picked (only
-// under All sets) the same row outlined, a Maybe one dashed line.
+// overlaps other Must-sees, and which Must-sees are live. Its pick level and
+// whether the list shows All sets decide its look:
+//   - every row is two lines tall, except a Maybe outside All sets: one line;
+//   - a Must-see is filled with its category's colour, a Maybe and an unpicked
+//     set (All sets only) with the raised surface, a "don't go" (All sets only)
+//     not at all, its text dimmed;
+//   - under every filter a Must-see has a solid left edge in the category's
+//     brighter colour and a Maybe a dotted grey one; the other rows have none;
+//   - a Must-see has a 1 pt accent border while it plays; no other row has a
+//     border;
+//   - under All sets every row shows its pick's star, under the others none.
 
-/** How the set is picked: Must-see, Maybe, or not at all (listed only under All sets). */
+/** How the set is picked: Must-see, Maybe, not at all or "don't go" (the last two listed only under All sets). */
 export type PlanSetLevel = PickLevel;
 
+/** The two-line row, and the compact one-line row of a Maybe outside All sets. */
+export const SET_ROW_HEIGHT = { tall: 58, compact: 26 } as const;
 
-/** A Must-see's row, which an unpicked set shares, and a Maybe's. */
-export const SET_ROW_HEIGHT = { must: 58, maybe: 26 } as const;
+/** A row's background: its category's colour, the raised surface, or none (the list shows through). */
+export type SetFill = 'category' | 'raised' | 'none';
 
 /** A fraction of a set's duration, 0 = its start, 1 = its end. */
 export type ClashBar = { from: number; to: number };
@@ -43,8 +54,19 @@ export type PlanSetModel = {
   timeText: string;
   stageName: string;
   status: SetStatus;
-  /** An empty star at the right end of the name's line, on an unpicked set only (All sets). */
-  emptyStar: boolean;
+  /** One line, time · name · stage, with no status: a Maybe outside All sets. */
+  compact: boolean;
+  fill: SetFill;
+  /** Its left edge, under every filter: solid in the category's brighter colour on a Must-see, dotted grey on a Maybe; on every other row null (transparent). */
+  edge: 'solid' | 'dotted' | null;
+  /** Its texts in the muted grey: a "don't go". */
+  dimmed: boolean;
+  /** The pick's star at the right end of the name's line, under All sets only; else null. */
+  star: InterestStatus | null;
+  /** A 1 pt accent border round the row: a Must-see while it plays, under every filter. */
+  liveBorder: boolean;
+  /** The live progress bar's colours (PROGRESS_COLORS): a Must-see's accent, every other set's grey. */
+  progressColors: 'live' | 'maybeLive';
   accessibilityLabel: string;
   /** Elapsed fraction while live, else 0: the left fill. */
   progress: number;
@@ -70,6 +92,8 @@ export type PlanSetInput = {
   liveMusts: DbEvent[];
   /** It starts a clash group (computeConflictEntries' leader). */
   conflictHead: boolean;
+  /** The list shows All sets: every row two lines tall, with its star. */
+  allSets: boolean;
 };
 
 function stateOf(event: DbEvent, now: number): PlanSetModel['state'] {
@@ -79,10 +103,27 @@ function stateOf(event: DbEvent, now: number): PlanSetModel['state'] {
   return event.dateFrom <= now ? 'live' : 'upcoming';
 }
 
-function statusOf(input: PlanSetInput, state: PlanSetModel['state']): SetStatus {
+function fillOf(level: PlanSetLevel): SetFill {
+  switch (level) {
+    case 'will_go': return 'category';
+    case 'maybe':
+    case 'none': return 'raised';
+    case 'dont_go': return 'none';
+  }
+}
+
+function edgeOf(level: PlanSetLevel): PlanSetModel['edge'] {
+  switch (level) {
+    case 'will_go': return 'solid';
+    case 'maybe': return 'dotted';
+    default: return null;
+  }
+}
+
+function statusOf(input: PlanSetInput, state: PlanSetModel['state'], compact: boolean): SetStatus {
   const { event, level, now, liveMusts } = input;
-  // A Maybe row has no status line, live or not.
-  if (level === 'maybe') {
+  // A compact row has no status line, live or not.
+  if (compact) {
     return { kind: 'none' };
   }
   if (state === 'live') {
@@ -92,7 +133,7 @@ function statusOf(input: PlanSetInput, state: PlanSetModel['state']): SetStatus 
     return { kind: 'done', label: strings().setStatus.done };
   }
   // Upcoming, while a Must-see it clashes with is already playing: time to move.
-  // Only a Must-see clashes; an unpicked set never counts down to its start.
+  // Only a Must-see clashes; no other set ever counts down to its start.
   if (level === 'will_go' && clashesWithLive(event, liveMusts)) {
     return { kind: 'start', label: strings().setStatus.start, time: formatRemaining(event.dateFrom - now) };
   }
@@ -100,11 +141,12 @@ function statusOf(input: PlanSetInput, state: PlanSetModel['state']): SetStatus 
 }
 
 export function planSetModel(input: PlanSetInput): PlanSetModel {
-  const { event, artist, stage, level, now } = input;
+  const { event, artist, stage, level, now, allSets } = input;
   const must = level === 'will_go';
+  const compact = level === 'maybe' && !allSets;
   const state = stateOf(event, now);
   const duration = event.dateTo - event.dateFrom;
-  const height = level === 'maybe' ? SET_ROW_HEIGHT.maybe : SET_ROW_HEIGHT.must;
+  const height = compact ? SET_ROW_HEIGHT.compact : SET_ROW_HEIGHT.tall;
   const progress = state === 'live' ? (now - event.dateFrom) / duration : 0;
   const timeText = `${formatTime(event.dateFrom)}–${formatTime(event.dateTo)}`;
   const stageName = stage !== undefined ? getStageLocalized(stage.localized, 'name') : '';
@@ -117,8 +159,15 @@ export function planSetModel(input: PlanSetInput): PlanSetModel {
     state,
     timeText,
     stageName,
-    status: statusOf(input, state),
-    emptyStar: level === 'none',
+    status: statusOf(input, state, compact),
+    compact,
+    fill: fillOf(level),
+    edge: edgeOf(level),
+    dimmed: level === 'dont_go',
+    // The levels are the interest statuses the stars show.
+    star: allSets ? level : null,
+    liveBorder: must && state === 'live',
+    progressColors: must ? 'live' : 'maybeLive',
     accessibilityLabel: `${artist.name}, ${timeText}, ${stageName}`,
     progress,
     nowY: state === 'live' ? progress * height : null,

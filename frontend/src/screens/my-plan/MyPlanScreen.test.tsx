@@ -305,6 +305,17 @@ it('drops a set whose pick changes, with the clash it made', async () => {
   expect(texts).not.toContain('Conflict');
 });
 
+it('keeps a set turned "don\'t go" listed under All sets, without the clash it made, so the pick can be undone', async () => {
+  await mount();
+  await act(async () => { controls.setLevel('all'); });
+  // Must-see → don't go.
+  await act(async () => { controls.cycle('batushka'); });
+  const texts = listTexts();
+  expect(texts).toContain('Batushka');
+  expect(texts).not.toContain('START');
+  expect(texts).not.toContain('Conflict');
+});
+
 it('follows a set moved by a sync, in the list and in the pill', async () => {
   await mount();
   await act(async () => {

@@ -3,11 +3,13 @@ import { Pressable, View } from 'react-native';
 import Svg, { ClipPath, Defs, Path, Rect } from 'react-native-svg';
 import { Text } from '../../ui/Text';
 import { stripePath, CONFLICT_STRIPE } from '../../ui/stripes';
-import { BOLD, CLASH_BAR_WIDTH, LIST_GUTTER, LIVE_BORDER, PAST_ROW, PROGRESS_BAR_WIDTH, PROGRESS_COLORS, STATUS_LABEL, TABULAR, type ProgressColors } from './planStyles';
+import { BOLD, CLASH_BAR_WIDTH, LIST_GUTTER, LIVE_BORDER, PAST_ROW, PROGRESS_BAR_WIDTH, PROGRESS_COLORS, ROW_EDGE_WIDTH, ROW_RADIUS, STATUS_LABEL, TABULAR, type ProgressColors } from './planStyles';
 import { NowArrow } from './PlanListItems';
 import { StarGlyph } from '../../features/interests/StarButton';
+import { PlanRowEdge } from './PlanRowEdge';
 import { sameProps } from '../../ui/sameProps';
-import type { ClashBar, PlanSetModel, SetStatus } from './PlanSetRow.model';
+import type { ClashBar, PlanSetModel, SetFill, SetStatus } from './PlanSetRow.model';
+import type { InterestStatus } from '../../cache/cacheService';
 import type { DbArtist } from '../../types/backend';
 import { LandingRing } from '../../ui/LandingRing';
 import { endLandingHighlight, useLandingHighlight } from '../../features/timeline/landingHighlight';
@@ -15,24 +17,30 @@ import { colors, MAX_CONTENT_WIDTH } from '../../styling/tokens';
 
 // ── One set in My plan ────────────────────────────────────────────────────────
 //
-// Must-see: a filled two-line card in its category's colours. A set you haven't
-// picked (All sets): the same card, outlined only. Maybe: one line in a dashed
-// box, its text muted but bright enough for sunlight; while live, a solid accent
-// border and a red dot before the name. Only an unpicked row has a star: an
-// empty one at the right end of the name's line, before which a long name cuts
-// off. A past row is only
-// slightly dimmed, with faint grey stripes behind its text.
+// A two-line card with rounded corners, filled by its pick: a Must-see in its
+// category's colour, a Maybe and an unpicked set (All sets) in the raised
+// surface, a "don't go" (All sets) with no fill and its text in the muted grey.
+// No row has a border of its own. A Must-see has a 3 pt solid left edge in the
+// category's brighter colour and a Maybe a dotted grey one, drawn by
+// PlanRowEdge; the others have none, their own background showing there. Every
+// live set's progress bar starts past the edge. A live Must-see is outlined in
+// a 1 pt accent border, laid over the row so nothing in it moves. Outside All sets a Maybe is
+// one compact line, its text muted but bright enough for sunlight, with a red
+// dot before the name while live. Under All sets every row has its pick's star
+// at the right end of the name's line, before which a long name cuts off. A
+// past row is only slightly dimmed, with faint grey stripes behind its text.
 // Both share one fixed inset, so the time, name and stage columns line up in
 // every state, clear of the progress bar on the left edge and the clash bar on
 // the right. Tapping anywhere opens the artist's detail sheet. Draws its model
 // (PlanSetRow.model.ts) and computes nothing itself.
 
-// Fixed inset inside the 1 pt border: clear of the left progress bar and the
+// A fixed inset: the content starts 18 pt from the row's left side and ends
+// 23 pt from its right, clear of the left edge and progress bar and of the
 // right clash bar whether they are drawn or not.
-const INSET_LEFT = 17;
-const INSET_RIGHT = 22;
+const INSET_LEFT = 18;
+const INSET_RIGHT = 23;
 
-const EMPTY_STAR_SIZE = 15;
+const STAR_SIZE = 15;
 
 /**
  * A past row's stripes, behind everything it shows. Drawn as wide as the content
@@ -53,11 +61,11 @@ function PastStripes({ height }: { height: number }) {
   );
 }
 
-/** An unpicked set's empty star, at the line's right end; it never shrinks, the name does. */
-function EmptyStar() {
+/** The pick's star, at the line's right end; it never shrinks, the name does. */
+function PickStar({ status }: { status: InterestStatus }) {
   return (
-    <View testID="plan-star-empty" style={{ flexShrink: 0 }}>
-      <StarGlyph status="none" size={EMPTY_STAR_SIZE} />
+    <View testID={`plan-star-${status}`} style={{ flexShrink: 0 }}>
+      <StarGlyph status={status} size={STAR_SIZE} />
     </View>
   );
 }
@@ -94,12 +102,24 @@ function ClashStripes({ bar, rowHeight, clipId }: { bar: ClashBar; rowHeight: nu
   );
 }
 
+/** A live Must-see's accent outline, over everything in the row: it takes no room. */
+const LIVE_OUTLINE = {
+  position: 'absolute' as const,
+  left: 0,
+  top: 0,
+  right: 0,
+  bottom: 0,
+  borderWidth: 1,
+  borderRadius: ROW_RADIUS,
+  borderColor: LIVE_BORDER,
+};
+
 function LeftProgress({ progress, palette }: { progress: number; palette: ProgressColors }) {
   return (
     <View
       testID="plan-live-progress"
       pointerEvents="none"
-      style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: PROGRESS_BAR_WIDTH, backgroundColor: palette.remaining }}
+      style={{ position: 'absolute', left: ROW_EDGE_WIDTH, top: 0, bottom: 0, width: PROGRESS_BAR_WIDTH, backgroundColor: palette.remaining }}
     >
       <View testID="plan-live-fill" style={{ width: PROGRESS_BAR_WIDTH, height: `${progress * 100}%`, backgroundColor: palette.passed }} />
     </View>
@@ -130,39 +150,60 @@ function Status({ status }: { status: SetStatus }) {
   }
 }
 
+/** The category's colours a row uses (categoryBlockColors). */
+type CategoryColors = { bg: string; border: string };
+
+/** Without category colours: the surface, and a grey border. */
+const NO_CATEGORY: CategoryColors = { bg: colors.surface, border: colors.borderMid };
+
 type Props = {
   item: PlanSetModel;
   onPressArtist: (artist: DbArtist) => void;
-  /** A Must-see row's background (an unpicked row has none), and any row's border; the surface colour and a grey border when not given. */
-  background?: string;
-  border?: string;
+  /** The set's category's colours: a Must-see's fill and left edge. */
+  category?: CategoryColors;
 };
 
-function SetCard({ item, onPressArtist, background = colors.surface, border = colors.borderMid }: Props) {
-  const live = item.state === 'live';
+function backgroundOf(fill: SetFill, category: CategoryColors): string | undefined {
+  switch (fill) {
+    case 'category': return category.bg;
+    case 'raised': return colors.surfaceRaised;
+    case 'none': return undefined;
+  }
+}
 
-  if (item.level === 'maybe') {
+function edgeColorOf(edge: PlanSetModel['edge'], category: CategoryColors): string {
+  if (edge === 'dotted') {
+    return colors.maybeBorder;
+  }
+  return category.border;
+}
+
+function SetCard({ item, onPressArtist, category = NO_CATEGORY }: Props) {
+  const live = item.state === 'live';
+  // No border: the left edge is drawn by its own element (PlanRowEdge). A native
+  // dotted border places its dots by the whole rounded box, not the left side.
+  const edge = <PlanRowEdge edge={item.edge} height={item.height} color={edgeColorOf(item.edge, category)} />;
+  const box = {
+    height: item.height,
+    paddingLeft: INSET_LEFT,
+    paddingRight: INSET_RIGHT,
+    borderRadius: ROW_RADIUS,
+    backgroundColor: backgroundOf(item.fill, category),
+    overflow: 'hidden' as const,
+    opacity: item.state === 'past' ? PAST_ROW.opacity : 1,
+  };
+
+  if (item.compact) {
     return (
       <Pressable
         onPress={() => { onPressArtist(item.artist); }}
         accessibilityRole="button"
         accessibilityLabel={item.accessibilityLabel}
-        style={{
-          height: item.height,
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 10,
-          paddingLeft: INSET_LEFT,
-          paddingRight: INSET_RIGHT,
-          borderWidth: 1,
-          borderStyle: live ? 'solid' : 'dashed',
-          borderColor: live ? LIVE_BORDER : border,
-          overflow: 'hidden',
-          opacity: item.state === 'past' ? PAST_ROW.opacity : 1,
-        }}
+        style={{ ...box, flexDirection: 'row', alignItems: 'center', gap: 10 }}
       >
         {item.state === 'past' && <PastStripes height={item.height} />}
-        {live && <LeftProgress progress={item.progress} palette={PROGRESS_COLORS.maybeLive} />}
+        {edge}
+        {live && <LeftProgress progress={item.progress} palette={PROGRESS_COLORS[item.progressColors]} />}
         <Text style={[TABULAR, { fontSize: 13, color: colors.textMuted }]}>{item.timeText}</Text>
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           {live && <View testID="plan-maybe-live-dot" style={LIVE_DOT} />}
@@ -173,43 +214,37 @@ function SetCard({ item, onPressArtist, background = colors.surface, border = co
     );
   }
 
+  // A "don't go" writes everything in the muted grey.
+  const timeColor = item.dimmed ? colors.muted : colors.textMuted;
+  const nameColor = item.dimmed ? colors.muted : colors.textPrimary;
+  const stageColor = item.dimmed ? colors.muted : colors.textSecondary;
   return (
     <Pressable
       onPress={() => { onPressArtist(item.artist); }}
       accessibilityRole="button"
       accessibilityLabel={item.accessibilityLabel}
-      style={{
-        height: item.height,
-        justifyContent: 'center',
-        gap: 5,
-        paddingLeft: INSET_LEFT,
-        paddingRight: INSET_RIGHT,
-        borderWidth: 1,
-        borderColor: live ? LIVE_BORDER : border,
-        // Filled = picked, outlined = not.
-        backgroundColor: item.level === 'none' ? undefined : background,
-        overflow: 'hidden',
-        opacity: item.state === 'past' ? PAST_ROW.opacity : 1,
-      }}
+      style={{ ...box, justifyContent: 'center', gap: 5 }}
     >
       {item.state === 'past' && <PastStripes height={item.height} />}
+      {edge}
       {item.clashBars.map((bar, i) => (
         <ClashStripes key={`${item.key}-${i}`} bar={bar} rowHeight={item.height} clipId={`planClash-${item.key}-${i}`} />
       ))}
-      {live && <LeftProgress progress={item.progress} palette={PROGRESS_COLORS.live} />}
+      {live && <LeftProgress progress={item.progress} palette={PROGRESS_COLORS[item.progressColors]} />}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-        <Text style={[TABULAR, { fontSize: 13, color: colors.textMuted }]}>{item.timeText}</Text>
+        <Text style={[TABULAR, { fontSize: 13, color: timeColor }]}>{item.timeText}</Text>
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <Text numberOfLines={1} style={[BOLD, { flexGrow: 1, flexShrink: 1, fontSize: 15, color: colors.textPrimary }]}>{item.artist.name}</Text>
-          {item.emptyStar && <EmptyStar />}
+          <Text numberOfLines={1} style={[BOLD, { flexGrow: 1, flexShrink: 1, fontSize: 15, color: nameColor }]}>{item.artist.name}</Text>
+          {item.star !== null && <PickStar status={item.star} />}
         </View>
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <Status status={item.status} />
-        <Text numberOfLines={1} style={{ flex: 1, textAlign: 'right', fontSize: 13, color: colors.textSecondary }}>
+        <Text numberOfLines={1} style={{ flex: 1, textAlign: 'right', fontSize: 13, color: stageColor }}>
           {item.stageName}
         </Text>
       </View>
+      {item.liveBorder && <View testID="plan-live-border" pointerEvents="none" style={LIVE_OUTLINE} />}
     </Pressable>
   );
 }

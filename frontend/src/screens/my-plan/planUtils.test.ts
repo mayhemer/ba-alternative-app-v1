@@ -47,8 +47,8 @@ import type { DbArtist, DbEvent, DbStage } from '../../types/backend';
 // Each expected list is written out by hand from the fixture times. Read a line
 // as: element, name, ⚠ when it heads a clash group, its state, and in quotes the
 // text it shows. "gap now" is the gap "now" falls in; "to Maybe" marks its
-// countdown to a Maybe, drawn in a dashed box, "to unpicked" one to an unpicked
-// set, in a solid box. "unpicked" is a set listed only under All sets. "cap end now" is the end cap
+// countdown to a Maybe, drawn in a dotted box, "to unpicked" one to an unpicked
+// set (or a "don't go" one), in a solid box. "unpicked" and "don't go" are sets listed only under All sets. "cap end now" is the end cap
 // carrying the now arrow, after the last listed set.
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -186,7 +186,7 @@ function statusText(status: SetStatus): string {
 
 function countdownTo(gap: PlanGapModel): string {
   switch (gap.countdownBox) {
-    case 'dashed': return ' to Maybe';
+    case 'dotted': return ' to Maybe';
     case 'solid': return ' to unpicked';
     default: return '';
   }
@@ -201,7 +201,7 @@ function shape(items: PlanItem[]): string[] {
       case 'empty': return `empty "${item.text}"`;
       case 'gap': return `gap${item.current ? ' now' : ''} "${item.label}"${item.opening ? ' opening' : ''}${countdownTo(item)}`;
       case 'set': {
-        const level = { will_go: 'must', maybe: 'maybe', none: 'unpicked' }[item.level];
+        const level = { will_go: 'must', maybe: 'maybe', none: 'unpicked', dont_go: "don't go" }[item.level];
         return `${level} ${item.artist.name}${item.conflictHead ? ' ⚠' : ''} — ${item.state}${statusText(item.status)}`;
       }
       // Anything else the list should not hold shows up by its kind.
@@ -410,11 +410,11 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
   ]],
 
   // All sets
-  ['All sets: unpicked sets listed too, never a "don\'t go" pick or a support set over 2 h', ALL, { now: at(7, '19:23'), filter: 'all' }, [
+  ['All sets: unpicked and "don\'t go" sets listed too, Maybes with their status, never a support set over 2 h', ALL, { now: at(7, '19:23'), filter: 'all' }, [
     'cap start',
     'must Hooded Menace — past "done"',
     'gap "50 min"',
-    'maybe Blood Incantation — past',
+    'maybe Blood Incantation — past "done"',
     'gap "15 min"',
     'unpicked Afternoon band — past "done"',
     'gap "15 min"',
@@ -426,7 +426,8 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
     'must Gojira ⚠ — live "LIVE −37 min"',
     'must Batushka — upcoming "START −17 min"',
     "maybe Paysage d'Hiver — upcoming",
-    'gap "1 h 30"',
+    "don't go Not going — upcoming",
+    'gap "1 h"',
     'must Emperor — upcoming',
     'gap "45 min"',
     'must Wolves in the Throne Room — upcoming',
@@ -436,7 +437,7 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
     'cap start',
     'must Hooded Menace — past "done"',
     'gap "50 min"',
-    'maybe Blood Incantation — past',
+    'maybe Blood Incantation — past "done"',
     'gap now "−10 min" to unpicked',
     'unpicked Afternoon band — upcoming',
     'gap "15 min"',
@@ -448,7 +449,8 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
     'must Gojira ⚠ — upcoming',
     'must Batushka — upcoming',
     "maybe Paysage d'Hiver — upcoming",
-    'gap "1 h 30"',
+    "don't go Not going — upcoming",
+    'gap "1 h"',
     'must Emperor — upcoming',
     'gap "45 min"',
     'must Wolves in the Throne Room — upcoming',
@@ -458,7 +460,7 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
     'cap start',
     'must Hooded Menace — past "done"',
     'gap "50 min"',
-    'maybe Blood Incantation — past',
+    'maybe Blood Incantation — past "done"',
     'gap "15 min"',
     'unpicked Afternoon band — past "done"',
     'gap "15 min"',
@@ -470,7 +472,8 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
     'must Gojira ⚠ — upcoming',
     'must Batushka — upcoming',
     "maybe Paysage d'Hiver — upcoming",
-    'gap "1 h 30"',
+    "don't go Not going — upcoming",
+    'gap "1 h"',
     'must Emperor — upcoming',
     'gap "45 min"',
     'must Wolves in the Throne Room — upcoming',
@@ -480,7 +483,7 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
     'cap start',
     'must Hooded Menace — past "done"',
     'gap "50 min"',
-    'maybe Blood Incantation — past',
+    'maybe Blood Incantation — past "done"',
     'gap "15 min"',
     'unpicked Afternoon band — past "done"',
     'gap "15 min"',
@@ -492,7 +495,8 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
     'must Gojira ⚠ — upcoming',
     'must Batushka — upcoming',
     "maybe Paysage d'Hiver — upcoming",
-    'gap "1 h 30"',
+    "don't go Not going — upcoming",
+    'gap "1 h"',
     'must Emperor — upcoming',
     'gap "45 min"',
     'must Wolves in the Throne Room — upcoming',
