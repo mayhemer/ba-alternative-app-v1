@@ -23,7 +23,13 @@ export function dimColor(rgbString: string, accent: number): string {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
-/** A set's background and its brighter border from its category's colour; the timeline's blocks and My plan's rows use them. */
-export function categoryBlockColors(categoryColor: string): { bg: string; border: string } {
-  return { bg: dimColor(categoryColor, 48), border: dimColor(categoryColor, 128) };
+/**
+ * A set's colours from its category's colour; the timeline's blocks and My
+ * plan's rows use them. `bg` is the dark background, `border` the brighter
+ * border, and `dimBg` a dimmer background (My plan's Maybe rows). All three are
+ * solid. `dimBg` is about `bg` at half opacity over a timeline lane (#141414),
+ * a little lighter than that over My plan's list (#0a0a0a), and the same on both.
+ */
+export function categoryBlockColors(categoryColor: string): { bg: string; border: string; dimBg: string } {
+  return { bg: dimColor(categoryColor, 48), border: dimColor(categoryColor, 128), dimBg: dimColor(categoryColor, 16) };
 }
