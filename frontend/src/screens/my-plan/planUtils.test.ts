@@ -46,9 +46,10 @@ import type { DbArtist, DbEvent, DbStage } from '../../types/backend';
 //
 // Each expected list is written out by hand from the fixture times. Read a line
 // as: element, name, ⚠ when it heads a clash group, its state, and in quotes the
-// text it shows. "gap now" is the gap "now" falls in; "to Maybe" marks its
-// countdown to a Maybe, drawn in a dotted box, "to unpicked" one to an unpicked
-// set (or a "don't go" one), in a solid box. "unpicked" and "don't go" are sets listed only under All sets. "cap end now" is the end cap
+// text it shows. "gap now" is the gap "now" falls in; "dashed box" marks its
+// countdown drawn in a dashed box (to a Maybe or an unpicked set), "solid box"
+// in a solid one (to a "don't go" set). "unpicked" and "don't go" are sets
+// listed only under All sets. "cap end now" is the end cap
 // carrying the now arrow, after the last listed set.
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -186,8 +187,8 @@ function statusText(status: SetStatus): string {
 
 function countdownTo(gap: PlanGapModel): string {
   switch (gap.countdownBox) {
-    case 'dotted': return ' to Maybe';
-    case 'solid': return ' to unpicked';
+    case 'dashed': return ' dashed box';
+    case 'solid': return ' solid box';
     default: return '';
   }
 }
@@ -345,7 +346,7 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
   ['Maybes shown: a gap ending at a Maybe counts down to it, marked as a countdown to a Maybe', DAY, { now: at(7, '15:00'), filter: 'maybe' }, [
     'cap start',
     'must Hooded Menace — past "done"',
-    'gap now "−30 min" to Maybe',
+    'gap now "−30 min" dashed box',
     'maybe Blood Incantation — upcoming',
     ...WITH_MAYBES_AHEAD.slice(3),
     'cap end',
@@ -372,7 +373,7 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
 
   // A Maybe before the first Must-see
   ['Maybes shown: the day-start break ends at the Maybe', EARLY, { now: at(7, '11:00'), filter: 'maybe' }, [
-    'gap now "−1 h" opening to Maybe', 'maybe Early maybe — upcoming', 'gap "1 h 20"', 'must First must — upcoming', 'cap end',
+    'gap now "−1 h" opening dashed box', 'maybe Early maybe — upcoming', 'gap "1 h 20"', 'must First must — upcoming', 'cap end',
   ]],
   ['Maybes hidden: the day-start break ends at the first Must-see', EARLY, { now: at(7, '11:00') }, [
     'gap now "−3 h" opening', 'must First must — upcoming', 'cap end',
@@ -438,7 +439,7 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
     'must Hooded Menace — past "done"',
     'gap "50 min"',
     'maybe Blood Incantation — past "done"',
-    'gap now "−10 min" to unpicked',
+    'gap now "−10 min" dashed box',
     'unpicked Afternoon band — upcoming',
     'gap "15 min"',
     'must Dark Funeral — upcoming',
@@ -512,7 +513,7 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
     'cap end',
   ]],
   ['All sets: the day-start break ends at an unpicked first set, marked as a countdown to it', ALL, { day: SAT, now: at(9, '11:00'), filter: 'all' }, [
-    'gap now "−1 h" opening to unpicked', 'unpicked Saturday opener — upcoming', 'gap "1 h 20"', 'must Saturday must — upcoming', 'cap end',
+    'gap now "−1 h" opening dashed box', 'unpicked Saturday opener — upcoming', 'gap "1 h 20"', 'must Saturday must — upcoming', 'cap end',
   ]],
   ['All sets: no day-start break on a day without a Must-see', ALL, { day: SUN, now: at(10, '11:00'), filter: 'all' }, [
     'cap start', 'unpicked Sunday band — upcoming', 'cap end',
@@ -542,7 +543,7 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
     'cap end',
   ]],
   ['support sets over 2 h do not start the day: the break counts to the first listed set', LONG, { now: at(7, '11:00'), filter: 'maybe' }, [
-    'gap now "−2 h" opening to Maybe', 'maybe Early maybe — upcoming', 'gap "20 min"', ...WITH_MAYBES_AHEAD, 'cap end',
+    'gap now "−2 h" opening dashed box', 'maybe Early maybe — upcoming', 'gap "20 min"', ...WITH_MAYBES_AHEAD, 'cap end',
   ]],
   ['a support set of exactly 2 h is listed', LONG, { day: FRI, now: at(7, '19:23') }, [
     'cap start', 'must Spectral Wound — upcoming', 'gap "50 min"', 'must Exactly two hours — upcoming', 'cap end',

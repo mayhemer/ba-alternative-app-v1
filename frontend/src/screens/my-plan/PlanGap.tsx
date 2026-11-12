@@ -13,10 +13,10 @@ import { colors } from '../../styling/tokens';
 //
 // A dotted rail and its label; the current one adds the blue fill and the now
 // arrow, and counts down in bold, or, to a set that isn't a Must-see, smaller in
-// a box (dotted for a Maybe, as its row's edge, solid for an unpicked or "don't
-// go" set), so it reads apart from the pill's countdown to the next Must-see.
-// Its bar starts where a live row's does. The one above a clash group carries its "Conflict" title. Draws its
-// model (PlanGap.model.ts) and computes nothing itself.
+// a box (dashed for a Maybe or an unpicked set, solid for a "don't go" one), so
+// it reads apart from the pill's countdown to the next Must-see. Its bar starts
+// where a live row's does. The one above a clash group carries its "Conflict"
+// title. Draws its model (PlanGap.model.ts) and computes nothing itself.
 
 type Props = { item: PlanGapModel; onPressConflict?: (event: DbEvent) => void };
 

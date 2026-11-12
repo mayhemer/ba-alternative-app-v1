@@ -180,7 +180,7 @@ The rows look different under **All sets** and under the other filters (Must-see
   - a blue 6.5 pt left bar (`#5b9bff` for what remains, `#1c2f52` filling it for the elapsed fraction), 3 pt in from the rows' left side, in line with a live row's bar (`PROGRESS_BAR_X`);
   - the now arrow;
   - a centred countdown `−1 h 20` (15 bold blue);
-  - counting down to a set that **isn't a Must-see**, the countdown is 13 regular blue in a 1 pt blue box (radius 4, 8 pt side padding): **dotted** for a Maybe, as its row's left edge, **solid** for an unpicked or "don't go" set. It tells the list's countdown apart from the now pill's, which always counts to the next Must-see.
+  - counting down to a set that **isn't a Must-see**, the countdown is 13 regular blue in a 1 pt blue box (radius 4, 8 pt side padding): **dashed** for a Maybe or an unpicked set (a dotted 1 pt box was tried and could not be told from a solid one), **solid** for a "don't go" set. It tells the list's countdown apart from the now pill's, which always counts to the next Must-see.
 
 ### Day caps
 

@@ -75,17 +75,17 @@ describe('planGapModel', () => {
     expect(gap.label).toBe('20 min');
   });
 
-  it('boxes its countdown, dotted like the Maybe\'s edge, when a Maybe is listed under it', () => {
+  it('boxes its countdown dashed when a Maybe is listed under it', () => {
     const gap = planGapModel('g', at('20:30'), setAt('22:30'), at('21:10'), false, 'maybe');
     expect(gap.label).toBe('−1 h 20');
-    expect(gap.countdownBox).toBe('dotted');
+    expect(gap.countdownBox).toBe('dashed');
   });
 
-  it('boxes its countdown, solid like the row\'s outline, when an unpicked set is listed under it', () => {
-    expect(planGapModel('g', at('20:30'), setAt('22:30'), at('21:10'), false, 'none').countdownBox).toBe('solid');
+  it('boxes its countdown dashed, as for a Maybe, when an unpicked set is listed under it', () => {
+    expect(planGapModel('g', at('20:30'), setAt('22:30'), at('21:10'), false, 'none').countdownBox).toBe('dashed');
   });
 
-  it('boxes its countdown solid, as for an unpicked set, when a "don\'t go" set is listed under it', () => {
+  it('boxes its countdown solid when a "don\'t go" set is listed under it', () => {
     expect(planGapModel('g', at('20:30'), setAt('22:30'), at('21:10'), false, 'dont_go').countdownBox).toBe('solid');
   });
 

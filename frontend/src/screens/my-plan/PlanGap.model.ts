@@ -40,10 +40,10 @@ export type PlanGapModel = {
   label: string;
   /**
    * Current, and the set listed under it isn't a Must-see: the countdown is drawn
-   * smaller, in a box — dotted for a Maybe (as its row's left edge), solid for
-   * an unpicked or "don't go" set. Else null.
+   * smaller, in a box — dashed for a Maybe or an unpicked set (dots read poorly
+   * at 1 pt), solid for a "don't go" set. Else null.
    */
-  countdownBox: 'dotted' | 'solid' | null;
+  countdownBox: 'dashed' | 'solid' | null;
   height: number;
   /** Where the blue bar starts, from the gap's top: on the day-start break below the start ring, an item spacing clear of it; else 0. */
   barTop: number;
@@ -57,8 +57,8 @@ export type PlanGapModel = {
 
 function countdownBoxOf(level: PlanSetLevel): PlanGapModel['countdownBox'] {
   switch (level) {
-    case 'maybe': return 'dotted';
-    case 'none':
+    case 'maybe':
+    case 'none': return 'dashed';
     case 'dont_go': return 'solid';
     default: return null;
   }
