@@ -274,7 +274,7 @@ My plan's strings live with the rest of the app's in `src/i18n/strings.ts` (see 
 |---|---|---|
 | setStatus.live | LIVE | HRAJE |
 | setStatus.done | done | odehráno |
-| setStatus.start | START | ZAČÍNÁ |
+| setStatus.start | START | ZAČNE |
 | conflict.conflict | Conflict | Konflikt |
 | planFilter.all (a11y) | All sets | Všechna vystoupení |
 | planFilter.maybe (a11y) | Must-see and Maybe | Musím vidět a Možná |

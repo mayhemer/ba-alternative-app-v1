@@ -245,7 +245,7 @@ const cs: Strings = {
   setStatus: {
     live: 'HRAJE',
     done: 'odehráno',
-    start: 'ZAČÍNÁ',
+    start: 'ZAČNE',
   },
 
   conflict: {
