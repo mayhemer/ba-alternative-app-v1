@@ -148,10 +148,27 @@ describe('search on the Program', () => {
     expect(screen.queryByTestId('search-input')).toBeNull();
   });
 
-  it('closes on ✕, typed or not', async () => {
+  it('on ✕ in a typed field clears it and stays open, the screen dimmed again', async () => {
     await renderOn('program');
     await openSearch();
     await type('goj');
+    expect(screen.getByTestId('search-results')).toBeTruthy();
+    await act(async () => { fireEvent.press(screen.getByTestId('search-close')); });
+    expect(screen.getByTestId('search-input').props.value).toBe('');
+    expect(screen.queryByTestId('search-results')).toBeNull();
+    expect(screen.getByTestId('search-dim')).toBeTruthy();
+    expect(screen.getByTestId('search-close').props.accessibilityLabel).toBe('Close search');
+  });
+
+  it('closes on ✕ in an empty field, opened empty or cleared', async () => {
+    await renderOn('program');
+    await openSearch();
+    await act(async () => { fireEvent.press(screen.getByTestId('search-close')); });
+    expect(screen.queryByTestId('search-input')).toBeNull();
+
+    await openSearch();
+    await type('goj');
+    await act(async () => { fireEvent.press(screen.getByTestId('search-close')); });
     await act(async () => { fireEvent.press(screen.getByTestId('search-close')); });
     expect(screen.queryByTestId('search-input')).toBeNull();
   });

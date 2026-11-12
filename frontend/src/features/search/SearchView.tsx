@@ -18,7 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text } from '../../ui/Text';
 import { useSearch, useCurrentSearchScope } from './SearchContext';
-import { SEARCH_LIST, searchItemOffsets, searchListItems, type SearchListItem } from './SearchView.model';
+import { SEARCH_LIST, searchFieldButton, searchItemOffsets, searchListItems, type SearchListItem } from './SearchView.model';
 import { searchResultRowModel } from './SearchResultRow.model';
 import { SearchResultRow } from './SearchResultRow';
 import { SEARCH_FIELD_SHADOW } from './SearchEntry';
@@ -118,6 +118,17 @@ function OpenSearch() {
   }, []);
 
   const [query, setQuery] = useState('');
+  // The field's ✕: a typed field is cleared, keeping the search open and the
+  // field the keyboard's; an empty one closes the search.
+  const fieldButton = searchFieldButton(query);
+  const handleFieldButton = useCallback((): void => {
+    if (fieldButton.action === 'close') {
+      close();
+      return;
+    }
+    setQuery('');
+    inputRef.current?.focus();
+  }, [fieldButton.action, close]);
   const deferredQuery = useDeferredValue(query);
 
   const slug = useSelectedSlug();
@@ -286,9 +297,9 @@ function OpenSearch() {
         />
         <Pressable
           testID="search-close"
-          onPress={close}
+          onPress={handleFieldButton}
           accessibilityRole="button"
-          accessibilityLabel={strings().search.close}
+          accessibilityLabel={fieldButton.accessibilityLabel}
           hitSlop={8}
           style={{ paddingHorizontal: 16, height: '100%', justifyContent: 'center' }}
         >

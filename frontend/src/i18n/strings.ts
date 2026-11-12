@@ -132,6 +132,8 @@ const en = {
     entry: 'Search',
     placeholder: 'Search',
     close: 'Close search',
+    /** The field's ✕ while it holds text: it clears the text only. */
+    clear: 'Clear search',
     /** The artist list's own section. */
     bands: 'Bands',
     inProgram: 'In the Program',
@@ -325,6 +327,7 @@ const cs: Strings = {
     entry: 'Hledat',
     placeholder: 'Hledat',
     close: 'Zavřít hledání',
+    clear: 'Vymazat hledání',
     bands: 'Kapely',
     inProgram: 'V programu',
     inSupportProgram: 'V doprovodném programu',

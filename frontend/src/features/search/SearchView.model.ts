@@ -37,6 +37,21 @@ function header(section: Section, scope: SearchScope): { title: string; note: st
   return { title: section === 'program' ? strings().search.inProgram : strings().search.inSupportProgram, note };
 }
 
+// ── The field's ✕ ─────────────────────────────────────────────────────────────
+//
+// In a typed field (spaces count: they are text in the field) it clears the
+// text and the search stays open; in an empty field it closes the search. Its
+// label says which.
+
+export type SearchFieldButton = { action: 'clear' | 'close'; accessibilityLabel: string };
+
+export function searchFieldButton(query: string): SearchFieldButton {
+  if (query !== '') {
+    return { action: 'clear', accessibilityLabel: strings().search.clear };
+  }
+  return { action: 'close', accessibilityLabel: strings().search.close };
+}
+
 function hitKey(hit: SearchHit): string {
   return hit.event !== null ? hit.event.eventId : `artist-${hit.artist.artistId}`;
 }

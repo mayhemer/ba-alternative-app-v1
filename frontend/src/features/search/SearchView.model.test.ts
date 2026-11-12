@@ -1,5 +1,5 @@
 import { placeResult, type SearchScope, type SetRef } from './searchScope';
-import { SEARCH_LIST, searchListItems, type SearchListItem } from './SearchView.model';
+import { SEARCH_LIST, searchFieldButton, searchListItems, type SearchListItem } from './SearchView.model';
 import type { SearchHit } from '../../lib/search';
 import type { DbArtist, DbEvent } from '../../types/backend';
 
@@ -149,5 +149,24 @@ describe('searchListItems', () => {
   it('spaces the rows 12 apart: a row takes its 58 and the gap under it', () => {
     const items = searchListItems([hit(band, 'b1')], programScope()) ?? [];
     expect(items[1].height).toBe(70);
+  });
+});
+
+// ── The field's ✕ ─────────────────────────────────────────────────────────────
+//
+// Dimension: the field empty, typed, or holding only spaces (text all the same,
+// though it lists nothing).
+
+describe('searchFieldButton', () => {
+  it('clears a typed field, and says so', () => {
+    expect(searchFieldButton('goj')).toEqual({ action: 'clear', accessibilityLabel: 'Clear search' });
+  });
+
+  it('clears a field holding only spaces', () => {
+    expect(searchFieldButton('  ').action).toBe('clear');
+  });
+
+  it('closes the search from an empty field', () => {
+    expect(searchFieldButton('')).toEqual({ action: 'close', accessibilityLabel: 'Close search' });
   });
 });

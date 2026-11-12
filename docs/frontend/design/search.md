@@ -22,8 +22,11 @@ document wins over the mock wherever they differ.
 - **The search view** (`features/search/SearchView`) covers the content area and the bottom bar,
   under the top bar, which stays visible. On a wide screen it is a column pinned right, like the
   panels, and the rest (the permanent drawer included) stays in sight, dimmed; a tap there closes
-  the search. The field, with a ✕ that closes the search, rises onto the keyboard. There is no
-  Cancel button.
+  the search. The field, with its ✕, rises onto the keyboard. There is no Cancel button.
+- **The field's ✕** (`searchFieldButton` in `SearchView.model.ts`): in a typed field (spaces count)
+  it clears the text only; the search stays open, the field keeps the keyboard, and the screen
+  behind is dimmed again. In an empty field it closes the search. Its label says which: "Clear
+  search" or "Close search".
 - **The keyboard:** the field rises with it and sits on it (`keyboardLift`: iOS reports the keyboard
   from the screen's edge, so the safe area under the content is taken off; Android, edge-to-edge,
   reports it above the navigation bar). On iOS the field moves with the keyboard; Android reports
@@ -37,7 +40,7 @@ document wins over the mock wherever they differ.
   that started below the top and comes to rest at it (a drag, or the fling it ends with) gives
   the field the keyboard back (`scrollRefocusesField`); a drag that starts at the top does not, as it
   is the one that put the keyboard away.
-- **Closing:** ✕, a tap on the dimmed area, Android back, web Escape, or a landing. A tap on the top
+- **Closing:** ✕ in an empty field, a tap on the dimmed area, Android back, web Escape, or a landing. A tap on the top
   bar (drawer button, now pill, the chip) closes the search **and then does what it always does**.
   Leaving the screen closes it too.
 - The search is in the screen-exclusivity hub (`utils/overlayHub`) with the drawer and the two

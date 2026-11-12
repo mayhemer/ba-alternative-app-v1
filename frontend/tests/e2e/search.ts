@@ -17,7 +17,11 @@ export function searchResult(page: Page, name: string): Locator {
   return page.locator('[data-testid^="search-row-"]').filter({ hasText: name }).first();
 }
 
-/** Closes the search with its ✕. */
+/** Closes the search with its ✕; in a typed field the first ✕ only clears it. */
 export async function closeSearch(page: Page): Promise<void> {
+  const clear = page.getByLabel('Clear search', { exact: true }).filter({ visible: true });
+  if (await clear.count() > 0) {
+    await clear.last().click();
+  }
   await page.getByLabel('Close search', { exact: true }).filter({ visible: true }).last().click();
 }
