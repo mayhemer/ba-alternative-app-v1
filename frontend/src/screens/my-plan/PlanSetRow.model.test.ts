@@ -225,25 +225,6 @@ describe('the star at the end of the name line', () => {
   });
 });
 
-describe('the live accent border', () => {
-  it('is on a Must-see while it plays, under every filter', () => {
-    expect(model({ now: at('19:23') }).liveBorder).toBe(true);
-    expect(model({ now: at('19:23'), allSets: true }).liveBorder).toBe(true);
-  });
-
-  it('is not on a Must-see before or after it plays', () => {
-    expect(model({ now: at('18:59') }).liveBorder).toBe(false);
-    expect(model({ now: at('20:00') }).liveBorder).toBe(false);
-  });
-
-  it('is on no other set, live or not', () => {
-    expect(model({ level: 'maybe', now: at('19:23') }).liveBorder).toBe(false);
-    expect(model({ level: 'maybe', allSets: true, now: at('19:23') }).liveBorder).toBe(false);
-    expect(model({ level: 'none', allSets: true, now: at('19:23') }).liveBorder).toBe(false);
-    expect(model({ level: 'dont_go', allSets: true, now: at('19:23') }).liveBorder).toBe(false);
-  });
-});
-
 describe('the live progress bar', () => {
   it('is the accent on a Must-see and grey on every other set', () => {
     expect(model().progressColors).toBe('live');

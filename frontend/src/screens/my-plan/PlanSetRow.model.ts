@@ -20,8 +20,7 @@ import type { InterestStatus } from '../../cache/cacheService';
 //     not at all, its text dimmed;
 //   - under every filter a Must-see has a solid left edge in the category's
 //     brighter colour and a Maybe a dotted grey one; the other rows have none;
-//   - a Must-see has a 1 pt accent border while it plays; no other row has a
-//     border;
+//   - no row has a border, live or not;
 //   - under All sets every row shows its pick's star, under the others none.
 
 /** How the set is picked: Must-see, Maybe, not at all or "don't go" (the last two listed only under All sets). */
@@ -63,8 +62,6 @@ export type PlanSetModel = {
   dimmed: boolean;
   /** The pick's star at the right end of the name's line, under All sets only; else null. */
   star: InterestStatus | null;
-  /** A 1 pt accent border round the row: a Must-see while it plays, under every filter. */
-  liveBorder: boolean;
   /** The live progress bar's colours (PROGRESS_COLORS): a Must-see's accent, every other set's grey. */
   progressColors: 'live' | 'maybeLive';
   accessibilityLabel: string;
@@ -166,7 +163,6 @@ export function planSetModel(input: PlanSetInput): PlanSetModel {
     dimmed: level === 'dont_go',
     // The levels are the interest statuses the stars show.
     star: allSets ? level : null,
-    liveBorder: must && state === 'live',
     progressColors: must ? 'live' : 'maybeLive',
     accessibilityLabel: `${artist.name}, ${timeText}, ${stageName}`,
     progress,

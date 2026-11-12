@@ -3,7 +3,7 @@ import { Pressable, View } from 'react-native';
 import Svg, { ClipPath, Defs, Path, Rect } from 'react-native-svg';
 import { Text } from '../../ui/Text';
 import { stripePath, CONFLICT_STRIPE } from '../../ui/stripes';
-import { BOLD, CLASH_BAR_WIDTH, LIST_GUTTER, LIVE_BORDER, PAST_ROW, PROGRESS_BAR_WIDTH, PROGRESS_COLORS, ROW_EDGE_WIDTH, ROW_RADIUS, STATUS_LABEL, TABULAR, type ProgressColors } from './planStyles';
+import { BOLD, CLASH_BAR_WIDTH, LIST_GUTTER, PAST_ROW, PROGRESS_BAR_WIDTH, PROGRESS_COLORS, ROW_EDGE_WIDTH, ROW_RADIUS, STATUS_LABEL, TABULAR, type ProgressColors } from './planStyles';
 import { NowArrow } from './PlanListItems';
 import { StarGlyph } from '../../features/interests/StarButton';
 import { PlanRowEdge } from './PlanRowEdge';
@@ -23,8 +23,7 @@ import { colors, MAX_CONTENT_WIDTH } from '../../styling/tokens';
 // No row has a border of its own. A Must-see has a 3 pt solid left edge in the
 // category's brighter colour and a Maybe a dotted grey one, drawn by
 // PlanRowEdge; the others have none, their own background showing there. Every
-// live set's progress bar starts past the edge. A live Must-see is outlined in
-// a 1 pt accent border, laid over the row so nothing in it moves. Outside All sets a Maybe is
+// live set's progress bar starts past the edge. Outside All sets a Maybe is
 // one compact line, its text muted but bright enough for sunlight, with a red
 // dot before the name while live. Under All sets every row has its pick's star
 // at the right end of the name's line, before which a long name cuts off. A
@@ -101,18 +100,6 @@ function ClashStripes({ bar, rowHeight, clipId }: { bar: ClashBar; rowHeight: nu
     </View>
   );
 }
-
-/** A live Must-see's accent outline, over everything in the row: it takes no room. */
-const LIVE_OUTLINE = {
-  position: 'absolute' as const,
-  left: 0,
-  top: 0,
-  right: 0,
-  bottom: 0,
-  borderWidth: 1,
-  borderRadius: ROW_RADIUS,
-  borderColor: LIVE_BORDER,
-};
 
 function LeftProgress({ progress, palette }: { progress: number; palette: ProgressColors }) {
   return (
@@ -244,7 +231,6 @@ function SetCard({ item, onPressArtist, category = NO_CATEGORY }: Props) {
           {item.stageName}
         </Text>
       </View>
-      {item.liveBorder && <View testID="plan-live-border" pointerEvents="none" style={LIVE_OUTLINE} />}
     </Pressable>
   );
 }

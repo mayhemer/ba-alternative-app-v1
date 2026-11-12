@@ -220,14 +220,11 @@ it.each([
 it.each([
   ['All sets', 'all'],
   ['Must-see only', 'must'],
-] as const)('outlines a live Must-see row under %s in a 1 pt accent border, over its category\'s edge, without moving its content', async (_filter, level) => {
+] as const)('draws a live Must-see row under %s with no border, just its category\'s solid left edge', async (_filter, level) => {
   const style = await rowStyle(item('Gojira', '19:23', level));
   expect(rowEdge()).toEqual({ edge: 'solid', color: 'rgb(40, 50, 60)' });
-  expect(StyleSheet.flatten(screen.getByTestId('plan-live-border').props.style)).toMatchObject({
-    position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, borderWidth: 1, borderRadius: 4, borderColor: colors.accent,
-  });
+  expect(screen.queryByTestId('plan-live-border')).toBeNull();
   expect(style.borderWidth ?? 0).toBe(0);
-  expect(style.paddingLeft).toBe(18);
 });
 
 it.each([

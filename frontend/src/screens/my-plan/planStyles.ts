@@ -12,9 +12,6 @@ export const STATUS_LABEL: TextStyle = { ...BOLD, fontSize: 11, letterSpacing: 0
 /** Tabular figures, so times and countdowns do not jitter as they change. */
 export const TABULAR: TextStyle = { fontVariant: ['tabular-nums'] };
 
-/** A live Must-see's 1 pt border: the full accent, to hold up in sunlight. */
-export const LIVE_BORDER = colors.accent;
-
 /** Every set row's corner radius. */
 export const ROW_RADIUS = 4;
 
