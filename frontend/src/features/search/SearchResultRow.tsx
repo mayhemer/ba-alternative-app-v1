@@ -9,7 +9,8 @@ import { colors } from '../../styling/tokens';
 // ── A search result row ───────────────────────────────────────────────────────
 //
 // Draws its model (SearchResultRow.model.ts). Takes its own key back on a press,
-// so one stable callback serves every row. The pressed look is state, not a
+// so one stable callback serves every row. No fill of its own: the list shows
+// through, and only a pressed row is filled. The pressed look is state, not a
 // style function: NativeWind drops a Pressable's function style on native.
 
 type Props = {
@@ -20,7 +21,6 @@ type Props = {
 const ROW_STYLE: ViewStyle = {
   flexDirection: 'row',
   alignItems: 'stretch',
-  backgroundColor: colors.surface,
 };
 const PRESSED_STYLE: ViewStyle = { backgroundColor: colors.surfacePressed };
 
@@ -39,12 +39,10 @@ function SearchResultRowBase({ item, onPress }: Props) {
       accessibilityLabel={item.accessibilityLabel}
       style={[ROW_STYLE, { height: item.height }, pressed && PRESSED_STYLE]}
     >
-      {/* Without a category, the bar's place stays, empty, so the text lines up. */}
-      <View style={{ width: SEARCH_ROW.barWidth, backgroundColor: item.barColor ?? undefined }} />
-      <View style={{ flex: 1, minWidth: 0, justifyContent: 'center', paddingLeft: 10, paddingRight: 6, gap: 3 }}>
-        <Text numberOfLines={1} style={{ fontSize: SEARCH_ROW.nameSize, color: colors.textPrimary, fontFamily: 'Bold-Default' }}>
+      <View style={{ flex: 1, minWidth: 0, justifyContent: 'center', paddingLeft: SEARCH_ROW.textInset, paddingRight: 6, gap: 3 }}>
+        <Text numberOfLines={1} style={{ fontSize: SEARCH_ROW.nameSize, color: colors.textPrimary }}>
           {item.nameBefore}
-          <Text style={{ color: colors.accent, fontFamily: 'Bold-Default' }}>{item.nameMatch}</Text>
+          <Text style={{ color: colors.accent }}>{item.nameMatch}</Text>
           {item.nameAfter}
         </Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: SEARCH_ROW.metaSize + 4 }}>
@@ -56,7 +54,7 @@ function SearchResultRowBase({ item, onPress }: Props) {
           {item.tag !== null && (
             <Text
               numberOfLines={1}
-              style={{ flexShrink: 0, fontSize: 11, color: colors.breakBlue, borderWidth: 1, borderColor: colors.breakBlue, borderRadius: 4, paddingHorizontal: 5 }}
+              style={{ flexShrink: 0, fontSize: 11, color: colors.breakBlue }}
             >
               {item.tag}
             </Text>

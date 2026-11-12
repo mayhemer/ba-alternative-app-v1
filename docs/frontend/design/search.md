@@ -73,7 +73,8 @@ Each result is placed by the screen it was opened on (`features/search/searchSco
 | Artists | "Bands": every band, opens details | — | opens details |
 
 - **This screen's section:** a tap lands on the set here. If the screen's filter hides it, the
-  filter widens just enough first, and the row says so with a small tag:
+  filter widens just enough first, and the row says so with a small tag, in blue after the time, with
+  no frame:
   - Program / Support Program: a set in a hidden lane shows its lane again; my "don't go" under
     My picks (the only set the lens removes there) turns the lens to Everything.
   - My plan: the filter steps out from where it is: Only conflicts → Must-see only → Must-see and
@@ -100,12 +101,13 @@ Each screen's section uses the same rule the screen draws with, never a search-o
 
 - Two lines at a fixed height (`SearchResultRow.model.ts`), easy to press, and a list that lays out
   without measuring:
-  - the name, the matched part in the accent colour;
+  - the name in the regular weight, the matched part in the accent colour;
   - the festival day, the time and the stage: `Fri · 19:00–20:00 · Marshall`. Day and time are the
     festival's (06:00 → 06:00, Europe/Prague), as everywhere.
-- A plain surface, no frame or rounding, 12 apart (`SEARCH_LIST.rowGap`). A colour bar on the left in the set's category colour.
-  Without a category (an artist with no set) there is no bar; the text stays where the other rows
-  have it.
+- No fill of its own: the list's background shows through, and only a pressed row is filled
+  (`surfacePressed`). No frame, no rounding, no line between rows, 12 apart (`SEARCH_LIST.rowGap`).
+  No colour bar: nothing in a row follows the set's category. The text starts 14 from the row's
+  edge (`SEARCH_ROW.textInset`).
 - My star on the right (Must-see, Maybe, Don't go), as on the artist list.
 - **An artist with no set:** the name, then genre and country, the line its artist sheet shows
   under the name (`artistGenreCountry` in `ArtistDetailTitle.model.ts`, the source both follow);

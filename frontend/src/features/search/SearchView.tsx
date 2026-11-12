@@ -34,7 +34,7 @@ import { searchIndex, searchLineup } from '../../lib/search';
 import { useArtistDetail } from '../artist-detail/ArtistDetailContext';
 import { useDeferredInterests } from '../interests/InterestContext';
 import { useSelectedSlug } from '../../store/AppContext';
-import { useArtistEventMap, useArtists, useCategories, useStages } from '../../store/cacheStore';
+import { useArtistEventMap, useArtists, useStages } from '../../store/cacheStore';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
 import { useKeyboardHeight } from '../../hooks/useKeyboardHeight';
 import type { InterestStatus } from '../../cache/cacheService';
@@ -124,12 +124,10 @@ function OpenSearch() {
   const artists = useArtists(slug);
   const artistEvents = useArtistEventMap(slug);
   const stages = useStages(slug);
-  const categories = useCategories(slug);
   const interests = useDeferredInterests();
 
   const index = useMemo(() => searchIndex(artists), [artists]);
   const stageById = useMemo(() => new Map(stages.map((s) => [s.stageId, s])), [stages]);
-  const categoryById = useMemo(() => new Map(categories.map((c) => [c.categoryId, c])), [categories]);
 
   const items = useMemo((): SearchListItem[] | null => {
     if (scope === null || deferredQuery.trim() === '') {
@@ -193,7 +191,6 @@ function OpenSearch() {
           hit: item.hit,
           status: (interests[item.hit.artist.artistId] ?? 'none') as InterestStatus,
           stage: item.hit.event !== null ? stageById.get(item.hit.event.stageId) : undefined,
-          category: item.hit.event !== null ? categoryById.get(item.hit.event.categoryId) : undefined,
           tag: item.tag,
         });
         return (
@@ -210,7 +207,7 @@ function OpenSearch() {
           </View>
         );
     }
-  }, [interests, stageById, categoryById, handlePress]);
+  }, [interests, stageById, handlePress]);
 
   const getItemLayout = useCallback((_: ArrayLike<SearchListItem> | null | undefined, i: number) => ({
     length: items?.[i].height ?? 0,
