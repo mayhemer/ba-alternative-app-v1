@@ -6,7 +6,9 @@ iPhone 17 Pro), installs the build, serves the fixtures on `:4010` and runs ever
 `http://localhost:4010` reaches the server with no further setup.
 
 The build is a Release simulator build made with `xcodebuild` from the prebuilt `ios/` folder, into
-`ios/build/e2e`, with the `e2e-ios-sim` profile's env from `eas.json` (`scripts/lib/iosLocalBuild.ts`).
+`~/Library/Developer/Xcode/DerivedData/BrutalAssaultalt-e2e` (outside `ios/`, so a prebuild keeps it),
+for the Mac's own architecture only, with the `e2e-ios-sim` profile's env from `eas.json`
+(`scripts/lib/iosLocalBuild.ts`).
 It covers the working tree's JS, and its native code as of the last `npm run prebuild:ios` — run that
 first after changing `app.json`, a config plugin or a native dependency. The first build takes about
 7 minutes, later ones about one.

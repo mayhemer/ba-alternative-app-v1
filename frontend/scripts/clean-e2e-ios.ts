@@ -9,7 +9,8 @@
 //     and setting on it goes, not just this one; the runner boots it, installs
 //     the app and re-applies its keyboard settings. Its first boot afterwards
 //     is slow.
-//   - the local Release build in ios/build/e2e (rebuilt by test:e2e:ios,
+//   - the local Release build in ~/Library/Developer/Xcode/DerivedData/
+//     BrutalAssaultalt-e2e (rebuilt by test:e2e:ios,
 //     from scratch, which takes minutes)
 //   - downloaded EAS simulator builds (re-downloaded by test:e2e:ios:eas;
 //     Android APKs are kept)
@@ -20,6 +21,7 @@ import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { BUILD_CACHE } from './lib/eas.ts';
+import { LOCAL_BUILD_DIR } from './lib/iosLocalBuild.ts';
 import { must, parseArgs, run, skip } from './lib/proc.ts';
 import { findSimulator, simulatorName } from './lib/simulator.ts';
 
@@ -70,7 +72,7 @@ if (existsSync(BUILD_CACHE)) {
     }
   }
 }
-remove(join(ROOT, 'ios', 'build', 'e2e'), 'local simulator build');
+remove(LOCAL_BUILD_DIR, 'local simulator build');
 remove(join(homedir(), '.maestro', 'tests'), 'Maestro debug output');
 remove(join(ROOT, 'e2e-results', 'ios'), 'last run\'s reports');
 
