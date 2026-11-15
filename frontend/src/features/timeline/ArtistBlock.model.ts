@@ -6,20 +6,24 @@ import { fitFontSize } from '../../ui/textFit';
 import { categoryBlockColors } from '../../utils/color';
 import { BLOCK_FONT_SIZE, LANE_BORDER_WIDTH, LANE_HEIGHT, MIN_BLOCK_WIDTH, PIXELS_PER_MS, timeToX } from './timelineLayout';
 import { formatTime } from '../../utils/festivalTime';
+import { LEFT_EDGE_WIDTH, type LeftEdgeKind } from '../../ui/LeftEdge.model';
 
 // ── A set's block on the timeline: what it shows ──────────────────────────────
 //
 // Everything a block shows comes from its set, its day and its row: where it
-// sits and how wide it is (its times), the label and how large it can be (that
-// width), the star (the pick), one striped bar per overlap interval, each over
-// just the overlapping part, and whether the lens mutes it: outlined, not filled.
-// ArtistBlock draws only this.
+// sits and how wide it is (its times, less a 1 px separator when the next set
+// in its row starts right at its end), the label and how large it can be (that
+// width), the star and the look (my pick: a Must-see's solid left edge, a
+// Maybe's dotted one, none on an unpicked set, a "don't go" outlined, not
+// filled), and one striped bar per overlap interval, each over just the
+// overlapping part. ArtistBlock draws only this.
 
 export const BLOCK_LAYOUT = {
   /** Inner padding; the label width maths below subtracts it. */
   padding: 8,
-  borderLeft: 3,
-  /** A muted block: a dotted grey frame all round, no stage colour, and its text dimmed. */
+  /** Room for a pick's left edge, kept on every block, so the label sits alike with or without one. */
+  borderLeft: LEFT_EDGE_WIDTH,
+  /** A "don't go": a dotted grey frame all round, no stage colour, and its text dimmed. */
   mutedEdge: '#4d4d4d',
   mutedEdgeWidth: 1,
   mutedEdgeStyle: 'dotted',
@@ -35,6 +39,8 @@ export const BLOCK_LAYOUT = {
   /** How far the bar sits above the block's bottom edge, "over" it. */
   barRaise: 1,
   barMinWidth: 4,
+  /** Cut from a block's end when the next set in its row starts right then: the lane's surface shows through. */
+  separator: 1,
 } as const;
 
 /** Where a set is drawn on its day's canvas: from its start, at least MIN_BLOCK_WIDTH wide. */
@@ -66,13 +72,15 @@ export type ArtistBlockModel = {
   top: number;
   width: number;
   height: number;
-  /** The fill; 'transparent' on a muted block. */
+  /** The fill; 'transparent' on a "don't go". */
   bg: string;
-  /** The left bar's colour, the stage's; a muted block draws its frame instead. */
+  /** My pick's left edge: solid on a Must-see, dotted on a Maybe, none otherwise. */
+  leftEdge: LeftEdgeKind;
+  /** The left edge's colour: the stage's, brighter. */
   border: string;
-  /** A muted block's frame colour, all round; null otherwise. */
-  edge: string | null;
-  /** The label's opacity: dimmed on a muted block. */
+  /** A "don't go"'s frame colour, all round; null otherwise. */
+  frame: string | null;
+  /** The label's opacity: dimmed on a "don't go". */
   textOpacity: number;
   /** Null on a block too narrow to show one. */
   label: BlockLabelModel | null;
@@ -92,9 +100,18 @@ export type ArtistBlockInputs = {
   labelRepeat: number;
   subRow: number;
   overlaps: ConflictOverlap[] | undefined;
-  /** Not the lens's pick under My picks or a friend's lens. */
-  muted: boolean;
+  /** The next set in its row starts right at its end (CategoryLane.model). */
+  abutsNext: boolean;
 };
+
+function leftEdgeOf(status: InterestStatus): LeftEdgeKind {
+  switch (status) {
+    case 'will_go': return 'solid';
+    case 'maybe': return 'dotted';
+    case 'none':
+    case 'dont_go': return null;
+  }
+}
 
 function labelOf(artist: DbArtist, event: DbEvent, width: number, status: InterestStatus, labelRepeat: number): BlockLabelModel | null {
   if (width < BLOCK_LAYOUT.labelMinBlockWidth) {
@@ -124,9 +141,13 @@ function labelOf(artist: DbArtist, event: DbEvent, width: number, status: Intere
   };
 }
 
-export function artistBlockModel({ event, artist, dayStart, status, categoryColor, labelRepeat, subRow, overlaps, muted }: ArtistBlockInputs): ArtistBlockModel {
-  const { left, width } = blockSpan(event, dayStart);
+export function artistBlockModel({ event, artist, dayStart, status, categoryColor, labelRepeat, subRow, overlaps, abutsNext }: ArtistBlockInputs): ArtistBlockModel {
+  const span = blockSpan(event, dayStart);
+  const left = span.left;
+  // Back to back with the next set, a 1 px separator is cut from its end.
+  const width = abutsNext ? span.width - BLOCK_LAYOUT.separator : span.width;
   const { bg, border } = categoryBlockColors(categoryColor);
+  const muted = status === 'dont_go';
   const bars = (overlaps ?? []).map((interval) => {
     const from = Math.max(0, Math.min(width, (interval.from - event.dateFrom) * PIXELS_PER_MS));
     const to = (interval.to - event.dateFrom) * PIXELS_PER_MS;
@@ -143,8 +164,9 @@ export function artistBlockModel({ event, artist, dayStart, status, categoryColo
     width,
     height: LANE_HEIGHT - LANE_BORDER_WIDTH,
     bg: muted ? 'transparent' : bg,
+    leftEdge: leftEdgeOf(status),
     border,
-    edge: muted ? BLOCK_LAYOUT.mutedEdge : null,
+    frame: muted ? BLOCK_LAYOUT.mutedEdge : null,
     textOpacity: muted ? BLOCK_LAYOUT.mutedTextOpacity : 1,
     label: labelOf(artist, event, width, status, labelRepeat),
     status,

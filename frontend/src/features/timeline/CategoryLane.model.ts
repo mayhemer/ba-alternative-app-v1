@@ -13,17 +13,19 @@ import { assignSubRows, LANE_HEIGHT, STRIP_HEIGHT, stripHeightFor } from './time
 // from these sets only, never from ones the lens or a filter hides. Its title
 // comes from the same model, so the title can never sit off its lane.
 
-/** A set the lane shows, with what its block needs: my pick, its overlaps, and whether the lens mutes it. */
+/** A set the lane shows, with what its block needs: my pick and its overlaps. */
 export type LaneSetInput = {
   event: DbEvent;
   artist: DbArtist;
   status: InterestStatus;
   overlaps: ConflictOverlap[] | undefined;
-  /** Not the lens's pick under My picks or a friend's lens: drawn outlined. */
-  muted: boolean;
 };
 
-export type LaneSet = LaneSetInput & { subRow: number };
+export type LaneSet = LaneSetInput & {
+  subRow: number;
+  /** The next set in its row starts right at its end: its block is cut short, a separator. */
+  abutsNext: boolean;
+};
 
 export type CategoryLaneModel = {
   /** The categoryId. */
@@ -59,12 +61,15 @@ type LaneOptions = {
 
 export function categoryLaneModel(category: DbCategory, sets: LaneSetInput[], { stack, overlayTitles }: LaneOptions): CategoryLaneModel {
   const layout = stack ? assignSubRows(sets.map((s) => s.event)) : null;
+  const rowOf = (s: LaneSetInput): number => layout?.eventSubRows[s.event.eventId] ?? 0;
+  // Where each row's sets start: a set ending at one of its own row's starts abuts the next.
+  const starts = new Set(sets.map((s) => `${rowOf(s)}@${s.event.dateFrom}`));
   return {
     key: category.categoryId,
     color: decodeCategoryColor(category.color),
     stripHeight: stripHeightFor(overlayTitles),
     height: (layout?.subRowCount ?? 1) * LANE_HEIGHT,
-    sets: sets.map((s) => ({ ...s, subRow: layout?.eventSubRows[s.event.eventId] ?? 0 })),
+    sets: sets.map((s) => ({ ...s, subRow: rowOf(s), abutsNext: starts.has(`${rowOf(s)}@${s.event.dateTo}`) })),
   };
 }
 

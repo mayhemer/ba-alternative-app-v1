@@ -4,7 +4,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { Text } from '../../ui/Text';
 import { strings } from '../../i18n/strings';
-import { CAP_GLYPH, LIST_GUTTER, PROGRESS_BAR_WIDTH, ROW_EDGE_WIDTH } from './planStyles';
+import { CAP_GLYPH, LIST_GUTTER, PROGRESS_BAR_WIDTH } from './planStyles';
+import { LEFT_EDGE_WIDTH } from '../../ui/LeftEdge.model';
 import type { DbEvent } from '../../types/backend';
 import { colors } from '../../styling/tokens';
 
@@ -27,7 +28,7 @@ const ARROW_TIP_X = 18;
  * Where a progress bar starts across the whole list width: a live row's (inside
  * the row's left edge) and the current gap's, so they line up.
  */
-export const PROGRESS_BAR_X = LIST_GUTTER + ROW_EDGE_WIDTH;
+export const PROGRESS_BAR_X = LIST_GUTTER + LEFT_EDGE_WIDTH;
 
 /** The arrow's left: its tip halfway across the progress bar. */
 const ARROW_LEFT = PROGRESS_BAR_X + PROGRESS_BAR_WIDTH / 2 - ARROW_TIP_X;

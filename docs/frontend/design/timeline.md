@@ -50,29 +50,35 @@ Each element computes what it shows in a pure model next to its component, in `s
 
 ### The lens on the timeline
 
-- **Everything:** every set, filled, as always. This is the default view.
-- **My picks / a friend's picks:** the lens hides nothing. Every set stays on the timeline; the
-  ones the lens doesn't pick are **muted**: no fill and no stage colour, only a **dotted** grey 1 pt
-  frame (`#4d4d4d`) all round, the left edge included, and the text at 60%. The frame is the same
-  width on every side because Android draws a dotted border only then. The lens's picks look as
-  under Everything.
-- **Removed:** only "don't go" sets, and only under My picks (my own). A friend's "don't go" isn't
-  shared, so a friend's lens removes nothing.
-- **Where a day lands:** at the lens's first pick; with none picked that day, at its first set.
-  A day the lens leaves empty (only "don't go" sets) lands nowhere and keeps no scroll position.
-- The artist list still filters to the lens's picks (see [artist-list.md](artist-list.md)).
+- **Everything:** every set, my "don't go" sets included. This is the default view.
+- **My picks / a friend's picks:** only the lens's picks; every other set is removed, as on the
+  artist list (`isRemovedByLens`). A removed set takes no row on the Support Program.
+- **Where a day lands:** at its first set listed. A day the lens leaves empty lands nowhere and
+  keeps no scroll position.
 
-Under every lens a block's star and conflict bars follow **your** picks.
+Under every lens a block's look, star and conflict bars follow **your** picks (a friend's lens
+shows their picks drawn by yours).
 
 ## Block Visual States
 
-Every block is filled in its stage's colour, with a 3 pt left bar in the brighter version of it
-(`categoryBlockColors`, shared with My plan's rows).
+A block is filled in its stage's colour (`categoryBlockColors`, shared with My plan's rows). Its
+look follows my pick; a pick's 3 pt left edge is the stage's brighter colour, drawn over the fill
+by `ui/LeftEdge` (shared with My plan's rows; dots placed by `leftEdgeDots`). Every block keeps
+the edge's 3 pt as padding, so the label sits in the same place with or without one.
 
-| State | Appearance |
+| My pick | Appearance |
 |---|---|
-| Default (any pick) | The fill and the left bar; a Maybe or Must-see adds its star |
-| Muted (not the lens's pick under My picks or a friend's lens) | No fill, no stage colour: a dotted grey 1 pt frame all round, the text at 60% |
+| Must-see | The fill, a **solid** left edge, and the star |
+| Maybe | The fill, a **dotted** left edge (3 pt square dots, 3 pt apart), and the star |
+| None | The fill only, no left edge |
+| Don't go | No fill, no stage colour: a dotted grey 1 pt frame (`#4d4d4d`) all round, the text at 30%. The frame is the same width on every side because Android draws a dotted border only then |
+
+The conflict sheet draws its blocks the same way.
+
+**Back to back:** when the next set listed in a block's row starts exactly at its end, the block is
+cut 1 pt short at its end, so the lane's surface shows through as a 1 pt separator
+(`BLOCK_LAYOUT.separator`; `abutsNext` from `CategoryLane.model`). A set the lens leaves out
+leaves no separator behind.
 
 ## Conflict Detection
 

@@ -58,10 +58,15 @@ export function matchesScope(
 }
 
 /**
- * Whether the lens takes a set off the timelines altogether. The lens only mutes
- * sets there, except my own "don't go" under My picks. TimelineDay.model draws
- * by it, and search widens it away before landing on such a set.
+ * Whether the lens takes a set off the timelines: every set but the lens's
+ * picks, under My picks or a friend's lens, as on the artist list; nothing under
+ * Everything. TimelineDay.model draws by it, and search widens it away before
+ * landing on such a set.
  */
-export function isRemovedByLens(scope: LensScope, myStatus: InterestStatus): boolean {
-  return scope.kind === 'me' && myStatus === 'dont_go';
+export function isRemovedByLens(
+  scope: LensScope,
+  myStatus: InterestStatus,
+  friendStatus: SharedInterestStatus | undefined,
+): boolean {
+  return !matchesScope(scope, myStatus, friendStatus);
 }

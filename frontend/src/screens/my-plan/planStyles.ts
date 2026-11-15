@@ -15,9 +15,6 @@ export const TABULAR: TextStyle = { fontVariant: ['tabular-nums'] };
 /** Every set row's corner radius. */
 export const ROW_RADIUS = 4;
 
-/** Every set row's left edge: a live set's progress bar, and the current gap's, start this far in. */
-export const ROW_EDGE_WIDTH = 3;
-
 /**
  * Every progress bar's two colours: the passed part dark, what remains light,
  * so the bright part is the time still to come. The bar is the remaining

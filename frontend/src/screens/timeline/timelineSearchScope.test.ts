@@ -5,8 +5,9 @@ import type { DbArtist, DbEvent } from '../../types/backend';
 // ── What a timeline tells search ──────────────────────────────────────────────
 //
 // Dimensions: the timeline (Program / Support Program); a band vs a support
-// set; the lens (Everything, My picks) and my pick (none, don't go); a hidden
-// lane; an artist with no set. And what a landing widens first.
+// set; the lens (Everything, My picks, a friend's) and the picks (mine: none,
+// Maybe, don't go; the friend's); a hidden lane; an artist with no set. And
+// what a landing widens first.
 
 const SLUG = 'tlscopetest';
 
@@ -28,7 +29,8 @@ function inputs(over: Partial<TimelineSearchInputs> = {}): TimelineSearchInputs 
   return {
     support: false,
     lens: { kind: 'all' },
-    interests: { nope: 'dont_go' },
+    interests: { nope: 'dont_go', band: 'maybe' },
+    friendInterests: undefined,
     hidden: new Set(),
     setLens: jest.fn(),
     showLane: jest.fn(),
@@ -59,6 +61,18 @@ describe('timelineSearchScope', () => {
     const placed = placeResult(mine, nopeSet);
     expect(placed).toEqual({ section: 'here', view: 2 });
     expect(mine.views[2].tag).toBe('Lens → Everything');
+  });
+
+  it('shows a set I haven\'t picked through the lens under My picks, my pick as it is', () => {
+    const mine = timelineSearchScope(inputs({ lens: { kind: 'me', level: null }, interests: { band: 'maybe' } }));
+    expect(placeResult(mine, bandSet)).toEqual({ section: 'here', view: 0 });
+    expect(placeResult(mine, nopeSet)).toEqual({ section: 'here', view: 2 });
+  });
+
+  it('shows a set the friend hasn\'t picked through the lens under theirs, whatever my pick', () => {
+    const theirs = timelineSearchScope(inputs({ lens: { kind: 'friend', token: 'f', level: null }, friendInterests: { nope: 'will_go' } }));
+    expect(placeResult(theirs, nopeSet)).toEqual({ section: 'here', view: 0 });
+    expect(placeResult(theirs, bandSet)).toEqual({ section: 'here', view: 2 });
   });
 
   it('shows a set in a hidden lane by showing the lane', () => {

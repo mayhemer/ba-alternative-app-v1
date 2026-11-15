@@ -3,10 +3,11 @@ import { Pressable, View } from 'react-native';
 import Svg, { ClipPath, Defs, Path, Rect } from 'react-native-svg';
 import { Text } from '../../ui/Text';
 import { stripePath, CONFLICT_STRIPE } from '../../ui/stripes';
-import { BOLD, CLASH_BAR_WIDTH, LIST_GUTTER, PAST_ROW, PROGRESS_BAR_WIDTH, PROGRESS_COLORS, ROW_EDGE_WIDTH, ROW_RADIUS, STATUS_LABEL, TABULAR, type ProgressColors } from './planStyles';
+import { BOLD, CLASH_BAR_WIDTH, LIST_GUTTER, PAST_ROW, PROGRESS_BAR_WIDTH, PROGRESS_COLORS, ROW_RADIUS, STATUS_LABEL, TABULAR, type ProgressColors } from './planStyles';
 import { NowArrow } from './PlanListItems';
 import { StarGlyph } from '../../features/interests/StarButton';
-import { PlanRowEdge } from './PlanRowEdge';
+import { LeftEdge } from '../../ui/LeftEdge';
+import { LEFT_EDGE_WIDTH } from '../../ui/LeftEdge.model';
 import { sameProps } from '../../ui/sameProps';
 import type { ClashBar, PlanSetModel, SetFill, SetStatus } from './PlanSetRow.model';
 import type { InterestStatus } from '../../cache/cacheService';
@@ -22,7 +23,7 @@ import { colors, MAX_CONTENT_WIDTH } from '../../styling/tokens';
 // surface, a "don't go" (All sets) with no fill and its text in the muted grey.
 // No row has a border of its own. A Must-see has a 3 pt solid left edge in the
 // category's brighter colour and a Maybe a dotted grey one, drawn by
-// PlanRowEdge; the others have none, their own background showing there. Every
+// LeftEdge; the others have none, their own background showing there. Every
 // live set's progress bar starts past the edge. Outside All sets a Maybe is
 // one compact line, its text muted but bright enough for sunlight, with a red
 // dot before the name while live. Under All sets every row has its pick's star
@@ -106,7 +107,7 @@ function LeftProgress({ progress, palette }: { progress: number; palette: Progre
     <View
       testID="plan-live-progress"
       pointerEvents="none"
-      style={{ position: 'absolute', left: ROW_EDGE_WIDTH, top: 0, bottom: 0, width: PROGRESS_BAR_WIDTH, backgroundColor: palette.remaining }}
+      style={{ position: 'absolute', left: LEFT_EDGE_WIDTH, top: 0, bottom: 0, width: PROGRESS_BAR_WIDTH, backgroundColor: palette.remaining }}
     >
       <View testID="plan-live-fill" style={{ width: PROGRESS_BAR_WIDTH, height: `${progress * 100}%`, backgroundColor: palette.passed }} />
     </View>
@@ -167,9 +168,9 @@ function edgeColorOf(edge: PlanSetModel['edge'], category: CategoryColors): stri
 
 function SetCard({ item, onPressArtist, category = NO_CATEGORY }: Props) {
   const live = item.state === 'live';
-  // No border: the left edge is drawn by its own element (PlanRowEdge). A native
+  // No border: the left edge is drawn by its own element (LeftEdge). A native
   // dotted border places its dots by the whole rounded box, not the left side.
-  const edge = <PlanRowEdge edge={item.edge} height={item.height} color={edgeColorOf(item.edge, category)} />;
+  const edge = <LeftEdge edge={item.edge} height={item.height} color={edgeColorOf(item.edge, category)} />;
   const box = {
     height: item.height,
     paddingLeft: INSET_LEFT,

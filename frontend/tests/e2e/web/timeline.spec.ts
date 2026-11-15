@@ -279,42 +279,44 @@ async function lensToMyPicks(page: Page): Promise<void> {
   await page.getByText('My picks', { exact: true }).filter({ visible: true }).first().click();
 }
 
-/** The fill of the block a name is drawn in: the box with the 3 px left bar, or a muted block's dotted frame. */
+/** The fill of the block a name is drawn in: its tappable box. */
 function blockFill(page: Page, name: string): Promise<string> {
   return visible(page, name).evaluate((el) => {
-    for (let n: Element | null = el; n !== null; n = n.parentElement) {
-      const style = getComputedStyle(n);
-      if (style.borderLeftWidth === '3px' || style.borderLeftStyle === 'dotted') {
-        return style.backgroundColor;
-      }
-    }
-    return 'none';
+    const box = el.closest('[data-testid="block-box"]');
+    return box === null ? 'none' : getComputedStyle(box).backgroundColor;
   });
 }
 
-test('"My picks" keeps the sets I have not picked, without their fill', async ({ appPage }) => {
+test('a "don\'t go" is drawn without its fill, and "My picks" leaves it out', async ({ appPage }) => {
   await ready(appPage);
   await openSection(appPage, 'Support Program');
   await pickFromSheet(appPage, 'ART-BRUT-ALL', 1);
-  await lensToMyPicks(appPage);
-  await expect(visible(appPage, 'KUNDY CREW')).toBeVisible();
-  expect(await blockFill(appPage, 'KUNDY CREW')).toBe('rgba(0, 0, 0, 0)');
+  await pickFromSheet(appPage, 'KUNDY CREW', 3);
+  await expect.poll(() => blockFill(appPage, 'KUNDY CREW'), { timeout: 5_000 }).toBe('rgba(0, 0, 0, 0)');
   expect(await blockFill(appPage, 'ART-BRUT-ALL')).not.toBe('rgba(0, 0, 0, 0)');
+  await lensToMyPicks(appPage);
+  await expect(appPage.getByText('KUNDY CREW', { exact: true }).filter({ visible: true })).toHaveCount(0);
+  await expect(visible(appPage, 'ART-BRUT-ALL')).toBeVisible();
 });
 
-test('a lane stacks only the sets the lens shows: "My picks" frees a "don\'t go"\'s row @layout', async ({ appPage }) => {
+test('a lane stacks only the sets the lens shows @layout', async ({ appPage }) => {
   await ready(appPage);
   await openSection(appPage, 'Support Program');
   // Wednesday's exhibitions all open at 10:00 and overlap, so the lane stacks
-  // them, a row each; ART-BRUT-ALL is below KUNDY CREW. "My picks" keeps the
-  // ones I haven't picked (muted) but removes a "don't go": with KUNDY CREW one,
-  // ART-BRUT-ALL moves up exactly one row within its lane.
+  // them; ART-BRUT-ALL is below KUNDY CREW. Picked alone, under "My picks" it
+  // is the lane's only set, in its first row, right under the title strip.
   await pickFromSheet(appPage, 'ART-BRUT-ALL', 1);
-  await pickFromSheet(appPage, 'KUNDY CREW', 3);
-  const inLane = async (): Promise<number> =>
-    (await boxOf(visible(appPage, 'ART-BRUT-ALL'))).top - (await boxOf(visible(appPage, 'Exhibition'))).top;
-  const before = await inLane();
   await lensToMyPicks(appPage);
   await expect(appPage.getByText('KUNDY CREW', { exact: true }).filter({ visible: true })).toHaveCount(0);
-  await expect.poll(async () => Math.round(before - (await inLane())), { timeout: 5_000 }).toBe(70);
+
+  const blockTop = (await boxOf(visible(appPage, 'ART-BRUT-ALL'))).top - 8;
+  const title = await boxOf(visible(appPage, 'Exhibition'));
+  if (appPage.viewportSize()!.height < 500) {
+    // Landscape: the title is drawn over the lane's first row.
+    expect(title.top).toBeGreaterThanOrEqual(blockTop - 2);
+    expect(title.bottom).toBeLessThanOrEqual(blockTop + 70);
+  } else {
+    expect(title.bottom).toBeLessThanOrEqual(blockTop + 1);
+    expect(title.top).toBeGreaterThanOrEqual(blockTop - 32 - 1);
+  }
 });

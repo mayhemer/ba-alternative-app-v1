@@ -9,12 +9,15 @@ import { sameProps } from '../../ui/sameProps';
 import { BLOCK_LAYOUT, type ArtistBlockModel, type BlockLabelModel } from './ArtistBlock.model';
 import { CONFLICT_STRIPE, stripePath } from '../../ui/stripes';
 import { LandingRing } from '../../ui/LandingRing';
+import { LeftEdge } from '../../ui/LeftEdge';
 import { endLandingHighlight, useLandingHighlight } from './landingHighlight';
 
 // ── A set's block on the timeline ─────────────────────────────────────────────
 //
-// Draws its model (ArtistBlock.model.ts): the box at its time and row, the
-// label (repeated along a long block), the star, and the conflict bars; and,
+// Draws its model (ArtistBlock.model.ts): the box at its time and row, my
+// pick's left edge (ui/LeftEdge, shared with My plan's rows) or a "don't go"'s
+// frame, the label (repeated along a long block), the star, and the conflict
+// bars; and,
 // after a jump that landed on its set, the frame (landingHighlight).
 
 type Props = {
@@ -65,23 +68,22 @@ function ArtistBlockBase({ item, onPress }: Props) {
         style={{
           flex: 1,
           backgroundColor: item.bg,
-          borderLeftColor: item.border,
-          borderLeftWidth: BLOCK_LAYOUT.borderLeft,
-          // A muted block is only outlined: a dotted grey frame, the same width
-          // on every side (Android draws a dotted border only then), so its left
-          // edge loses the stage colour too.
-          ...(item.edge !== null && {
+          // A "don't go" is only outlined: a dotted grey frame, the same width
+          // on every side (Android draws a dotted border only then).
+          ...(item.frame !== null && {
             borderWidth: BLOCK_LAYOUT.mutedEdgeWidth,
-            borderLeftWidth: BLOCK_LAYOUT.mutedEdgeWidth,
             borderStyle: BLOCK_LAYOUT.mutedEdgeStyle,
-            borderColor: item.edge,
-            borderLeftColor: item.edge,
+            borderColor: item.frame,
           }),
           overflow: 'hidden',
           justifyContent: 'flex-start',
           padding: BLOCK_LAYOUT.padding,
+          // The edge's room is kept on every block, so the label does not move
+          // with the pick; the edge is drawn over it, not as a border.
+          paddingLeft: BLOCK_LAYOUT.padding + BLOCK_LAYOUT.borderLeft,
         }}
       >
+        <LeftEdge edge={item.leftEdge} height={item.height} color={item.border} />
         {label !== null ? (
           <View testID="block-label" style={{ flexDirection: 'row', alignItems: 'flex-start', flex: 1, opacity: item.textOpacity }}>
             {/* Label area. Repeats are positioned against this box, so their

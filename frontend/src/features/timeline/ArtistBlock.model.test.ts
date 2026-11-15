@@ -8,12 +8,14 @@ import type { DbArtist, DbEvent } from '../../types/backend';
 //            set of no length; the 40 px a label needs
 //   row    — the first row or a stacked one
 //   name   — one word or several; short or long for the block
-//   pick   — none, or Maybe/Must-see (the star takes label width)
-//   muted  — not the lens's pick under My picks or a friend's lens: no fill, a
-//            dotted grey 1 pt frame all round (no stage-coloured left bar),
-//            its text at 30 %
+//   pick   — none, or Maybe/Must-see (the star takes label width); and the
+//            block's look: a Must-see's solid left edge, a Maybe's dotted one,
+//            none on an unpicked set; a "don't go" with no fill, a dotted grey
+//            1 pt frame all round (no stage colour), its text at 30 %
 //   length — a block longer than the label repeat gap (repeated labels)
 //   clash  — none, an overlap inside the block, one reaching past its start
+//   abuts  — the next set in its row starts right at its end: cut 1 px short,
+//            the lane's surface showing through as a separator
 // Expected values are worked out by hand.
 
 // The label's glyph width is empirical and differs per platform
@@ -48,7 +50,7 @@ function model(overrides: Partial<ArtistBlockInputs> & { from?: string; to?: str
     labelRepeat: 400,
     subRow: 0,
     overlaps: undefined,
-    muted: false,
+    abutsNext: false,
     ...rest,
   });
 }
@@ -63,6 +65,13 @@ describe('where a block is drawn', () => {
 
   it('is never narrower than 4 px, for a set of no length', () => {
     expect(model({ from: '13:00', to: '13:00' }).width).toBe(4);
+  });
+
+  it('is cut 1 px short at its end when the next set in its row starts right then, from the same start', () => {
+    // 35 minutes: 99.17 px, 98.17 cut.
+    const cut = model({ abutsNext: true });
+    expect(cut.left).toBeCloseTo(1445);
+    expect(cut.width).toBeCloseTo(98.17, 2);
   });
 
   it('fills its row: 68 tall, the lane border below it, one row down 70', () => {
@@ -127,7 +136,7 @@ describe('its label', () => {
     // padding). One a pixel wider keeps it, 91 wide; one a pixel narrower not.
     const blockOf = (px: number) => artistBlockModel({
       event: { ...event('10:00', '10:00'), dateTo: at('10:00') + (px / 170) * 60 * MIN },
-      artist: artist('KUNDY CREW'), dayStart: WED, status: 'none', categoryColor: 'rgb(0, 0, 0)', labelRepeat: 400, subRow: 0, overlaps: undefined, muted: false,
+      artist: artist('KUNDY CREW'), dayStart: WED, status: 'none', categoryColor: 'rgb(0, 0, 0)', labelRepeat: 400, subRow: 0, overlaps: undefined, abutsNext: false,
     });
     expect(blockOf(510).label?.repeats.map((r) => [r.left, Math.round(r.width)])).toEqual([[400, 91]]);
     expect(blockOf(508).label?.repeats).toEqual([]);
@@ -161,12 +170,20 @@ describe('its conflict bars', () => {
   });
 });
 
-describe('a muted block (not the lens\'s pick)', () => {
-  it('has no fill and no stage colour: a dotted grey 1 pt frame all round, and its text at 30 %', () => {
-    expect(model({ muted: true })).toMatchObject({ bg: 'transparent', edge: '#4d4d4d', textOpacity: 0.3 });
+describe('its look, by my pick', () => {
+  it('fills a Must-see in its stage colour, with a solid left edge in the brighter one', () => {
+    expect(model({ status: 'will_go' })).toMatchObject({ bg: 'rgb(78, 30, 30)', leftEdge: 'solid', border: 'rgb(158, 30, 30)', frame: null, textOpacity: 1 });
   });
 
-  it('is drawn as before when not muted', () => {
-    expect(model()).toMatchObject({ bg: 'rgb(78, 30, 30)', border: 'rgb(158, 30, 30)', edge: null, textOpacity: 1 });
+  it('fills a Maybe in its stage colour, with a dotted left edge in the brighter one', () => {
+    expect(model({ status: 'maybe' })).toMatchObject({ bg: 'rgb(78, 30, 30)', leftEdge: 'dotted', border: 'rgb(158, 30, 30)', frame: null, textOpacity: 1 });
+  });
+
+  it('fills an unpicked set in its stage colour, with no left edge', () => {
+    expect(model({ status: 'none' })).toMatchObject({ bg: 'rgb(78, 30, 30)', leftEdge: null, frame: null, textOpacity: 1 });
+  });
+
+  it('draws a "don\'t go" with no fill and no stage colour: a dotted grey 1 pt frame all round, and its text at 30 %', () => {
+    expect(model({ status: 'dont_go' })).toMatchObject({ bg: 'transparent', leftEdge: null, frame: '#4d4d4d', textOpacity: 0.3 });
   });
 });

@@ -6,6 +6,7 @@ import { formatRemaining } from './planDurations';
 import { strings } from '../../i18n/strings';
 import type { DbArtist, DbEvent, DbStage } from '../../types/backend';
 import type { InterestStatus } from '../../cache/cacheService';
+import type { LeftEdgeKind } from '../../ui/LeftEdge.model';
 
 // ── One set in My plan: what it shows ─────────────────────────────────────────
 //
@@ -57,7 +58,7 @@ export type PlanSetModel = {
   compact: boolean;
   fill: SetFill;
   /** Its left edge, under every filter: solid in the category's brighter colour on a Must-see, dotted grey on a Maybe; on every other row null (transparent). */
-  edge: 'solid' | 'dotted' | null;
+  edge: LeftEdgeKind;
   /** Its texts in the muted grey: a "don't go". */
   dimmed: boolean;
   /** The pick's star at the right end of the name's line, under All sets only; else null. */

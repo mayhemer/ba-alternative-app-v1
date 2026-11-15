@@ -176,11 +176,11 @@ const DOTS = {
 
 /** The left edge the row draws: solid with its colour, dotted with its colour and dots, or null. */
 function rowEdge(): { edge: 'solid'; color: unknown } | { edge: 'dotted'; color: unknown; dots: string } | null {
-  const solid = screen.queryByTestId('plan-row-edge-solid');
+  const solid = screen.queryByTestId('left-edge-solid');
   if (solid !== null) {
     return { edge: 'solid', color: StyleSheet.flatten(solid.props.style).backgroundColor };
   }
-  const dots = screen.queryByTestId('plan-row-edge-dots');
+  const dots = screen.queryByTestId('left-edge-dots');
   if (dots !== null) {
     return { edge: 'dotted', color: dots.props.fill, dots: dots.props.d };
   }

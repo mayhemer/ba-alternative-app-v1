@@ -11,6 +11,7 @@ import { useTimelineData } from './useTimelineData';
 import { setSelectedDay } from '../../store/uiStatePersistence';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
 import { useLens, useLensPanel } from '../../features/social/LensContext';
+import { useSocialData } from '../../features/social/SocialContext';
 import { LensPanelSkeleton } from '../../features/social/LensPanelSkeleton';
 import { useDeferredInterests } from '../../features/interests/InterestContext';
 import { useSearchScope } from '../../features/search/SearchContext';
@@ -41,12 +42,14 @@ export function BaseTimelineScreen({ title, screenKey, BottomBarComponent, filte
   // A pull down past the lanes' top opens the lens panel, as the lens chip does.
   const { open: openLensPanel } = useLensPanel();
   const interests = useDeferredInterests();
+  const { getFriend } = useSocialData();
+  const friendInterests = lens.kind === 'friend' ? getFriend(lens.token)?.interests : undefined;
   const jump = useJumpToTimeline();
 
   // What this timeline tells search (timelineSearchScope), while it is focused.
   const searchScope = useMemo(
-    () => timelineSearchScope({ support: screenKey === 'support', lens, interests, hidden: hiddenCategories, setLens, showLane: toggleCategory, jump }),
-    [screenKey, lens, interests, hiddenCategories, setLens, toggleCategory, jump],
+    () => timelineSearchScope({ support: screenKey === 'support', lens, interests, friendInterests, hidden: hiddenCategories, setLens, showLane: toggleCategory, jump }),
+    [screenKey, lens, interests, friendInterests, hiddenCategories, setLens, toggleCategory, jump],
   );
   useSearchScope(searchScope);
 

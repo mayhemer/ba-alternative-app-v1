@@ -79,7 +79,7 @@ describe('one timeline block', () => {
             labelRepeat: 400,
             subRow: 0,
             overlaps: undefined,
-            muted: false,
+            abutsNext: false,
           })}
           onPress={() => undefined}
         />
@@ -93,16 +93,22 @@ describe('one timeline block', () => {
     expect(formatCensus(census)).toContain('elements');
   });
 
-  it('costs no extra view when muted', async () => {
-    const block = (muted: boolean) => render(
-      <FeatureProviders>
-        <ArtistBlock
-          item={artistBlockModel({ event: EVENT, artist: ARTIST, dayStart: EVENT.dateFrom, status: 'none', categoryColor: '#888888', labelRepeat: 400, subRow: 0, overlaps: undefined, muted })}
-          onPress={() => undefined}
-        />
-      </FeatureProviders>,
-    );
-    expect(countElements((await block(true)).toJSON()).total).toBe(countElements((await block(false)).toJSON()).total);
+  // Most blocks of a day are unpicked: only a pick's left edge costs a view.
+  const blockOf = (status: ArtistBlockInputs['status']) => render(
+    <FeatureProviders>
+      <ArtistBlock
+        item={artistBlockModel({ event: EVENT, artist: ARTIST, dayStart: EVENT.dateFrom, status, categoryColor: '#888888', labelRepeat: 400, subRow: 0, overlaps: undefined, abutsNext: false })}
+        onPress={() => undefined}
+      />
+    </FeatureProviders>,
+  );
+
+  it('costs no extra view for a "don\'t go"', async () => {
+    expect(countElements((await blockOf('dont_go')).toJSON()).total).toBe(countElements((await blockOf('none')).toJSON()).total);
+  });
+
+  it('costs two views more for a Must-see: its star and its solid left edge', async () => {
+    expect(countElements((await blockOf('will_go')).toJSON()).total).toBe(countElements((await blockOf('none')).toJSON()).total + 2);
   });
 
   it('adds views for a conflict only when there is one', async () => {
@@ -115,7 +121,7 @@ describe('one timeline block', () => {
       labelRepeat: 400,
       subRow: 0,
       overlaps: undefined,
-      muted: false,
+      abutsNext: false,
     };
     const clean = await render(<FeatureProviders><ArtistBlock item={artistBlockModel(common)} onPress={() => undefined} /></FeatureProviders>);
     const clashing = await render(

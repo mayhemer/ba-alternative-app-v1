@@ -5,7 +5,9 @@ import type { DbArtist, DbCategory, DbEvent } from '../../types/backend';
 //
 // Dimensions:
 //   sets   — one; two overlapping; back to back (no overlap); three where two
-//            overlap the first but not each other
+//            overlap the first but not each other; a gap of a minute
+//   abuts  — the next set in a set's own row starts right at its end (the
+//            block is cut 1 px short); one in another row does not count
 //   stack  — on (Support Program, conflict sheet) or off (Program)
 //   layout — a title strip (portrait) or the title over the lane (short viewport)
 
@@ -15,7 +17,7 @@ const CATEGORY: DbCategory = { slug: 't', categoryId: '7', color: 0xff00ff00, lo
 function set(id: string, from: string, to: string): LaneSetInput {
   const event: DbEvent = { slug: 't', eventId: id, artistId: id, stageId: 's', categoryId: '7', dateFrom: at(from), dateTo: at(to) };
   const artist: DbArtist = { slug: 't', artistId: id, name: id, isPlayable: false, imageUrl: '', thumbUrl: '', url: '', localized: [] };
-  return { event, artist, status: 'none', overlaps: undefined, muted: false };
+  return { event, artist, status: 'none', overlaps: undefined };
 }
 
 const rows = (sets: LaneSetInput[], stack = true) =>
@@ -53,6 +55,29 @@ describe('categoryLaneModel', () => {
 
   it("is tinted from its category's colour", () => {
     expect(categoryLaneModel(CATEGORY, [set('a', '10:00', '11:00')], { stack: true, overlayTitles: false }).color).toBe('rgb(0, 255, 0)');
+  });
+});
+
+describe('which sets the next one in their row starts right after', () => {
+  const abutting = (sets: LaneSetInput[], stack = true) =>
+    categoryLaneModel(CATEGORY, sets, { stack, overlayTitles: false }).sets.map((s) => [s.event.eventId, s.abutsNext]);
+
+  it('marks the first of two sets back to back, not the second', () => {
+    expect(abutting([set('a', '10:00', '11:00'), set('b', '11:00', '12:00')])).toEqual([['a', true], ['b', false]]);
+  });
+
+  it('marks back-to-back sets on a lane that does not stack too', () => {
+    expect(abutting([set('a', '10:00', '11:00'), set('b', '11:00', '12:00')], false)).toEqual([['a', true], ['b', false]]);
+  });
+
+  it('marks none with a minute between them', () => {
+    expect(abutting([set('a', '10:00', '11:00'), set('b', '11:01', '12:00')])).toEqual([['a', false], ['b', false]]);
+  });
+
+  it('marks only the set in the row the next one goes to', () => {
+    // a and b overlap (rows 0 and 1), both end at 17:00; c starts then, in row 0.
+    expect(abutting([set('a', '10:00', '17:00'), set('b', '10:00', '17:00'), set('c', '17:00', '18:00')]))
+      .toEqual([['a', true], ['b', false], ['c', false]]);
   });
 });
 

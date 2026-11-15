@@ -1,4 +1,4 @@
-# B8 · Under My picks the Support Program keeps every set but my don't-gos.
+# B8 · Under My picks the Support Program shows only my picks.
 #
 # Native only: the native timeline's lanes drawn again under another lens. The
 # lens rule is Jest's (screens/timeline/*.test.ts*) and web's
@@ -7,9 +7,9 @@
 # The seed made KUNDY CREW a Maybe and PIT OF DOOM a don't go. On the warm-up
 # Tuesday, from 13:00, the Support Program has KUNDY CREW and ART-BRUT-ALL (the
 # exhibitions, both until 01:00) and PIT OF DOOM, all on screen where the day
-# opens (12:45). Under My picks the timeline keeps the sets I haven't picked,
-# muted (which Maestro can't see), and removes only my "don't go" sets: that
-# removal is what proves the lens on this timeline.
+# opens (12:45). Under My picks the timeline shows only my picks: the set I
+# haven't picked and my "don't go" are both gone, which proves the lens on this
+# timeline.
 appId: cz.janbambas.ba
 ---
 - runFlow: common/relaunch.yaml
@@ -24,7 +24,7 @@ appId: cz.janbambas.ba
 - tapOn: "View and share schedules"
 - tapOn: ".*My picks.*"
 - waitForAnimationToEnd
-# The pick, and a set I haven't picked, both stay; my "don't go" is gone.
+# The pick stays; a set I haven't picked and my "don't go" are gone.
 - assertVisible: ".*KUNDY CREW.*"
-- assertVisible: ".*ART-BRUT-ALL.*"
+- assertNotVisible: ".*ART-BRUT-ALL.*"
 - assertNotVisible: ".*PIT OF DOOM.*"

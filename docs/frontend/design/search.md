@@ -78,8 +78,9 @@ Each result is placed by the screen it was opened on (`features/search/searchSco
 - **This screen's section:** a tap lands on the set here. If the screen's filter hides it, the
   filter widens just enough first, and the row says so with a small tag, in blue after the time, with
   no frame:
-  - Program / Support Program: a set in a hidden lane shows its lane again; my "don't go" under
-    My picks (the only set the lens removes there) turns the lens to Everything.
+  - Program / Support Program: a set in a hidden lane shows its lane again; a set the lens
+    leaves out (under My picks or a friend's lens, every set but its picks) turns the lens to
+    Everything.
   - My plan: the filter steps out from where it is: Only conflicts → Must-see only → Must-see and
     Maybe → All sets, to the first that lists the set.
 - **The other sections** are named by where the set is, never by what is missing. On My plan,
