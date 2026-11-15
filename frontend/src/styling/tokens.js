@@ -11,6 +11,7 @@ const colors = {
   border:         '#2a2a2a',
   borderMid:      '#333333',   // slightly lighter border
   borderConflict: '#666666', 
+  skeleton:       '#5a5a5a',   // the lens panel's pull preview (its skeleton): bars, icons and outline
   timeline: {
     blockDefault:       '#333333',
     categoryName:       '#777777',

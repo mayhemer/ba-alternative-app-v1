@@ -12,6 +12,8 @@ import { useConflicts } from '../../features/conflicts/ConflictContext';
 import { usePlanFilters, usePlanPanel, usePlanShownDay, usePlanStore, usePlanStoreVersion } from './PlanContext';
 import { minuteNow, useMinuteNow } from '../../hooks/useMinuteNow';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
+import { usePullPastTop } from '../../ui/PullPreview';
+import { PlanFilterSkeleton } from './filter/PlanFilterSkeleton';
 import { getScroll, setScroll } from '../../store/uiStatePersistence';
 import { buildPlanDay, itemAtOffset, itemOffsets, itemsToFill, maxScrollOffset, nowScrollOffset, PLAN_LAYOUT, planNowInView, planNowView, setScrollOffset, type PlanItem } from './planUtils';
 import { registerPlanNowProbe } from './planNowProbe';
@@ -107,7 +109,7 @@ export function MyPlanScreen() {
   );
   const now = useMinuteNow();
   const { level, setLevel } = usePlanFilters();
-  const { close: closePanel } = usePlanPanel();
+  const { open: openPanel, close: closePanel } = usePlanPanel();
   const store = usePlanStore();
   const storeVersion = usePlanStoreVersion();
   const day = usePlanShownDay(festivalDays, now);
@@ -242,6 +244,13 @@ export function MyPlanScreen() {
     persistScroll(e);
   }, [persistScroll]);
 
+  // A pull down past the list's top opens the filter panel, as its chip does.
+  const { scrollProps, preview } = usePullPastTop(openPanel, {
+    onScroll: handleScroll,
+    onScrollEndDrag: persistScroll,
+    scrollEventThrottle: 100,
+  }, PlanFilterSkeleton);
+
   // ── Is now in view here? ───────────────────────────────────────────────────
   // Asked by the now pill at the tap: it switches to the timeline when the now
   // arrow is in the central 80 % of the list above the floating bottom bar, or
@@ -305,12 +314,11 @@ export function MyPlanScreen() {
         keyExtractor={keyOf}
         renderItem={renderItem}
         getItemLayout={getItemLayout}
-        onScroll={handleScroll}
-        onScrollEndDrag={persistScroll}
+        {...scrollProps}
         onMomentumScrollEnd={persistScroll}
-        scrollEventThrottle={100}
         contentContainerStyle={{ paddingTop: PLAN_LAYOUT.paddingTop, paddingBottom: PLAN_LAYOUT.paddingBottom + bottomClearance }}
       />
+      {preview}
     </View>
   );
 }

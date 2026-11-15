@@ -16,7 +16,7 @@ import { onSupportProgram } from '../../lib/timelineJump';
 import { useTopBar, useBottomBar } from '../../shell/ScreenUIContext';
 import { useStarSelectorActions } from '../../features/interests/StarSelectorContext';
 import { useInterest } from '../../features/interests/InterestContext';
-import { useLens } from '../../features/social/LensContext';
+import { useLens, useLensPanel } from '../../features/social/LensContext';
 import { useSocialData } from '../../features/social/SocialContext';
 import { useArtistDetail } from '../../features/artist-detail/ArtistDetailContext';
 import { ConnectedArtistRow } from './ConnectedArtistRow';
@@ -24,6 +24,8 @@ import { SectionSeparator } from './SectionSeparator';
 import { LoadingScreen } from '../../ui/LoadingScreen';
 import { LensChip } from '../../features/social/LensChip';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
+import { usePullPastTop, type PullScrollProps } from '../../ui/PullPreview';
+import { LensPanelSkeleton } from '../../features/social/LensPanelSkeleton';
 
 // ── TopBar right slot (module-level for stable reference) ─────────────────────
 
@@ -49,16 +51,17 @@ function closeStarSelectorOnScroll(close: () => void) {
 // renderer change — never for a pick on the "Everything" lens, which the rows
 // take themselves (ConnectedArtistRow).
 
-type ScrollProps = ReturnType<typeof closeStarSelectorOnScroll>;
-
 type ListProps = {
   sections: Section[];
   renderItem: ({ item }: { item: DbArtist }) => React.ReactElement;
-  scrollProps: ScrollProps;
+  /** Its own handlers, wrapped by the pull past its top (ui/PullPreview). */
+  scrollProps: PullScrollProps;
   bottomClearance: number;
 };
 
 const keyExtractor = (item: DbArtist): string => item.artistId;
+
+const FILL = { flex: 1 };
 
 const renderSectionHeader = ({ section }: { section: Section }): React.ReactElement => (
   <SectionSeparator letter={section.title} />
@@ -80,6 +83,7 @@ const ArtistSectionList = React.memo(function ArtistSectionList({ sections, rend
   const contentContainerStyle = useMemo(() => ({ paddingBottom: bottomClearance }), [bottomClearance]);
   return (
     <SectionList<DbArtist, Section>
+      testID="artist-list"
       sections={sections}
       keyExtractor={keyExtractor}
       renderItem={renderItem}
@@ -121,7 +125,10 @@ export function ArtistListScreen() {
   const { openDetail } = useArtistDetail();
   const { bottomClearance } = useLayoutMode();
   const { close: closeStarSelector } = useStarSelectorActions();
-  const scrollProps = useMemo(() => closeStarSelectorOnScroll(closeStarSelector), [closeStarSelector]);
+  const ownScrollProps = useMemo(() => closeStarSelectorOnScroll(closeStarSelector), [closeStarSelector]);
+  // A pull down past the list's top opens the lens panel, as the lens chip does.
+  const { open: openLensPanel } = useLensPanel();
+  const { scrollProps, preview } = usePullPastTop(openLensPanel, ownScrollProps, LensPanelSkeleton);
 
   const friendInterests =
     scope.kind === 'friend' ? getFriend(scope.token)?.interests : undefined;
@@ -162,11 +169,14 @@ export function ArtistListScreen() {
   }
 
   return (
-    <ArtistSectionList
-      sections={sections}
-      renderItem={renderItem}
-      scrollProps={scrollProps}
-      bottomClearance={bottomClearance}
-    />
+    <View style={FILL}>
+      <ArtistSectionList
+        sections={sections}
+        renderItem={renderItem}
+        scrollProps={scrollProps}
+        bottomClearance={bottomClearance}
+      />
+      {preview}
+    </View>
   );
 }

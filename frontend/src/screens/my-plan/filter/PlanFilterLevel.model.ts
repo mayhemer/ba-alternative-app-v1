@@ -18,10 +18,20 @@ export type PlanFilterLevelModel = {
   selected: boolean;
 };
 
-const ORDER: readonly PlanLevel[] = ['all', 'maybe', 'must', 'conflicts'];
+/** The buttons' order in the panel. */
+export const PLAN_LEVEL_ORDER: readonly PlanLevel[] = ['all', 'maybe', 'must', 'conflicts'];
+
+// The panel's measures, which its pull preview (PlanFilterSkeleton) draws too.
+export const LEVEL_BUTTON_HEIGHT = 48;
+export const LEVEL_BUTTON_RADIUS = 8;
+export const LEVEL_ICON_SIZE = 24;
+/** Between two buttons. */
+export const LEVEL_GAP = 8;
+/** Inside the panel's card, around its content. */
+export const FILTER_PANEL_PADDING = 12;
 
 export function planFilterLevelModels(current: PlanLevel): PlanFilterLevelModel[] {
-  return ORDER.map((level) => ({
+  return PLAN_LEVEL_ORDER.map((level) => ({
     key: `level-${level}`,
     level,
     label: strings().planFilter[level],

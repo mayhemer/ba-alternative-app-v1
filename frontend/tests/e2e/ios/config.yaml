@@ -12,7 +12,7 @@
 # Three launches, each a cleared install that its scenarios share, in order:
 #   A  fresh, the real clock (outside the 2025 festival), no picks
 #   B  seeded as a returning user (tests/fixtures/e2e/seeds.json), on Wednesday 14:10
-#      (src/instrumentation/timeMode.ts); B5–B8 relaunch on the real clock
+#      (src/instrumentation/timeMode.ts); B5–B9 relaunch on the real clock
 #   C  fresh, the system in Czech
 # The first scenario of each launch clears the app; every other one starts
 # with a relaunch, so it begins from a state a user can be in whatever the one
@@ -39,5 +39,6 @@ executionOrder:
     - b6-plan-search-jump
     - b7-add-friend
     - b8-support-lens
+    - b9-pull-opens-panel
     - c1-language
     - c2-edition-switch

@@ -7,7 +7,7 @@ import { PlanFilterLevel } from './PlanFilterLevel';
 import { MyScheduleShare } from '../../../features/social/MyScheduleShare';
 import { SearchEntry } from '../../../features/search/SearchEntry';
 import { SEARCH_ENTRY_DOCK_HEIGHT } from '../../../features/search/SearchDock.model';
-import { planFilterLevelModels, type PlanFilterLevelModel } from './PlanFilterLevel.model';
+import { FILTER_PANEL_PADDING, LEVEL_GAP, planFilterLevelModels, type PlanFilterLevelModel } from './PlanFilterLevel.model';
 import type { PlanLevel } from '../../../store/uiStatePersistence';
 import {
   colors,
@@ -67,7 +67,7 @@ export function PlanFilterPanelView({ levels, onPick, onClose, dock, children }:
             borderWidth: 1,
             borderColor: colors.border,
             borderRadius: OVERLAY_PANEL_RADIUS,
-            padding: 12,
+            padding: FILTER_PANEL_PADDING,
             shadowColor: colors.black,
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.4,
@@ -75,7 +75,7 @@ export function PlanFilterPanelView({ levels, onPick, onClose, dock, children }:
             elevation: 12,
           }}
         >
-          <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ flexDirection: 'row', gap: LEVEL_GAP }}>
             {levels.map((item) => <PlanFilterLevel key={item.key} item={item} onPick={onPick} />)}
           </View>
           {children}

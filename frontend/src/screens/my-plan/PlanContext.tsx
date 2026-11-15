@@ -110,6 +110,8 @@ type PlanFilterContextValue = PlanFilters & {
 type PlanPanelContextValue = {
   isOpen: boolean;
   toggle: () => void;
+  /** Opens the panel; a no-op while it is open (a pull past the list's top). */
+  open: () => void;
   close: () => void;
 };
 
@@ -138,6 +140,7 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const toggle = useCallback((): void => { setIsOpen((prev) => !prev); }, []);
+  const open = useCallback((): void => { setIsOpen(true); }, []);
   const close = useCallback((): void => { setIsOpen(false); }, []);
 
   // Screen exclusivity: closes when the drawer or the lens panel opens, and
@@ -148,7 +151,7 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
   }, [isOpen, notifyOpening]);
 
   const filterValue = useMemo(() => ({ ...filters, setLevel }), [filters, setLevel]);
-  const panelValue = useMemo(() => ({ isOpen, toggle, close }), [isOpen, toggle, close]);
+  const panelValue = useMemo(() => ({ isOpen, toggle, open, close }), [isOpen, toggle, open, close]);
 
   return (
     <PlanStoreContext.Provider value={store}>

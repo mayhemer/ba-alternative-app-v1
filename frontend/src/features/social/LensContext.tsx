@@ -24,6 +24,8 @@ type LensContextValue = {
 type LensPanelContextValue = {
   isOpen: boolean;
   toggle: () => void;
+  /** Opens the panel; a no-op while it is open (a pull past a screen's top). */
+  open: () => void;
   close: () => void;
 };
 
@@ -44,6 +46,7 @@ export function LensProvider({ children }: { children: React.ReactNode }) {
   }, [scope]);
 
   const toggle = useCallback((): void => { setIsOpen((prev) => !prev); }, []);
+  const open = useCallback((): void => { setIsOpen(true); }, []);
   const close = useCallback((): void => { setIsOpen(false); }, []);
 
   // Screen exclusivity: the panel closes when another overlay opens, and
@@ -55,7 +58,7 @@ export function LensProvider({ children }: { children: React.ReactNode }) {
   }, [isOpen, notifyOpening]);
 
   const scopeValue = useMemo(() => ({ scope, setScope: setScopeState }), [scope]);
-  const panelValue = useMemo(() => ({ isOpen, toggle, close }), [isOpen, toggle, close]);
+  const panelValue = useMemo(() => ({ isOpen, toggle, open, close }), [isOpen, toggle, open, close]);
 
   return (
     <LensContext.Provider value={scopeValue}>

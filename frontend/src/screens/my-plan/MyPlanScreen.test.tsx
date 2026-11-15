@@ -15,6 +15,7 @@ import { getFestivalDayStart } from '../../utils/festivalTime';
 import { rendersSinceReset, resetRenders } from '../../../tests/setup/countRenders';
 import { useSearch } from '../../features/search/SearchContext';
 import { useLensPanel } from '../../features/social/LensContext';
+import { pullPastTop } from '../../../tests/setup/pullPastTop';
 import { useArtistDetail } from '../../features/artist-detail/ArtistDetailContext';
 import { useOpenStarSelector, useStarSelectorActions } from '../../features/interests/StarSelectorContext';
 import type { DbArtist, DbCategory, DbEvent, DbStage } from '../../types/backend';
@@ -658,6 +659,19 @@ describe('the chrome', () => {
     await fireEvent.press(screen.getByRole('link', { name: 'Sign in' }));
     expect(screen.queryByText('My schedule')).toBeNull();
     expect(screen.queryByRole('button', { name: 'All sets' })).toBeNull();
+  });
+
+  it('opens the filter panel, not the lens panel, when the list is pulled down past its top', async () => {
+    let lensPanelOpen = false;
+    function LensPanelProbe() {
+      lensPanelOpen = useLensPanel().isOpen;
+      return null;
+    }
+    await render(<PerfProviders><><LensPanelProbe /><Chrome /></></PerfProviders>);
+    expect(screen.queryByRole('button', { name: 'All sets' })).toBeNull();
+    await pullPastTop('plan-list');
+    expect(screen.getByRole('button', { name: 'All sets' })).toBeTruthy();
+    expect(lensPanelOpen).toBe(false);
   });
 
   // Which chrome elements render again after one change, by key: `day-<day>`

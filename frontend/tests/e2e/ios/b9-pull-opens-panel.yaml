@@ -1,0 +1,34 @@
+# B9 · Pulling a screen's content down past its top and letting go opens its
+# chip's panel: the lens panel on a timeline, the filter panel on My plan.
+#
+# Native only: the pull is the scroller's own drag past its top
+# (ui/PullPreview), which react-native-web does not have. Jest drives the
+# drag's events and covers every screen's wiring (the screens' *.test.tsx); this
+# shows a real drag reaches it, on the two native scrollers that differ: the
+# timeline's vertical one, which holds a horizontal one, and My plan's list.
+# Artists uses the same hook on a plain list, so it adds nothing here. Both
+# panels open with the search field (`search-entry`).
+appId: cz.janbambas.ba
+---
+- runFlow: common/relaunch.yaml
+# Program: a pull on the lanes, below the time ruler.
+- runFlow:
+    file: common/open-section.yaml
+    env: { SECTION: "Program" }
+- extendedWaitUntil:
+    visible: { id: "timeline-scroll-y" }
+    timeout: 20000
+- swipe: { start: "50%, 35%", end: "50%, 80%" }
+- extendedWaitUntil:
+    visible: { id: "search-entry" }
+    timeout: 5000
+# My plan, on Tuesday: no scenario before scrolls it, and outside the festival
+# it opens at its top. Opening the drawer closes the lens panel.
+- runFlow:
+    file: common/open-section.yaml
+    env: { SECTION: "My plan.*" }
+- tapOn: "TUE.*"
+- swipe: { start: "50%, 35%", end: "50%, 80%" }
+- extendedWaitUntil:
+    visible: "All sets"
+    timeout: 5000

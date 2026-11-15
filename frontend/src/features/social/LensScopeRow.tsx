@@ -11,12 +11,19 @@ import { colors } from '../../styling/tokens';
 // ── One source in the lens panel ──────────────────────────────────────────────
 //
 // Draws its model (LensPanel.model.ts): a radio, the label, and for a friend
-// the avatar and the ✕ — or, once armed, Cancel and Remove.
+// the avatar and the ✕ — or, once armed, Cancel and Remove. Given
+// `skeletonColor`, the same row as a mock for the panel's preview
+// (LensPanelSkeleton): the label and the icons in that colour, the avatar a
+// disc of it.
 
 // The avatar is the tallest thing in a friend row, so it sets the row height.
 // Capping the trailing action slot to the same height keeps the row from
 // growing when the ✕ is swapped for the Cancel / Remove pair.
 const FRIEND_AVATAR_SIZE = 22;
+const LABEL_TEXT = { color: colors.textPrimary, fontSize: 15 };
+const LABEL_BOX = { flex: 1 };
+const FRIEND_LABEL_BOX = { flex: 1, marginLeft: 8 };
+const AVATAR_DISC = { width: FRIEND_AVATAR_SIZE, height: FRIEND_AVATAR_SIZE, borderRadius: FRIEND_AVATAR_SIZE / 2 };
 
 type Props = {
   item: LensScopeRowModel;
@@ -25,10 +32,15 @@ type Props = {
   onArm: (token: string) => void;
   onDisarm: () => void;
   onRemove: (token: string) => void;
+  /** Draws the row as a loading skeleton in this colour. */
+  skeletonColor?: string;
 };
 
-function LensScopeRowBase({ item, onPress, onArm, onDisarm, onRemove }: Props) {
+function LensScopeRowBase({ item, onPress, onArm, onDisarm, onRemove, skeletonColor }: Props) {
   const { friend } = item;
+  const skeleton = skeletonColor !== undefined;
+  const radioColor = item.active ? colors.accent : colors.notInterested;
+  const labelColor = skeleton ? { color: skeletonColor } : undefined;
   return (
     <Pressable
       onPress={() => onPress(item)}
@@ -44,18 +56,17 @@ function LensScopeRowBase({ item, onPress, onArm, onDisarm, onRemove }: Props) {
       <Ionicons
         name={item.active ? 'radio-button-on' : 'radio-button-off'}
         size={18}
-        color={item.active ? colors.accent : colors.notInterested}
+        color={skeletonColor ?? radioColor}
         style={{ marginRight: 10 }}
       />
       {friend === null ? (
-        <Text style={{ color: colors.textPrimary, fontSize: 15, flex: 1 }}>{item.label}</Text>
+        <Text style={[LABEL_TEXT, LABEL_BOX, labelColor]}>{item.label}</Text>
       ) : (
         <>
-          <FriendAvatar label={item.label} avatarUrl={friend.avatarUrl} size={FRIEND_AVATAR_SIZE} />
-          <Text
-            numberOfLines={1}
-            style={{ color: colors.textPrimary, fontSize: 15, flex: 1, marginLeft: 8 }}
-          >
+          {skeleton
+            ? <View testID="skeleton-avatar" style={[AVATAR_DISC, { backgroundColor: skeletonColor }]} />
+            : <FriendAvatar label={item.label} avatarUrl={friend.avatarUrl} size={FRIEND_AVATAR_SIZE} />}
+          <Text numberOfLines={1} style={[LABEL_TEXT, FRIEND_LABEL_BOX, labelColor]}>
             {item.label}
           </Text>
           {friend.confirming ? (
@@ -83,7 +94,7 @@ function LensScopeRowBase({ item, onPress, onArm, onDisarm, onRemove }: Props) {
               accessibilityRole="button"
               accessibilityLabel={strings().lensScopeRow.removeFriend(item.label)}
             >
-              <Ionicons name="close-circle-outline" size={20} color={colors.notInterested} />
+              <Ionicons name="close-circle-outline" size={20} color={skeletonColor ?? colors.notInterested} />
             </Pressable>
           )}
         </>

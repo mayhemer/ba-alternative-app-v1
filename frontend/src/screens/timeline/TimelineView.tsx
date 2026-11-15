@@ -9,6 +9,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTimelineFilter } from './TimelineFilterContext';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
+import { usePullPastTop, type PullPreview } from '../../ui/PullPreview';
 import { useNowX } from '../../features/timeline/useNowX';
 import { getScroll, setScroll } from '../../store/uiStatePersistence';
 import { CategoryLane } from '../../features/timeline/CategoryLane';
@@ -54,15 +55,22 @@ const MOUNT_FALLBACK_WIDTH = 420;
 const MOUNT_FALLBACK_HEIGHT = 640;
 const MOUNT_MIN_STEP = 200;
 
+/** The lanes' area under the ruler: the vertical scroller and the pull preview over its top. */
+const PULL_AREA = { flex: 1 };
+
 type Props = {
   screenKey: string;
   /** The shown day's lanes, titles and geometry (TimelineDay.model.ts). */
   day: TimelineDayModel;
   selectedDayStart: number;
   onBlockPress: (event: DbEvent, artist: DbArtist) => void;
+  /** Runs when the lanes are pulled down past their top and let go (ui/PullPreview). */
+  onPullPastTop: () => void;
+  /** What that pull shows coming down: the panel it opens. */
+  pullPreview: PullPreview;
 };
 
-export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress }: Props) {
+export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress, onPullPastTop, pullPreview }: Props) {
   const { lanes, titles, tops, canvasHeight, firstEventMs } = day;
   const [areaHeight, setAreaHeight] = useState(0);
   // The same measurement in two forms: a ref for the scroll-to-event centring,
@@ -160,6 +168,12 @@ export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress }:
   const onVerticalScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>): void => {
     scrollYRef.current = e.nativeEvent.contentOffset.y;
   }, []);
+
+  // A pull down past the lanes' top runs onPullPastTop (the lens panel).
+  const { scrollProps: verticalScrollProps, preview: pullPreviewElement } = usePullPastTop(onPullPastTop, {
+    onScroll: onVerticalScroll,
+    scrollEventThrottle: 100,
+  }, pullPreview);
 
   // Imperative handle for the scroll-to-event jump below.
   const verticalScrollRef = useRef<ScrollViewInstance>(null);
@@ -334,89 +348,92 @@ export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress }:
   return (
     <View style={{ flex: 1 }} onLayout={(e) => { setAreaHeight(e.nativeEvent.layout.height); }}>
       <TimeRuler dayStart={selectedDayStart} scrollX={scrollX} nowX={nowX} />
-      <ScrollView
-        ref={verticalScrollRef}
-        // Stable handles for E2E position checks; an attribute, not a view.
-        testID="timeline-scroll-y"
-        className="flex-1 bg-background"
-        showsVerticalScrollIndicator={false}
-        scrollEventThrottle={100}
-        onScroll={onVerticalScroll}
-      >
-        {/* Wrapper so the label overlay can sit beside the horizontal scroller:
-            inside the vertical one (so it scrolls with the lanes) but outside the
-            horizontal one (so horizontal scroll cannot move it). */}
-        <View>
-          {/* Lane-band backdrop. The strip and the events row are both
-              transparent — that is what lets the titles show through them in
-              landscape — so the colour they used to carry lives here instead.
-              Sized to the lane stack rather than left to fill the wrapper: the
-              wrapper also spans the canvas's bottom padding, which would tint the
-              dead space under the last lane. */}
-          <View
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              height: laneStackHeight,
-              backgroundColor: colors.timeline.laneBg,
-            }}
-          />
-          {/* Before the scroller, so the lanes paint over the titles. */}
-          <LaneLabelOverlay titles={titles} />
-          <Animated.ScrollView
-            ref={horizontalScrollRef}
-            testID="timeline-scroll-x"
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            scrollEventThrottle={16}
-            onScroll={onScroll}
-            // Mounts already at the day's landing position instead of scrolling
-            // there afterwards, so there is no window in which the view, scrollX
-            // and the mount anchor disagree. Ignored by react-native-web; the
-            // restore effect's first-mount branch covers that.
-            contentOffset={mountContentOffset}
-            onLayout={(e) => {
-              const measured = e.nativeEvent.layout.width;
-              scrollViewWidthRef.current = measured;
-              setViewportWidth(measured);
-            }}
-          >
-            {/* Clipping wrapper sized to the visible window only */}
-            <View style={{ width: VIEW_WIDTH, overflow: 'hidden' }}>
-              {/* Full canvas shifted left so 09:30 aligns with x=0. The bottom
-                  padding is the larger of two needs: clearing the floating
-                  BottomBar, and keeping this — the horizontal scroller's content —
-                  at least as tall as the viewport, so that a horizontal drag below
-                  the last lane still pans the timeline on a day with few lanes. */}
-              <View style={{ width: CANVAS_WIDTH, position: 'relative', transform: [{ translateX: -VIEW_OFFSET_X }], paddingBottom: Math.max(bottomClearance, areaHeight - canvasHeight)}}>
-                {lanes.map((lane) => {
-                  const laneTop    = tops[lane.key];
-                  const laneBottom = laneTop + lane.stripHeight + lane.height;
-                  // A lane below the window ignores the X span, so feed it a
-                  // constant one — its props then stop changing per step and its
-                  // memo skips it outright.
-                  const mountEvents = laneInMountWindow(laneTop, laneBottom, mountWindow);
-                  return (
-                    <CategoryLane
-                      key={lane.key}
-                      item={lane}
-                      dayStart={selectedDayStart}
-                      nowX={nowX}
-                      onBlockPress={onBlockPress}
-                      labelRepeat={labelRepeat}
-                      mountEvents={mountEvents}
-                      mountFromX={mountEvents ? mountWindow.fromX : 0}
-                      mountToX={mountEvents ? mountWindow.toX : 0}
-                    />
-                  );
-                })}
+      {/* The pull preview's top is the lanes' top, under the ruler. */}
+      <View style={PULL_AREA}>
+        <ScrollView
+          ref={verticalScrollRef}
+          // Stable handles for E2E position checks; an attribute, not a view.
+          testID="timeline-scroll-y"
+          className="flex-1 bg-background"
+          showsVerticalScrollIndicator={false}
+          {...verticalScrollProps}
+        >
+          {/* Wrapper so the label overlay can sit beside the horizontal scroller:
+              inside the vertical one (so it scrolls with the lanes) but outside the
+              horizontal one (so horizontal scroll cannot move it). */}
+          <View>
+            {/* Lane-band backdrop. The strip and the events row are both
+                transparent — that is what lets the titles show through them in
+                landscape — so the colour they used to carry lives here instead.
+                Sized to the lane stack rather than left to fill the wrapper: the
+                wrapper also spans the canvas's bottom padding, which would tint the
+                dead space under the last lane. */}
+            <View
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: laneStackHeight,
+                backgroundColor: colors.timeline.laneBg,
+              }}
+            />
+            {/* Before the scroller, so the lanes paint over the titles. */}
+            <LaneLabelOverlay titles={titles} />
+            <Animated.ScrollView
+              ref={horizontalScrollRef}
+              testID="timeline-scroll-x"
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              scrollEventThrottle={16}
+              onScroll={onScroll}
+              // Mounts already at the day's landing position instead of scrolling
+              // there afterwards, so there is no window in which the view, scrollX
+              // and the mount anchor disagree. Ignored by react-native-web; the
+              // restore effect's first-mount branch covers that.
+              contentOffset={mountContentOffset}
+              onLayout={(e) => {
+                const measured = e.nativeEvent.layout.width;
+                scrollViewWidthRef.current = measured;
+                setViewportWidth(measured);
+              }}
+            >
+              {/* Clipping wrapper sized to the visible window only */}
+              <View style={{ width: VIEW_WIDTH, overflow: 'hidden' }}>
+                {/* Full canvas shifted left so 09:30 aligns with x=0. The bottom
+                    padding is the larger of two needs: clearing the floating
+                    BottomBar, and keeping this — the horizontal scroller's content —
+                    at least as tall as the viewport, so that a horizontal drag below
+                    the last lane still pans the timeline on a day with few lanes. */}
+                <View style={{ width: CANVAS_WIDTH, position: 'relative', transform: [{ translateX: -VIEW_OFFSET_X }], paddingBottom: Math.max(bottomClearance, areaHeight - canvasHeight)}}>
+                  {lanes.map((lane) => {
+                    const laneTop    = tops[lane.key];
+                    const laneBottom = laneTop + lane.stripHeight + lane.height;
+                    // A lane below the window ignores the X span, so feed it a
+                    // constant one — its props then stop changing per step and its
+                    // memo skips it outright.
+                    const mountEvents = laneInMountWindow(laneTop, laneBottom, mountWindow);
+                    return (
+                      <CategoryLane
+                        key={lane.key}
+                        item={lane}
+                        dayStart={selectedDayStart}
+                        nowX={nowX}
+                        onBlockPress={onBlockPress}
+                        labelRepeat={labelRepeat}
+                        mountEvents={mountEvents}
+                        mountFromX={mountEvents ? mountWindow.fromX : 0}
+                        mountToX={mountEvents ? mountWindow.toX : 0}
+                      />
+                    );
+                  })}
+                </View>
               </View>
-            </View>
-          </Animated.ScrollView>
-        </View>
-      </ScrollView>
+            </Animated.ScrollView>
+          </View>
+        </ScrollView>
+        {pullPreviewElement}
+      </View>
     </View>
   );
 }

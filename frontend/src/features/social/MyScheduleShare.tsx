@@ -31,16 +31,32 @@ type ViewProps = {
   onRevoke: () => void;
   /** Drawn at the right end of the heading's line: the toast reporting this section's actions. */
   headingAccessory?: React.ReactNode;
+  /**
+   * Draws the section as a mock in this colour, for a panel's preview
+   * (LensPanelSkeleton): every text and the icon in it.
+   */
+  skeletonColor?: string;
 };
 
-export function MyScheduleShareView({ item, busy, onSignIn, onShare, onCopy, onRevoke, headingAccessory }: ViewProps) {
+const SIGN_IN_TEXT = { color: colors.accent, fontSize: 13, fontFamily: 'Bold-Default' };
+const SIGN_IN_REST_TEXT = { color: colors.notInterested, fontSize: 13 };
+const SHARE_TEXT = { color: colors.textPrimary, fontSize: 15 };
+const SHARE_BOX = { flex: 1 };
+const COPY_TEXT = { color: colors.accent, fontSize: 14 };
+const REVOKE_TEXT = { color: colors.danger, fontSize: 14 };
+
+export function MyScheduleShareView({ item, busy, onSignIn, onShare, onCopy, onRevoke, headingAccessory, skeletonColor }: ViewProps) {
+  /** A text, in the mock's colour when drawn as one. */
+  const text = (value: string, style: object, boxStyle?: object) => (
+    <Text style={[style, boxStyle, skeletonColor === undefined ? undefined : { color: skeletonColor }]}>{value}</Text>
+  );
   return (
     <>
       <View style={{ height: 1, backgroundColor: colors.border, marginVertical: 10 }} />
       {/* The toast floats over the heading's line, centred on it, so showing it
           moves nothing in the panel. */}
       <View style={{ zIndex: 1 }}>
-        <PanelSectionLabel>{strings().myScheduleShare.heading}</PanelSectionLabel>
+        <PanelSectionLabel skeletonColor={skeletonColor}>{strings().myScheduleShare.heading}</PanelSectionLabel>
         <View
           pointerEvents="box-none"
           style={{ position: 'absolute', top: -20, bottom: -20, left: 0, right: 0, flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center' }}
@@ -65,13 +81,9 @@ export function MyScheduleShareView({ item, busy, onSignIn, onShare, onCopy, onR
             accessibilityRole="link"
             accessibilityLabel={strings().myScheduleShare.signIn}
           >
-            <Text style={{ color: colors.accent, fontSize: 13, fontFamily: 'Bold-Default' }}>
-              {strings().myScheduleShare.signIn}
-            </Text>
+            {text(strings().myScheduleShare.signIn, SIGN_IN_TEXT)}
           </Pressable>
-          <Text style={{ color: colors.notInterested, fontSize: 13 }}>
-            {strings().myScheduleShare.signInRest}
-          </Text>
+          {text(strings().myScheduleShare.signInRest, SIGN_IN_REST_TEXT)}
         </View>
       ) : (
         <>
@@ -80,20 +92,18 @@ export function MyScheduleShareView({ item, busy, onSignIn, onShare, onCopy, onR
             disabled={busy}
             style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 8 }}
           >
-            <Ionicons name="share-outline" size={20} color={colors.accent} style={{ marginRight: 10 }} />
-            <Text style={{ color: colors.textPrimary, fontSize: 15, flex: 1 }}>
-              {item.shareLabel}
-            </Text>
+            <Ionicons name="share-outline" size={20} color={skeletonColor ?? colors.accent} style={{ marginRight: 10 }} />
+            {text(item.shareLabel, SHARE_TEXT, SHARE_BOX)}
             {busy && <ActivityIndicator size="small" color={colors.notInterested} />}
           </Pressable>
 
           {item.canCopyOrRevoke && (
             <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8 }}>
               <Pressable onPress={onCopy} style={{ paddingVertical: 8, paddingRight: 16 }}>
-                <Text style={{ color: colors.accent, fontSize: 14 }}>{strings().myScheduleShare.copyLink}</Text>
+                {text(strings().myScheduleShare.copyLink, COPY_TEXT)}
               </Pressable>
               <Pressable onPress={onRevoke} style={{ paddingVertical: 8 }}>
-                <Text style={{ color: colors.danger, fontSize: 14 }}>{strings().myScheduleShare.revoke}</Text>
+                {text(strings().myScheduleShare.revoke, REVOKE_TEXT)}
               </Pressable>
             </View>
           )}

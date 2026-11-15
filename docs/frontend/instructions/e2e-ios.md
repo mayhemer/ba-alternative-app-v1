@@ -33,7 +33,7 @@ The suite runs as three launches, in the order `tests/e2e/ios/config.yaml` lists
 | Launch | Install | Scenarios |
 |---|---|---|
 | A | fresh, the real clock, no picks | `a1`–`a8`: startup, drawer sections, search, jump to a set, the star selector, two quick star presses, picks after a restart, an offline cold start |
-| B | seeded as a returning user (`e2eSeed: returning-user`), Wednesday 14:10 (`e2eNow`) | `b1`–`b8`: My plan's clashes, the now pill's switch between My plan and the timeline, the now card's link, the conflict sheet, a day's restored end, a search landing then a jump, a share link, the Support Program's lens |
+| B | seeded as a returning user (`e2eSeed: returning-user`), Wednesday 14:10 (`e2eNow`) | `b1`–`b9`: My plan's clashes, the now pill's switch between My plan and the timeline, the now card's link, the conflict sheet, a day's restored end, a search landing then a jump, a share link, the Support Program's lens, a pull past the top opening a panel |
 | C | fresh, the system in Czech | `c1`, `c2`: the language, the edition switch |
 
 The first scenario of a launch clears the app (`common/launch-fresh.yaml`,

@@ -2,7 +2,7 @@ import React, { memo, useCallback } from 'react';
 import { Pressable } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { sameProps } from '../../../ui/sameProps';
-import type { PlanFilterLevelModel } from './PlanFilterLevel.model';
+import { LEVEL_BUTTON_HEIGHT, LEVEL_BUTTON_RADIUS, LEVEL_ICON_SIZE, type PlanFilterLevelModel } from './PlanFilterLevel.model';
 import type { PlanLevel } from '../../../store/uiStatePersistence';
 import { colors } from '../../../styling/tokens';
 
@@ -10,9 +10,6 @@ import { colors } from '../../../styling/tokens';
 //
 // Draws its model (PlanFilterLevel.model.ts): the filter's glyph, in an accent
 // border on a raised background while it is the current filter.
-
-const ICON_SIZE = 24;
-const HEIGHT = 48;
 
 type Props = {
   item: PlanFilterLevelModel;
@@ -30,16 +27,16 @@ function PlanFilterLevelBase({ item, onPick }: Props) {
       accessibilityState={{ selected: item.selected }}
       style={{
         flex: 1,
-        height: HEIGHT,
+        height: LEVEL_BUTTON_HEIGHT,
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: 8,
+        borderRadius: LEVEL_BUTTON_RADIUS,
         borderWidth: 1,
         borderColor: item.selected ? colors.accent : colors.borderMid,
         backgroundColor: item.selected ? colors.border : colors.surfaceRaised,
       }}
     >
-      <Ionicons name={item.icon} size={ICON_SIZE} color={item.color} />
+      <Ionicons name={item.icon} size={LEVEL_ICON_SIZE} color={item.color} />
     </Pressable>
   );
 }

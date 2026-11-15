@@ -10,7 +10,8 @@ import { LensChip } from '../../features/social/LensChip';
 import { useTimelineData } from './useTimelineData';
 import { setSelectedDay } from '../../store/uiStatePersistence';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
-import { useLens } from '../../features/social/LensContext';
+import { useLens, useLensPanel } from '../../features/social/LensContext';
+import { LensPanelSkeleton } from '../../features/social/LensPanelSkeleton';
 import { useDeferredInterests } from '../../features/interests/InterestContext';
 import { useSearchScope } from '../../features/search/SearchContext';
 import { useJumpToTimeline } from '../../navigation/useJumpToTimeline';
@@ -37,6 +38,8 @@ export function BaseTimelineScreen({ title, screenKey, BottomBarComponent, filte
   const { openDetail } = useArtistDetail();
   const { shareOpeningDay, hiddenCategories, toggleCategory } = useTimelineFilter();
   const { scope: lens, setScope: setLens } = useLens();
+  // A pull down past the lanes' top opens the lens panel, as the lens chip does.
+  const { open: openLensPanel } = useLensPanel();
   const interests = useDeferredInterests();
   const jump = useJumpToTimeline();
 
@@ -101,6 +104,8 @@ export function BaseTimelineScreen({ title, screenKey, BottomBarComponent, filte
       day={day}
       selectedDayStart={dayToShow}
       onBlockPress={handleBlockPress}
+      onPullPastTop={openLensPanel}
+      pullPreview={LensPanelSkeleton}
     />
   );
 }

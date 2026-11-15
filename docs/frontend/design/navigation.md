@@ -32,6 +32,38 @@
 - Back button candidate — placement TBD (TopBar vs BottomBar).
 - Fed per screen similarly to TopBar.
 
+## Pull past the top
+
+Pulling a screen's content down past its top and letting go opens the panel of the chip in its top
+bar: the lens panel on Artists, Program and Support Program, My plan's filter panel on My plan. It
+opens as a tap on the chip does, never closes it (the open panel covers the content), and is a no-op
+on Settings, which has no panel. The screen's main scroller carries it (the artist list, the
+timeline's vertical scroller, My plan's list), through `ui/PullPreview` (`usePullPastTop`).
+
+- **iOS**: the content follows the finger past its top, a list too short to scroll too. In the gap
+  it opens shows a preview of the panel, a loading skeleton of its card where the panel opens
+  (`ui/PanelSkeletonCard`): for the first 84 pt it comes down with the content's top edge; from there
+  it stays where the panel opens, and a longer pull uncovers more of it, top first
+  (`ui/PullPreview.model.ts`). At 84 pt it is armed: letting go opens the panel. The card's border
+  stays as it is when armed; a reaction to arming has one place, `panelSkeletonBorder` in
+  `ui/PanelSkeletonCard.model.ts`, for both previews. Pulled
+  back before letting go, it does nothing. Only a finger's drag counts: a fling bouncing off the top
+  shows nothing. On a timeline it shows under the time ruler, where the lanes' gap opens.
+  - My plan: the four filter buttons outlined with their glyphs, in the panel's own measures, 84 pt
+    from the top bar, so all out when armed; armed, the glyphs take their own colours
+    (`screens/my-plan/filter/PlanFilterSkeleton`).
+  - Artists and the timelines: the lens panel itself as a mock, laid out by its own elements
+    (`features/social/LensPanelSkeleton`; `PanelSectionLabel`, `LensScopeRow` and
+    `MyScheduleShareView` take a `skeletonColor`): the same sections, texts, rows (a followed friend's
+    too, its avatar a disc) and "My schedule" for the session, every text, icon and the outline in
+    `colors.skeleton`, a brighter grey than the filter preview's. It is taller than 84 pt, so armed it
+    shows its top.
+- **Android**: the content does not move past its top, so there is nothing to draw, and the
+  platform's own pull indicator is a refresh spinner, which would promise a reload. Its
+  pull-to-refresh control carries the gesture invisibly (a transparent spinner, never refreshing),
+  opening the panel on letting go past its own distance.
+- **Web**: no pull (react-native-web has no gesture for it); the chips are the way in.
+
 ## Back history
 
 Android's hardware back button — and the browser's back button on web — walk back

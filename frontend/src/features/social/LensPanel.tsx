@@ -20,6 +20,9 @@ import {
   OVERLAY_PANEL_MAX_WIDTH,
 } from '../../styling/tokens';
 
+/** The card's padding, which its pull preview (LensPanelSkeleton) lays out in too. */
+export const LENS_PANEL_CARD_PADDING = { paddingHorizontal: 12, paddingTop: 10, paddingBottom: 14 };
+
 // ── Panel ─────────────────────────────────────────────────────────────────────
 
 export function LensPanel() {
@@ -127,9 +130,7 @@ export function LensPanel() {
             borderWidth: 1,
             borderColor: colors.border,
             borderRadius: OVERLAY_PANEL_RADIUS,
-            paddingHorizontal: 12,
-            paddingTop: 10,
-            paddingBottom: 14,
+            ...LENS_PANEL_CARD_PADDING,
             shadowColor: colors.black,
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.4,

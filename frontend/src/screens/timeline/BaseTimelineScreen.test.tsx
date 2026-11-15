@@ -6,7 +6,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BaseTimelineScreen } from './BaseTimelineScreen';
 import { DaySwitcher } from './DaySwitcher';
 import { PerfProviders } from '../../../tests/setup/PerfProviders';
-import { useLens } from '../../features/social/LensContext';
+import { useLens, useLensPanel } from '../../features/social/LensContext';
+import { pullPastTop } from '../../../tests/setup/pullPastTop';
 import { useInterestCycle, useInterestStatus } from '../../features/interests/InterestContext';
 import { rendersSinceReset, resetRenders } from '../../../tests/setup/countRenders';
 import { useTimelineFilter } from './TimelineFilterContext';
@@ -919,5 +920,35 @@ describe('what a pick renders first', () => {
     expect(rendersSinceReset()).toEqual({ '3': 1, '7029': 1 });
     // Back to none: Must-see, don't go, none — one press per render.
     await pressTimes('51', 3);
+  });
+});
+
+// ── Pulled down past its top ──────────────────────────────────────────────────
+//
+// A drag down from the top of the lanes opens the lens panel, as the lens chip
+// in the top bar does.
+
+describe('pulled down past its top', () => {
+  let lensPanelOpen = false;
+
+  function LensPanelProbe() {
+    lensPanelOpen = useLensPanel().isOpen;
+    return null;
+  }
+
+  it('opens the lens panel', async () => {
+    setSelectedDay('pull', WED);
+    await render(
+      <PerfProviders>
+        <>
+          <LensPanelProbe />
+          <BaseTimelineScreen title="Program" screenKey="pull" BottomBarComponent={NoBottomBar} filterArtist={playable} />
+        </>
+      </PerfProviders>,
+    );
+    await settle();
+    expect(lensPanelOpen).toBe(false);
+    await pullPastTop('timeline-scroll-y');
+    expect(lensPanelOpen).toBe(true);
   });
 });
