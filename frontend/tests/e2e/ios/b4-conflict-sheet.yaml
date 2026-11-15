@@ -1,0 +1,29 @@
+# B4 · From a set's artist sheet, its clash opens the conflict sheet, on a
+# timeline of its own.
+#
+# Native only: the second native sheet over the first, and its timeline. Its
+# content is Jest's (features/conflicts/*.test.ts*).
+#
+# EXORCIZPHOBIA (14:30–15:05) overlaps CRYSTAL LAKE (14:00–14:40), so their
+# group runs 14:00–15:05, with now (14:10) inside it.
+appId: cz.janbambas.ba
+---
+- runFlow: common/relaunch-returning-user.yaml
+- runFlow:
+    file: common/open-section.yaml
+    env: { SECTION: "My plan.*" }
+- tapOn: "EXORCIZPHOBIA, 14:30–15:05, .*"
+# The sheet opens collapsed over My plan; its sets are below the fold, so it is
+# swiped up by its handle.
+- swipe:
+    start: "50%,62%"
+    end: "50%,12%"
+- scrollUntilVisible:
+    element: ".*Overlaps with 1 other event.*"
+    direction: DOWN
+- tapOn: ".*Overlaps with 1 other event.*"
+- waitForAnimationToEnd
+# The group's festival day and span, which only the conflict sheet shows, and
+# its timeline's now line (My plan's list behind has neither).
+- assertVisible: ".*Wed 6.*14:00–15:05.*"
+- assertVisible: { id: "conflict-now-line" }

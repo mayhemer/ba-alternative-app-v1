@@ -1,8 +1,0 @@
-# Restarts the app as a user would: no cleared state. In English, as
-# common/launch-fresh.yaml explains.
-appId: cz.janbambas.ba
----
-- stopApp
-- launchApp:
-    arguments:
-      AppleLanguages: "(en)"

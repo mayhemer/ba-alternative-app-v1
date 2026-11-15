@@ -1,0 +1,18 @@
+# A7 · The picks made in A5 and A6 survive a restart of the app's process.
+#
+# Native only: native storage read back by a new process. Web's equivalent is a
+# page reload (tests/e2e/web/artistList.spec.ts).
+#
+# Under "My picks" only picked artists are listed: 3 INCHES OF BLOOD (Must see!,
+# chosen in the selector, A5) and ABBIE FALLS (Must see!, by two quick presses,
+# A6). The third row, back to none in A6, is not.
+appId: cz.janbambas.ba
+---
+- runFlow: common/relaunch.yaml
+- runFlow:
+    file: common/open-section.yaml
+    env: { SECTION: "Artists" }
+- tapOn: "View and share schedules"
+- tapOn: ".*My picks.*"
+- assertVisible: ".*3 INCHES OF BLOOD.*"
+- assertVisible: ".*ABBIE FALLS.*"

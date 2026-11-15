@@ -1,7 +1,10 @@
+# C2 · Switching the edition reloads the lineup.
+#
+# Native only: the native dropdown, then the startup gate run again for the new
+# edition, its fetch and the native list.
 appId: cz.janbambas.ba
-name: switching edition reloads the lineup
 ---
-- runFlow: common/launch-fresh.yaml
+- runFlow: common/relaunch.yaml
 - runFlow:
     file: common/open-section.yaml
     env: { SECTION: "Settings" }

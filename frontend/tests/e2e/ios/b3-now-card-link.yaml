@@ -1,0 +1,19 @@
+# B3 · The lock-screen now card's link opens My plan at now.
+#
+# The card itself is drawn by iOS and is not checked here; this is the link it
+# opens (navigation/nowCardLink.ts), handled by the running app. Native only:
+# the custom-scheme link, through the system. Its handling is Jest's
+# (shell/useNowCardLinkHandler.test.tsx).
+appId: cz.janbambas.ba
+---
+- runFlow: common/relaunch-returning-user.yaml
+# From a screen that shows no set at all.
+- runFlow:
+    file: common/open-section.yaml
+    env: { SECTION: "Settings" }
+- runFlow:
+    file: common/open-link.yaml
+    env:
+      LINK: "ba://my-plan/now"
+      ARRIVED: "CRYSTAL LAKE, 14:00–14:40, Sea Shepherd"
+- assertVisible: { id: "plan-now-arrow" }

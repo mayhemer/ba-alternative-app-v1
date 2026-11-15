@@ -1,0 +1,18 @@
+# Opens a section from the drawer. On a phone in portrait the drawer is not
+# permanent, so it is reached through the menu button ("Open menu"; "Close menu"
+# while the drawer is open, as a relaunch may restore it).
+#
+# Right after a relaunch the first tap on the button has been seen to go
+# nowhere, so the drawer is opened until it is open.
+appId: cz.janbambas.ba
+---
+- retry:
+    maxRetries: 2
+    commands:
+      - runFlow:
+          when:
+            visible: "Open menu"
+          commands:
+            - tapOn: "Open menu"
+      - assertVisible: "Close menu"
+- tapOn: ${SECTION}

@@ -1,0 +1,27 @@
+# B7 · A share link opens the friend's schedule: the lens switches to their
+# picks.
+#
+# Native only: the custom-scheme link through iOS, handled by the running app.
+# The handling is Jest's (features/social/*.test.ts*); web opens the same link
+# in a browser (tests/e2e/web/share.spec.ts).
+#
+# The fixture API knows one share token (tests/server/shareFixture.ts): a friend
+# whose ba2025 picks are EXORCIZPHOBIA (must see) and CRYSTAL LAKE (maybe). It
+# runs before B8, while the lens is still the default: under "My picks" the
+# seed would list EXORCIZPHOBIA already.
+appId: cz.janbambas.ba
+---
+- runFlow: common/relaunch.yaml
+- runFlow:
+    file: common/open-section.yaml
+    env: { SECTION: "Artists" }
+# Far down the collated order: not on screen until the lens lists only the
+# friend's picks.
+- assertNotVisible: ".*EXORCIZPHOBIA.*"
+- runFlow:
+    file: common/open-link.yaml
+    env:
+      LINK: "ba://add-friend/0123456789abcdef0123456789abcdef0123456789abcdef"
+      ARRIVED: ".*EXORCIZPHOBIA.*"
+- assertVisible: ".*CRYSTAL LAKE.*"
+- assertNotVisible: ".*3 INCHES OF BLOOD.*"

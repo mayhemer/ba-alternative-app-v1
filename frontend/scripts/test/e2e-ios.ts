@@ -5,11 +5,11 @@
 //   npm run test:e2e:ios -- --app path/X.app  any other simulator app
 //   npm run test:e2e:ios -- --sim "iPhone 17" a different simulator
 //   npm run test:e2e:ios -- --show            bring up the Simulator window
-//   npm run test:e2e:ios -- --flow e2e/native/X.yaml   one flow only, while writing it
+//   npm run test:e2e:ios -- --flow tests/e2e/ios/X.yaml   one flow only, while writing it
 //
 // Boots a simulator, installs the app, serves the fixture API on :4010 (the
 // simulator shares the Mac's network, so the build's http://localhost:4010
-// reaches it), runs every Maestro flow in e2e/native, and exits with Maestro's
+// reaches it), runs every Maestro flow in tests/e2e/ios, and exits with Maestro's
 // result.
 //
 // It tests a BUILT BINARY. By default that is a Release simulator build made
@@ -33,7 +33,7 @@ import { EXIT, has, must, parseArgs, run, skip } from '../lib/proc.ts';
 import { findSimulator, simulatorName } from '../lib/simulator.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
-const FLOWS = join(ROOT, 'e2e', 'native');
+const FLOWS = join(ROOT, 'tests', 'e2e', 'ios');
 const REPORTS = join(ROOT, 'e2e-results', 'ios');
 const BUNDLE_ID = 'cz.janbambas.ba';
 const PROFILE = 'e2e-ios-sim';
@@ -41,7 +41,7 @@ const PROFILE = 'e2e-ios-sim';
 const args = parseArgs(process.argv.slice(2));
 const simName = simulatorName(args);
 
-// The whole suite, or one flow while it is being written (a full run is ~11 min).
+// The whole suite, or one flow while it is being written.
 const flows = typeof args.flow === 'string' ? resolve(args.flow) : FLOWS;
 if (!existsSync(flows)) {
   skip(`--flow ${flows} does not exist`);

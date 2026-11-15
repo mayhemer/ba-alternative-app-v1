@@ -18,10 +18,10 @@ import type { Config } from 'jest';
 
 const shared = {
   rootDir: '.',
-  // e2e/ is Playwright and Maestro; tests/ is fixtures and helpers, not cases.
+  // tests/ is fixtures, helpers and the end-to-end suites (Playwright in
+  // tests/e2e/web, Maestro in tests/e2e/ios), not Jest cases.
   testPathIgnorePatterns: [
     '<rootDir>/node_modules/',
-    '<rootDir>/e2e/',
     '<rootDir>/tests/',
     '\\.perf-test\\.[jt]sx?$',
   ],

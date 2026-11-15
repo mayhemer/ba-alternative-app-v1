@@ -1,0 +1,45 @@
+# A6 · Two quick presses on a star are two presses, also into and out of
+# "Don't go".
+#
+# Each pair is Maestro's quickest: `repeat: 2, delay: 0`, which lands the two
+# touches ~0.34 s apart on iOS (each synthesized tap takes ~0.33 s; measured in
+# the runner's log, 2026-11-14). The selector then shows the pick two steps on —
+# its button for that state is the selected one, as VoiceOver reads it; a lost
+# or swallowed press would leave it one step on.
+#
+# The second pair starts from "Must see!", so its first press goes into
+# "Don't go" and its second out of it — where 6b8215e lost presses: the
+# "Don't go" glyph used to wrap the icon in a view of its own, so the icon
+# remounted, and a second touch already down on it lost its release. This flow
+# does NOT guard that bug: with the old glyph put back it still passed, as the
+# simulator finishes the remount long before a touch 0.34 s later. Its guard is
+# Jest's (features/interests/StarButton.test.tsx: the icon is never remounted,
+# the bar takes no touch).
+#
+# The order of states is none → Maybe → Must see! → Don't go → none
+# (features/interests/InterestContext INTEREST_CYCLE).
+appId: cz.janbambas.ba
+---
+- runFlow: common/relaunch.yaml
+- runFlow:
+    file: common/open-section.yaml
+    env: { SECTION: "Artists" }
+# The second row (ABBIE FALLS): none → Maybe → Must see!
+- tapOn: { text: "Toggle interest", index: 1, repeat: 2, delay: 0 }
+- assertVisible: { text: "Must see!", selected: true }
+- extendedWaitUntil:
+    notVisible: { id: "star-selector" }
+    timeout: 5000
+# The third row, to "Must see!" by two separate presses first.
+- tapOn: { text: "Toggle interest", index: 2 }
+- tapOn: { text: "Toggle interest", index: 2 }
+- assertVisible: { text: "Must see!", selected: true }
+- extendedWaitUntil:
+    notVisible: { id: "star-selector" }
+    timeout: 5000
+# Then quickly: Must see! → Don't go → none.
+- tapOn: { text: "Toggle interest", index: 2, repeat: 2, delay: 0 }
+- assertVisible: { text: "Not marked", selected: true }
+- extendedWaitUntil:
+    notVisible: { id: "star-selector" }
+    timeout: 5000

@@ -1,0 +1,32 @@
+# B2 · The now pill switches between My plan and the timeline: from a timeline
+# to My plan at now, and from My plan showing now to the live set's timeline.
+#
+# Native only: whether now is in view is asked of the native list's layout (the
+# now arrow inside the list's central 80 %), and both switches land natively.
+# Every case of the rule is web's (tests/e2e/web/plan.spec.ts) and Jest's
+# (shell/NowPill*.test.ts*); spec: docs/frontend/design/my-plan.md › Top bar.
+#
+# At Wednesday 14:10 the pill names CRYSTAL LAKE, live on the Sea Shepherd
+# stage. A plan row's label is "name, time, stage", a timeline block's
+# "name, time" — the stage after it tells them apart.
+appId: cz.janbambas.ba
+---
+- runFlow: common/relaunch-returning-user.yaml
+- runFlow:
+    file: common/open-section.yaml
+    env: { SECTION: "Program" }
+- extendedWaitUntil:
+    visible: ".*Marshall.*"
+    timeout: 20000
+# From a timeline: My plan, today, scrolled to now.
+- tapOn: { id: "now-pill" }
+- extendedWaitUntil:
+    visible: { id: "plan-now-arrow" }
+    timeout: 10000
+- assertVisible: "CRYSTAL LAKE, 14:00–14:40, Sea Shepherd"
+# From My plan with now in view: the live set's timeline (the Program) at now.
+- tapOn: { id: "now-pill" }
+- extendedWaitUntil:
+    visible: { id: "now-line" }
+    timeout: 10000
+- assertVisible: "CRYSTAL LAKE, 14:00–14:40(?!, Sea Shepherd).*"

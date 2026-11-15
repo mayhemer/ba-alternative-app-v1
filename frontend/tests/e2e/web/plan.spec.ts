@@ -1,6 +1,6 @@
 import { expect, PINNED_NOW, test } from './fixtures';
 import type { Locator, Page } from '@playwright/test';
-import { eventScrollTarget } from '../../src/features/timeline/timelineLayout';
+import { eventScrollTarget } from '../../../src/features/timeline/timelineLayout';
 import { closeSearch, searchFor, searchResult } from './search';
 
 // ── My plan ───────────────────────────────────────────────────────────────────

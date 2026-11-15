@@ -1,0 +1,28 @@
+# A5 · In the artist sheet, a star press opens the star selector, and a state
+# tapped in it becomes the pick.
+#
+# Native only: the press inside the native sheet, the selector placed from the
+# star's measured window frame (measureInWindow), the tap on one of its states.
+# Its states and timer are Jest's (features/interests/StarSelector*.test.ts*),
+# its placement is web's (tests/e2e/web/artistList.spec.ts). A7 checks the pick
+# survives a restart.
+appId: cz.janbambas.ba
+---
+- runFlow: common/relaunch.yaml
+- runFlow:
+    file: common/open-section.yaml
+    env: { SECTION: "Artists" }
+# The first row opens its artist sheet over the list.
+- tapOn: ".*3 INCHES OF BLOOD.*"
+- waitForAnimationToEnd
+# The sheet's title is the bare name; the list row behind has the longer label.
+- tapOn: { text: "Toggle interest", rightOf: "3 INCHES OF BLOOD" }
+# One press is "Maybe" and opens the selector; "Must see!" is chosen in it.
+- assertVisible: { text: "Maybe", selected: true }
+- tapOn: "Must see!"
+- assertVisible: { text: "Must see!", selected: true }
+# The selector closes by itself 2.5 s after the last tap. The sheet stays open:
+# the next scenario starts with a relaunch.
+- extendedWaitUntil:
+    notVisible: { id: "star-selector" }
+    timeout: 5000

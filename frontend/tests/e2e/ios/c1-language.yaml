@@ -1,0 +1,41 @@
+# C1 · The app shows the system's language, unless Settings chose one, and the
+# choice survives a restart.
+#
+# Launch C: a cleared app on the real clock, its system language Czech.
+#
+# Native only: iOS hands the app its language list at launch (-AppleLanguages,
+# as iOS's per-app language setting would), restarts it when that changes, and
+# the choice is read back from native storage by a new process. Which language
+# wins is Jest's (i18n/language*.test.ts*).
+appId: cz.janbambas.ba
+---
+- runScript: common/api-online.js
+- launchApp:
+    clearState: true
+    arguments:
+      AppleLanguages: "(cs)"
+- extendedWaitUntil:
+    visible: ".*3 INCHES OF BLOOD.*"
+    timeout: 30000
+# Czech, from the system.
+- tapOn: "Otevřít menu"
+- assertVisible: "Doprovodný program"
+# English chosen in Settings: the app remounts in English, back on Settings.
+- tapOn: "Nastavení"
+- scrollUntilVisible:
+    element: "Jazyk, .*"
+- tapOn: "Jazyk, .*"
+- tapOn: "English"
+- extendedWaitUntil:
+    visible: "Language, English"
+    timeout: 10000
+# Still English after a restart, though the system is still Czech.
+- stopApp
+- launchApp:
+    arguments:
+      AppleLanguages: "(cs)"
+- extendedWaitUntil:
+    visible: "Open menu"
+    timeout: 30000
+- tapOn: "Open menu"
+- assertVisible: "Support Program"

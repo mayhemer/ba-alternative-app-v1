@@ -1,0 +1,14 @@
+# A1 · A fresh install starts, fetches the edition and shows its lineup.
+#
+# Launch A: a cleared app on the real clock (outside the 2025 festival), no
+# picks. Its scenarios run in order on the one install (config.yaml); each
+# after this one starts with a relaunch.
+#
+# Native only: the Release binary, native storage, the startup gate and its
+# fonts, the fetch from the fixture API, the native list's first rows. Its logic
+# is Jest's (store/StartupGate.test.tsx); web runs the same path in a browser.
+appId: cz.janbambas.ba
+---
+- runFlow: common/launch-fresh.yaml
+# A second name proves a list rendered, not just one cell.
+- assertVisible: ".*ABBIE FALLS.*"

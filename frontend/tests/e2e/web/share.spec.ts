@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { FIXTURE_FRIEND_LABEL, FIXTURE_SHARE_TOKEN } from '../server/shareFixture';
+import { FIXTURE_FRIEND_LABEL, FIXTURE_SHARE_TOKEN } from '../../server/shareFixture';
 
 // ── Opening a friend's share link ─────────────────────────────────────────────
 //

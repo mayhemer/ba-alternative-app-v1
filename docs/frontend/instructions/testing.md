@@ -25,7 +25,8 @@ npm run verify         # ~7 min  types → lint → unit → doctor → web E2E 
 Conventions worth knowing before adding a test:
 
 - Tests sit next to the module they cover (`<module>.test.ts`), as in the backend. `tests/` holds
-  fixtures, setup and the E2E servers — not cases.
+  fixtures, setup, the E2E servers and the end-to-end suites — Playwright in `tests/e2e/web/`,
+  Maestro in `tests/e2e/ios/` — not Jest cases.
 - `.test.ts` runs on all three platform presets; `.test.tsx` only on the native ones.
   `@testing-library/react-native` builds a React Native element tree, which react-native-web's DOM
   output cannot host, so web rendering is Playwright's job.

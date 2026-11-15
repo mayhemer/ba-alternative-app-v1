@@ -8,7 +8,7 @@ import { defineConfig, devices } from '@playwright/test';
 // Both servers are started by `webServer` below: the static host for dist/, and
 // the fixture API. The app bundle has the production origin compiled into it,
 // so each test redirects that origin to the fixture API with page.route (see
-// tests/e2e/fixtures.ts) — which means no special build is needed here. Maestro
+// tests/e2e/web/fixtures.ts) — which means no special build is needed here. Maestro
 // cannot do that, which is why the app also accepts EXPO_PUBLIC_API_ORIGIN.
 //
 // Scope note: this layer is for web-specific correctness. It is not a
@@ -19,7 +19,7 @@ import { defineConfig, devices } from '@playwright/test';
 const APP_PORT = 4009;
 
 export default defineConfig({
-  testDir: './tests/e2e',
+  testDir: './tests/e2e/web',
   fullyParallel: true,
   // Two browsers at a time at most, as for Jest (jest.config.ts): the default
   // takes half the cores, each with its own browser.

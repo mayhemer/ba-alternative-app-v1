@@ -1,0 +1,22 @@
+# Opens ${LINK} as the system would, then waits until ${ARRIVED} (a text only
+# the link's result shows) is on screen.
+#
+# iOS asks before handing a custom-scheme link to an app ("Open in …?"), in the
+# simulator's language, until it has been accepted once on this simulator. So
+# the wait is for either the question or the result, and the question is
+# answered only when it is there — an optional tap would wait out its full
+# timeout on every run where it is not.
+appId: cz.janbambas.ba
+---
+- openLink: ${LINK}
+- extendedWaitUntil:
+    visible: "Open|Otevřít|${ARRIVED}"
+    timeout: 20000
+- runFlow:
+    when:
+      visible: "Open|Otevřít"
+    commands:
+      - tapOn: "Open|Otevřít"
+- extendedWaitUntil:
+    visible: ${ARRIVED}
+    timeout: 20000

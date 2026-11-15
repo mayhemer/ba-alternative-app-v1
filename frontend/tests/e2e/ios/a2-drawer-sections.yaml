@@ -1,17 +1,27 @@
-appId: cz.janbambas.ba
-name: reaches every section from the drawer
----
+# A2 · Every section opens from the drawer, and the Program switches day.
+#
+# Native only: the drawer and stack navigators, and the native timeline drawing
+# another day's lanes.
+#
 # The header shows the festival logo, not a screen title, so each section is
-# recognised by content only it has. On the first festival day (the warm-up
-# Tuesday) the Program has a single lane, "Obscure"; the support programme's
-# "Exhibition" lane exists nowhere else — so the two timelines cannot be
-# mistaken for each other.
-- runFlow: common/launch-fresh.yaml
+# recognised by content only it has. Outside the festival the timelines open on
+# the first festival day, the warm-up Tuesday: the Program has a single lane,
+# "Obscure", and "Marshall" opens on Wednesday; the Support Program's
+# "Exhibition" lane exists nowhere else.
+appId: cz.janbambas.ba
+---
+- runFlow: common/relaunch.yaml
 - runFlow:
     file: common/open-section.yaml
     env: { SECTION: "Program" }
 - extendedWaitUntil:
     visible: ".*Obscure.*"
+    timeout: 20000
+- assertNotVisible: ".*Marshall.*"
+# Day buttons render uppercase and merge with their date: "WED, 6.8.".
+- tapOn: "WED.*"
+- extendedWaitUntil:
+    visible: ".*Marshall.*"
     timeout: 20000
 - runFlow:
     file: common/open-section.yaml
@@ -19,7 +29,7 @@ name: reaches every section from the drawer
 - extendedWaitUntil:
     visible: ".*Exhibition.*"
     timeout: 20000
-# My plan on a fresh install: nothing picked, so the shown day is empty.
+# My plan with nothing picked: the shown day is empty.
 - runFlow:
     file: common/open-section.yaml
     env: { SECTION: "My plan" }

@@ -1,0 +1,20 @@
+# A3 · Search finds a band, opens its sheet over the results, and ✕ closes
+# back to the list.
+#
+# Native only: the iOS keyboard and the field's focus, the native sheet opening
+# expanded over the results, the ✕ that first clears and then closes.
+appId: cz.janbambas.ba
+---
+- runFlow: common/relaunch.yaml
+- runFlow:
+    file: common/open-section.yaml
+    env: { SECTION: "Artists" }
+# Far down the collated order: found only through the search.
+- runFlow:
+    file: common/search-artist.yaml
+    env: { QUERY: "mastodon" }
+# The sheet's title, the bare name.
+- assertVisible: "MASTODON"
+- runFlow: common/close-sheet-and-search.yaml
+- assertNotVisible: { id: "search-input" }
+- assertVisible: ".*3 INCHES OF BLOOD.*"

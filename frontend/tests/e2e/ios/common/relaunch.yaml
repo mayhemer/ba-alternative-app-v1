@@ -1,0 +1,19 @@
+# Restarts the app as a user would: no cleared state, so the picks, the lens,
+# the last screen, its day and scroll all come back. In English, as
+# common/launch-fresh.yaml explains; on the real clock (the e2e build's
+# controlled time needs `e2eNow`, which this does not pass).
+#
+# Every scenario after the first of its launch starts here, then opens the
+# screen it needs: whatever the scenario before it left on screen, a relaunch
+# puts the app in a state a user can be in.
+appId: cz.janbambas.ba
+---
+- stopApp
+- launchApp:
+    arguments:
+      AppleLanguages: "(en)"
+# The menu button, closed or open: the last screen comes back as it was left,
+# its drawer too.
+- extendedWaitUntil:
+    visible: "Open menu|Close menu"
+    timeout: 30000

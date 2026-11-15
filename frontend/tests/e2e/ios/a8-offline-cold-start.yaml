@@ -1,0 +1,15 @@
+# A8 · A cold start with no network opens on the cached data.
+#
+# Native only: a new process reading the cache from native storage. The API is
+# taken down from the host (the runner's fixture server), so the app sees a
+# failing network, as on a phone without signal.
+appId: cz.janbambas.ba
+---
+- runScript: common/api-offline.js
+- runFlow: common/relaunch.yaml
+# The last known lineup, not the error screen. The lens is still "My picks"
+# from A7, which lists this one.
+- extendedWaitUntil:
+    visible: ".*3 INCHES OF BLOOD.*"
+    timeout: 30000
+- runScript: common/api-online.js

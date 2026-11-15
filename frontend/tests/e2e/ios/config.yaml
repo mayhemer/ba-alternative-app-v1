@@ -1,0 +1,43 @@
+# ── Native E2E (Maestro) ─────────────────────────────────────────────────────
+#
+# Run through `npm run test:e2e:ios`, which boots the simulator, installs the
+# e2e build, starts the fixture API on :4010 and then calls Maestro on this
+# directory. Shared steps live in common/ and are not run on their own.
+#
+# What runs here is what only the native app can show — native components,
+# layout and scrolling, the keyboard, a restart, iOS links and languages. The
+# logic behind each scenario is Jest's, and web E2E runs most paths again in a
+# browser; each scenario's header says what it adds over those.
+#
+# Three launches, each a cleared install that its scenarios share, in order:
+#   A  fresh, the real clock (outside the 2025 festival), no picks
+#   B  seeded as a returning user (tests/fixtures/e2e/seeds.json), on Wednesday 14:10
+#      (src/instrumentation/timeMode.ts); B5–B8 relaunch on the real clock
+#   C  fresh, the system in Czech
+# The first scenario of each launch clears the app; every other one starts
+# with a relaunch, so it begins from a state a user can be in whatever the one
+# before it left on screen. A failure is reported and the run goes on; the
+# rest of that launch may then fail after it, so read its first failure first.
+flows:
+  - "*.yaml"
+executionOrder:
+  continueOnFailure: true
+  flowsOrder:
+    - a1-cold-start
+    - a2-drawer-sections
+    - a3-search
+    - a4-timeline-jump
+    - a5-star-selector
+    - a6-fast-star-presses
+    - a7-picks-survive-restart
+    - a8-offline-cold-start
+    - b1-plan-conflicts
+    - b2-now-pill
+    - b3-now-card-link
+    - b4-conflict-sheet
+    - b5-plan-filter-landing
+    - b6-plan-search-jump
+    - b7-add-friend
+    - b8-support-lens
+    - c1-language
+    - c2-edition-switch

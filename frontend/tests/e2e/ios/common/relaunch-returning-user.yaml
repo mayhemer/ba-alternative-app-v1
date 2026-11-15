@@ -1,0 +1,15 @@
+# common/relaunch.yaml, with the clock standing at Wednesday 14:10 again, as
+# common/launch-returning-user.yaml set it: a launch argument holds for its
+# launch only. The seed is not passed: the picks are already stored.
+appId: cz.janbambas.ba
+---
+- stopApp
+- launchApp:
+    arguments:
+      AppleLanguages: "(en)"
+      e2eNow: "2025-08-06T14:10:00+02:00"
+# The menu button, closed or open: the last screen comes back as it was left,
+# its drawer too.
+- extendedWaitUntil:
+    visible: "Open menu|Close menu"
+    timeout: 30000

@@ -1,0 +1,26 @@
+# B1 · My plan shows the seeded Must-sees on today, the clash between them, and
+# the drawer counts the clashing sets.
+#
+# Launch B: a cleared app seeded as a returning user, on Wednesday 14:10
+# (common/launch-returning-user.yaml). Its scenarios run in order on the one
+# install (config.yaml); each after this one starts with a relaunch.
+#
+# Native only: the native list drawn from stored picks, landing on today at
+# now, and the drawer's marker. Which sets clash, and every filter, are Jest's
+# (lib/conflictUtils.test.ts, screens/my-plan/*.test.ts*).
+#
+# The seed's seven clashing Must-sees: CRYSTAL LAKE with EXORCIZPHOBIA; THRASH
+# COBRA, ROTTING CHRIST and ORANGE GOBLIN; COMPUTERBOY with HERIOT. KERRY KING
+# only touches THRASH COBRA and is not counted.
+appId: cz.janbambas.ba
+---
+- runFlow: common/launch-returning-user.yaml
+- tapOn: "Open menu"
+- assertVisible: "My plan, 7 conflicts"
+- tapOn: "My plan, 7 conflicts"
+# Today is Wednesday: My plan opens on it, at now, the clashing pair beside it.
+- extendedWaitUntil:
+    visible: "CRYSTAL LAKE, 14:00–14:40, Sea Shepherd"
+    timeout: 10000
+- assertVisible: "EXORCIZPHOBIA, 14:30–15:05, .*"
+- assertVisible: "Conflict"

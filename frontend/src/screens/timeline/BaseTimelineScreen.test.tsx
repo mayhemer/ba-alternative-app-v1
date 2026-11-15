@@ -252,8 +252,8 @@ it('renders with every lane hidden', async () => {
 // Jest lays nothing out and moves no scroller, so these pin the commands: the
 // offset the horizontal scroller mounts at (`contentOffset`) and every scrollTo
 // issued to either scroller afterwards. Whether a scroller then really lands
-// there — clamping, real layout — is for tests/e2e/timeline.spec.ts (web) and
-// e2e/native (iOS) to show. User scrolls go through the view's real onScroll
+// there — clamping, real layout — is for tests/e2e/web/timeline.spec.ts (web) and
+// tests/e2e/ios to show. User scrolls go through the view's real onScroll
 // handler, so what gets remembered is decided by the app's own persist path.
 // Expected offsets come from the same timelineLayout functions the app uses
 // (unit-tested in timelineLayout.test.ts), fed with the fixture schedule.
