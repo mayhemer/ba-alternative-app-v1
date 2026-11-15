@@ -7,6 +7,7 @@ import { hydrateLocalState } from './uiStatePersistence';
 import { loadFonts } from '../styling/fonts';
 import { perfMark, perfMarksEnabled } from '../utils/perfMarks';
 import { installTimeMode } from '../instrumentation/timeMode';
+import { applyE2eTestSeedFromLaunch } from '../instrumentation/e2eTestSeeds';
 
 
 // ── Startup umbrella ──────────────────────────────────────────────────────────
@@ -16,7 +17,7 @@ import { installTimeMode } from '../instrumentation/timeMode';
 // Promise.all resolution flips the splash → full UI:
 //
 //   resolve slug → install the time mode
-//                → (load external data ∥ hydrate local state ∥ load fonts)
+//                → (load external data ∥ E2E seed, hydrate local state ∥ load fonts)
 //                → all done → lift splash, render full UI
 //                → (logged in) server interest sync
 //
@@ -80,7 +81,10 @@ export function StartupGate({ children }: { children: React.ReactNode }) {
       });
     });
 
-    Promise.all([externalLoad, hydrateLocalState(slug), loadFonts()])
+    // An E2E launch's seeded picks go in before local state reads them.
+    const localState = applyE2eTestSeedFromLaunch(slug).then(() => hydrateLocalState(slug));
+
+    Promise.all([externalLoad, localState, loadFonts()])
       .then(() => { setReady(true); })
       .catch((err) => { setError(err instanceof Error ? err.message : String(err)); });
   }, []);

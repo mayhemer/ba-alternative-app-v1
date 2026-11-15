@@ -1,0 +1,18 @@
+{
+  "returning-user": {
+    "about": "A returning user, for tests/e2e/ios/b*.yaml. Eight Wednesday Must-sees, two in the afternoon and six after midnight, seven of them clashing: CRYSTAL LAKE 14:00–14:40 with EXORCIZPHOBIA 14:30–15:05; THRASH COBRA 00:30–01:15, ROTTING CHRIST 00:35–01:30 and ORANGE GOBLIN 00:45–01:30; COMPUTERBOY 01:30–03:30 with HERIOT 02:00–02:40. KERRY KING 23:30–00:30 only touches THRASH COBRA, so it does not clash. On the Support Program, KUNDY CREW a Maybe and PIT OF DOOM a don't go.",
+    "slug": "ba2025",
+    "picks": [
+      { "artistId": "35", "name": "CRYSTAL LAKE", "status": "will_go" },
+      { "artistId": "216", "name": "EXORCIZPHOBIA", "status": "will_go" },
+      { "artistId": "72", "name": "KERRY KING", "status": "will_go" },
+      { "artistId": "160", "name": "THRASH COBRA", "status": "will_go" },
+      { "artistId": "103", "name": "ROTTING CHRIST", "status": "will_go" },
+      { "artistId": "28", "name": "ORANGE GOBLIN", "status": "will_go" },
+      { "artistId": "142", "name": "COMPUTERBOY", "status": "will_go" },
+      { "artistId": "76", "name": "HERIOT", "status": "will_go" },
+      { "artistId": "221", "name": "KUNDY CREW", "status": "maybe" },
+      { "artistId": "220", "name": "PIT OF DOOM", "status": "dont_go" }
+    ]
+  }
+}

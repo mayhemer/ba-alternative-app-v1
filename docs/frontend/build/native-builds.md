@@ -37,7 +37,7 @@ eas config --profile preview --platform ios
 | `preview` | **Release**, self-contained, ad-hoc iOS / `.apk` Android; live-simulated time | testing on real devices + inviting testers |
 | `production` | Release, App Store profile / `.aab` | store submission |
 | `perf` | `preview` + fixture API, ba2025, perf marker, plain HTTP allowed, the real clock | `test:perf:device` on the Android phone |
-| `e2e-ios-sim` | Release **simulator** build + fixture API, ba2025, controlled time | `test:e2e:ios:eas` (`test:e2e:ios` builds the same locally) |
+| `e2e-ios-sim` | Release **simulator** build + fixture API, ba2025, controlled time, E2E seeds | `test:e2e:ios:eas` (`test:e2e:ios` builds the same locally) |
 
 The time modes (live-simulated, real, controlled) are in [startup.md › Clock and time modes](../design/architecture/startup.md#clock-and-time-modes).
 

@@ -173,72 +173,72 @@
           {
             "target": "./src/adapters",
             "from": "./src/instrumentation",
-            "message": "instrumentation/ is the builds' test and simulation hooks (time modes, launch arguments): only shell/ and store/StartupGate wire it in (docs/frontend/design/architecture/overview.md, Where a file goes)."
+            "message": "instrumentation/ is the builds' test and simulation hooks (time modes, E2E seeds, launch arguments): only shell/ and store/StartupGate wire it in (docs/frontend/design/architecture/overview.md, Where a file goes)."
           },
           {
             "target": "./src/auth",
             "from": "./src/instrumentation",
-            "message": "instrumentation/ is the builds' test and simulation hooks (time modes, launch arguments): only shell/ and store/StartupGate wire it in (docs/frontend/design/architecture/overview.md, Where a file goes)."
+            "message": "instrumentation/ is the builds' test and simulation hooks (time modes, E2E seeds, launch arguments): only shell/ and store/StartupGate wire it in (docs/frontend/design/architecture/overview.md, Where a file goes)."
           },
           {
             "target": "./src/cache",
             "from": "./src/instrumentation",
-            "message": "instrumentation/ is the builds' test and simulation hooks (time modes, launch arguments): only shell/ and store/StartupGate wire it in (docs/frontend/design/architecture/overview.md, Where a file goes)."
+            "message": "instrumentation/ is the builds' test and simulation hooks (time modes, E2E seeds, launch arguments): only shell/ and store/StartupGate wire it in (docs/frontend/design/architecture/overview.md, Where a file goes)."
           },
           {
             "target": "./src/features",
             "from": "./src/instrumentation",
-            "message": "instrumentation/ is the builds' test and simulation hooks (time modes, launch arguments): only shell/ and store/StartupGate wire it in (docs/frontend/design/architecture/overview.md, Where a file goes)."
+            "message": "instrumentation/ is the builds' test and simulation hooks (time modes, E2E seeds, launch arguments): only shell/ and store/StartupGate wire it in (docs/frontend/design/architecture/overview.md, Where a file goes)."
           },
           {
             "target": "./src/hooks",
             "from": "./src/instrumentation",
-            "message": "instrumentation/ is the builds' test and simulation hooks (time modes, launch arguments): only shell/ and store/StartupGate wire it in (docs/frontend/design/architecture/overview.md, Where a file goes)."
+            "message": "instrumentation/ is the builds' test and simulation hooks (time modes, E2E seeds, launch arguments): only shell/ and store/StartupGate wire it in (docs/frontend/design/architecture/overview.md, Where a file goes)."
           },
           {
             "target": "./src/i18n",
             "from": "./src/instrumentation",
-            "message": "instrumentation/ is the builds' test and simulation hooks (time modes, launch arguments): only shell/ and store/StartupGate wire it in (docs/frontend/design/architecture/overview.md, Where a file goes)."
+            "message": "instrumentation/ is the builds' test and simulation hooks (time modes, E2E seeds, launch arguments): only shell/ and store/StartupGate wire it in (docs/frontend/design/architecture/overview.md, Where a file goes)."
           },
           {
             "target": "./src/lib",
             "from": "./src/instrumentation",
-            "message": "instrumentation/ is the builds' test and simulation hooks (time modes, launch arguments): only shell/ and store/StartupGate wire it in (docs/frontend/design/architecture/overview.md, Where a file goes)."
+            "message": "instrumentation/ is the builds' test and simulation hooks (time modes, E2E seeds, launch arguments): only shell/ and store/StartupGate wire it in (docs/frontend/design/architecture/overview.md, Where a file goes)."
           },
           {
             "target": "./src/navigation",
             "from": "./src/instrumentation",
-            "message": "instrumentation/ is the builds' test and simulation hooks (time modes, launch arguments): only shell/ and store/StartupGate wire it in (docs/frontend/design/architecture/overview.md, Where a file goes)."
+            "message": "instrumentation/ is the builds' test and simulation hooks (time modes, E2E seeds, launch arguments): only shell/ and store/StartupGate wire it in (docs/frontend/design/architecture/overview.md, Where a file goes)."
           },
           {
             "target": "./src/screens",
             "from": "./src/instrumentation",
-            "message": "instrumentation/ is the builds' test and simulation hooks (time modes, launch arguments): only shell/ and store/StartupGate wire it in (docs/frontend/design/architecture/overview.md, Where a file goes)."
+            "message": "instrumentation/ is the builds' test and simulation hooks (time modes, E2E seeds, launch arguments): only shell/ and store/StartupGate wire it in (docs/frontend/design/architecture/overview.md, Where a file goes)."
           },
           {
             "target": "./src/styling",
             "from": "./src/instrumentation",
-            "message": "instrumentation/ is the builds' test and simulation hooks (time modes, launch arguments): only shell/ and store/StartupGate wire it in (docs/frontend/design/architecture/overview.md, Where a file goes)."
+            "message": "instrumentation/ is the builds' test and simulation hooks (time modes, E2E seeds, launch arguments): only shell/ and store/StartupGate wire it in (docs/frontend/design/architecture/overview.md, Where a file goes)."
           },
           {
             "target": "./src/sync",
             "from": "./src/instrumentation",
-            "message": "instrumentation/ is the builds' test and simulation hooks (time modes, launch arguments): only shell/ and store/StartupGate wire it in (docs/frontend/design/architecture/overview.md, Where a file goes)."
+            "message": "instrumentation/ is the builds' test and simulation hooks (time modes, E2E seeds, launch arguments): only shell/ and store/StartupGate wire it in (docs/frontend/design/architecture/overview.md, Where a file goes)."
           },
           {
             "target": "./src/types",
             "from": "./src/instrumentation",
-            "message": "instrumentation/ is the builds' test and simulation hooks (time modes, launch arguments): only shell/ and store/StartupGate wire it in (docs/frontend/design/architecture/overview.md, Where a file goes)."
+            "message": "instrumentation/ is the builds' test and simulation hooks (time modes, E2E seeds, launch arguments): only shell/ and store/StartupGate wire it in (docs/frontend/design/architecture/overview.md, Where a file goes)."
           },
           {
             "target": "./src/ui",
             "from": "./src/instrumentation",
-            "message": "instrumentation/ is the builds' test and simulation hooks (time modes, launch arguments): only shell/ and store/StartupGate wire it in (docs/frontend/design/architecture/overview.md, Where a file goes)."
+            "message": "instrumentation/ is the builds' test and simulation hooks (time modes, E2E seeds, launch arguments): only shell/ and store/StartupGate wire it in (docs/frontend/design/architecture/overview.md, Where a file goes)."
           },
           {
             "target": "./src/utils",
             "from": "./src/instrumentation",
-            "message": "instrumentation/ is the builds' test and simulation hooks (time modes, launch arguments): only shell/ and store/StartupGate wire it in (docs/frontend/design/architecture/overview.md, Where a file goes)."
+            "message": "instrumentation/ is the builds' test and simulation hooks (time modes, E2E seeds, launch arguments): only shell/ and store/StartupGate wire it in (docs/frontend/design/architecture/overview.md, Where a file goes)."
           }
         ]
       }

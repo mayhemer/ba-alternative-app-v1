@@ -21,6 +21,8 @@ const config: Config = {
     '<rootDir>/tests/setup/perf.setup.ts',
   ],
   testPathIgnorePatterns: ['<rootDir>/node_modules/'],
+  // Same as jest.config.ts: a build without E2E test seeds.
+  moduleNameMapper: { '^e2e-test-seeds$': '<rootDir>/src/instrumentation/noE2eTestSeeds.json' },
   // Same as jest.config.ts: Reanimated's and Worklets' web implementations.
   resolver: 'react-native-reanimated/jest/resolver',
   // Generous on purpose. Each scenario repeats its subject to fill a ~20 ms

@@ -7,13 +7,14 @@
 
 ```
 resolve slug → install the time mode
-             → (load external data ∥ hydrate local state ∥ load fonts) → all done
+             → (load external data ∥ E2E seed, then hydrate local state ∥ load fonts) → all done
              → lift splash, render full UI → (logged in) server interest sync
 ```
 
 The time mode is installed first, so the sync's first poll interval and every screen read the clock
-the build runs ([Clock and time modes](#clock-and-time-modes)). It is installed again for the new
-edition on an edition switch.
+the build runs ([Clock and time modes](#clock-and-time-modes)); an E2E build's seed is stored before
+local state reads the picks ([E2E test seeds](#e2e-test-seeds)). Both run again for the new edition on an
+edition switch.
 
 One `Promise.all([startSync(...), hydrateLocalState(slug)])` resolution flips splash → full UI.
 `RootGate` blocked only on the external load and let providers hydrate local state late, which is
@@ -62,6 +63,23 @@ Launch arguments (`src/instrumentation/launchArguments.ts`): Maestro's `launchAp
 reaches an iOS app as `-key value`, which iOS keeps in the app's user defaults for that launch only;
 React Native's `Settings` reads them. iOS only, as nothing runs E2E on Android yet. Jest pins time
 with `setCurrentTimeMs`, which overrides both clocks and any mode.
+
+## E2E test seeds
+
+`tests/fixtures/e2e/seeds.json` holds named sets of picks the E2E build stores at launch, so a
+Maestro flow that tests what picks lead to (My plan, conflicts, the lens) starts from them instead of
+starring each artist through search. Each pick names its artist by id and by its lineup name; a test
+checks both against the edition's fixture.
+
+Only a build whose `EXPO_PUBLIC_E2E_SEEDS` names that file carries it (`e2e-ios-sim`): Metro
+resolves the app's import of `e2e-test-seeds` to it while bundling (`metro/e2eTestSeeds.js`), and
+every other build gets `src/instrumentation/noE2eTestSeeds.json`, which holds `null`, so neither the
+seeds nor the test data reach it. A misnamed file fails the bundle.
+
+`applyE2eTestSeedFromLaunch` (`src/instrumentation/e2eTestSeeds.ts`) applies the seed a launch names
+(`e2eSeed`), through `setInterest`, as a tap would. A build without seeds does not read the argument.
+An install is seeded once (`e2e:seeded:<name>:<slug>` in AsyncStorage), so a later launch naming it
+again keeps what the flow changed since; a name the file lacks fails startup.
 
 ---
 

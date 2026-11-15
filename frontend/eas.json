@@ -62,7 +62,8 @@
       "env": {
         "EXPO_PUBLIC_API_ORIGIN": "http://localhost:4010",
         "EXPO_PUBLIC_DEFAULT_SLUG": "ba2025",
-        "EXPO_PUBLIC_TIME_MODE": "controlled"
+        "EXPO_PUBLIC_TIME_MODE": "controlled",
+        "EXPO_PUBLIC_E2E_SEEDS": "tests/fixtures/e2e/seeds.json"
       }
     }
   },

@@ -49,7 +49,7 @@ Architecture
 - [data-layer.md](frontend/design/architecture/data-layer.md) — slug adapter, cache, adapters, cache change notification, data hooks, shared types
 - [cache-freshness.md](frontend/design/architecture/cache-freshness.md) — persisted cache and the server watermark
 - [background-sync.md](frontend/design/architecture/background-sync.md) — sync runs, intervals, error handling
-- [startup.md](frontend/design/architecture/startup.md) — startup gate, clock and time modes (native, live simulation, controlled), UI state persistence, splash
+- [startup.md](frontend/design/architecture/startup.md) — startup gate, clock and time modes (native, live simulation, controlled), E2E seeds, UI state persistence, splash
 - [responsiveness.md](frontend/design/architecture/responsiveness.md) — urgent vs deferred updates, narrow subscriptions, list rendering
 - [localization.md](frontend/design/architecture/localization.md) — English and Czech by the system language, the strings file, API-localized data
 - [known-gaps.md](frontend/design/architecture/known-gaps.md) — deferred items and known gaps

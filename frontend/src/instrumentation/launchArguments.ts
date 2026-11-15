@@ -5,8 +5,8 @@ import { Platform, Settings } from 'react-native';
 // What a test launched the app with: Maestro's `launchApp: arguments:` reaches
 // an iOS app as `-key value` on its command line, which iOS puts in the app's
 // user defaults for that launch only (nothing is stored), and React Native's
-// Settings reads those. The E2E flows pass `e2eNow` (timeMode.ts) this way;
-// only builds that enable it read it.
+// Settings reads those. The E2E flows pass `e2eSeed` (e2eTestSeeds.ts) and
+// `e2eNow` (timeMode.ts) this way; only builds that enable those read them.
 //
 // iOS only for now: Android would need the launch intent's extras, and nothing
 // runs E2E on Android yet.

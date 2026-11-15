@@ -6,6 +6,7 @@ import { startSync, stop } from '../sync/backgroundSyncService';
 import { hydrateLocalState } from './uiStatePersistence';
 import { loadFonts } from '../styling/fonts';
 import { installTimeMode } from '../instrumentation/timeMode';
+import { applyE2eTestSeedFromLaunch } from '../instrumentation/e2eTestSeeds';
 
 // ── Jest mocks ────────────────────────────────────────────────────────────────
 // The gate's whole job is sequencing, so everything it sequences is replaced and
@@ -35,6 +36,10 @@ jest.mock('../instrumentation/timeMode', () => ({
   installTimeMode: jest.fn(),
 }));
 
+jest.mock('../instrumentation/e2eTestSeeds', () => ({
+  applyE2eTestSeedFromLaunch: jest.fn(),
+}));
+
 jest.mock('expo-splash-screen', () => ({
   hideAsync: jest.fn(async () => undefined),
   preventAutoHideAsync: jest.fn(async () => undefined),
@@ -58,6 +63,7 @@ const mockStop = stop as jest.MockedFunction<typeof stop>;
 const mockHydrate = hydrateLocalState as jest.MockedFunction<typeof hydrateLocalState>;
 const mockLoadFonts = loadFonts as jest.MockedFunction<typeof loadFonts>;
 const mockInstallTimeMode = installTimeMode as jest.MockedFunction<typeof installTimeMode>;
+const mockApplyE2eTestSeedFromLaunch = applyE2eTestSeedFromLaunch as jest.MockedFunction<typeof applyE2eTestSeedFromLaunch>;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -87,6 +93,7 @@ beforeEach(() => {
   mockHydrate.mockResolvedValue(undefined);
   mockLoadFonts.mockResolvedValue(undefined);
   mockStartSync.mockImplementation(() => undefined);
+  mockApplyE2eTestSeedFromLaunch.mockResolvedValue(undefined);
 });
 
 // ── Gating ────────────────────────────────────────────────────────────────────
@@ -204,16 +211,38 @@ describe('lifecycle', () => {
   });
 });
 
-// ── Time mode ─────────────────────────────────────────────────────────────────
+// ── Time mode and E2E seed ────────────────────────────────────────────────────
 //
-// It acts before anything reads the clock: the sync's first poll interval and
-// any screen.
+// Both act before anything reads them: the clock before the sync's first poll
+// interval and any screen, the seed before local state reads the stored picks.
 
-describe('time mode', () => {
+describe('time mode and E2E seed', () => {
   it('installs the time mode for the slug before the sync starts', async () => {
     await mount();
 
     expect(mockInstallTimeMode).toHaveBeenCalledWith('ba2025');
     expect(mockInstallTimeMode.mock.invocationCallOrder[0]).toBeLessThan(mockStartSync.mock.invocationCallOrder[0]);
+  });
+
+  it('stores a launch seed before local state is read', async () => {
+    const seed = deferred();
+    mockApplyE2eTestSeedFromLaunch.mockReturnValue(seed.promise);
+
+    await mount();
+    await act(async () => { await flush(); });
+    expect(mockApplyE2eTestSeedFromLaunch).toHaveBeenCalledWith('ba2025');
+    expect(mockHydrate).not.toHaveBeenCalled();
+
+    await act(async () => { seed.resolve(); await flush(); });
+    expect(mockHydrate).toHaveBeenCalledWith('ba2025');
+  });
+
+  it('stops on the error screen when the launch seed fails', async () => {
+    mockApplyE2eTestSeedFromLaunch.mockRejectedValue(new Error('no E2E seed "returning-usr"'));
+
+    await mount();
+    await act(async () => { latestCallbacks().onFirstLoadSuccess(); await flush(); });
+
+    expect(screen.getByText('error:no E2E seed "returning-usr"')).toBeTruthy();
   });
 });

@@ -49,7 +49,7 @@ src/
   hooks/          # Generic React hooks (layout mode, minute clock, overlays, bottom sheets, stable value)
   utils/          # Plain helpers, no React (festival clock and days, colour, text fit, perf marks)
   i18n/           # Every string the app shows (EN + CS) and the app language; see localization.md
-  instrumentation/ # The builds' test and simulation hooks: time modes, live simulation, launch arguments
+  instrumentation/ # The builds' test and simulation hooks: time modes, live simulation, E2E test seeds, launch arguments
 
   adapters/       # API-specific fetchers (swappable)
   auth/           # Cognito config, token storage, sign-in/out, AuthContext
@@ -91,9 +91,10 @@ src/
    - tests and perf tests, which assemble screens with their chrome the way `shell/` does.
 
    `instrumentation/` sits beside the chain: what a build does to be tested or simulated (time
-   modes, live simulation and the lock-screen card under it, launch arguments). It runs in the
-   app, `timeMode.ts` in every build, so it is linted and tested with `src/`. Only `shell/`
-   (`NowCardSync`) and `store/` (`StartupGate`) wire it in; nothing else imports it.
+   modes, live simulation and the lock-screen card under it, E2E test seeds, launch arguments). It
+   runs in the app, `timeMode.ts` in every build, so it is linted and tested with `src/`; test data
+   it uses stays in `tests/` (`tests/fixtures/e2e/seeds.json`). Only `shell/` (`NowCardSync`) and
+   `store/` (`StartupGate`) wire it in; nothing else imports it.
 
    Lint enforces it (`import/no-restricted-paths` zones and `no-restricted-imports` in
    `frontend/.eslintrc.json`). The data and service folders (`adapters/`, `auth/`, `cache/`,

@@ -26,6 +26,9 @@ const shared = {
     '\\.perf-test\\.[jt]sx?$',
   ],
   setupFilesAfterEnv: ['<rootDir>/tests/setup/jest.setup.ts'],
+  // A build without E2E test seeds, as Metro would bundle it (metro/e2eTestSeeds.js);
+  // tests hand the seeds functions their own.
+  moduleNameMapper: { '^e2e-test-seeds$': '<rootDir>/src/instrumentation/noE2eTestSeeds.json' },
   // Reanimated's and Worklets' web implementations; their native ones need the
   // native runtime, which Jest does not have. See tests/setup/jest.setup.ts.
   resolver: 'react-native-reanimated/jest/resolver',
