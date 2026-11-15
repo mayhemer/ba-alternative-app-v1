@@ -12,6 +12,7 @@ import { SEARCH_ENTRY_DOCK_HEIGHT } from '../search/SearchDock.model';
 import { useInterestCycle } from '../interests/InterestContext';
 import { type LensScope } from '../../lib/interestUtils';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
+import { PanelFadeIn } from '../../ui/PanelFadeIn';
 import {
   colors,
   OVERLAY_BACKDROP,
@@ -96,7 +97,7 @@ export function LensPanel() {
   if (!isOpen) { return null; }
 
   return (
-    <>
+    <PanelFadeIn>
       {/* Backdrop — taps outside the card dismiss the panel */}
       <Pressable
         onPress={close}
@@ -161,6 +162,6 @@ export function LensPanel() {
 
       {/* ── SEARCH, at the bottom edge ─────────────────────────── */}
       <SearchEntry />
-    </>
+    </PanelFadeIn>
   );
 }

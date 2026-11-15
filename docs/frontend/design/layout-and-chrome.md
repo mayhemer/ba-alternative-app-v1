@@ -39,6 +39,10 @@ Separately, `MAX_CONTENT_WIDTH` (700) caps centred content so a desktop window s
 </View>
 ```
 
+The lens and filter panels fade in over 250 ms (`ui/PanelFadeIn`, `OVERLAY_PANEL_FADE_IN_MS`),
+backdrop, card and search field together, taking touches while fading; they close at once. The fade
+plays with the system's reduce-motion setting on too (`ReduceMotion.Never`): it moves nothing.
+
 The panels and the search cover the bottom bar's area too: while one of them is open the search
 field sits at the bottom edge, where the bar was (`features/search/SearchDock.model.ts`), and the
 bar is out of sight (`bottomBarInSight`). It stays laid out, invisible and untouchable, so the screen

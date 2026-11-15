@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, within } from '@testing-library/react-native';
 import type { DrawerContentComponentProps } from '@react-navigation/drawer';
 import { FeatureProviders } from '../../tests/setup/PerfProviders';
 import { LensChip } from '../features/social/LensChip';
@@ -119,6 +119,11 @@ describe('the chrome reacts', () => {
     await fireEvent.press(screen.getByLabelText('Remove Anna'));
     await fireEvent.press(screen.getByText('Remove'));
     expect(screen.queryByText('Anna')).toBeNull();
+  });
+
+  it('fades the panel in (ui/PanelFadeIn)', async () => {
+    await mountChrome();
+    expect(within(screen.getByTestId('panel-fade-in')).getByText('Everything')).toBeTruthy();
   });
 
   it('closes the panel once a source is chosen', async () => {

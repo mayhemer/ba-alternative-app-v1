@@ -88,18 +88,28 @@ onIos('on iOS', () => {
     expect(pulls).toBe(0);
   });
 
-  it('opens once when let go armed, and the preview goes', async () => {
-    await render(<Harness />);
-    await beginDrag();
-    await scrollTo(-90);
-    await release(-90);
-    expect(pulls).toBe(1);
-    expect(preview()).toBeNull();
-    // The content bouncing back after the release is not a pull.
-    await scrollTo(-40);
-    await scrollTo(0);
-    expect(pulls).toBe(1);
-    expect(preview()).toBeNull();
+  // The panel fades in over 250 ms (OVERLAY_PANEL_FADE_IN_MS) where the
+  // preview stands; the preview stays under it until it is in.
+  it('opens once when let go armed, and the preview stays until the panel has faded in', async () => {
+    jest.useFakeTimers();
+    try {
+      await render(<Harness />);
+      await beginDrag();
+      await scrollTo(-90);
+      await release(-90);
+      expect(pulls).toBe(1);
+      expect(preview()).not.toBeNull();
+      // The content bouncing back after the release is not a pull.
+      await scrollTo(-40);
+      await scrollTo(0);
+      expect(pulls).toBe(1);
+      await act(async () => { jest.advanceTimersByTime(249); });
+      expect(preview()).not.toBeNull();
+      await act(async () => { jest.advanceTimersByTime(1); });
+      expect(preview()).toBeNull();
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it('does not open when let go before 84 pt', async () => {

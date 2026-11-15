@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import {
   Animated,
   Platform,
@@ -8,6 +8,7 @@ import {
   type NativeSyntheticEvent,
 } from 'react-native';
 import { isArmed, previewPosition } from './PullPreview.model';
+import { OVERLAY_PANEL_FADE_IN_MS } from '../styling/tokens';
 
 // ── A pull down past a scroller's top, as one action ──────────────────────────
 //
@@ -20,8 +21,10 @@ import { isArmed, previewPosition } from './PullPreview.model';
 //   shows in the gap above the content: it comes down with the content's edge,
 //   then stays where the panel opens while a longer pull uncovers more of it.
 //   From PULL_ARM_DISTANCE it is armed, and letting go then runs `onPull`
-//   (PullPreview.model). A fling bouncing off the top, with no finger on it,
-//   shows nothing.
+//   (PullPreview.model); the preview stays where it stands until the panel
+//   has faded in over it (OVERLAY_PANEL_FADE_IN_MS, ui/PanelFadeIn), so the
+//   one turns into the other. Let go before, it goes at once. A fling bouncing
+//   off the top, with no finger on it, shows nothing.
 // - Android: the content does not move past its top, so there is nothing to
 //   draw. The platform's pull-to-refresh control does the gesture, opening on
 //   letting go past its own distance; its spinner is transparent and it never
@@ -154,6 +157,11 @@ export function usePullPastTop(
   // Set while a finger drags, cleared when it lets go: the bounce back, or a
   // fling's bounce off the top, is not a pull.
   const draggingRef = useRef(false);
+  // Takes the preview away once the panel opened by the pull has faded in.
+  const handoffRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (handoffRef.current !== null) { clearTimeout(handoffRef.current); }
+  }, []);
   const { onScroll, onScrollBeginDrag, onScrollEndDrag, scrollEventThrottle } = own;
 
   const scrollProps = useMemo((): PullScrollProps => {
@@ -179,6 +187,10 @@ export function usePullPastTop(
       alwaysBounceVertical: true,
       scrollEventThrottle: Math.min(scrollEventThrottle ?? FRAME_THROTTLE, FRAME_THROTTLE),
       onScrollBeginDrag: (e) => {
+        if (handoffRef.current !== null) {
+          clearTimeout(handoffRef.current);
+          handoffRef.current = null;
+        }
         draggingRef.current = true;
         follow(pullOf(e));
         onScrollBeginDrag?.(e);
@@ -193,11 +205,18 @@ export function usePullPastTop(
         // What the preview showed last, or where the finger let go: armed means it opens.
         const armed = store.get().armed || isArmed(pullOf(e));
         draggingRef.current = false;
-        store.set(NOT_PULLED);
         onScrollEndDrag?.(e);
-        if (armed) {
-          onPull();
+        if (!armed) {
+          store.set(NOT_PULLED);
+          return;
         }
+        // Stands still under the panel fading in, then goes.
+        store.set(ARMED);
+        handoffRef.current = setTimeout(() => {
+          handoffRef.current = null;
+          store.set(NOT_PULLED);
+        }, OVERLAY_PANEL_FADE_IN_MS);
+        onPull();
       },
     };
   }, [onPull, onScroll, onScrollBeginDrag, onScrollEndDrag, scrollEventThrottle, store, motion]);

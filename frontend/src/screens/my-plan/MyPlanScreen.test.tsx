@@ -1,5 +1,5 @@
 import React, { Profiler, useLayoutEffect, useRef } from 'react';
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, within } from '@testing-library/react-native';
 import { MyPlanScreen } from './MyPlanScreen';
 import { NowPill } from '../../shell/NowPill';
 import { PlanDaySwitcher } from './PlanDaySwitcher';
@@ -640,6 +640,12 @@ describe('the chrome', () => {
     expect(screen.queryByRole('button', { name: 'All sets' })).toBeNull();
     expect(screen.getByTestId('plan-filter-state-all')).toBeTruthy();
     expect(listTexts()).toContain('Ulcerate');
+  });
+
+  it('fades the panel in (ui/PanelFadeIn)', async () => {
+    await mountChrome();
+    await fireEvent.press(screen.getByLabelText('Filters'));
+    expect(within(screen.getByTestId('panel-fade-in')).getByRole('button', { name: 'All sets' })).toBeTruthy();
   });
 
   it('closes the panel on a tap of the current filter too, changing nothing', async () => {

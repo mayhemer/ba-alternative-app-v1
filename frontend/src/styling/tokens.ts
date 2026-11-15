@@ -50,6 +50,8 @@ export const DAY_SWITCHER_MAX_FRACTION = 0.4;
 // Gap between a floating overlay panel and the screen edges / the TopBar above it.
 export const OVERLAY_PANEL_MARGIN = 10;
 export const OVERLAY_PANEL_RADIUS = 14;
+// How long the lens and filter panels take to fade in (ui/PanelFadeIn); they close at once.
+export const OVERLAY_PANEL_FADE_IN_MS = 250;
 
 // Behind the lens and filter panels and an empty search: the screen shows through
 // at a fifth, so the panel and the search field at the bottom edge stand out.

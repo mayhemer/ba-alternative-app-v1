@@ -2,6 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Pressable, View } from 'react-native';
 import { usePlanFilters, usePlanPanel } from '../PlanContext';
 import { useLayoutMode } from '../../../hooks/useLayoutMode';
+import { PanelFadeIn } from '../../../ui/PanelFadeIn';
 import { strings } from '../../../i18n/strings';
 import { PlanFilterLevel } from './PlanFilterLevel';
 import { MyScheduleShare } from '../../../features/social/MyScheduleShare';
@@ -40,7 +41,7 @@ type ViewProps = {
 export function PlanFilterPanelView({ levels, onPick, onClose, dock, children }: ViewProps) {
   const { isWide } = useLayoutMode();
   return (
-    <>
+    <PanelFadeIn>
       {/* Backdrop — taps outside the card dismiss the panel */}
       <Pressable
         onPress={onClose}
@@ -82,7 +83,7 @@ export function PlanFilterPanelView({ levels, onPick, onClose, dock, children }:
         </View>
       </View>
       {dock}
-    </>
+    </PanelFadeIn>
   );
 }
 
