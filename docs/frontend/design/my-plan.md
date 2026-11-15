@@ -126,13 +126,13 @@ What each element shows comes from its own model (see Principles), built from th
 
 The rows look different under **All sets** and under the other filters (Must-see and Maybe, Must-see only, Only conflicts).
 
-- **Every filter:** every row has **4 pt rounded corners** (`ROW_RADIUS`) and **no border**. A Must-see and a Maybe have a **3 pt left edge** (`LEFT_EDGE_WIDTH`), drawn by its own element (`ui/LeftEdge`, shared with the timeline's blocks) over the row's background: **solid** in the category's brighter colour (`categoryBlockColors().border`, the timeline block's edge) on a Must-see; **dotted** in a single grey (`maybeBorder`), whatever its category, on a Maybe. The dots are 3 pt squares 3 pt apart, as many as fit with 2 pt clear at each end, centred on whole points (`leftEdgeDots`): 4 on the compact row, 9 on the tall one, both ends whole dots clear of the rounded corners. (A native dotted border was tried: on iOS it is one dotted stroke around the whole rounded box, so the dots on the left side were cut at the corners and fell by the row's width, which showed on the compact row.) An unpicked or "don't go" row has no edge, its own background showing there (the raised surface, or the list). Every live set's progress bar starts 3 pt in, past the edge. No row gets an accent border, live or not (a 1 pt one on a live Must-see was tried and dropped).
+- **Every filter:** every row has **4 pt rounded corners** (`ROW_RADIUS`) and **no border of its own**. A Must-see and a Maybe have a **3 pt left edge** (`LEFT_EDGE_WIDTH`), drawn by its own element (`ui/LeftEdge`, shared with the timeline's blocks) over the row's background: **solid** in the category's brighter colour (`categoryBlockColors().border`, the timeline block's edge) on a Must-see; **dotted** in a single grey (`maybeBorder`), whatever its category, on a Maybe. The dots are 3 pt squares 3 pt apart, as many as fit with 2 pt clear at each end, centred on whole points (`leftEdgeDots`): 4 on the compact row, 9 on the tall one, both ends whole dots clear of the rounded corners. (A native dotted border was tried: on iOS it is one dotted stroke around the whole rounded box, so the dots on the left side were cut at the corners and fell by the row's width, which showed on the compact row.) An unpicked or "don't go" row has no edge, its own background showing there (the raised surface, or the list). Every live set's progress bar starts 3 pt in, past the edge. A **live Must-see or Maybe** is outlined in a **1 pt border in its category's brighter colour** (`categoryBlockColors().border`, the Must-see's edge colour), laid over the row so nothing in it moves; it runs over the left edge. No other row gets a border, live or not. (A 1 pt accent outline on a live Must-see was tried and dropped.)
 - **All sets:** every row is the tall two-line row (58 pt) and shows its pick's star at the right end of line 1, the same place whatever the name's length; a name too long for the line cuts off before it. The star is the star button's glyph at 15 pt (`StarGlyph`): ★ Must-see, ½ Maybe, ☆ unpicked, struck red ☆ "don't go".
 - **Every other filter:** no row has a star, and a Maybe is the compact one-line row (26 pt).
 
 ### Must-see row
 
-- **Box:** 58 pt tall, filled with its **category's colour, as on the timeline** (`categoryBlockColors().bg`, the block's background), with the solid left edge in the category's brighter colour. A live Must-see has no outline: its accent progress bar and the now arrow mark it.
+- **Box:** 58 pt tall, filled with its **category's colour, as on the timeline** (`categoryBlockColors().bg`, the block's background), with the solid left edge in the category's brighter colour. A live Must-see is outlined in 1 pt of the same brighter colour, besides its accent progress bar and the now arrow.
 - **Fixed inset for every row type and state:** content starts 18 pt from the row's left side and ends 23 pt from its right. The time, name and stage columns always line up, clear of the left progress bar and the right clash bar.
 - **Line 1:** `HH:MM–HH:MM` (13, `textMuted`, tabular figures), then the band name (15 bold, ellipsis). Under All sets, the accent ★ at the right end; under the other filters no star.
 - **Line 2:** the status on the left, the stage right-aligned (13, `textSecondary`, ellipsis). Statuses:
@@ -149,7 +149,7 @@ The rows look different under **All sets** and under the other filters (Must-see
 - **Look:** the same 58 pt, two lines, insets and texts as a Must-see row, filled with the raised surface (`surfaceRaised`), with no left edge and no category colour. Only Must-see rows are filled with their category's colour, so they stand out among the rest; a Maybe shares the unpicked row's fill and is told apart by its dotted grey edge and its ½ star.
 - **Star:** the grey ☆ ("Not marked").
 - **Status line:** `● LIVE −37 min` while it plays and `done` once it's over (dimmed and striped as any past row), as a Must-see's. Never `START`, and never clash bars or a `⚠ Conflict` title: clashes are Must-see × Must-see only.
-- **Live:** a grey 6.5 pt left bar (`#8a8a8a` for what remains, `#333` filling it for the elapsed fraction), 3 pt in as on a picked row, and the now arrow; no accent border.
+- **Live:** a grey 6.5 pt left bar (`#8a8a8a` for what remains, `#333` filling it for the elapsed fraction), 3 pt in as on a picked row, and the now arrow; no border.
 
 ### "Don't go" row
 
@@ -161,11 +161,11 @@ The rows look different under **All sets** and under the other filters (Must-see
 ### Maybe row
 
 - Shown under **Must-see and Maybe** and **All sets**.
-- **Box:** filled with the raised surface (`surfaceRaised`), as an unpicked row, with the same fixed insets as Must-see rows. Under every filter, the **3 pt dotted** left edge in one grey for every category (`maybeBorder` `#595959`: the luminance of the Octagon stage's border colour, `rgb(95, 89, 72)`). A Maybe row shows no category colour.
+- **Box:** filled with the raised surface (`surfaceRaised`), as an unpicked row, with the same fixed insets as Must-see rows. Under every filter, the **3 pt dotted** left edge in one grey for every category (`maybeBorder` `#595959`: the luminance of the Octagon stage's border colour, `rgb(95, 89, 72)`). A Maybe row shows no category colour, except its 1 pt live outline.
 - **Under Must-see and Maybe:** the compact row, 26 pt tall, one line: `time · name · stage` (13, `textMuted`), no star and no status; a long name cuts off. Muted, but bright enough to read in sunlight.
 - **Under All sets:** the tall two-line row, with the accent ½ star, and the status line of an unpicked row (`● LIVE −37 min`, `done`).
 - Never marked as a clash, and never part of conflict logic.
-- **Live:** the dotted edge stays, a grey 6.5 pt left bar (`#8a8a8a` for what remains, `#333` filling it for the elapsed fraction) and the now arrow. The compact row also gets a red dot (7 pt) right before the name; it moves only that row's name, by its width and gap. The tall row shows `● LIVE` on its status line instead.
+- **Live:** the dotted edge stays, under a 1 pt outline in the category's brighter colour, a grey 6.5 pt left bar (`#8a8a8a` for what remains, `#333` filling it for the elapsed fraction) and the now arrow. The compact row also gets a red dot (7 pt) right before the name; it moves only that row's name, by its width and gap. The tall row shows `● LIVE` on its status line instead.
 
 ### Gaps
 
@@ -318,6 +318,7 @@ New values this screen introduces, to add as tokens:
 | Must-see row background | the set's category, as timeline blocks (`categoryBlockColors().bg`) |
 | Must-see row left edge, 3 pt | solid, `categoryBlockColors().border` |
 | Maybe row left edge, 3 pt (`maybeBorder`) | dotted, `#595959` |
+| live Must-see and Maybe outline, 1 pt | `categoryBlockColors().border` |
 | Maybe and unpicked row background | `surfaceRaised` |
 | "don't go" row | no background; texts in `muted` |
 | past row stripes (`PAST_ROW`) | white at 8 % |

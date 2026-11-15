@@ -24,7 +24,9 @@ import { colors, MAX_CONTENT_WIDTH } from '../../styling/tokens';
 // No row has a border of its own. A Must-see has a 3 pt solid left edge in the
 // category's brighter colour and a Maybe a dotted grey one, drawn by
 // LeftEdge; the others have none, their own background showing there. Every
-// live set's progress bar starts past the edge. Outside All sets a Maybe is
+// live set's progress bar starts past the edge. A live Must-see or Maybe is
+// outlined in a 1 pt border in its category's brighter colour, laid over the
+// row so nothing in it moves. Outside All sets a Maybe is
 // one compact line, its text muted but bright enough for sunlight, with a red
 // dot before the name while live. Under All sets every row has its pick's star
 // at the right end of the name's line, before which a long name cuts off. A
@@ -102,6 +104,21 @@ function ClashStripes({ bar, rowHeight, clipId }: { bar: ClashBar; rowHeight: nu
   );
 }
 
+/** A live Must-see's or Maybe's outline, over everything in the row: it takes no room. */
+const LIVE_OUTLINE = {
+  position: 'absolute' as const,
+  left: 0,
+  top: 0,
+  right: 0,
+  bottom: 0,
+  borderWidth: 1,
+  borderRadius: ROW_RADIUS,
+};
+
+function LiveOutline({ color }: { color: string }) {
+  return <View testID="plan-live-border" pointerEvents="none" style={[LIVE_OUTLINE, { borderColor: color }]} />;
+}
+
 function LeftProgress({ progress, palette }: { progress: number; palette: ProgressColors }) {
   return (
     <View
@@ -147,7 +164,7 @@ const NO_CATEGORY: CategoryColors = { bg: colors.surface, border: colors.borderM
 type Props = {
   item: PlanSetModel;
   onPressArtist: (artist: DbArtist) => void;
-  /** The set's category's colours: a Must-see's fill and left edge. */
+  /** The set's category's colours: a Must-see's fill and left edge, and a live Must-see's or Maybe's outline. */
   category?: CategoryColors;
 };
 
@@ -198,6 +215,7 @@ function SetCard({ item, onPressArtist, category = NO_CATEGORY }: Props) {
           <Text numberOfLines={1} style={{ flexShrink: 1, fontSize: 13, color: colors.textMuted }}>{item.artist.name}</Text>
         </View>
         <Text numberOfLines={1} style={{ maxWidth: '35%', fontSize: 13, color: colors.textMuted }}>{item.stageName}</Text>
+        {item.liveBorder && <LiveOutline color={category.border} />}
       </Pressable>
     );
   }
@@ -232,6 +250,7 @@ function SetCard({ item, onPressArtist, category = NO_CATEGORY }: Props) {
           {item.stageName}
         </Text>
       </View>
+      {item.liveBorder && <LiveOutline color={category.border} />}
     </Pressable>
   );
 }

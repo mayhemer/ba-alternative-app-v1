@@ -155,8 +155,9 @@ it('gives every clash bar its own clip id: on web, SVG ids are global to the pag
 // colour and a Maybe a dotted one in one grey whatever its category, each drawn
 // by its own element (PlanRowEdge); the others have none, their own background
 // showing there. Every live set's progress bar starts 3 pt in, past the edge.
-// No accent border while live. The content keeps its inset: 18 pt from the
-// left side, 23 pt from the right.
+// A live Must-see or Maybe is outlined in a 1 pt border in its category's
+// brighter colour, laid over the row. The content keeps its inset: 18 pt from
+// the left side, 23 pt from the right.
 
 const CATEGORY = { bg: 'rgb(10, 20, 30)', border: 'rgb(40, 50, 60)' };
 
@@ -218,22 +219,28 @@ it.each([
 });
 
 it.each([
-  ['All sets', 'all'],
-  ['Must-see only', 'must'],
-] as const)('draws a live Must-see row under %s with no border, just its category\'s solid left edge', async (_filter, level) => {
-  const style = await rowStyle(item('Gojira', '19:23', level));
-  expect(rowEdge()).toEqual({ edge: 'solid', color: 'rgb(40, 50, 60)' });
-  expect(screen.queryByTestId('plan-live-border')).toBeNull();
+  ['a live Must-see under All sets', 'Gojira', '19:23', 'all', 'solid'],
+  ['a live Must-see under Must-see only', 'Gojira', '19:23', 'must', 'solid'],
+  ['a live Maybe under All sets', 'Paysage', '20:30', 'all', 'dotted'],
+  ['a live compact Maybe', 'Paysage', '20:30', 'maybe', 'dotted'],
+] as const)('outlines %s in a 1 pt border in its category\'s brighter colour, over its left edge, without moving its content', async (_kind, name, now, level, edge) => {
+  const style = await rowStyle(item(name, now, level));
+  expect(rowEdge()?.edge).toBe(edge);
+  expect(StyleSheet.flatten(screen.getByTestId('plan-live-border').props.style)).toMatchObject({
+    position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, borderWidth: 1, borderRadius: 4, borderColor: 'rgb(40, 50, 60)',
+  });
   expect(style.borderWidth ?? 0).toBe(0);
+  expect(style.paddingLeft).toBe(18);
+  expect(style.paddingRight).toBe(23);
 });
 
 it.each([
   ['an upcoming Must-see', 'Batushka', '19:23', 'all'],
-  ['a live Maybe under All sets', 'Paysage', '20:30', 'all'],
-  ['a live compact Maybe', 'Paysage', '20:30', 'maybe'],
+  ['a past Must-see', 'Mgła', '19:23', 'all'],
+  ['an upcoming Maybe', 'Paysage', '19:23', 'all'],
   ['a live unpicked set', 'Ulcerate', '21:20', 'all'],
   ['a live "don\'t go" set', 'Spectral', '22:10', 'all'],
-] as const)('draws no accent border on %s', async (_kind, name, now, level) => {
+] as const)('draws no live border on %s', async (_kind, name, now, level) => {
   await rowStyle(item(name, now, level));
   expect(screen.queryByTestId('plan-live-border')).toBeNull();
 });
