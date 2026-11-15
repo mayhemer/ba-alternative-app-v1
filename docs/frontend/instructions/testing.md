@@ -36,7 +36,9 @@ Conventions worth knowing before adding a test:
   local fields (`getHours`, `getDate`, `toLocale…`) for anything shown. Jest runs in New York
   (`tests/setup/globalTz.ts`) so such a read fails the suite instead of passing in Prague; Playwright
   runs in Prague, with one test from New York. Use fake timers only for *scheduling* — and for
-  render counts, where they make the timeline's per-frame mount deterministic.
+  render counts, where they make the timeline's per-frame mount deterministic — except to tell the
+  app's time from the real one: `setCurrentTimeMs` pins both, so a test of a time mode sets the real
+  clock with `jest.setSystemTime` and the mode with `setClockShift` (`src/utils/clock.test.ts`).
 - `@testing-library/react-native` 14 is async: `await render(…)` and `await view.unmount()`. An
   unawaited unmount runs its cleanup after your assertion.
 - Mock at the module boundary (the adapter), not at `fetch`.

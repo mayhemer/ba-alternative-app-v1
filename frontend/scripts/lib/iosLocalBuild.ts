@@ -12,8 +12,9 @@
 // profile's env goes on xcodebuild. Metro's cache is reset on every build so a
 // bundle cached with other values cannot slip through.
 
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { profileEnv, readEasConfig } from './easProfile.ts';
 import { run, skip } from './proc.ts';
 
 const SCHEME = 'BrutalAssaultalt';
@@ -49,7 +50,7 @@ export function buildLocalSimulatorApp(root: string, profile: string): string {
     'build',
   ], {
     stdio: 'inherit',
-    env: { ...process.env, ...profileEnv(root, profile), EXTRA_PACKAGER_ARGS: '--reset-cache' },
+    env: { ...process.env, ...profileEnv(readEasConfig(root), profile), EXTRA_PACKAGER_ARGS: '--reset-cache' },
   });
   if (!build.ok) {
     throw new Error(`xcodebuild failed (${build.code}) — its errors are above`);
@@ -60,16 +61,4 @@ export function buildLocalSimulatorApp(root: string, profile: string): string {
     throw new Error(`xcodebuild succeeded but left no ${app}`);
   }
   return app;
-}
-
-/** The profile's `env` from eas.json, so a local build bakes in what EAS would. */
-function profileEnv(root: string, profile: string): Record<string, string> {
-  const eas = JSON.parse(readFileSync(join(root, 'eas.json'), 'utf8')) as {
-    build: Record<string, { env?: Record<string, string> } | undefined>;
-  };
-  const env = eas.build[profile]?.env;
-  if (env === undefined) {
-    throw new Error(`eas.json has no env for the "${profile}" profile`);
-  }
-  return env;
 }

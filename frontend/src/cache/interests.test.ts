@@ -5,7 +5,7 @@ import {
   setInterest,
   type LocalInterest,
 } from './cacheService';
-import { setCurrentTimeMs } from '../utils/clock';
+import { setClockShift, setCurrentTimeMs } from '../utils/clock';
 import type { DbUserInterest } from '../types/backend';
 
 // ── Interests: local-first, merged latest-updatedAt-wins ──────────────────────
@@ -216,5 +216,25 @@ describe('merging the server\'s copy', () => {
     expect(merged['keep-local'].status).toBe('will_go');
     expect(merged['take-server'].status).toBe('will_go');
     expect(merged['server-only'].status).toBe('maybe');
+  });
+});
+
+// ── Under a time mode ─────────────────────────────────────────────────────────
+
+describe('a pick set while the app shows another time', () => {
+  afterEach(() => {
+    setClockShift(null);
+    jest.useRealTimers();
+  });
+
+  it('is stamped with the real time, which the server\'s timestamps are compared with', async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(LATER);
+    setClockShift(() => EARLIER);
+    const slug = freshSlug();
+
+    const record = await setInterest(slug, 'a1', 'will_go');
+
+    expect(record).toEqual({ status: 'will_go', updatedAt: LATER });
   });
 });

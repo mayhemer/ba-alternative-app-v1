@@ -33,11 +33,23 @@ eas config --profile preview --platform ios
 
 | Profile | What it produces | Use for |
 |---|---|---|
-| `development` | dev client, needs Metro running | day-to-day native debugging |
-| `preview` | **Release**, self-contained, ad-hoc iOS / `.apk` Android | testing on real devices + inviting testers |
+| `development` | dev client, needs Metro running; live-simulated time | day-to-day native debugging |
+| `preview` | **Release**, self-contained, ad-hoc iOS / `.apk` Android; live-simulated time | testing on real devices + inviting testers |
 | `production` | Release, App Store profile / `.aab` | store submission |
-| `perf` | `preview` + fixture API, ba2025, perf marker, plain HTTP allowed | `test:perf:device` on the Android phone |
-| `e2e-ios-sim` | Release **simulator** build + fixture API, ba2025 | `test:e2e:ios:eas` (`test:e2e:ios` builds the same locally) |
+| `perf` | `preview` + fixture API, ba2025, perf marker, plain HTTP allowed, the real clock | `test:perf:device` on the Android phone |
+| `e2e-ios-sim` | Release **simulator** build + fixture API, ba2025, controlled time | `test:e2e:ios:eas` (`test:e2e:ios` builds the same locally) |
+
+The time modes (live-simulated, real, controlled) are in [startup.md › Clock and time modes](../design/architecture/startup.md#clock-and-time-modes).
+
+`eas.json` is the one place a profile's env is written. EAS applies it to its own builds; the local
+scripts, which build with `expo run:ios` and never see `eas.json`, run through
+`scripts/with-profile-env.ts <profile>`, which reads it (following `extends`) and passes it on:
+`start:sim:ios` and `start:device:ios` the `development` profile's, `install:preview:ios` the
+`preview` profile's, and the local E2E build (`test:e2e:ios`) the `e2e-ios-sim` profile's. A dev
+client's JS comes from the Metro it connects to, so for `development` the env counts where Metro
+starts, which is those two scripts. A variable set in the shell wins over the profile's for a run
+script (not for the E2E build), e.g. a fixed instant: `EXPO_PUBLIC_TIME_MODE=controlled
+EXPO_PUBLIC_TIME_NOW=2025-08-06T14:10:00+02:00 npm run start:sim:ios`.
 
 ```bash
 npm run eas-build:preview:ios       # eas build -p ios --profile preview
@@ -70,7 +82,7 @@ npm run install:preview:ios -- "iPhone Honza"    # pick a device by name or UDID
 ```
 
 It is `expo run:ios --configuration Release`: JS and assets bundled in, no dev launcher, no Metro, the
-same as an EAS `preview` build (which sets no env) except that:
+same as an EAS `preview` build (the script passes the profile's env from `eas.json`) except that:
 
 - it builds the **working tree**, uncommitted changes included — the opposite of `eas build`;
 - it builds from the prebuilt `ios/` and only generates it when missing, so after a change to

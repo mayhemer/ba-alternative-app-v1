@@ -3,7 +3,7 @@ import { AppState, Platform } from 'react-native';
 import { act, render } from '@testing-library/react-native';
 import { NowCardSyncView } from './NowCardSync';
 import { getNowCardPermission, requestNowCardPermission, setNowCardScript } from '../../modules/now-card';
-import { setCurrentTimeMs } from '../utils/clock';
+import { setClockShift, setCurrentTimeMs } from '../utils/clock';
 import { getFestivalDayStart } from '../utils/festivalTime';
 import type { NowCardSegment } from '../lib/nowCard';
 
@@ -112,4 +112,38 @@ it('does not ask on a day without a Must-see to come', async () => {
   await render(<NowCardSyncView script={SCRIPT} festivalDays={DAYS} />);
   await settle();
   expect(requestPermission).not.toHaveBeenCalled();
+});
+
+// ── Under a time mode ─────────────────────────────────────────────────────────
+//
+// The phone draws the card and switches its segments on its own, real clock. A
+// time mode moves only the app's clock, so the card's times are moved by the
+// same amount onto the real one: the card shows what the app shows. The time
+// texts ("19:00–20:00") stay the festival's.
+
+describe('under a time mode', () => {
+  const REAL = at(7, '10:00') + 7 * 24 * 60 * 60 * 1000; // a week after the app's time
+  const WEEK = 7 * 24 * 60 * 60 * 1000;
+
+  beforeEach(() => {
+    setCurrentTimeMs(null);
+    jest.useFakeTimers({ doNotFake: ['nextTick', 'setImmediate', 'queueMicrotask'] });
+    jest.setSystemTime(REAL);
+    setClockShift((realMs) => realMs - WEEK);
+  });
+
+  afterEach(() => {
+    setClockShift(null);
+    jest.useRealTimers();
+  });
+
+  it('hands the card its times moved onto the real clock, every set with them', async () => {
+    await render(<NowCardSyncView script={SCRIPT} festivalDays={DAYS} />);
+    await settle();
+    const moved = { ...SET, start: at(7, '19:00') + WEEK, end: at(7, '20:00') + WEEK };
+    expect(setScript.mock.calls.at(-1)[0].segments).toEqual([
+      { from: at(7, '08:00') + WEEK, to: at(7, '19:00') + WEEK, state: { kind: 'break', next: moved } },
+      { from: at(7, '19:00') + WEEK, to: at(7, '20:00') + WEEK, state: { kind: 'live', live: moved, next: null, nextClashes: false, more: 0 } },
+    ]);
+  });
 });

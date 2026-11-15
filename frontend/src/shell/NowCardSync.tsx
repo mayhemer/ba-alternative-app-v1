@@ -4,10 +4,11 @@ import { useSelectedSlug } from '../store/AppContext';
 import { useArtistEventMap, useArtists, useFestivalDays, useStages } from '../store/cacheStore';
 import { useDeferredInterests } from '../features/interests/InterestContext';
 import { nowCardScript, sameNowCardScript, shouldAskNowCardPermission, type NowCardSegment } from '../lib/nowCard';
+import { nowCardScriptForSimulatedTime } from '../instrumentation/nowCardScriptForSimulatedTime';
 import { useStableValue } from '../hooks/useStableValue';
 import { strings } from '../i18n/strings';
 import { NOW_CARD_URL } from '../navigation/nowCardLink';
-import { currentTimeMs } from '../utils/clock';
+import { currentTimeMs, realTimeMs } from '../utils/clock';
 import {
   getNowCardPermission,
   nowCardAvailable,
@@ -34,7 +35,8 @@ function payload(script: NowCardSegment[]): NowCardPayload {
   const { setStatus, nowCard } = strings();
   return {
     version: 2,
-    segments: script,
+    // On the phone's real clock: the app's may be moved by a time mode.
+    segments: nowCardScriptForSimulatedTime(script, realTimeMs() - currentTimeMs()),
     strings: { live: setStatus.live, next: nowCard.next, nextShort: nowCard.nextShort, over: nowCard.over, channel: nowCard.name },
     url: NOW_CARD_URL,
   };

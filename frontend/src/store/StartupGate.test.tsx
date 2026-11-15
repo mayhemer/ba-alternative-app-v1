@@ -5,6 +5,7 @@ import { StartupGate } from './StartupGate';
 import { startSync, stop } from '../sync/backgroundSyncService';
 import { hydrateLocalState } from './uiStatePersistence';
 import { loadFonts } from '../styling/fonts';
+import { installTimeMode } from '../instrumentation/timeMode';
 
 // ── Jest mocks ────────────────────────────────────────────────────────────────
 // The gate's whole job is sequencing, so everything it sequences is replaced and
@@ -30,6 +31,10 @@ jest.mock('../styling/fonts', () => ({
   loadFonts: jest.fn(),
 }));
 
+jest.mock('../instrumentation/timeMode', () => ({
+  installTimeMode: jest.fn(),
+}));
+
 jest.mock('expo-splash-screen', () => ({
   hideAsync: jest.fn(async () => undefined),
   preventAutoHideAsync: jest.fn(async () => undefined),
@@ -52,6 +57,7 @@ const mockStartSync = startSync as jest.MockedFunction<typeof startSync>;
 const mockStop = stop as jest.MockedFunction<typeof stop>;
 const mockHydrate = hydrateLocalState as jest.MockedFunction<typeof hydrateLocalState>;
 const mockLoadFonts = loadFonts as jest.MockedFunction<typeof loadFonts>;
+const mockInstallTimeMode = installTimeMode as jest.MockedFunction<typeof installTimeMode>;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -195,5 +201,19 @@ describe('lifecycle', () => {
     // Leaving a poll timer behind would keep hitting the API for an app that is
     // no longer on screen.
     expect(mockStop).toHaveBeenCalled();
+  });
+});
+
+// ── Time mode ─────────────────────────────────────────────────────────────────
+//
+// It acts before anything reads the clock: the sync's first poll interval and
+// any screen.
+
+describe('time mode', () => {
+  it('installs the time mode for the slug before the sync starts', async () => {
+    await mount();
+
+    expect(mockInstallTimeMode).toHaveBeenCalledWith('ba2025');
+    expect(mockInstallTimeMode.mock.invocationCallOrder[0]).toBeLessThan(mockStartSync.mock.invocationCallOrder[0]);
   });
 });

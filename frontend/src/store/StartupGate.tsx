@@ -6,6 +6,7 @@ import { startSync, stop as stopSync } from '../sync/backgroundSyncService';
 import { hydrateLocalState } from './uiStatePersistence';
 import { loadFonts } from '../styling/fonts';
 import { perfMark, perfMarksEnabled } from '../utils/perfMarks';
+import { installTimeMode } from '../instrumentation/timeMode';
 
 
 // ── Startup umbrella ──────────────────────────────────────────────────────────
@@ -14,7 +15,8 @@ import { perfMark, perfMarksEnabled } from '../utils/perfMarks';
 // data load, local-state hydration and font loading concurrently; one
 // Promise.all resolution flips the splash → full UI:
 //
-//   resolve slug → (load external data ∥ hydrate local state ∥ load fonts)
+//   resolve slug → install the time mode
+//                → (load external data ∥ hydrate local state ∥ load fonts)
 //                → all done → lift splash, render full UI
 //                → (logged in) server interest sync
 //
@@ -64,6 +66,10 @@ export function StartupGate({ children }: { children: React.ReactNode }) {
   const runStartup = useCallback((slug: string): void => {
     setReady(false);
     setError(null);
+
+    // The build's time mode, for this edition, before anything reads the clock:
+    // the sync's first poll interval, then every screen.
+    installTimeMode(slug);
 
     const externalLoad = new Promise<void>((resolve, reject) => {
       startSync(slug, {
