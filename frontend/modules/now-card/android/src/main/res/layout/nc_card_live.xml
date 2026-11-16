@@ -1,81 +1,89 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Layout #4 on Android, live: two lines.
-     BAND NAME ………………………………… [⚠] [+N]
+     BAND NAME ………………………………………… [+N]
      ● LIVE −48:00 ……… 19:00–20:00 · Stage
-     ⚠: collapsed only, the next band (hidden there) clashes with a live one.
-     +N: how many other Must-sees are live at the same moment. -->
+     +N: how many other Must-sees are live at the same moment.
+     When the next band clashes, My plan's striped clash bar on the right edge (nc_clash_edge),
+     collapsed and expanded, as on the next row (nc_card_break); no ⚠ here. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
   android:layout_width="match_parent"
   android:layout_height="wrap_content"
-  android:orientation="vertical">
+  android:orientation="horizontal">
   <LinearLayout
-    android:layout_width="match_parent"
+    android:layout_width="0dp"
     android:layout_height="wrap_content"
-    android:gravity="center_vertical"
-    android:orientation="horizontal">
-    <TextView
-      android:includeFontPadding="false"
-      android:id="@+id/nc_name"
-      android:layout_width="0dp"
+    android:layout_weight="1"
+    android:orientation="vertical">
+    <LinearLayout
+      android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:layout_weight="1"
-      android:ellipsize="end"
-      android:maxLines="1"
-      android:textColor="@color/nc_text"
-      android:textSize="@dimen/nc_name"
-      android:textStyle="bold" />
-    <ImageView
-      android:id="@+id/nc_flag"
-      android:layout_width="14dp"
-      android:layout_height="14dp"
-      android:layout_marginStart="8dp"
-      android:contentDescription="@string/nc_clash"
-      android:src="@drawable/nc_warn"
-      android:visibility="gone" />
-    <TextView
-      android:includeFontPadding="false"
-      android:id="@+id/nc_more"
-      android:layout_width="wrap_content"
+      android:gravity="center_vertical"
+      android:orientation="horizontal">
+      <TextView
+        android:includeFontPadding="false"
+        android:id="@+id/nc_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="@color/nc_text"
+        android:textSize="@dimen/nc_name"
+        android:textStyle="bold" />
+      <TextView
+        android:includeFontPadding="false"
+        android:id="@+id/nc_more"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:fontFeatureSettings="tnum"
+        android:textColor="@color/nc_danger"
+        android:textSize="@dimen/nc_meta"
+        android:textStyle="bold"
+        android:visibility="gone" />
+    </LinearLayout>
+    <LinearLayout
+      android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:layout_marginStart="3dp"
-      android:fontFeatureSettings="tnum"
-      android:textColor="@color/nc_danger"
-      android:textSize="@dimen/nc_meta"
-      android:textStyle="bold"
-      android:visibility="gone" />
+      android:layout_marginTop="@dimen/nc_line_gap"
+      android:gravity="center_vertical"
+      android:orientation="horizontal">
+      <ImageView
+        android:layout_width="7dp"
+        android:layout_height="7dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/nc_dot" />
+      <TextView
+        android:includeFontPadding="false"
+        android:id="@+id/nc_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:letterSpacing="0.08"
+        android:maxLines="1"
+        android:textColor="@color/nc_text"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+      <Chronometer
+        android:includeFontPadding="false"
+        android:id="@+id/nc_countdown"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:fontFeatureSettings="tnum"
+        android:textColor="@color/nc_accent"
+        android:textSize="@dimen/nc_meta"
+        android:textStyle="bold" />
+      <include layout="@layout/nc_time_stage" />
+    </LinearLayout>
   </LinearLayout>
-  <LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginTop="@dimen/nc_line_gap"
-    android:gravity="center_vertical"
-    android:orientation="horizontal">
-    <ImageView
-      android:layout_width="7dp"
-      android:layout_height="7dp"
-      android:importantForAccessibility="no"
-      android:src="@drawable/nc_dot" />
-    <TextView
-      android:includeFontPadding="false"
-      android:id="@+id/nc_label"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:layout_marginStart="6dp"
-      android:letterSpacing="0.08"
-      android:maxLines="1"
-      android:textColor="@color/nc_text"
-      android:textSize="12sp"
-      android:textStyle="bold" />
-    <Chronometer
-      android:includeFontPadding="false"
-      android:id="@+id/nc_countdown"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:layout_marginStart="6dp"
-      android:fontFeatureSettings="tnum"
-      android:textColor="@color/nc_accent"
-      android:textSize="@dimen/nc_meta"
-      android:textStyle="bold" />
-    <include layout="@layout/nc_time_stage" />
-  </LinearLayout>
+  <ImageView
+    android:id="@+id/nc_clash_edge"
+    android:layout_width="6dp"
+    android:layout_height="match_parent"
+    android:layout_marginStart="8dp"
+    android:importantForAccessibility="no"
+    android:scaleType="centerCrop"
+    android:src="@drawable/nc_clash_stripes"
+    android:visibility="gone" />
 </LinearLayout>

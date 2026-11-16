@@ -96,14 +96,14 @@ screen shows, and on older Androids (the Nokia 3, Android 9) the only view; wher
 expanded view, a live card adds the next row there.
 
 ```
-BETWEEN THE BURIED AND ME                     ⚠ +1     live, collapsed (⚠: the hidden next band clashes; +1: another set live)
-● LIVE −48:00 (yellow)  19:00–20:00 · Jägermeister
+BETWEEN THE BURIED AND ME                      +1 ▨    live, collapsed (+1: another set live; ▨: the hidden next band clashes)
+● LIVE −48:00 (yellow)  19:00–20:00 · Jägermeister ▨
 
-BETWEEN THE BURIED AND ME                        +1    live, expanded
-● LIVE −48:00 (yellow)  19:00–20:00 · Jägermeister
+BETWEEN THE BURIED AND ME                      +1 ▨    live, expanded
+● LIVE −48:00 (yellow)  19:00–20:00 · Jägermeister ▨
 ──────────────────────────────────────────────────
-NEXT: THE DILLINGER ESCAPE PLAN
-−28:00 (blue) ⚠           19:40–20:30 · Metal Gate
+NEXT: THE DILLINGER ESCAPE PLAN                    ▨
+−28:00 (blue) ⚠           19:40–20:30 · Metal Gate ▨
 
 NEXT: HOODED MENACE                                    break
 −1:30:00 (blue)               11:30–12:10 · Octagon
@@ -111,14 +111,15 @@ NEXT: HOODED MENACE                                    break
 
 - **Live:** the name (18 bold) with `+N` (red) at its end, always, collapsed and expanded; then the
   red dot, `LIVE`, the time left (14 bold, accent) and `time · stage` on the right (stage bold).
-- **Live, collapsed:** the next row is hidden, so a red `⚠` before `+N` on the name line says the next
-  band clashes with a live one.
-- **Live, expanded** (when the day has a Must-see still to start): the live card without that `⚠`, a
+- **Live, clashing:** when the next band clashes, the live row gets the striped clash bar on its
+  right edge (below), collapsed and expanded, and no `⚠`. Collapsed, where the next row is hidden,
+  the stripes and the status-bar icon say the next band clashes.
+- **Live, expanded** (when the day has a Must-see still to start): the live card, a
   1 px line with 6 dp above and below, then the next row: the break card's layout for the next band
   at the iPhone next row's sizes (`NEXT:` and the name 16 sp, the blue countdown 14 sp, as
   `time · stage`), with a red `⚠` after the countdown when it clashes. A clashing next row also
-  gets a striped clash bar on its right edge (6 dp, `nc_clash_stripes`, the same rising hatch): Android has no
-  live bar to stripe, as iOS does.
+  gets a striped clash bar on its right edge (6 dp, `nc_clash_stripes`, the same rising hatch), as
+  the live row above it does: Android has no live bar to stripe, as iOS does.
 - **Break:** `NEXT:` (`strings().nowCard.nextShort` with a colon, "DALŠÍ:" in Czech; iOS's break row
   keeps `NEXT UP`; the name's size, the time range's colour), the name (18 bold); then the countdown
   (18 bold blue, to `time · stage` as on iOS) on one baseline with `time · stage`.

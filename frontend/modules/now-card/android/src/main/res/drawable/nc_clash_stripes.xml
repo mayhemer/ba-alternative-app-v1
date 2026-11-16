@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The app's clash hatch (src/ui/stripes.ts): rising 45° lines ("/"), as clash stripes are
      everywhere (ux-principles.md), 2 dp wide, gaps as wide, on the
-     expanded live card's next row when it clashes. Tall, so centerCrop in a 6 dp strip only
+     live row and the expanded card's next row when the next band clashes. Tall, so centerCrop in a 6 dp strip only
      crops it and the lines keep 45°. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
   android:width="6dp" android:height="64dp" android:viewportWidth="6" android:viewportHeight="64">

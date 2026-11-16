@@ -5,7 +5,7 @@
      −1:30:12 [⚠] …………… 14:00–14:50 · Stage  (the countdown 18 sp, on one baseline with the 14 sp;
                                            ⚠ only on the next row, when it clashes with a live set)
      The next row, when it clashes, also gets My plan's striped clash bar on its right edge
-     (nc_clash_edge): Android has no live bar to stripe, as iOS does. -->
+     (nc_clash_edge), as the live row above it does: Android has no live bar to stripe, as iOS does. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
   android:layout_width="match_parent"
   android:layout_height="wrap_content"

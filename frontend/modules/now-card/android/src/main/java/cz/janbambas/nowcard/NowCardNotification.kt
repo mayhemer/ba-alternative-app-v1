@@ -21,17 +21,17 @@ import androidx.core.content.ContextCompat
 //
 // Spec: docs/frontend/design/lock-screen.md, layout #4 on Android: two lines at
 // the notification's text size.
-//   live   BAND NAME ……………………………… [⚠] [+N]   break  NEXT: BAND NAME
+//   live   BAND NAME …………………………………… [+N]   break  NEXT: BAND NAME
 //          ● LIVE −48:00 … 19:00–20:00 · Stage           −1:30:12 … 14:00–14:50 · Stage
 // +N (how many other Must-sees are live now) always on the live row.
 // Expanded (where Android offers it), a live card with a Must-see still to
 // come adds the next row under a line, as the break card (iOS's next row):
 //          NEXT: THE NEXT BAND                    ▨ (16 sp, as the iPhone's next row)
 //          −28:00 [⚠] …………… 19:40–20:30 · Stage ▨ (14 sp, blue; ⚠ red when it clashes)
-// ▨: when the next band clashes, My plan's striped clash bar on the row's right
-// edge (iOS stripes the overlap on its live bar; Android has no bar).
-// Collapsed, the next row is hidden, so a clashing next band shows as ⚠ on the
-// live row's name line instead.
+// ▨: when the next band clashes, My plan's striped clash bar on the right edge of
+// the next row and of the live row, collapsed too (iOS stripes the overlap on its
+// live bar; Android has no bar). Collapsed, the next row is hidden: the live row's
+// stripes and the status-bar ⚠ tell the clash.
 // Colours tell the state too (yellow live, blue break and next). Silent, ongoing, shown on the lock
 // screen; the status-bar icon tells the state as the iPhone's Dynamic Island
 // does (dot, ⚠, ›). No progress bar: it could only move with extra wakeups.
@@ -57,7 +57,7 @@ object NowCardNotification {
       .setCategory(NotificationCompat.CATEGORY_EVENT)
       .setPriority(NotificationCompat.PRIORITY_LOW)
       .setStyle(NotificationCompat.DecoratedCustomViewStyle())
-      .setCustomContentView(card(context, script, span, flagClash = true))
+      .setCustomContentView(card(context, script, span))
       .apply { expanded(context, script, span)?.let { setCustomBigContentView(it) } }
       .setContentIntent(openIntent(context, script.url))
       .setDeleteIntent(dismissIntent(context))
@@ -93,14 +93,14 @@ object NowCardNotification {
       return null
     }
     val rows = RemoteViews(context.packageName, R.layout.nc_rows)
-    rows.addView(R.id.nc_rows, card(context, script, span, flagClash = false))
+    rows.addView(R.id.nc_rows, card(context, script, span))
     rows.addView(R.id.nc_rows, RemoteViews(context.packageName, R.layout.nc_divider))
     rows.addView(R.id.nc_rows, nextCard(context, script, next, flagClash = span.nextClashes, asRow = true))
     return rows
   }
 
-  /** The two-line card; `flagClash`: ⚠ on the live row's name line for a clashing next band it hides. */
-  private fun card(context: Context, script: CardScript, span: CardSegment, flagClash: Boolean): RemoteViews {
+  /** The two-line card. */
+  private fun card(context: Context, script: CardScript, span: CardSegment): RemoteViews {
     val set = span.top
     if (!span.isLive) {
       return nextCard(context, script, set, flagClash = false, asRow = false)
@@ -108,7 +108,8 @@ object NowCardNotification {
     val card = RemoteViews(context.packageName, R.layout.nc_card_live)
     card.setTextViewText(R.id.nc_label, script.liveLabel)
     countdown(card, R.id.nc_countdown, set.end)
-    card.setViewVisibility(R.id.nc_flag, if (flagClash && span.nextClashes) View.VISIBLE else View.GONE)
+    // My plan's striped clash bar on the right edge, collapsed and expanded, as on the next row.
+    card.setViewVisibility(R.id.nc_clash_edge, if (span.nextClashes) View.VISIBLE else View.GONE)
     card.setViewVisibility(R.id.nc_more, if (span.more > 0) View.VISIBLE else View.GONE)
     card.setTextViewText(R.id.nc_more, "+${span.more}")
     fill(card, set)
