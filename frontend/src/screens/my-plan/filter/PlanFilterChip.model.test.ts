@@ -8,7 +8,7 @@ import { colors } from '../../../styling/tokens';
 // same as its button in the panel.
 
 describe('planFilterChipModel', () => {
-  it('shows the accent full star for Must-see only, the default', () => {
+  it('shows the accent full star for Must-see only', () => {
     expect(planFilterChipModel({ level: 'must', isOpen: false })).toEqual({
       key: 'plan-filter-chip',
       state: { testID: 'plan-filter-state-must', icon: 'star', color: colors.accent },

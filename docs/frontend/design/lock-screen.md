@@ -192,7 +192,7 @@ NEXT: HOODED MENACE                                    break
   after the stale date, and a screen dimmed across it keeps the old span; later switches don't
   happen until the next refresh (app open). **Not shippable as is**: push updates or a rethink are
   being weighed. Until a redraw the card stays on its last drawn span, its countdowns at zero
-  (iOS 18+: counting up past it, `2 min`; `0:00` before iOS 18). After the day's last span it reads "Today's Must-sees are over"; after the last
+  (iOS 18+: counting up past it, `2 min`; `0:00` before iOS 18). After the day's last span it reads "Today's plan is over"; after the last
   span of a list cut to fit, it stays on that span.
 - **Refreshes:** every app open (the hand-over, below), plus background refresh when iOS grants it
   (asked for at each next change; no JS runs).

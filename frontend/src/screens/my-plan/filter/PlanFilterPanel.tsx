@@ -8,7 +8,8 @@ import { PlanFilterLevel } from './PlanFilterLevel';
 import { MyScheduleShare } from '../../../features/social/MyScheduleShare';
 import { SearchEntry } from '../../../features/search/SearchEntry';
 import { SEARCH_ENTRY_DOCK_HEIGHT } from '../../../features/search/SearchDock.model';
-import { FILTER_PANEL_PADDING, LEVEL_GAP, planFilterLevelModels, type PlanFilterLevelModel } from './PlanFilterLevel.model';
+import { FILTER_PANEL_PADDING, planFilterLevelModels, type PlanFilterLevelModel } from './PlanFilterLevel.model';
+import { PanelSectionLabel } from '../../../ui/PanelSectionLabel';
 import type { PlanLevel } from '../../../store/uiStatePersistence';
 import {
   colors,
@@ -22,9 +23,10 @@ import {
 //
 // Drops from under the TopBar like the lens panel, with the same backdrop and
 // card, and the same place in AppShell; the search field at the bottom edge
-// (features/search/SearchEntry). One row of four buttons, one per
-// filter, each drawn from its model (PlanFilterLevel.model.ts). A tap applies
-// that filter and closes the panel, back to the list. Below them, the lens
+// (features/search/SearchEntry). Under a "Filter" heading, one row per filter:
+// its glyph and name, as the lens panel lists its sources, each drawn from its
+// model (PlanFilterLevel.model.ts). A tap applies that filter and closes the
+// panel, back to the list. Below them, the lens
 // panel's "My schedule" section (MyScheduleShare), passed in as children.
 
 
@@ -34,7 +36,7 @@ type ViewProps = {
   onClose: () => void;
   /** Drawn outside the card, over the backdrop: the search field at the bottom edge. */
   dock?: React.ReactNode;
-  /** Drawn below the filter buttons. */
+  /** Drawn below the filter rows. */
   children?: React.ReactNode;
 };
 
@@ -76,9 +78,8 @@ export function PlanFilterPanelView({ levels, onPick, onClose, dock, children }:
             elevation: 12,
           }}
         >
-          <View style={{ flexDirection: 'row', gap: LEVEL_GAP }}>
-            {levels.map((item) => <PlanFilterLevel key={item.key} item={item} onPick={onPick} />)}
-          </View>
+          <PanelSectionLabel>{strings().planFilter.heading}</PanelSectionLabel>
+          {levels.map((item) => <PlanFilterLevel key={item.key} item={item} onPick={onPick} />)}
           {children}
         </View>
       </View>

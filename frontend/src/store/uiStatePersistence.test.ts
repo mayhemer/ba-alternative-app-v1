@@ -251,12 +251,22 @@ describe('My plan\'s filter', () => {
     expect(getUiState('planFilters')).toEqual({ level });
   });
 
-  it('falls back to Must-see only for a filter it does not know', async () => {
+  it('falls back to Must-see and Maybe for a filter it does not know', async () => {
     await AsyncStorage.setItem(KEY_PLAN_FILTERS, JSON.stringify({ level: 'everything' }));
 
     await hydrateLocalState('ba2025');
 
-    expect(getUiState('planFilters')).toEqual({ level: 'must' });
+    expect(getUiState('planFilters')).toEqual({ level: 'maybe' });
+  });
+
+  it('starts from Must-see and Maybe on a fresh install, nothing stored', async () => {
+    await AsyncStorage.removeItem(KEY_PLAN_FILTERS);
+    let fresh: typeof import('./uiStatePersistence') | undefined;
+    jest.isolateModules(() => { fresh = require('./uiStatePersistence'); });
+
+    await fresh!.hydrateLocalState('ba2025');
+
+    expect(fresh!.getUiState('planFilters')).toEqual({ level: 'maybe' });
   });
 });
 

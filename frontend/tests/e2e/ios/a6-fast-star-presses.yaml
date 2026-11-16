@@ -26,14 +26,14 @@ appId: cz.janbambas.ba
     env: { SECTION: "Artists" }
 # The second row (ABBIE FALLS): none → Maybe → Must see!
 - tapOn: { text: "Toggle interest", index: 1, repeat: 2, delay: 0 }
-- assertVisible: { text: "Must see!", selected: true }
+- assertVisible: { text: "I must see this!", selected: true }
 - extendedWaitUntil:
     notVisible: { id: "star-selector" }
     timeout: 5000
 # The third row, to "Must see!" by two separate presses first.
 - tapOn: { text: "Toggle interest", index: 2 }
 - tapOn: { text: "Toggle interest", index: 2 }
-- assertVisible: { text: "Must see!", selected: true }
+- assertVisible: { text: "I must see this!", selected: true }
 - extendedWaitUntil:
     notVisible: { id: "star-selector" }
     timeout: 5000

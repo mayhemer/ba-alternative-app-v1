@@ -137,7 +137,7 @@ export function buildPlanDay(
     items.push(planCapModel('end', { listedEnd: groupEnd, dayStart, now }));
   }
   if (visible.length === 0) {
-    items.push(planEmptyModel(conflictsOnly));
+    items.push(planEmptyModel(level));
   }
   return items;
 }

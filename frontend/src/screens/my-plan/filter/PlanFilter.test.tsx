@@ -5,12 +5,14 @@ import { PlanFilterPanelView } from './PlanFilterPanel';
 import { planFilterChipModel } from './PlanFilterChip.model';
 import { planFilterLevelModels } from './PlanFilterLevel.model';
 import type { PlanLevel } from '../../../store/uiStatePersistence';
+import { setLanguageChoice } from '../../../i18n/language';
 
 // ── The plan's filter chip and panel ──────────────────────────────────────────
 //
 // "State + menu", like the lens chip: the state slot tells which filter is on
-// without opening anything; the panel holds one button per filter, glyphs
-// only. Both draw their models (PlanFilterChip.model.ts,
+// without opening anything; the panel lists the filters under a "Filter"
+// heading, one row each: the chip's glyph and the filter's name, the current
+// row raised and ticked. Both draw their models (PlanFilterChip.model.ts,
 // PlanFilterLevel.model.ts, tested there). That a tap also closes the panel is
 // the connected panel's job, tested with the screen (MyPlanScreen.test.tsx).
 
@@ -49,8 +51,8 @@ describe('PlanFilterPanelView', () => {
     await renderPanel('maybe');
     const selected = (name: string): unknown => screen.getByRole('button', { name }).props.accessibilityState?.selected;
     expect(selected('All sets')).toBe(false);
-    expect(selected('Must-see and Maybe')).toBe(true);
-    expect(selected('Must-see only')).toBe(false);
+    expect(selected('All my picks')).toBe(true);
+    expect(selected('Only what I must see')).toBe(false);
     expect(selected('Only conflicts')).toBe(false);
   });
 
@@ -58,8 +60,35 @@ describe('PlanFilterPanelView', () => {
     const { onPick } = await renderPanel('must');
     await fireEvent.press(screen.getByRole('button', { name: 'All sets' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Only conflicts' }));
-    await fireEvent.press(screen.getByRole('button', { name: 'Must-see only' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Only what I must see' }));
     expect(onPick.mock.calls).toEqual([['all'], ['conflicts'], ['must']]);
+  });
+
+  it('heads the list "Filter" and names every filter beside its glyph', async () => {
+    await renderPanel('must');
+    expect(screen.getByText('Filter')).toBeTruthy();
+    for (const name of ['All sets', 'All my picks', 'Only what I must see', 'Only conflicts']) {
+      expect(screen.getByText(name)).toBeTruthy();
+    }
+    for (const icon of ['star-outline', 'star-half', 'star', 'warning-outline']) {
+      expect(screen.getByTestId(`plan-filter-glyph-${icon}`)).toBeTruthy();
+    }
+  });
+
+  it.each(['all', 'maybe', 'must', 'conflicts'] as const)('ticks only the current filter: %s', async (level) => {
+    await renderPanel(level);
+    expect(screen.getAllByTestId(/^plan-filter-tick-/).map((t) => t.props.testID)).toEqual([`plan-filter-tick-${level}`]);
+  });
+
+  it('names the filters in Czech', async () => {
+    setLanguageChoice('cs');
+    try {
+      await renderPanel('must');
+      expect(screen.getByText('Filtr')).toBeTruthy();
+      expect(screen.getByText('Jen co musím vidět')).toBeTruthy();
+    } finally {
+      setLanguageChoice('system');
+    }
   });
 
   it('closes on a tap outside the card', async () => {

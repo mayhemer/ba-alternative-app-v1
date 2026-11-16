@@ -29,7 +29,7 @@ appId: cz.janbambas.ba
 # Another day, the filter narrowed there, then back to Wednesday.
 - tapOn: "THU.*"
 - tapOn: "Filters"
-- tapOn: "Must-see only"
+- tapOn: "Only what I must see"
 - tapOn: "WED.*"
 # No scroll or tap in between: the list lands at its end, drawn there, the
 # last sets with it (unfixed, only the end cap was drawn).

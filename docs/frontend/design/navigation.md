@@ -50,9 +50,11 @@ timeline's vertical scroller, My plan's list), through `ui/PullPreview` (`usePul
   `ui/PanelSkeletonCard.model.ts`, for both previews. Pulled
   back before letting go, it does nothing. Only a finger's drag counts: a fling bouncing off the top
   shows nothing. On a timeline it shows under the time ruler, where the lanes' gap opens.
-  - My plan: the four filter buttons outlined with their glyphs, in the panel's own measures, 84 pt
-    from the top bar, so all out when armed; armed, the glyphs take their own colours
-    (`screens/my-plan/filter/PlanFilterSkeleton`).
+  - My plan: the filter panel's card as a mock, laid out by its own elements (`PanelSectionLabel`
+    and `PlanFilterLevel` take a `skeletonColor`): the heading and the four rows, names and glyphs
+    grey, none current; armed, the glyphs take their own colours
+    (`screens/my-plan/filter/PlanFilterSkeleton`). It fits its content, so it is taller than 84 pt
+    and a longer pull uncovers the rest.
   - Artists and the timelines: the lens panel itself as a mock, laid out by its own elements
     (`features/social/LensPanelSkeleton`; `PanelSectionLabel`, `LensScopeRow` and
     `MyScheduleShareView` take a `skeletonColor`): the same sections, texts, rows (a followed friend's

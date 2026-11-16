@@ -16,7 +16,7 @@ import { useArtistDetail } from '../artist-detail/ArtistDetailContext';
 import { useSelectedDay, useTimelineFilter } from '../../screens/timeline/TimelineFilterContext';
 import { PerfProviders } from '../../../tests/setup/PerfProviders';
 import { createDataCollector, hydrateInterests, populateCache, setInterest } from '../../cache/cacheService';
-import { setLensScope } from '../../store/uiStatePersistence';
+import { setLensScope, setPlanFilters } from '../../store/uiStatePersistence';
 import { setCurrentTimeMs } from '../../utils/clock';
 import { DEFAULT_SCOPE, type LensScope } from '../../lib/interestUtils';
 import type { DbArtist, DbCategory, DbEvent, DbStage } from '../../types/backend';
@@ -311,6 +311,8 @@ function PlanProbe() {
 
 describe('search on My plan', () => {
   beforeEach(async () => {
+    // Under Must-see only, so a Maybe is one the filter hides.
+    setPlanFilters({ level: 'must' });
     await setInterest('ba2025', '79', 'will_go');
     await setInterest('ba2025', '22', 'maybe');
     await hydrateInterests('ba2025');
@@ -350,7 +352,7 @@ describe('search on My plan', () => {
     await openFromFilters();
     await type('dark');
     expect(screen.getByText('My plan')).toBeTruthy();
-    expect(screen.getByText('Filter → Must-see and Maybe')).toBeTruthy();
+    expect(screen.getByText('Filter → All my picks')).toBeTruthy();
     expect(screen.getByText('Filter → All sets')).toBeTruthy();
     expect(screen.getByText('In the Support Program')).toBeTruthy();
     ['7205', '7034', '7100', '7035', '7206', '6998'].forEach((id) => { expect(screen.getByTestId(`search-row-${id}`)).toBeTruthy(); });

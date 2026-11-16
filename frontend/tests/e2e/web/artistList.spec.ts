@@ -68,7 +68,7 @@ test('a share link opens the app rather than 404ing', async ({ appPage }) => {
 // A star press turns the pick one step and opens the selector beside the star,
 // apart from it: the four states to its left, the star left uncovered.
 
-const STATES = ['Not marked', 'Maybe', 'Must see!', "Don't go"];
+const STATES = ['Not marked', "Maybe I'll go", 'I must see this!', "I'll skip this"];
 
 test('the star selector opens beside the pressed star, leaving it uncovered @layout', async ({ appPage }) => {
   await ready(appPage);
@@ -102,16 +102,16 @@ test('pressing the star again keeps the selector open, without a blink', async (
 
   // The same element: it was neither closed nor drawn again from scratch.
   expect(await before!.evaluate((el) => el.isConnected)).toBe(true);
-  await expect(appPage.getByTestId('star-selector-info')).toHaveText('Must see!✓');
+  await expect(appPage.getByTestId('star-selector-info')).toHaveText('I must see this!✓');
 });
 
 test('a state tapped in the selector is the pick', async ({ appPage }) => {
   await ready(appPage);
   await appPage.getByLabel('Toggle interest').filter({ visible: true }).first().click();
 
-  await appPage.getByTestId('star-selector').getByLabel('Must see!', { exact: true }).click();
+  await appPage.getByTestId('star-selector').getByLabel('I must see this!', { exact: true }).click();
 
-  await expect(appPage.getByTestId('star-selector-info')).toHaveText('Must see!✓');
+  await expect(appPage.getByTestId('star-selector-info')).toHaveText('I must see this!✓');
   const stored = await appPage.evaluate(() => window.localStorage.getItem('user:interests:v2:ba2025'));
   expect(stored).toContain('will_go');
 });

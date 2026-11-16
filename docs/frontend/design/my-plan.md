@@ -88,19 +88,20 @@ On every screen that has a top bar. On festival days it replaces the logo while 
 
 - **Shape:** the same "state + ⋮" frame as the lens chip on Artists and Program (`TopBarChip`): a 24 pt state slot right against a 14 pt slot for the dots, 38 pt in all. The dots slot is narrower than the 20 pt glyph, whose dots are a thin column in its middle; 14 pt keeps them clear of a friend avatar's star badge.
 - **Open:** while its panel is open the chip is drawn open, as the lens chip and the hamburger are for theirs (`ui/topBarButton`): an accent background with 2 pt corners, reaching 6 pt past the glyphs on either side (padding cancelled by a negative margin, so nothing moves), and the glyph and the dots black on it, as on the selected day button. A friend's avatar in the lens chip stays as it is.
-- **One filter, four states.** The state slot shows the current one, with the same glyph as its button in the panel:
+- **One filter, four states.** The state slot shows the current one, with the same glyph as its button in the panel. The names below are internal; what a screen reader and a search tag say is in the strings table at the end (`planFilter.*`):
 
   | Filter | Glyph | Lists |
   |---|---|---|
   | **All sets** | ☆ grey outline star (`muted`) | every set of the day by a Program band, your "don't go" bands too (so a pick changed by mistake is easy to undo), plus any support-programme set you picked; never an unpicked or "don't go" support-programme set |
-  | **Must-see and Maybe** | ½ star, accent | your Must-see and Maybe picks |
-  | **Must-see only** (default) | ★ full star, accent | your Must-see picks |
+  | **Must-see and Maybe** (default) | ½ star, accent | your Must-see and Maybe picks |
+  | **Must-see only** | ★ full star, accent | your Must-see picks |
   | **Only conflicts** | ⚠ red | your clashing Must-sees (see [Conflicts](#conflicts)) |
 - **⋮** turns accent while the panel is open.
-- **Panel:** tapping, or pulling the list down past its top ([navigation.md](navigation.md) › Pull past the top), drops a panel from under the top bar, like the lens panel, with a dimmed backdrop. It opens with the search field ([search.md](search.md)), then holds one row of four buttons, glyphs only, in the order above; the current one has an accent border on a raised background. Each button's accessibility label names its filter.
-  - **Tapping a button applies its filter and closes the panel**, back to the list, the current one too.
-  - **Below the buttons, the lens panel's "My schedule" section**, the same element (`features/social/MyScheduleShare`): signed out, *Sign in* (to Settings, closing the panel); signed in, *Share my schedule* (*Share again* once shared) with *Copy link* and *Revoke* while a share exists.
-- **Persistence:** the filter is saved through `uiStatePersistence`. A filter saved by an older build (two switches) loads as: only conflicts → **Only conflicts**; Maybe picks shown → **Must-see and Maybe**; else **Must-see only**.
+- **Panel:** tapping, or pulling the list down past its top ([navigation.md](navigation.md) › Pull past the top), drops a panel from under the top bar, like the lens panel, with a dimmed backdrop. It opens with the search field ([search.md](search.md)), then lists the filters under a **Filter** / **Filtr** heading (`PanelSectionLabel`, as the lens panel's "Show"), one row each in the order above: the filter's glyph (the chip's) and its name (`planFilter.*`; also its accessibility label). A row is the lens panel's source row with the glyph where that has its radio: 15 pt text, 10 × 8 pt padding, 8 pt corners. The current one is raised (`surfaceRaised`) with an accent ✓ at its end. Glyphs alone (one row of four buttons) were tried and replaced: nothing named the filters, so a first-timer sent to the panel had to guess.
+  - **Tapping a row applies its filter and closes the panel**, back to the list, the current one too.
+  - **Below the rows, the lens panel's "My schedule" section**, the same element (`features/social/MyScheduleShare`): signed out, *Sign in* (to Settings, closing the panel); signed in, *Share my schedule* (*Share again* once shared) with *Copy link* and *Revoke* while a share exists.
+- **Default:** **Must-see and Maybe**. A first star tap makes a Maybe, so a narrower default would leave a new user's first picks off the plan; the narrower filters are found in the panel.
+- **Persistence:** the filter is saved through `uiStatePersistence`, only when the user picks one (a default saved at startup would read as a choice), so a user who never picked one follows the default. An unknown stored value falls back to the default. A filter saved by an older build (two switches) loads as: only conflicts → **Only conflicts**; Maybe picks shown → **Must-see and Maybe**; else **Must-see only**.
 
 ---
 
@@ -116,7 +117,7 @@ What each element shows comes from its own model (see Principles), built from th
 | Gap | where it starts (the end of everything listed above) and the set listed right under it with its pick level, now | length or countdown (boxed when it counts to a set that isn't a Must-see), height, fill, now arrow, the conflict title of the group under it |
 | Day-start break | a gap from 08:00 to the first **listed** set | as a gap, with the start ring |
 | Cap / spacer | its edge, or the clash group under it; the end cap also the end of everything listed, the shown day, now | the rail end, the conflict title of the group under it; the end cap the now arrow once the day's listed sets are over |
-| Empty day | whether only conflicts are shown | its sentence |
+| Empty day | the filter | its title and sentence, with links and the filter's glyph under the filters of picks |
 
 ### No day title
 
@@ -211,9 +212,16 @@ The rows look different under **All sets** and under the other filters (Must-see
 ### End of the day and empty day
 
 - The list ends with the end cap below the day's last set; there is no text marker.
-- **Empty day:** centred text:
-  - "Nothing planned for this day" / "Na tento den nic v plánu";
-  - under **Only conflicts**: "No conflicts on this day" / "V tento den žádné konflikty".
+- **Empty day:** centred text, by the filter:
+  - **All sets** (a day without sets to list): "Nothing planned for this day" / "Na tento den nic v plánu";
+  - **Only conflicts**: "No conflicts on this day" / "V tento den žádné konflikty";
+  - **All my picks** and **Only what I must see**, whether nothing is picked at all or only not that day: a bold title, a line saying the filter is why the list is empty, and on a new line a sentence with two links (accent, bold):
+    - **Nothing picked for this day** / **Na tento den nemáte nic vybráno** ("planned" read as if nothing plays that day);
+    - "The filter shows only your picks." / "Filtr ukazuje jen váš výběr.";
+    - "**Pick artists**, or **change the filter** ½★⋮" / "**Vyberte kapely**, nebo **změňte filtr** ½★⋮";
+    - *Pick artists* opens the artist list. *Change the filter* opens the filter panel and changes no filter: the user picks one there, and the chip is drawn open over it, so it is found in the top bar. A filter changed for the user would leave them unsure where they are and how to go back.
+    - The filter link ends with the chip's own glyphs, in their top-bar colours: the current filter's (½★ or ★) and the white ⋮. No full stop after them: the ⋮ glyph's box is wide, so one floats.
+    - The links sit inside their sentence (nested text), so it wraps as one text in either language; each is its own accessibility element with the link role. 150 pt tall: the title, the intro and up to two lines of links.
 
 ---
 
@@ -277,11 +285,12 @@ My plan's strings live with the rest of the app's in `src/i18n/strings.ts` (see 
 | setStatus.start | START | ZAČNE |
 | conflict.conflict | Conflict | Konflikt |
 | planFilter.all (a11y) | All sets | Všechna vystoupení |
-| planFilter.maybe (a11y) | Must-see and Maybe | Musím vidět a Možná |
-| planFilter.must (a11y) | Must-see only | Jen Musím vidět |
+| planFilter.maybe (a11y) | All my picks | Vše vybrané |
+| planFilter.must (a11y) | Only what I must see | Jen co musím vidět |
 | planFilter.conflicts (a11y) | Only conflicts | Jen konflikty |
 | myPlanScreen.empty | Nothing planned for this day | Na tento den nic v plánu |
 | myPlanScreen.emptyConflicts | No conflicts on this day | V tento den žádné konflikty |
+| myPlanScreen.nothingPicked | Nothing picked for this day · The filter shows only your picks. Pick artists, or change the filter | Na tento den nemáte nic vybráno · Filtr ukazuje jen váš výběr. Vyberte kapely, nebo změňte filtr |
 | planFilter.chip (a11y) | Filters | Filtry |
 
 ---

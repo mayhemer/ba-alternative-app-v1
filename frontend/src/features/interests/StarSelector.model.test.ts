@@ -42,8 +42,8 @@ describe('starSelectorModel', () => {
   it('labels each state, and names the current one in the info text', () => {
     const m = model({ status: 'will_go' });
 
-    expect(m.slots.map((s) => s.label)).toEqual(['Not marked', 'Maybe', 'Must see!', "Don't go"]);
-    expect(m.info.label).toBe('Must see!');
+    expect(m.slots.map((s) => s.label)).toEqual(['Not marked', "Maybe I'll go", 'I must see this!', "I'll skip this"]);
+    expect(m.info.label).toBe('I must see this!');
   });
 
   it('sits left of a list star, apart from it, centred on it', () => {

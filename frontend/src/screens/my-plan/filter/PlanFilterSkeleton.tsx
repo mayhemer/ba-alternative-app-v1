@@ -1,42 +1,29 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View } from 'react-native';
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { PanelSkeletonCard } from '../../../ui/PanelSkeletonCard';
+import { PanelSectionLabel } from '../../../ui/PanelSectionLabel';
 import type { PullPreview } from '../../../ui/PullPreview';
-import { colors } from '../../../styling/tokens';
+import { strings } from '../../../i18n/strings';
 import { planFilterSkeletonModel } from './PlanFilterSkeleton.model';
-import { FILTER_PANEL_PADDING, LEVEL_BUTTON_HEIGHT, LEVEL_BUTTON_RADIUS, LEVEL_GAP, LEVEL_ICON_SIZE } from './PlanFilterLevel.model';
+import { PlanFilterLevel } from './PlanFilterLevel';
+import { FILTER_PANEL_PADDING } from './PlanFilterLevel.model';
 
 // ── The filter panel's preview, drawn ─────────────────────────────────────────
 //
-// Draws its model (PlanFilterSkeleton.model.ts): the card and the four button
-// outlines with their glyphs.
+// Draws its model (PlanFilterSkeleton.model.ts): the card, the heading and the
+// four rows, by the panel's own elements in their mock look.
 
-const ROW = { flexDirection: 'row' as const, gap: LEVEL_GAP };
 const PADDING = { padding: FILTER_PANEL_PADDING };
-const BUTTON = {
-  flex: 1,
-  height: LEVEL_BUTTON_HEIGHT,
-  alignItems: 'center' as const,
-  justifyContent: 'center' as const,
-  borderRadius: LEVEL_BUTTON_RADIUS,
-  borderWidth: 1,
-  borderColor: colors.borderMid,
-};
+const NO_OP = (): void => undefined;
 
 function PlanFilterSkeletonBase({ armed }: { armed: boolean }) {
-  const model = planFilterSkeletonModel(armed);
+  const model = useMemo(() => planFilterSkeletonModel(armed), [armed]);
   return (
-    <PanelSkeletonCard
-      height={model.cardHeight}
-      borderColor={model.borderColor}
-      padding={PADDING}
-    >
-      <View testID="plan-filter-skeleton" style={ROW}>
-        {model.glyphs.map((glyph) => (
-          <View key={glyph.icon} style={BUTTON}>
-            <Ionicons name={glyph.icon} size={LEVEL_ICON_SIZE} color={glyph.color} />
-          </View>
+    <PanelSkeletonCard borderColor={model.borderColor} padding={PADDING}>
+      <View testID="plan-filter-skeleton">
+        <PanelSectionLabel skeletonColor={model.textColor}>{strings().planFilter.heading}</PanelSectionLabel>
+        {model.levels.map((item) => (
+          <PlanFilterLevel key={item.key} item={item} onPick={NO_OP} skeletonColor={model.textColor} />
         ))}
       </View>
     </PanelSkeletonCard>

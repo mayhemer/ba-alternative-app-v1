@@ -32,14 +32,14 @@ const WRITE_DEBOUNCE_MS = 300;
 export type ScrollPositions = Record<string, Record<string, number>>; // screenKey → dayStart → x
 export type SelectedDayMap  = Record<string, number>;                  // screenKey → dayStart
 
-/** My plan's filter panel. Both off by default. */
 /** My plan's filter: All sets, Must-see and Maybe, Must-see only, Only conflicts. */
 export type PlanLevel = 'all' | 'maybe' | 'must' | 'conflicts';
 export type PlanFilters = { level: PlanLevel };
 
 const PLAN_LEVELS: readonly PlanLevel[] = ['all', 'maybe', 'must', 'conflicts'];
 
-const DEFAULT_PLAN_FILTERS: PlanFilters = { level: 'must' };
+// Must-see and Maybe: a first star tap makes a Maybe, which the plan must show.
+const DEFAULT_PLAN_FILTERS: PlanFilters = { level: 'maybe' };
 
 type Snapshot = {
   hiddenCategories: string[];
@@ -102,6 +102,9 @@ const ENTRIES: { [K in UiStateKey]: Entry<K> } = {
       }
       if (stored.showMaybe === true) {
         return { level: 'maybe' };
+      }
+      if (stored.showMaybe === false) {
+        return { level: 'must' };
       }
       return DEFAULT_PLAN_FILTERS;
     },

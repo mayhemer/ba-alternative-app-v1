@@ -5,10 +5,16 @@ with no conversion layer:
 
 | State | Value | Icon | Label (EN) | Label (CZ) |
 |---|---|---|---|---|
-| Default | `none` | ☆ empty star, neutral | Not marked | Nemám zájem |
-| Maybe | `maybe` | ⯪ half star, accent color | Maybe | Možná chci vidět |
-| Must See | `will_go` | ★ full star, accent color | Must see! | Musím vidět! |
-| Don't go | `dont_go` | ☆ empty star, red (`dontGo`), struck through | Don't go | — |
+| Default | `none` | ☆ empty star, neutral | Not marked | Neoznačeno |
+| Maybe | `maybe` | ⯪ half star, accent color | Maybe I'll go | Možná se podívám |
+| Must See | `will_go` | ★ full star, accent color | I must see this! | Tohle chci vidět! |
+| Don't go | `dont_go` | ☆ empty star, red (`dontGo`), struck through | I'll skip this | Tohle vynechám |
+
+- **The state names are internal.** "Must-see", "Maybe" and "Don't go" name the states in code
+  and docs; they never reach the user. The labels are the user's own words, in the first person;
+  elsewhere the app describes a state ("All my picks", "Only what I must see").
+- **Length:** a label stays within about 18 characters: the selector's name box is 182 pt wide at
+  13 pt bold, with the tick.
 
 - Tap cycles state, one tap = one step: none → maybe → will_go → dont_go → none (`INTEREST_CYCLE`).
 - `dont_go` records "I listened and decided not to go", so a band once checked is never re-checked

@@ -18,6 +18,7 @@ import { useLensPanel } from '../../features/social/LensContext';
 import { pullPastTop } from '../../../tests/setup/pullPastTop';
 import { useArtistDetail } from '../../features/artist-detail/ArtistDetailContext';
 import { useOpenStarSelector, useStarSelectorActions } from '../../features/interests/StarSelectorContext';
+import { navigationRef } from '../../navigation/navigationRef';
 import type { DbArtist, DbCategory, DbEvent, DbStage } from '../../types/backend';
 
 // ── My plan reacts to every input ─────────────────────────────────────────────
@@ -245,7 +246,7 @@ async function minuteTo(time: number): Promise<void> {
 beforeEach(async () => {
   jest.useFakeTimers({ doNotFake: ['nextTick', 'queueMicrotask', 'performance', 'hrtime', 'Date'] });
   setCurrentTimeMs(at(7, '19:23'));
-  // The filters persist across mounts: every case starts from the defaults.
+  // The filters persist across mounts: every case starts from Must-see only.
   setPlanFilters({ level: 'must' });
   sync(EVENTS);
   await setInterest(SLUG, 'hooded', 'will_go');
@@ -620,11 +621,11 @@ describe('the chrome', () => {
     await mountChrome();
     await fireEvent.press(screen.getByLabelText('Filters'));
     expect(screen.getByTestId('plan-filter-state-must')).toBeTruthy();
-    expect(buttonSelected('Must-see only')).toBe(true);
+    expect(buttonSelected('Only what I must see')).toBe(true);
     await act(async () => { controls.setLevel('maybe'); });
     expect(screen.getByTestId('plan-filter-state-maybe')).toBeTruthy();
-    expect(buttonSelected('Must-see and Maybe')).toBe(true);
-    expect(buttonSelected('Must-see only')).toBe(false);
+    expect(buttonSelected('All my picks')).toBe(true);
+    expect(buttonSelected('Only what I must see')).toBe(false);
     await act(async () => { controls.setLevel('all'); });
     expect(screen.getByTestId('plan-filter-state-all')).toBeTruthy();
     expect(buttonSelected('All sets')).toBe(true);
@@ -651,8 +652,8 @@ describe('the chrome', () => {
   it('closes the panel on a tap of the current filter too, changing nothing', async () => {
     await mountChrome();
     await fireEvent.press(screen.getByLabelText('Filters'));
-    await fireEvent.press(screen.getByRole('button', { name: 'Must-see only' }));
-    expect(screen.queryByRole('button', { name: 'Must-see only' })).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: 'Only what I must see' }));
+    expect(screen.queryByRole('button', { name: 'Only what I must see' })).toBeNull();
     expect(screen.getByTestId('plan-filter-state-must')).toBeTruthy();
   });
 
@@ -910,5 +911,63 @@ describe('a tap on the now pill', () => {
     await act(async () => { fireEvent.press(screen.getByTestId('now-pill')); });
 
     expect(overlays.lensPanel.isOpen).toBe(false);
+  });
+});
+
+// ── Nothing picked for the day ────────────────────────────────────────────────
+//
+// No picks at all (as on a fresh install), under Must-see only: the empty day
+// says nothing is picked, and links the artist list and the filter panel. The
+// filter link opens the panel, changing no filter itself.
+
+describe('with nothing picked for the day', () => {
+  beforeEach(async () => {
+    for (const id of ['hooded', 'blood', 'gojira', 'batushka', 'spectral', 'late']) {
+      await setInterest(SLUG, id, 'none');
+    }
+  });
+
+  async function mountWithPanel(): Promise<void> {
+    await render(
+      <PerfProviders>
+        <PlanProvider>
+          <Controls />
+          <PlanFilterChip />
+          <MyPlanScreen />
+          <PlanFilterPanel />
+        </PlanProvider>
+      </PerfProviders>,
+    );
+  }
+
+  it('says nothing is picked, and opens the filter panel on "change the filter", the filter unchanged', async () => {
+    await mountWithPanel();
+    expect(listTexts()).toEqual(expect.arrayContaining(['Nothing picked for this day', 'Pick artists', 'change the filter']));
+    expect(screen.queryByRole('button', { name: 'All sets' })).toBeNull();
+    await act(async () => { fireEvent.press(screen.getByRole('link', { name: 'change the filter' })); });
+    expect(screen.getByRole('button', { name: 'All sets' })).toBeTruthy();
+    expect(screen.getByLabelText('Filters').props.accessibilityState).toMatchObject({ expanded: true });
+    expect(screen.getByTestId('plan-filter-state-must')).toBeTruthy();
+    expect(listTexts()).not.toContain('Ulcerate');
+  });
+
+  it('opens the artist list on a tap of "Pick artists"', async () => {
+    const navigate = jest.spyOn(navigationRef, 'navigate').mockImplementation(() => undefined);
+    try {
+      await mount();
+      await act(async () => { fireEvent.press(screen.getByRole('link', { name: 'Pick artists' })); });
+      expect(navigate).toHaveBeenCalledWith('ArtistList');
+    } finally {
+      navigate.mockRestore();
+    }
+  });
+
+  it('drops the message once a Must-see is picked', async () => {
+    await mount();
+    // none → Maybe → Must-see.
+    await act(async () => { controls.cycle('ulcerate'); });
+    await act(async () => { controls.cycle('ulcerate'); });
+    expect(listTexts()).toContain('Ulcerate');
+    expect(listTexts()).not.toContain('Nothing picked for this day');
   });
 });

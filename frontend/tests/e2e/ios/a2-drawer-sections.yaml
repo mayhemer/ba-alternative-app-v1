@@ -33,7 +33,7 @@ appId: cz.janbambas.ba
 - runFlow:
     file: common/open-section.yaml
     env: { SECTION: "My plan" }
-- assertVisible: "Nothing planned for this day"
+- assertVisible: "Nothing picked for this day"
 - runFlow:
     file: common/open-section.yaml
     env: { SECTION: "Settings" }

@@ -28,7 +28,7 @@ import type { DbArtist, DbEvent, DbStage } from '../../types/backend';
 // its size and texts. These cases check the whole list.
 //
 // Dimensions, and the corner cases tested for each:
-//   filter   — All sets; Must-see and Maybe; Must-see only (the default); Only
+//   filter   — All sets; Must-see and Maybe (the app's default); Must-see only (these cases' default); Only
 //              conflicts
 //   data     — Must-sees only; a Maybe between Must-sees; a Maybe overlapping a
 //              Must-see; a Maybe ending after a clash group (shortens the gap
@@ -160,6 +160,12 @@ const ALL: Spec[] = [
   ['35', 'Saturday opener', 's1', at(9, '12:00'), at(9, '12:40'), 'none'],
   ['36', 'Saturday must', 's2', at(9, '14:00'), at(9, '14:40'), 'will_go'],
   ['37', 'Sunday band', 's1', at(10, '14:00'), at(10, '14:40'), 'none'],
+];
+
+/** No picks at all: a set not picked and one marked "don't go", both on Thursday. */
+const NO_PICKS: Spec[] = [
+  ['40', 'Unpicked band', 's1', at(7, '14:00'), at(7, '14:40'), 'none'],
+  ['41', 'Skipped band', 's2', at(7, '16:00'), at(7, '16:40'), 'dont_go'],
 ];
 
 type Options = { day: number; now: number; filter: 'all' | 'maybe' | 'must' | 'conflicts'; festival: boolean };
@@ -390,7 +396,7 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
     'cap start', 'maybe Only maybe — upcoming', 'cap end',
   ]],
   ['only Maybes, hidden: an empty day', MAYBE_ONLY, { now: at(7, '11:00') }, [
-    'empty "Nothing planned for this day"',
+    'empty "The filter shows only your picks. Pick artists, or change the filter"',
   ]],
   ['only Maybes, shown, after the last one: the end cap takes the arrow without a Must-see', MAYBE_ONLY, { now: at(7, '16:00'), filter: 'maybe' }, [
     'cap start', 'maybe Only maybe — past', 'cap end now',
@@ -519,7 +525,7 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
     'cap start', 'unpicked Sunday band — upcoming', 'cap end',
   ]],
   ['Must-see only: the unpicked sets are not listed', ALL, { day: SUN, now: at(10, '11:00') }, [
-    'empty "Nothing planned for this day"',
+    'empty "The filter shows only your picks. Pick artists, or change the filter"',
   ]],
 
   // Where a clash group sits
@@ -566,7 +572,7 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
     'cap start', ...MUSTS_DONE, 'cap end',
   ]],
   ['a day with nothing planned', DAY, { day: SAT, now: at(7, '12:00') }, [
-    'empty "Nothing planned for this day"',
+    'empty "The filter shows only your picks. Pick artists, or change the filter"',
   ]],
 
   // Outside the festival
@@ -575,6 +581,23 @@ const CASES: [name: string, data: Spec[], opts: Partial<Options>, expected: stri
   ]],
   ['after the festival: read as before it', DAY, { now: at(12, '12:00'), festival: false, filter: 'maybe' }, [
     'cap start', ...WITH_MAYBES_AHEAD, 'cap end',
+  ]],
+
+  // No picks at all ("don't go" is not a pick): the same as a day without picks
+  ['no picks, Must-see only: nothing picked, with the ways out', NO_PICKS, { now: at(7, '11:00') }, [
+    'empty "The filter shows only your picks. Pick artists, or change the filter"',
+  ]],
+  ['no picks, Must-see and Maybe: the same', NO_PICKS, { now: at(7, '11:00'), filter: 'maybe' }, [
+    'empty "The filter shows only your picks. Pick artists, or change the filter"',
+  ]],
+  ['no picks, Only conflicts: no conflicts', NO_PICKS, { now: at(7, '11:00'), filter: 'conflicts' }, [
+    'empty "No conflicts on this day"',
+  ]],
+  ['no picks, All sets: the unpicked and "don\'t go" sets listed', NO_PICKS, { now: at(7, '11:00'), filter: 'all' }, [
+    'cap start', 'unpicked Unpicked band — upcoming', 'gap "1 h 20"', 'don\'t go Skipped band — upcoming', 'cap end',
+  ]],
+  ['All sets, on a day without sets: nothing planned', NO_PICKS, { day: FRI, now: at(7, '11:00'), filter: 'all' }, [
+    'empty "Nothing planned for this day"',
   ]],
 ];
 

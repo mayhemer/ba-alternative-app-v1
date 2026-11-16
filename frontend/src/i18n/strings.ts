@@ -53,12 +53,17 @@ const en = {
     conflictsLabel: (count: number): string => `${count} ${count === 1 ? 'conflict' : 'conflicts'}`,
   },
 
-  /** A pick's name: the star selector, the feedback after a star press. */
+  /**
+   * A pick's name: the star selector, the feedback after a star press. In the
+   * user's own words, first person; the internal names (Must-see, Maybe, don't
+   * go) never reach the user. At most about 18 characters: the selector's name
+   * box is 182 pt at 13 pt bold, with the tick.
+   */
   interest: {
     none: 'Not marked',
-    maybe: 'Maybe',
-    will_go: 'Must see!',
-    dont_go: 'Don\'t go',
+    maybe: 'Maybe I\'ll go',
+    will_go: 'I must see this!',
+    dont_go: 'I\'ll skip this',
   },
 
   starButton: {
@@ -92,15 +97,31 @@ const en = {
   myPlanScreen: {
     empty: 'Nothing planned for this day',
     emptyConflicts: 'No conflicts on this day',
+    /**
+     * An empty day under a filter of picks: a title, the intro on a line of
+     * its own, then one sentence read in order: pickArtists (the link to the
+     * artist list), pickArtistsRest,
+     * changeFilter (the link to the filter panel, followed by the filter
+     * button's glyph, which ends the sentence: a full stop after it floats).
+     */
+    nothingPicked: {
+      title: 'Nothing picked for this day',
+      intro: 'The filter shows only your picks.',
+      pickArtists: 'Pick artists',
+      pickArtistsRest: ', or ',
+      changeFilter: 'change the filter',
+    },
   },
 
   planFilter: {
     /** The top-bar chip that opens the panel. */
     chip: 'Filters',
+    /** The panel's heading over the filters. */
+    heading: 'Filter',
     close: 'Close',
     all: 'All sets',
-    maybe: 'Must-see and Maybe',
-    must: 'Must-see only',
+    maybe: 'All my picks',
+    must: 'Only what I must see',
     conflicts: 'Only conflicts',
   },
 
@@ -113,7 +134,7 @@ const en = {
     /** Android: before the next Must-see's name in a break, "NEXT:". */
     nextShort: 'NEXT',
     /** iOS: the day's last Must-see is over. */
-    over: 'Today\'s Must-sees are over',
+    over: 'Today\'s plan is over',
   },
 
   artistDetail: {
@@ -255,9 +276,9 @@ const cs: Strings = {
 
   interest: {
     none: 'Neoznačeno',
-    maybe: 'Možná',
-    will_go: 'Musím vidět!',
-    dont_go: 'Nejdu',
+    maybe: 'Možná se podívám',
+    will_go: 'Tohle chci vidět!',
+    dont_go: 'Tohle vynechám',
   },
 
   starButton: {
@@ -291,14 +312,22 @@ const cs: Strings = {
   myPlanScreen: {
     empty: 'Na tento den nic v plánu',
     emptyConflicts: 'V tento den žádné konflikty',
+    nothingPicked: {
+      title: 'Na tento den nemáte nic vybráno',
+      intro: 'Filtr ukazuje jen váš výběr.',
+      pickArtists: 'Vyberte kapely',
+      pickArtistsRest: ', nebo ',
+      changeFilter: 'změňte filtr',
+    },
   },
 
   planFilter: {
     chip: 'Filtry',
+    heading: 'Filtr',
     close: 'Zavřít',
     all: 'Všechna vystoupení',
-    maybe: 'Musím vidět a Možná',
-    must: 'Jen Musím vidět',
+    maybe: 'Vše vybrané',
+    must: 'Jen co musím vidět',
     conflicts: 'Jen konflikty',
   },
 

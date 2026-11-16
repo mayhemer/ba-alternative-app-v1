@@ -18,9 +18,9 @@ appId: cz.janbambas.ba
 # The sheet's title is the bare name; the list row behind has the longer label.
 - tapOn: { text: "Toggle interest", rightOf: "3 INCHES OF BLOOD" }
 # One press is "Maybe" and opens the selector; "Must see!" is chosen in it.
-- assertVisible: { text: "Maybe", selected: true }
-- tapOn: "Must see!"
-- assertVisible: { text: "Must see!", selected: true }
+- assertVisible: { text: "Maybe I'll go", selected: true }
+- tapOn: "I must see this!"
+- assertVisible: { text: "I must see this!", selected: true }
 # The selector closes by itself 2.5 s after the last tap. The sheet stays open:
 # the next scenario starts with a relaunch.
 - extendedWaitUntil:

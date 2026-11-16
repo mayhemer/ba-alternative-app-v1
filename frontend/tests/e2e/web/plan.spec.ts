@@ -22,7 +22,7 @@ async function mustSee(page: Page, query: string): Promise<void> {
   // The sheet's star is the last one in the tree. One press is Maybe and opens
   // the selector; Must-see is picked in it.
   await page.getByLabel('Toggle interest').filter({ visible: true }).last().click();
-  await page.getByTestId('star-selector').getByLabel('Must see!', { exact: true }).click();
+  await page.getByTestId('star-selector').getByLabel('I must see this!', { exact: true }).click();
   await page.getByText('✕', { exact: true }).filter({ visible: true }).first().click();
   await closeSearch(page);
 }
@@ -101,7 +101,7 @@ test('switches days and filters to conflicts only', async ({ appPage }) => {
 
   // Another day: nothing picked there.
   await appPage.getByText('Thu', { exact: true }).click();
-  await expect(appPage.getByText('Nothing planned for this day')).toBeVisible();
+  await expect(appPage.getByText('Nothing picked for this day')).toBeVisible();
   await appPage.getByText('Wed', { exact: true }).click();
 
   // A filter button applies and closes the panel itself.
@@ -217,11 +217,11 @@ test('on My plan showing another day, the now pill goes to today at now, not the
   await pill.click();
   await expect(appPage.getByTestId('plan-clash-bar').first()).toBeVisible({ timeout: 20_000 });
   await appPage.getByText('Thu', { exact: true }).filter({ visible: true }).click();
-  await expect(appPage.getByText('Nothing planned for this day')).toBeVisible();
+  await expect(appPage.getByText('Nothing picked for this day')).toBeVisible();
 
   // Thursday is not today: My plan again, back on Wednesday with the live set.
   await pill.click();
   await expect(appPage.getByTestId('plan-clash-bar').first()).toBeVisible();
-  await expect(appPage.getByText('Nothing planned for this day')).toHaveCount(0);
+  await expect(appPage.getByText('Nothing picked for this day')).toHaveCount(0);
   await expect(appPage.getByTestId('timeline-scroll-x').filter({ visible: true })).toHaveCount(0);
 });

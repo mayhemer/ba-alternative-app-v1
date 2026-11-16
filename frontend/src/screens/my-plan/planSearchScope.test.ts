@@ -45,7 +45,7 @@ describe('planSearchScope', () => {
   it('widens to the first filter that lists a set, and says which', () => {
     const scope = planSearchScope(inputs());
     expect(placeResult(scope, ref('maybe'))).toEqual({ section: 'here', view: 1 });
-    expect(scope.views[1].tag).toBe('Filter → Must-see and Maybe');
+    expect(scope.views[1].tag).toBe('Filter → All my picks');
     expect(placeResult(scope, ref('band'))).toEqual({ section: 'here', view: 2 });
     expect(scope.views[2].tag).toBe('Filter → All sets');
   });
@@ -59,7 +59,7 @@ describe('planSearchScope', () => {
     const scope = planSearchScope(inputs({ level: 'conflicts' }));
     expect(placeResult(scope, ref('clash'))).toEqual({ section: 'here', view: 0 });
     expect(placeResult(scope, ref('must'))).toEqual({ section: 'here', view: 1 });
-    expect(scope.views[1].tag).toBe('Filter → Must-see only');
+    expect(scope.views[1].tag).toBe('Filter → Only what I must see');
   });
 
   it('places what no filter lists by where it is', () => {

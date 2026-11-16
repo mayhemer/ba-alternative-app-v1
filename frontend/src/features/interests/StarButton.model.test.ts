@@ -1,5 +1,6 @@
 import { getFeedbackLabel, STAR_COLUMN_RESERVE, starGlyphModel } from './StarButton.model';
 import { colors } from '../../styling/tokens';
+import { setLanguageChoice } from '../../i18n/language';
 
 // ── The interest star, as a model ─────────────────────────────────────────────
 //
@@ -38,7 +39,16 @@ describe('starGlyphModel', () => {
 
 describe('the star\'s labels and reach', () => {
   it('names each status', () => {
-    expect(['none', 'maybe', 'will_go', 'dont_go'].map((s) => getFeedbackLabel(s as 'none'))).toEqual(['Not marked', 'Maybe', 'Must see!', "Don't go"]);
+    expect(['none', 'maybe', 'will_go', 'dont_go'].map((s) => getFeedbackLabel(s as 'none'))).toEqual(['Not marked', "Maybe I'll go", 'I must see this!', "I'll skip this"]);
+  });
+
+  it('names each status in Czech', () => {
+    setLanguageChoice('cs');
+    try {
+      expect(['none', 'maybe', 'will_go', 'dont_go'].map((s) => getFeedbackLabel(s as 'none'))).toEqual(['Neoznačeno', 'Možná se podívám', 'Tohle chci vidět!', 'Tohle vynechám']);
+    } finally {
+      setLanguageChoice('system');
+    }
   });
 
   it('keeps overlays 83 pt from the column\'s edge: the sheet star with its slop and the web ✕', () => {

@@ -25,6 +25,8 @@ import { planSearchScope } from './planSearchScope';
 import { PlanSetRow } from './PlanSetRow';
 import { PlanCap } from './PlanCap';
 import { PlanEmpty } from './PlanEmpty';
+import type { PlanEmptyAction } from './PlanEmpty.model';
+import { navigationRef } from '../../navigation/navigationRef';
 import { PlanGap } from './PlanGap';
 import { PlanSpacer } from './PlanSpacer';
 import { PlanFilterChip } from './filter/PlanFilterChip';
@@ -149,6 +151,15 @@ export function MyPlanScreen() {
   const handleConflict = useCallback((event: DbEvent): void => {
     openConflict(event);
   }, [openConflict]);
+
+  // The empty day's links: the artist list, or the filter panel (which picks no filter itself).
+  const handleEmptyAction = useCallback((action: PlanEmptyAction): void => {
+    if (action === 'artists') {
+      navigationRef.navigate('ArtistList');
+    } else {
+      openPanel();
+    }
+  }, [openPanel]);
 
   // ── Scroll: landing, "now" requests, per-day memory ────────────────────────
 
@@ -288,11 +299,11 @@ export function MyPlanScreen() {
         content = <PlanSpacer item={item} onPressConflict={handleConflict} />;
         break;
       case 'empty':
-        content = <PlanEmpty item={item} />;
+        content = <PlanEmpty item={item} onAction={handleEmptyAction} />;
         break;
     }
     return <View style={{ height: item.height + PLAN_LAYOUT.itemSpacing }}>{content}</View>;
-  }, [handleArtist, handleConflict, rowColors]);
+  }, [handleArtist, handleConflict, handleEmptyAction, rowColors]);
 
   const getItemLayout = useCallback((_: ArrayLike<PlanItem> | null | undefined, index: number) => ({
     length: items[index].height + PLAN_LAYOUT.itemSpacing,

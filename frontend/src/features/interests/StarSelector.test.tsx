@@ -91,7 +91,7 @@ it('turns the pick one step and opens beside the star, naming the new state', as
 
   expect(status).toBe('maybe');
   expect(selector()).toBeTruthy();
-  expect(info().getByText('Maybe')).toBeTruthy();
+  expect(info().getByText("Maybe I'll go")).toBeTruthy();
 });
 
 it('confirms the change with a tick', async () => {
@@ -121,8 +121,8 @@ it('marks the current state among the four', async () => {
   await pressStar();
   const sel = within(screen.getByTestId('star-selector'));
 
-  expect(sel.getByLabelText('Maybe').props.accessibilityState).toMatchObject({ selected: true });
-  for (const other of ['Not marked', 'Must see!', "Don't go"]) {
+  expect(sel.getByLabelText("Maybe I'll go").props.accessibilityState).toMatchObject({ selected: true });
+  for (const other of ['Not marked', 'I must see this!', "I'll skip this"]) {
     expect(sel.getByLabelText(other).props.accessibilityState).toMatchObject({ selected: false });
   }
 });
@@ -130,10 +130,10 @@ it('marks the current state among the four', async () => {
 it('sets the state tapped in it, skipping the ones between', async () => {
   await pressStar();
 
-  await act(async () => { fireEvent.press(screen.getByLabelText("Don't go")); });
+  await act(async () => { fireEvent.press(screen.getByLabelText("I'll skip this")); });
 
   expect(status).toBe('dont_go');
-  expect(info().getByText("Don't go")).toBeTruthy();
+  expect(info().getByText("I'll skip this")).toBeTruthy();
 });
 
 it('leaves the star to the star: it draws no star of its own', async () => {
@@ -152,7 +152,7 @@ it('turns the pick again on another press of its star, staying the same selector
 
   expect(status).toBe('will_go');
   expect(opened!.id).toBe(first);
-  expect(info().getByText('Must see!')).toBeTruthy();
+  expect(info().getByText('I must see this!')).toBeTruthy();
 });
 
 it('opens afresh, from the state before, for another artist\'s star', async () => {
@@ -193,7 +193,7 @@ it('closes by itself 2.5 s after the last tap', async () => {
   expect(selector()).toBeTruthy();
 
   // A tap restarts the wait.
-  await act(async () => { fireEvent.press(screen.getByLabelText('Must see!')); });
+  await act(async () => { fireEvent.press(screen.getByLabelText('I must see this!')); });
   await act(async () => { jest.advanceTimersByTime(2400); });
   expect(selector()).toBeTruthy();
 
