@@ -2,4 +2,5 @@
 *.d.ts
 
 !jest.config.js
-!jest-dynalite-config.js
+!jest-dynamodb-config.js
+!db-table-schema.js
