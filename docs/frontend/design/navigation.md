@@ -61,10 +61,9 @@ timeline's vertical scroller, My plan's list), through `ui/PullPreview` (`usePul
     too, its avatar a disc) and "My schedule" for the session, every text, icon and the outline in
     `colors.skeleton`, a brighter grey than the filter preview's. It is taller than 84 pt, so armed it
     shows its top.
-- **Android**: the content does not move past its top, so there is nothing to draw, and the
-  platform's own pull indicator is a refresh spinner, which would promise a reload. Its
-  pull-to-refresh control carries the gesture invisibly (a transparent spinner, never refreshing),
-  opening the panel on letting go past its own distance.
+- **Android**: no pull; the chips are the way in. The content does not move past its top, so there
+  is no gap for a preview, and the platform's pull-to-refresh control, once used to carry the
+  gesture, drew its spinner black on the dark theme, nearly invisible, and promised a reload.
 - **Web**: no pull (react-native-web has no gesture for it); the chips are the way in.
 
 ## Back history

@@ -7,7 +7,7 @@ import { BaseTimelineScreen } from './BaseTimelineScreen';
 import { DaySwitcher } from './DaySwitcher';
 import { PerfProviders } from '../../../tests/setup/PerfProviders';
 import { useLens, useLensPanel } from '../../features/social/LensContext';
-import { pullPastTop } from '../../../tests/setup/pullPastTop';
+import { itPullsOnIos, pullPastTop } from '../../../tests/setup/pullPastTop';
 import { useInterestCycle, useInterestStatus } from '../../features/interests/InterestContext';
 import { rendersSinceReset, resetRenders } from '../../../tests/setup/countRenders';
 import { useTimelineFilter } from './TimelineFilterContext';
@@ -916,7 +916,7 @@ describe('what a pick renders first', () => {
 // ── Pulled down past its top ──────────────────────────────────────────────────
 //
 // A drag down from the top of the lanes opens the lens panel, as the lens chip
-// in the top bar does.
+// in the top bar does; on iOS only (ui/PullPreview).
 
 describe('pulled down past its top', () => {
   let lensPanelOpen = false;
@@ -926,7 +926,7 @@ describe('pulled down past its top', () => {
     return null;
   }
 
-  it('opens the lens panel', async () => {
+  itPullsOnIos('opens the lens panel', async () => {
     setSelectedDay('pull', WED);
     await render(
       <PerfProviders>

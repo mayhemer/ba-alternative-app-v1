@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useRef, useState, useSyncExternalStore } fro
 import {
   Animated,
   Platform,
-  RefreshControl,
   View,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
@@ -25,10 +24,10 @@ import { OVERLAY_PANEL_FADE_IN_MS } from '../styling/tokens';
 //   has faded in over it (OVERLAY_PANEL_FADE_IN_MS, ui/PanelFadeIn), so the
 //   one turns into the other. Let go before, it goes at once. A fling bouncing
 //   off the top, with no finger on it, shows nothing.
-// - Android: the content does not move past its top, so there is nothing to
-//   draw. The platform's pull-to-refresh control does the gesture, opening on
-//   letting go past its own distance; its spinner is transparent and it never
-//   refreshes.
+// - Android: no pull. The content does not move past its top, so there is no
+//   gap to draw a preview in, and the platform's pull-to-refresh control (tried
+//   for the gesture) draws its own indicator, which could not be hidden on a
+//   dark theme.
 // - Web: no pull (react-native-web has no gesture for it, and wraps a scroller
 //   given a control in an extra view).
 
@@ -43,7 +42,6 @@ export type OwnScrollProps = {
 };
 
 export type PullScrollProps = OwnScrollProps & {
-  refreshControl?: React.ReactElement;
   alwaysBounceVertical?: boolean;
 };
 
@@ -58,8 +56,6 @@ const WINDOW = 1000;
 
 /** A scroll event per frame, so the preview follows the finger. */
 const FRAME_THROTTLE = 16;
-const HIDDEN = 'transparent';
-const HIDDEN_COLORS = [HIDDEN];
 
 // ── The pull's state, outside React ───────────────────────────────────────────
 //
@@ -166,14 +162,6 @@ export function usePullPastTop(
 
   const scrollProps = useMemo((): PullScrollProps => {
     const passed = { onScroll, onScrollBeginDrag, onScrollEndDrag, scrollEventThrottle };
-    if (Platform.OS === 'android') {
-      return {
-        ...passed,
-        refreshControl: (
-          <RefreshControl refreshing={false} onRefresh={onPull} tintColor={HIDDEN} colors={HIDDEN_COLORS} progressBackgroundColor={HIDDEN} />
-        ),
-      };
-    }
     if (Platform.OS !== 'ios') {
       return passed;
     }

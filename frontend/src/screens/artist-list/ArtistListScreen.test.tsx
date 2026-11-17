@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ArtistListScreen } from './ArtistListScreen';
 import { PerfProviders } from '../../../tests/setup/PerfProviders';
 import { useLens, useLensPanel } from '../../features/social/LensContext';
-import { pullPastTop } from '../../../tests/setup/pullPastTop';
+import { itPullsOnIos, pullPastTop } from '../../../tests/setup/pullPastTop';
 import { setLensScope } from '../../store/uiStatePersistence';
 import { DEFAULT_SCOPE } from '../../lib/interestUtils';
 import { createDataCollector, hydrateInterests, populateCache, setInterest } from '../../cache/cacheService';
@@ -239,7 +239,7 @@ describe('the list reacts', () => {
 // ── Pulled down past its top ──────────────────────────────────────────────────
 //
 // A drag down from the top of the list opens the lens panel, as the lens chip
-// in the top bar does.
+// in the top bar does; on iOS only (ui/PullPreview).
 
 describe('pulled down past its top', () => {
   let lensPanelOpen = false;
@@ -249,7 +249,7 @@ describe('pulled down past its top', () => {
     return null;
   }
 
-  it('opens the lens panel', async () => {
+  itPullsOnIos('opens the lens panel', async () => {
     await render(<PerfProviders><><LensPanelProbe /><ArtistListScreen /></></PerfProviders>);
     expect(lensPanelOpen).toBe(false);
     await pullPastTop('artist-list');

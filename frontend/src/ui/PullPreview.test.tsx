@@ -7,9 +7,8 @@ import { usePullPastTop, type PullPreview } from './PullPreview';
 //
 // On iOS the content follows the finger past its top, and a preview of the
 // panel shows in the gap while the finger drags (PullPreview.model); from
-// 84 pt it is armed, and letting go then opens the panel, once. On Android
-// the platform's pull-to-refresh control does it, its spinner hidden, with no
-// preview; web has no pull.
+// 84 pt it is armed, and letting go then opens the panel, once. Android and
+// web have no pull: the scroller keeps its own handlers and gets no control.
 //
 // Dimensions: the platform (iOS, Android: the suite runs once per preset, and
 // each case runs on its own; web renders no .test.tsx, see jest.config.ts); the
@@ -189,13 +188,13 @@ onIos('on iOS', () => {
 });
 
 onAndroid('on Android', () => {
-  it('opens through the platform\'s pull control, which opens on letting go, with no preview', async () => {
+  it('has no pull: no refresh control, and pulling past the top opens nothing', async () => {
     await render(<Harness />);
-    const control = scroller().props.refreshControl;
-    expect(control.props.refreshing).toBe(false);
-    expect(control.props.tintColor).toBe('transparent');
-    await act(async () => { control.props.onRefresh(); });
-    expect(pulls).toBe(1);
+    expect(scroller().props.refreshControl).toBeUndefined();
+    await beginDrag();
+    await scrollTo(-90);
+    await release(-90);
+    expect(pulls).toBe(0);
     expect(preview()).toBeNull();
   });
 
