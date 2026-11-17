@@ -2,12 +2,21 @@
 // Values live in tokens.js so tailwind.config.js can require() them without
 // a TypeScript transpilation step. TypeScript infers the shape via allowJs.
 
+import { Platform, type TextStyle } from 'react-native';
 import { colors as imported_colors } from './tokens.js';
 
 export const colors = { ...imported_colors } as any;
 export type ColorToken = keyof typeof colors;
 
 export const MAX_CONTENT_WIDTH = 700;
+
+/**
+ * For a text field whose own frame marks focus (the search field, my note's
+ * editor): no browser focus ring inside it. Chrome draws that ring with
+ * outline-style auto, which ignores outline-width; React Native's types have no
+ * 'none', which react-native-web passes through.
+ */
+export const NO_FOCUS_RING = Platform.OS === 'web' ? ({ outlineStyle: 'none' } as unknown as TextStyle) : null;
 
 // The drop shadow of what floats over the screen (the feedback toast, the star
 // selector), plus a dark ring just outside its light border that keeps the edge

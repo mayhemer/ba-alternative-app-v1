@@ -12,7 +12,6 @@ import {
   type TextInputInstance,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
-  type TextStyle,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -41,6 +40,7 @@ import type { InterestStatus } from '../../cache/cacheService';
 import type { DbArtist, DbEvent } from '../../types/backend';
 import {
   colors,
+  NO_FOCUS_RING,
   OVERLAY_BACKDROP,
   OVERLAY_PANEL_MARGIN,
   OVERLAY_PANEL_MAX_WIDTH,
@@ -71,12 +71,6 @@ const RISE = Platform.OS === 'ios'
   : { duration: 120, easing: Easing.out(Easing.quad) };
 type ScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
 const keyOf = (item: SearchListItem): string => item.key;
-/**
- * The field's accent frame marks it already, so no browser focus ring inside it.
- * Chrome draws that ring with outline-style auto, which ignores outline-width;
- * React Native's types have no 'none', which react-native-web passes through.
- */
-const NO_FOCUS_RING = Platform.OS === 'web' ? ({ outlineStyle: 'none' } as unknown as TextStyle) : null;
 
 export function SearchView() {
   const { isOpen } = useSearch();
