@@ -18,6 +18,19 @@ if (Platform.OS !== 'web') {
   require('react-native-reanimated').setUpTests();
 }
 
+// Gesture handler's supported Jest setup: its native module and host detector
+// mocked, so gestures can be driven from tests (react-native-gesture-handler/
+// jest-utils). Its UI-runtime install is swapped for the web one, a no-op: with
+// the Worklets web build above there is no UI runtime, and the native install
+// throws asking for one.
+// https://docs.swmansion.com/react-native-gesture-handler/docs/guides/testing
+require('react-native-gesture-handler/jestSetup');
+{
+  const rnghRoot = require('path').dirname(require.resolve('react-native-gesture-handler/package.json'));
+  const bindings = require('path').join(rnghRoot, 'lib/module/handlers/gestures/installUIRuntimeBindings');
+  jest.doMock(`${bindings}.js`, () => jest.requireActual(`${bindings}.web.js`));
+}
+
 // SecureStore backs the native half of tokenStorage. jest-expo auto-mocks the
 // module so calls do not crash, but that stub stores nothing — a write followed
 // by a read comes back empty, which would make every token test vacuous. This

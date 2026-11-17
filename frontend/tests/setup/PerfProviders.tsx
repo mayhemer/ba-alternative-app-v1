@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ScreenUIProvider } from '../../src/shell/ScreenUIContext';
 import { InterestProvider } from '../../src/features/interests/InterestContext';
@@ -69,17 +70,23 @@ export function FeatureProviders({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** Feature providers plus a navigator, for whole screens. */
+/**
+ * Feature providers plus a navigator, for whole screens. Under the gesture
+ * handler's root view, as AppShell puts every screen: a screen's gestures
+ * (GestureDetector) need one above them.
+ */
 export function PerfProviders({ children }: { children: React.ReactElement }) {
   return (
-    <NavigationContainer>
-      <FeatureProviders>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="subject">
-            {() => children}
-          </Stack.Screen>
-        </Stack.Navigator>
-      </FeatureProviders>
-    </NavigationContainer>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <NavigationContainer>
+        <FeatureProviders>
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="subject">
+              {() => children}
+            </Stack.Screen>
+          </Stack.Navigator>
+        </FeatureProviders>
+      </NavigationContainer>
+    </GestureHandlerRootView>
   );
 }
