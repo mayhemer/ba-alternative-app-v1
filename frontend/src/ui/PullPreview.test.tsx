@@ -111,7 +111,7 @@ onIos('on iOS', () => {
     expect(pulls).toBe(0);
   });
 
-  // The panel fades in over 250 ms (OVERLAY_PANEL_FADE_IN_MS) where the
+  // The panel fades in over 125 ms (OVERLAY_PANEL_FADE_IN_MS) where the
   // preview stands; the preview stays under it until it is in.
   it('opens once when let go armed, and the preview stays until the panel has faded in', async () => {
     jest.useFakeTimers();
@@ -126,7 +126,7 @@ onIos('on iOS', () => {
       await scrollTo(-40);
       await scrollTo(0);
       expect(pulls).toBe(1);
-      await act(async () => { jest.advanceTimersByTime(249); });
+      await act(async () => { jest.advanceTimersByTime(124); });
       expect(preview()).not.toBeNull();
       await act(async () => { jest.advanceTimersByTime(1); });
       expect(preview()).toBeNull();

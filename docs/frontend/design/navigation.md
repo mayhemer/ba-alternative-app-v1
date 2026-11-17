@@ -50,7 +50,7 @@ timeline's vertical scroller, My plan's list), through `ui/PullPreview` (`usePul
   (`ui/PanelSkeletonCard`): for the first 84 pt it comes down with the content's top edge; from there
   it stays where the panel opens, and a longer pull uncovers more of it, top first
   (`ui/PullPreview.model.ts`). At 84 pt it is armed: letting go opens the panel,
-  and the preview stays where it stands until the panel has faded in over it (250 ms). The card's border
+  and the preview stays where it stands until the panel has faded in over it (125 ms). The card's border
   stays as it is when armed; a reaction to arming has one place, `panelSkeletonBorder` in
   `ui/PanelSkeletonCard.model.ts`, for both previews. Pulled
   back before letting go, it does nothing. Only a finger's drag counts: a fling bouncing off the top

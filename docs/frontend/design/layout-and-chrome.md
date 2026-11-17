@@ -40,7 +40,7 @@ Separately, `MAX_CONTENT_WIDTH` (700) caps centred content so a desktop window s
 </View>
 ```
 
-The lens and filter panels fade in over 250 ms (`ui/PanelFadeIn`, `OVERLAY_PANEL_FADE_IN_MS`),
+The lens and filter panels fade in over 125 ms (`ui/PanelFadeIn`, `OVERLAY_PANEL_FADE_IN_MS`),
 backdrop, card and search field together, taking touches while fading; they close at once. The fade
 plays with the system's reduce-motion setting on too (`ReduceMotion.Never`): it moves nothing.
 
