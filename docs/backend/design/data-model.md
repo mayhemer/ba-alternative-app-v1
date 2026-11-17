@@ -58,6 +58,18 @@ status       string    (will_go | maybe | dont_go | none)   ← none = soft dele
 updatedAt    number    (Unix ms UTC)  ← used for merge conflict resolution
 ```
 
+### `userNotes`
+```
+PK: userId          (string)   — Cognito sub
+SK: slug#artistId   (string)   — composite, keyed like userInterests
+---
+text         string    (at most 1000 characters; '' = cleared, kept with its date)
+updatedAt    number    (Unix ms UTC, set by the server)  ← used for merge conflict resolution
+```
+My private note on an artist (table `ba-user-notes`). A table of its own, not a field on the
+interest record: `GET /share/:token` returns interest records whole, so a note there would reach
+friends, and the interest PUT replaces the whole item, so it would wipe the note.
+
 ### `shareTokens`
 ```
 PK: token    (string)   — opaque random token

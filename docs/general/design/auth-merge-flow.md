@@ -15,3 +15,7 @@
    d. Clear local anonymous data
 5. Future sessions: sync from DynamoDB, update on change
 ```
+
+My notes on artists follow the same flow per artist (`user:notes:v1:<slug>`, `{ text, updatedAt }`;
+table `userNotes`): local-first, the newer `updatedAt` wins, a cleared note is an empty text with
+its date. They are private: the share route never reads them.

@@ -11,6 +11,8 @@
 | GET | /user/:slug/schedule | Authenticated user's interests for this edition |
 | PUT | /user/:slug/schedule/:artistId | Set status for a band in this edition |
 | DELETE | /user/:slug/schedule/:artistId | Remove status for a band in this edition |
+| GET | /user/:slug/notes | Authenticated user's private notes for this edition, cleared ones (`text: ''`) included |
+| PUT | /user/:slug/notes/:artistId | Set my note on a band, `{ text }` of at most 1000 characters; `''` clears it (kept with its date, like an interest's soft delete) |
 | POST | /:slug/share | Generate a share token for this edition |
 | GET | /share/:token | Read-only personal schedule via token |
 | DELETE | /share/:token | Revoke share token (authenticated, must own token) |

@@ -60,6 +60,9 @@ function getCacheVersion(): number;
   `populateCache` completes.
 - The service also owns local interests (`getInterests` / `setInterest` /
   `mergeServerInterests`), so anonymous use is local-first and login merges rather than replaces.
+- My notes live beside it in `cache/notesCache.ts` (`hydrateNotes` / `setNote` /
+  `mergeServerNotes`), the same contract per artist: loaded before the providers mount, newer
+  `updatedAt` wins, a cleared note is an empty text with its date.
 
 ---
 
@@ -99,7 +102,7 @@ datasets; making first paint wait for them is what splitting them out was meant 
 | Adapter | Purpose |
 |---|---|
 | `baPublicApiAdapter` | Public festival data; origin `https://api.ba.janbambas.cz` |
-| `baUserApiAdapter` | Authenticated interests sync |
+| `baUserApiAdapter` | Authenticated interests and notes sync |
 | `baShareApiAdapter` | Share tokens and friends' schedules |
 
 - `validate` calls `GET /{slug}/validity` (no time segment — see above).

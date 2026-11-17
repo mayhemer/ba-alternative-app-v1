@@ -39,6 +39,7 @@ full account.
 
 ### Personal Schedule
 - Per-band status: **Will Go** | **Maybe**
+- A private note per band, on its artist sheet only (never shared)
 - Works fully in **anonymous mode** (stored locally, with `updatedAt` timestamp)
 - On login: local data **merges with cloud** — conflict resolved by latest `updatedAt` wins
 - Cross-device **sync** when logged in
