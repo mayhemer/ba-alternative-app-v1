@@ -2,6 +2,7 @@ import React from 'react';
 import { Platform, ScrollView, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { usePullPastTop, type PullPreview } from './PullPreview';
+import { PULL_PAST_TOP_ENABLED } from './PullPreview.model';
 
 // ── A pull down past a scroller's top ─────────────────────────────────────────
 //
@@ -13,7 +14,9 @@ import { usePullPastTop, type PullPreview } from './PullPreview';
 // Dimensions: the platform (iOS, Android: the suite runs once per preset, and
 // each case runs on its own; web renders no .test.tsx, see jest.config.ts); the
 // pull at release (under 84 pt, past it, past it and back under);
-// a drag or a fling's bounce; the scroller's own scroll handlers.
+// a drag or a fling's bounce; the scroller's own scroll handlers; the pull
+// switched on or off (PULL_PAST_TOP_ENABLED): off, no platform has it, and the
+// iOS cases wait for it to be on again.
 
 type Handler = (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
 
@@ -60,8 +63,29 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-const onIos = Platform.OS === 'ios' ? describe : describe.skip;
+const onIos = PULL_PAST_TOP_ENABLED && Platform.OS === 'ios' ? describe : describe.skip;
 const onAndroid = Platform.OS === 'android' ? describe : describe.skip;
+const switchedOff = PULL_PAST_TOP_ENABLED ? describe.skip : describe;
+
+switchedOff('while the pull is switched off', () => {
+  it('has no pull on any platform: no bounce, no preview, and pulling past the top opens nothing', async () => {
+    await render(<Harness />);
+    expect(scroller().props.alwaysBounceVertical).toBeUndefined();
+    await beginDrag();
+    await scrollTo(-120);
+    await release(-120);
+    expect(pulls).toBe(0);
+    expect(preview()).toBeNull();
+  });
+
+  it("leaves the scroller's own handlers and throttle as they are", async () => {
+    await render(<Harness />);
+    expect(scroller().props.scrollEventThrottle).toBe(100);
+    await beginDrag();
+    await scrollTo(-120);
+    expect(own.onScroll).toHaveBeenCalledTimes(1);
+  });
+});
 
 onIos('on iOS', () => {
   it('shows no preview before a drag', async () => {

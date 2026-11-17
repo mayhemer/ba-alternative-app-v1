@@ -34,6 +34,11 @@
 
 ## Pull past the top
 
+**Switched off** on every screen and platform since 2026-11-17 (`PULL_PAST_TOP_ENABLED` in
+`ui/PullPreview.model.ts`): the scrollers keep their own handlers, nothing bounces or previews, and
+the chips are the way into the panels. The code and its tests stay (the tests run while it is on);
+what follows is the pull when switched on.
+
 Pulling a screen's content down past its top and letting go opens the panel of the chip in its top
 bar: the lens panel on Artists, Program and Support Program, My plan's filter panel on My plan. It
 opens as a tap on the chip does, never closes it (the open panel covers the content), and is a no-op

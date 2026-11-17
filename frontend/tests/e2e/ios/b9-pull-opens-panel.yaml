@@ -9,6 +9,9 @@
 # Artists uses the same hook on a plain list, so it adds nothing here. Both
 # panels open with the search field (`search-entry`).
 appId: cz.janbambas.ba
+# Out of the run while the pull is switched off (config.yaml › excludeTags).
+tags:
+  - pull-switched-off
 ---
 - runFlow: common/relaunch.yaml
 # Program: a pull on the lanes, below the time ruler.

@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import { act, fireEvent, screen } from '@testing-library/react-native';
+import { PULL_PAST_TOP_ENABLED } from '../../src/ui/PullPreview.model';
 
 /** A scroll event with the content at `y` (negative: pulled down past its top). */
 function at(y: number) {
@@ -15,9 +16,10 @@ function at(y: number) {
 
 /**
  * A case about the pull: run on iOS only, the one platform with a pull
- * (ui/PullPreview); Android and web have none.
+ * (ui/PullPreview); Android and web have none. Skipped everywhere while the
+ * pull is switched off (PULL_PAST_TOP_ENABLED).
  */
-export const itPullsOnIos = Platform.OS === 'ios' ? it : it.skip;
+export const itPullsOnIos = PULL_PAST_TOP_ENABLED && Platform.OS === 'ios' ? it : it.skip;
 
 /**
  * Pulls the scroller with this testID down past its top and lets go, as a

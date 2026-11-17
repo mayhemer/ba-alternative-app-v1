@@ -8,6 +8,14 @@
 // what shows armed is what opens.
 
 /**
+ * Whether any scroller has the pull (ui/PullPreview › usePullPastTop). Off on
+ * every screen and platform since 2026-11-17; the code stays, so switching it
+ * back on is this line. Off, a scroller keeps its own handlers and gets no
+ * bounce or preview, and the screens' chips are the way into their panels.
+ */
+export const PULL_PAST_TOP_ENABLED = false;
+
+/**
  * How far a pull goes before letting go opens the panel. My plan's filter
  * preview is as tall (PlanFilterSkeleton.model), so it is all out just then.
  */

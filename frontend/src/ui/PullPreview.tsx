@@ -6,7 +6,7 @@ import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from 'react-native';
-import { isArmed, previewPosition } from './PullPreview.model';
+import { isArmed, previewPosition, PULL_PAST_TOP_ENABLED } from './PullPreview.model';
 import { OVERLAY_PANEL_FADE_IN_MS } from '../styling/tokens';
 
 // ── A pull down past a scroller's top, as one action ──────────────────────────
@@ -14,6 +14,9 @@ import { OVERLAY_PANEL_FADE_IN_MS } from '../styling/tokens';
 // usePullPastTop wires a scroller so that pulling its content down past the top
 // and letting go runs `onPull` (a screen opens its panel with it), and returns
 // the preview to draw over the scroller's top edge.
+//
+// Switched off on every platform (PULL_PAST_TOP_ENABLED): the scroller keeps
+// its own handlers and nothing is drawn. What follows is the pull when on.
 //
 // - iOS: the content follows the finger past its top (the scroller bounces).
 //   While the finger drags, a preview of the panel (the screen's skeleton of it)
@@ -53,6 +56,9 @@ export type PullPreview = React.ComponentType<{ armed: boolean }>;
 
 /** Taller than any panel's preview: the gap's cut moves within it. */
 const WINDOW = 1000;
+
+/** iOS only, while switched on. */
+const HAS_PULL = PULL_PAST_TOP_ENABLED && Platform.OS === 'ios';
 
 /** A scroll event per frame, so the preview follows the finger. */
 const FRAME_THROTTLE = 16;
@@ -162,7 +168,7 @@ export function usePullPastTop(
 
   const scrollProps = useMemo((): PullScrollProps => {
     const passed = { onScroll, onScrollBeginDrag, onScrollEndDrag, scrollEventThrottle };
-    if (Platform.OS !== 'ios') {
+    if (!HAS_PULL) {
       return passed;
     }
     const follow = (pull: number): void => {
@@ -210,7 +216,7 @@ export function usePullPastTop(
   }, [onPull, onScroll, onScrollBeginDrag, onScrollEndDrag, scrollEventThrottle, store, motion]);
 
   const previewElement = useMemo(
-    () => (Platform.OS === 'ios' ? <PullPreviewView store={store} motion={motion} Preview={Preview} /> : null),
+    () => (HAS_PULL ? <PullPreviewView store={store} motion={motion} Preview={Preview} /> : null),
     [store, motion, Preview],
   );
 

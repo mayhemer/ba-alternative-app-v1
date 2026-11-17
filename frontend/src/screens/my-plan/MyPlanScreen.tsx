@@ -313,7 +313,8 @@ export function MyPlanScreen() {
     listRef.current?.scrollToOffset({ offset: target, animated: false });
   }, [pinchCount]);
 
-  // A pull down past the list's top opens the filter panel, as its chip does.
+  // A pull down past the list's top opens the filter panel, as its chip does
+  // (switched off for now: ui/PullPreview.model › PULL_PAST_TOP_ENABLED).
   const { scrollProps, preview } = usePullPastTop(openPanel, {
     onScroll: handleScroll,
     onScrollEndDrag: persistScroll,

@@ -171,7 +171,8 @@ export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress, o
     scrollYRef.current = e.nativeEvent.contentOffset.y;
   }, []);
 
-  // A pull down past the lanes' top runs onPullPastTop (the lens panel).
+  // A pull down past the lanes' top runs onPullPastTop (the lens panel)
+  // (switched off for now: ui/PullPreview.model › PULL_PAST_TOP_ENABLED).
   const { scrollProps: verticalScrollProps, preview: pullPreviewElement } = usePullPastTop(onPullPastTop, {
     onScroll: onVerticalScroll,
     scrollEventThrottle: 100,

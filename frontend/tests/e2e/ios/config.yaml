@@ -20,6 +20,11 @@
 # rest of that launch may then fail after it, so read its first failure first.
 flows:
   - "*.yaml"
+# b9 (a pull past the top opens a panel) is out while the pull is switched off
+# (ui/PullPreview.model › PULL_PAST_TOP_ENABLED); back in by dropping this and
+# restoring it to the order below, after b8-support-lens.
+excludeTags:
+  - pull-switched-off
 executionOrder:
   continueOnFailure: true
   flowsOrder:
@@ -39,6 +44,5 @@ executionOrder:
     - b6-plan-search-jump
     - b7-add-friend
     - b8-support-lens
-    - b9-pull-opens-panel
     - c1-language
     - c2-edition-switch

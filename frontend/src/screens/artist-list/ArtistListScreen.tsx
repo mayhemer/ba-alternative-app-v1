@@ -126,7 +126,8 @@ export function ArtistListScreen() {
   const { bottomClearance } = useLayoutMode();
   const { close: closeStarSelector } = useStarSelectorActions();
   const ownScrollProps = useMemo(() => closeStarSelectorOnScroll(closeStarSelector), [closeStarSelector]);
-  // A pull down past the list's top opens the lens panel, as the lens chip does.
+  // A pull down past the list's top opens the lens panel, as the lens chip does
+  // (switched off for now: ui/PullPreview.model › PULL_PAST_TOP_ENABLED).
   const { open: openLensPanel } = useLensPanel();
   const { scrollProps, preview } = usePullPastTop(openLensPanel, ownScrollProps, LensPanelSkeleton);
 
