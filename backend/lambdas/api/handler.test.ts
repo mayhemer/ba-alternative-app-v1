@@ -8,13 +8,14 @@ jest.mock('./db', () => ({
   putItem: jest.fn(),
   deleteItem: jest.fn(),
   queryUserInterestsBySlug: jest.fn(),
+  queryUserNotesBySlug: jest.fn(),
   querySyncState: jest.fn(),
 }));
 
 import { handler } from './handler';
-import { getItem, putItem, queryAll, querySyncState, queryUserInterestsBySlug } from './db';
+import { getItem, putItem, queryAll, querySyncState, queryUserInterestsBySlug, queryUserNotesBySlug } from './db';
 import type {
-  DbArtist, DbArtistListItem, DbArtistBios, DbShareToken, DbSyncState, DbUserInterest,
+  DbArtist, DbArtistListItem, DbArtistBios, DbShareToken, DbSyncState, DbUserInterest, DbUserNote,
 } from '../../shared/types';
 
 const mockQueryAll       = queryAll       as jest.MockedFunction<typeof queryAll>;
@@ -22,6 +23,7 @@ const mockQuerySyncState = querySyncState as jest.MockedFunction<typeof querySyn
 const mockGetItem        = getItem        as jest.MockedFunction<typeof getItem>;
 const mockPutItem        = putItem        as jest.MockedFunction<typeof putItem>;
 const mockQueryInterests = queryUserInterestsBySlug as jest.MockedFunction<typeof queryUserInterestsBySlug>;
+const mockQueryNotes     = queryUserNotesBySlug as jest.MockedFunction<typeof queryUserNotesBySlug>;
 
 // ── Fixture data ──────────────────────────────────────────────────────────────
 
@@ -244,5 +246,86 @@ describe('GET /share/{token}', () => {
 
     expect(statusCode).toBe(200);
     expect(body).toEqual(expect.objectContaining({ slug: 'ba2025', interests }));
+  });
+});
+
+// ── My notes: /user/{slug}/notes ──────────────────────────────────────────────
+//
+// A note is private: it lives in a table of its own, which the share route
+// never reads. Clearing a note is a PUT of an empty text, kept as a dated record
+// so the clear wins the merge on the user's other devices.
+
+describe('GET /user/{slug}/notes', () => {
+  it('returns the caller\'s notes for the edition', async () => {
+    const notes: DbUserNote[] = [
+      { userId: 'user-1', slugArtistId: 'ba2025#42', text: 'Front left', updatedAt: 5 },
+    ];
+    mockQueryNotes.mockResolvedValue(notes);
+
+    const { statusCode, body } = await call('GET /user/{slug}/notes', { slug: 'ba2025' }, { sub: 'user-1' });
+
+    expect(statusCode).toBe(200);
+    expect(mockQueryNotes).toHaveBeenCalledWith(undefined, 'user-1', 'ba2025');
+    expect(body).toEqual(notes);
+  });
+});
+
+describe('PUT /user/{slug}/notes/{artistId}', () => {
+  const put = (text: unknown) => call(
+    'PUT /user/{slug}/notes/{artistId}',
+    { slug: 'ba2025', artistId: '42' },
+    { body: JSON.stringify({ text }), sub: 'user-1' },
+  );
+
+  it('stores the text under the caller and the edition\'s artist, stamped by the server', async () => {
+    jest.spyOn(Date, 'now').mockReturnValue(1234);
+
+    const { statusCode, body } = await put('Front left');
+
+    expect(statusCode).toBe(200);
+    expect(mockPutItem).toHaveBeenCalledWith(
+      undefined, // table name from env, not set here
+      { userId: 'user-1', slugArtistId: 'ba2025#42', text: 'Front left', updatedAt: 1234 },
+    );
+    expect(body).toEqual({ userId: 'user-1', slugArtistId: 'ba2025#42', text: 'Front left', updatedAt: 1234 });
+    jest.restoreAllMocks();
+  });
+
+  it('stores an empty text as a dated clear, not a removal', async () => {
+    const { statusCode } = await put('');
+
+    expect(statusCode).toBe(200);
+    expect(mockPutItem).toHaveBeenCalledWith(undefined, expect.objectContaining({ text: '' }));
+  });
+
+  it('accepts a text of exactly 1000 characters', async () => {
+    const { statusCode } = await put('x'.repeat(1000));
+
+    expect(statusCode).toBe(200);
+  });
+
+  it.each([
+    ['1001 characters', 'x'.repeat(1001)],
+    ['a number', 42],
+    ['no text', undefined],
+    ['null', null],
+  ])('rejects %s', async (_label, text) => {
+    const { statusCode } = await put(text);
+
+    expect(statusCode).toBe(400);
+    expect(mockPutItem).not.toHaveBeenCalled();
+  });
+});
+
+describe('notes stay private', () => {
+  it('a shared schedule never reads the notes', async () => {
+    const token: DbShareToken = { token: 't1', userId: 'user-1', slug: 'ba2025', createdAt: 1, label: 'Friend' };
+    mockGetItem.mockResolvedValue(token);
+    mockQueryInterests.mockResolvedValue([]);
+
+    const { body } = await call('GET /share/{token}', { token: 't1' });
+
+    expect(mockQueryNotes).not.toHaveBeenCalled();
+    expect(JSON.stringify(body)).not.toContain('text');
   });
 });

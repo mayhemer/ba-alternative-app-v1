@@ -6,7 +6,7 @@ import {
   PutCommand,
   DeleteCommand,
 } from '@aws-sdk/lib-dynamodb';
-import type { DbSyncState, DbUserInterest } from '../../shared/types';
+import type { DbSyncState, DbUserInterest, DbUserNote } from '../../shared/types';
 
 const client = new DynamoDBClient(
   process.env.MOCK_DYNAMODB_ENDPOINT
@@ -70,13 +70,33 @@ export async function deleteItem(tableName: string, key: Record<string, string>)
 // ── User interests ────────────────────────────────────────────────────────────
 
 // Returns all interests for a user in a specific festival edition.
-// Uses begins_with on the composite SK "slug#artistId".
 export async function queryUserInterestsBySlug(
   tableName: string,
   userId: string,
   slug: string,
 ): Promise<DbUserInterest[]> {
-  const items: DbUserInterest[] = [];
+  return queryUserItemsBySlug<DbUserInterest>(tableName, userId, slug);
+}
+
+// ── User notes ────────────────────────────────────────────────────────────────
+
+// Returns all notes for a user in a specific festival edition.
+export async function queryUserNotesBySlug(
+  tableName: string,
+  userId: string,
+  slug: string,
+): Promise<DbUserNote[]> {
+  return queryUserItemsBySlug<DbUserNote>(tableName, userId, slug);
+}
+
+// A user's items in one edition, from a table keyed userId + "slug#artistId".
+// Uses begins_with on the composite SK.
+async function queryUserItemsBySlug<T>(
+  tableName: string,
+  userId: string,
+  slug: string,
+): Promise<T[]> {
+  const items: T[] = [];
   let lastKey: Record<string, unknown> | undefined;
 
   do {
@@ -88,7 +108,7 @@ export async function queryUserInterestsBySlug(
         ExclusiveStartKey: lastKey,
       }),
     );
-    for (const item of result.Items ?? []) items.push(item as DbUserInterest);
+    for (const item of result.Items ?? []) items.push(item as T);
     lastKey = result.LastEvaluatedKey as Record<string, unknown> | undefined;
   } while (lastKey);
 

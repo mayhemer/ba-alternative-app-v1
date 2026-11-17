@@ -11,12 +11,17 @@ import {
   putItem,
   deleteItem,
   queryUserInterestsBySlug,
+  queryUserNotesBySlug,
   querySyncState,
 } from './db';
 import type {
   DbArtist, DbArtistListItem, DbArtistBios, DbCategory, DbStage, DbEvent,
-  DbUserInterest, DbShareToken,
+  DbUserInterest, DbUserNote, DbShareToken,
 } from '../../shared/types';
+
+// The longest note a user may keep; the app's editor stops at the same length
+// (frontend NOTE_MAX_LENGTH). Counted in UTF-16 code units, as both sides do.
+const NOTE_MAX_LENGTH = 1000;
 
 // ── Config (read lazily so tests can set process.env) ─────────────────────────
 
@@ -30,6 +35,7 @@ function getConfig() {
       categories:    env.CATEGORIES_TABLE,
       events:        env.EVENTS_TABLE,
       userInterests: env.USER_INTERESTS_TABLE,
+      userNotes:     env.USER_NOTES_TABLE,
       shareTokens:   env.SHARE_TOKENS_TABLE,
       syncState:     env.SYNC_STATE_TABLE,
     },
@@ -148,6 +154,30 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
         };
         await putItem(tables.userInterests, softDelete);
         return noContent();
+      }
+
+      // ── My notes ─────────────────────────────────────────────────────────
+      // Private: the share route never reads this table.
+
+      case 'GET /user/{slug}/notes':
+        return json(await queryUserNotesBySlug(tables.userNotes, userId(event), p.slug!));
+
+      // One route for writing and clearing: an empty text is a cleared note,
+      // stored with its date for the same reason as the interests' soft delete.
+      case 'PUT /user/{slug}/notes/{artistId}': {
+        const body = parseBody(event.body);
+        const text = body?.text;
+        if (typeof text !== 'string' || text.length > NOTE_MAX_LENGTH) {
+          return badRequest(`body.text must be a string of at most ${NOTE_MAX_LENGTH} characters`);
+        }
+        const note: DbUserNote = {
+          userId: userId(event),
+          slugArtistId: `${p.slug!}#${p.artistId!}`,
+          text,
+          updatedAt: Date.now(),
+        };
+        await putItem(tables.userNotes, note);
+        return json(note);
       }
 
       case 'POST /{slug}/share': {
