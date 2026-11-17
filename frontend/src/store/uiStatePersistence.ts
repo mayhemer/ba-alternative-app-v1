@@ -20,6 +20,7 @@ import { loadLanguageChoice } from '../i18n/languageSources';
 // ── Storage keys ──────────────────────────────────────────────────────────────
 
 const KEY_HIDDEN_CATS    = 'timeline:hiddenCategories';   // existing — JSON string[]
+const KEY_LANE_ORDER     = 'timeline:laneOrder';          // new      — Record<screenKey, categoryId[]>
 const KEY_SCROLL_POS     = 'timeline:scrollPositions:v2'; // existing — Record<screenKey, Record<dayStart, x>>
 const KEY_SELECTED_DAY   = 'timeline:selectedDayStart';   // new      — Record<screenKey, dayStart>
 const KEY_LENS_SCOPE     = 'lens:scope:v2';               // existing — LensScope, never a friend's (v2: level 'will_go', see storageMigration)
@@ -31,6 +32,7 @@ const WRITE_DEBOUNCE_MS = 300;
 
 export type ScrollPositions = Record<string, Record<string, number>>; // screenKey → dayStart → x
 export type SelectedDayMap  = Record<string, number>;                  // screenKey → dayStart
+export type LaneOrders      = Record<string, string[]>;                // screenKey → categoryIds, top first
 
 /** My plan's filter: All sets, Must-see and Maybe, Must-see only, Only conflicts. */
 export type PlanLevel = 'all' | 'maybe' | 'must' | 'conflicts';
@@ -43,6 +45,7 @@ const DEFAULT_PLAN_FILTERS: PlanFilters = { level: 'maybe' };
 
 type Snapshot = {
   hiddenCategories: string[];
+  laneOrder: LaneOrders;
   scrollPositions: ScrollPositions;
   selectedDayStart: SelectedDayMap;
   lensScope: LensScope;
@@ -64,6 +67,12 @@ const ENTRIES: { [K in UiStateKey]: Entry<K> } = {
     parse: (raw) => JSON.parse(raw) as string[],
     serialize: (value) => JSON.stringify(value),
     fallback: () => [],
+  },
+  laneOrder: {
+    storageKey: KEY_LANE_ORDER,
+    parse: (raw) => JSON.parse(raw) as LaneOrders,
+    serialize: (value) => JSON.stringify(value),
+    fallback: () => ({}),
   },
   scrollPositions: {
     storageKey: KEY_SCROLL_POS,
@@ -119,6 +128,7 @@ const KEYS = Object.keys(ENTRIES) as UiStateKey[];
 
 let snapshot: Snapshot = {
   hiddenCategories: ENTRIES.hiddenCategories.fallback(),
+  laneOrder: ENTRIES.laneOrder.fallback(),
   scrollPositions: ENTRIES.scrollPositions.fallback(),
   selectedDayStart: ENTRIES.selectedDayStart.fallback(),
   lensScope: ENTRIES.lensScope.fallback(),
@@ -200,6 +210,11 @@ function setUiState<K extends UiStateKey>(key: K, value: Snapshot[K]): void {
 
 export function setHiddenCategories(list: string[]): void {
   setUiState('hiddenCategories', list);
+}
+
+/** Remembers the order of a timeline screen's lanes (screens/timeline/order), top first. */
+export function setLaneOrder(screenKey: string, order: string[]): void {
+  setUiState('laneOrder', { ...snapshot.laneOrder, [screenKey]: order });
 }
 
 /**

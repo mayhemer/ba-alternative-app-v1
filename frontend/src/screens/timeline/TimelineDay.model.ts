@@ -6,6 +6,7 @@ import { isRemovedByLens, type LensScope } from '../../lib/interestUtils';
 import { categoryLaneModel, laneTitleModel, type CategoryLaneModel, type LaneSetInput, type LaneTitleModel } from '../../features/timeline/CategoryLane.model';
 import { RULER_HEIGHT } from '../../features/timeline/timelineLayout';
 import { DAY_DURATION_MS } from '../../utils/festivalTime';
+import { orderLanes } from './order/laneOrder';
 
 // ── One festival day of a timeline: which lanes, where ────────────────────────
 //
@@ -31,6 +32,8 @@ export type TimelineDayInputs = {
   /** The focused friend's picks, for a friend's lens. */
   friendInterests: Record<string, SharedInterestStatus> | undefined;
   hiddenCategories: ReadonlySet<string>;
+  /** The screen's saved lane order, top first (order/laneOrder); none: by category id. */
+  laneOrder?: readonly string[];
   conflictOverlaps: Map<string, ConflictOverlap[]>;
   /** Stack overlapping sets of a lane in rows (the Support Program). */
   stack: boolean;
@@ -39,7 +42,7 @@ export type TimelineDayInputs = {
 };
 
 export type TimelineDayModel = {
-  /** The shown lanes, in category order. */
+  /** The shown lanes, in the screen's lane order (order/laneOrder). */
   lanes: CategoryLaneModel[];
   titles: LaneTitleModel[];
   /** categoryId → where its strip starts, from the top of the lane stack. */
@@ -54,8 +57,10 @@ export type TimelineDayModel = {
   firstEventMs: number | undefined;
 };
 
+const NO_ORDER: readonly string[] = [];
+
 export function timelineDayModel(inputs: TimelineDayInputs): TimelineDayModel {
-  const { events, artists, categories, dayStart, filterArtist, scope, interests, friendInterests, hiddenCategories, conflictOverlaps, stack, overlayTitles } = inputs;
+  const { events, artists, categories, dayStart, filterArtist, scope, interests, friendInterests, hiddenCategories, laneOrder = NO_ORDER, conflictOverlaps, stack, overlayTitles } = inputs;
   const artistById = new Map(artists.map((a) => [a.artistId, a]));
   const byCategory = new Map<string, LaneSetInput[]>();
   let firstEventMs: number | undefined;
@@ -87,7 +92,7 @@ export function timelineDayModel(inputs: TimelineDayInputs): TimelineDayModel {
   const titles: LaneTitleModel[] = [];
   const tops: Record<string, number> = {};
   let y = 0;
-  const ordered = [...categories].sort((a, b) => parseInt(a.categoryId) - parseInt(b.categoryId));
+  const ordered = orderLanes(categories, laneOrder);
   for (const category of ordered) {
     const sets = byCategory.get(category.categoryId);
     if (sets === undefined || hiddenCategories.has(category.categoryId)) {

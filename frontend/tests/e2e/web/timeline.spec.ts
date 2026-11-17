@@ -320,3 +320,44 @@ test('a lane stacks only the sets the lens shows @layout', async ({ appPage }) =
     expect(title.top).toBeGreaterThanOrEqual(blockTop - 32 - 1);
   }
 });
+
+// ── The stage order ───────────────────────────────────────────────────────────
+// A long press on a lane's title opens the order panel; a drag of a row's handle
+// moves the lane. The drag is a real pointer drag, which the unit tests cannot
+// give (screens/timeline/order). Desktop only: in landscape a title sits under
+// the blocks, so a press on it may land on a set instead.
+
+test('a long press opens the stage order, and a dragged stage moves its lane', async ({ appPage }) => {
+  await ready(appPage);
+  await openSection(appPage, 'Program');
+  // Let the day land first: its first position is a deferred scrollTo on web,
+  // and a scroll during the press cancels it, as a pan does.
+  const scroller = scrollerX(appPage);
+  await expectScrolledTo(scroller, await reachable(scroller, defaultScrollX(FIRST_WED_SET.dateFrom, WED)));
+  const titleY = async (name: string): Promise<number> =>
+    (await scrollerY(appPage).getByText(name, { exact: true }).first().boundingBox())!.y;
+
+  const title = (await scrollerY(appPage).getByText('Marshall', { exact: true }).first().boundingBox())!;
+  await appPage.mouse.move(title.x + title.width / 2, title.y + title.height / 2);
+  await appPage.mouse.down();
+  await appPage.waitForTimeout(800);
+  await appPage.mouse.up();
+  await expect(appPage.getByText('Stage order', { exact: true })).toBeVisible();
+
+  // Two rows down (48 + 6 each): Marshall drops third.
+  const handle = (await appPage.getByLabel('Move Marshall').boundingBox())!;
+  const x = handle.x + handle.width / 2;
+  const y = handle.y + handle.height / 2;
+  await appPage.mouse.move(x, y);
+  await appPage.mouse.down();
+  await appPage.mouse.move(x, y + 108, { steps: 12 });
+  await appPage.mouse.up();
+  await expect.poll(() => appPage.evaluate(() => window.localStorage.getItem('timeline:laneOrder')))
+    .toBe(JSON.stringify({ timeline: ['2', '3', '1', '4', '5'] }));
+
+  await appPage.getByTestId('lane-order-close').click();
+  await expect(appPage.getByText('Stage order', { exact: true })).toHaveCount(0);
+  expect(await titleY('Sea Shepherd')).toBeLessThan(await titleY('Obscure'));
+  expect(await titleY('Obscure')).toBeLessThan(await titleY('Marshall'));
+  expect(await titleY('Marshall')).toBeLessThan(await titleY('KAL stage'));
+});

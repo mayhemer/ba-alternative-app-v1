@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import type { NativeScrollEvent, NativeSyntheticEvent, ScrollViewInstance } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -64,13 +64,15 @@ type Props = {
   day: TimelineDayModel;
   selectedDayStart: number;
   onBlockPress: (event: DbEvent, artist: DbArtist) => void;
+  /** A long press on the lanes, off the blocks: a lane's title or the empty space (the order panel). */
+  onLongPress: () => void;
   /** Runs when the lanes are pulled down past their top and let go (ui/PullPreview). */
   onPullPastTop: () => void;
   /** What that pull shows coming down: the panel it opens. */
   pullPreview: PullPreview;
 };
 
-export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress, onPullPastTop, pullPreview }: Props) {
+export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress, onLongPress, onPullPastTop, pullPreview }: Props) {
   const { lanes, titles, tops, canvasHeight, firstEventMs } = day;
   const [areaHeight, setAreaHeight] = useState(0);
   // The same measurement in two forms: a ref for the scroll-to-event centring,
@@ -405,7 +407,19 @@ export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress, o
                     BottomBar, and keeping this — the horizontal scroller's content —
                     at least as tall as the viewport, so that a horizontal drag below
                     the last lane still pans the timeline on a day with few lanes. */}
-                <View style={{ width: CANVAS_WIDTH, position: 'relative', transform: [{ translateX: -VIEW_OFFSET_X }], paddingBottom: Math.max(bottomClearance, areaHeight - canvasHeight)}}>
+                {/* Takes a long press anywhere a block does not: the lanes'
+                    titles (drawn beneath, they take no touches), their empty
+                    stretches and the space under the last lane. A block is a
+                    pressable of its own and keeps its touches. A pan cancels the
+                    press, so scrolling never opens anything. Not an accessible
+                    element: it would hide the blocks inside it from a screen
+                    reader. */}
+                <Pressable
+                  testID="timeline-canvas"
+                  accessible={false}
+                  onLongPress={onLongPress}
+                  style={{ width: CANVAS_WIDTH, position: 'relative', transform: [{ translateX: -VIEW_OFFSET_X }], paddingBottom: Math.max(bottomClearance, areaHeight - canvasHeight)}}
+                >
                   {lanes.map((lane) => {
                     const laneTop    = tops[lane.key];
                     const laneBottom = laneTop + lane.stripHeight + lane.height;
@@ -427,7 +441,7 @@ export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress, o
                       />
                     );
                   })}
-                </View>
+                </Pressable>
               </View>
             </Animated.ScrollView>
           </View>

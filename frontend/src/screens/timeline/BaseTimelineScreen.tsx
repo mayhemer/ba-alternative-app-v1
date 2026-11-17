@@ -1,5 +1,6 @@
 import { strings } from '../../i18n/strings';
 import React, { useCallback, useEffect, useMemo } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { LoadingScreen } from '../../ui/LoadingScreen';
 import type { DbArtist, DbEvent } from '../../types/backend';
 import { useTopBar, useBottomBar } from '../../shell/ScreenUIContext';
@@ -17,6 +18,7 @@ import { useDeferredInterests } from '../../features/interests/InterestContext';
 import { useSearchScope } from '../../features/search/SearchContext';
 import { useJumpToTimeline } from '../../navigation/useJumpToTimeline';
 import { timelineSearchScope } from './timelineSearchScope';
+import { useLaneOrderPanel } from './order/LaneOrderPanelContext';
 
 // ── Shared TopBar / BottomBar slot components ─────────────────────────────────
 
@@ -64,7 +66,7 @@ export function BaseTimelineScreen({ title, screenKey, BottomBarComponent, filte
   // context, so a sync that repopulates the cache re-derives everything below.
   const dayToShow = useShownDay(screenKey);
 
-  const day = useTimelineData({ dayStart: dayToShow, filterArtist, useSubRows });
+  const day = useTimelineData({ screenKey, dayStart: dayToShow, filterArtist, useSubRows });
 
   useTopBar({ title, RightComponent: TopBarRight });
   useBottomBar({ ContentComponent: BottomBarComponent });
@@ -95,6 +97,14 @@ export function BaseTimelineScreen({ title, screenKey, BottomBarComponent, filte
     openDetail(artist, isWide ? 'expanded' : 'collapsed');
   }, [openDetail, isWide]);
 
+  // A long press on the lanes (a title or the empty space) opens this screen's
+  // order panel; leaving the screen closes it, as it belongs to this timeline.
+  const { open: openLaneOrder, close: closeLaneOrder } = useLaneOrderPanel();
+  const handleLongPress = useCallback((): void => {
+    openLaneOrder(screenKey, filterArtist);
+  }, [openLaneOrder, screenKey, filterArtist]);
+  useFocusEffect(useCallback(() => closeLaneOrder, [closeLaneOrder]));
+
   // ── Render ──────────────────────────────────────────────────────────────────
 
   if (dayToShow === 0) {
@@ -107,6 +117,7 @@ export function BaseTimelineScreen({ title, screenKey, BottomBarComponent, filte
       day={day}
       selectedDayStart={dayToShow}
       onBlockPress={handleBlockPress}
+      onLongPress={handleLongPress}
       onPullPastTop={openLensPanel}
       pullPreview={LensPanelSkeleton}
     />

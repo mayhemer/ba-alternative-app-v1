@@ -8,6 +8,7 @@ import { MEASURE_OPTIONS } from '../../../tests/setup/perfOptions';
 import { useTimelineFilter } from './TimelineFilterContext';
 import { useLens } from '../../features/social/LensContext';
 import { setHiddenCategories, setLensScope } from '../../store/uiStatePersistence';
+import { setLaneOrder as saveLaneOrder } from '../../store/uiStatePersistence';
 import { DEFAULT_SCOPE, type LensScope } from '../../lib/interestUtils';
 import { createDataCollector, getFestivalDays, hydrateInterests, populateCache, setInterest } from '../../cache/cacheService';
 import { setCurrentTimeMs } from '../../utils/clock';
@@ -225,4 +226,36 @@ test('timeline: lens to My picks', async () => {
 
 test('support timeline: lens to My picks', async () => {
   await withPicks(() => measureChange(<SupportProgram />, () => { setScope({ kind: 'me', level: null }); }));
+});
+
+// ── Moving a lane in the order panel ──────────────────────────────────────────
+// Marshall below Sea Shepherd. Every run starts from the festival's order.
+
+let setLaneOrder: (screenKey: string, order: string[]) => void;
+
+function OrderControl() {
+  setLaneOrder = useTimelineFilter().setLaneOrder;
+  return null;
+}
+
+test('timeline: moving a lane', async () => {
+  await measureRenders(
+    <>
+      <OrderControl />
+      <TimelineScreen />
+    </>,
+    {
+      ...MEASURE_OPTIONS,
+      wrapper: PerfProviders,
+      beforeEach: async () => {
+        await everything();
+        saveLaneOrder('timeline', []);
+      },
+      scenario: async () => {
+        await settleWholeDay();
+        await act(async () => { setLaneOrder('timeline', ['2', '1', '3', '4', '5']); });
+        await settle();
+      },
+    },
+  );
 });

@@ -92,6 +92,7 @@ API, never AsyncStorage directly. In-memory snapshot updated synchronously, writ
 | Key | Contents |
 |---|---|
 | `timeline:hiddenCategories` | `string[]` |
+| `timeline:laneOrder` | per screenKey, categoryIds top first ([timeline.md](../timeline.md) *Stage and category order*) |
 | `timeline:scrollPositions:v2` | per screenKey, per day |
 | `timeline:selectedDayStart` | per screenKey |
 

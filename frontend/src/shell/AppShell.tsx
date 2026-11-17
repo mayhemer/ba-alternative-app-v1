@@ -14,6 +14,7 @@ import { StarSelector } from '../features/interests/StarSelector';
 import { useStarSelectorActions } from '../features/interests/StarSelectorContext';
 import { LensPanel } from '../features/social/LensPanel';
 import { PlanFilterPanel } from '../screens/my-plan/filter/PlanFilterPanel';
+import { LaneOrderPanel } from '../screens/timeline/order/LaneOrderPanel';
 import { SearchView } from '../features/search/SearchView';
 import { useShareLinkHandler } from '../navigation/useShareLinkHandler';
 import { useNowCardLinkHandler } from './useNowCardLinkHandler';
@@ -116,6 +117,8 @@ export function AppShell() {
           <LensPanel />
           {/* My plan's filter panel — the same kind of drop-down, in the same place */}
           <PlanFilterPanel />
+          {/* A timeline's stage / category order, opened by a long press on it */}
+          <LaneOrderPanel />
           {/* Search — over the content and the panels, under the top bar, which
               stays in sight and usable: its buttons close the search and still
               do their job (features/search/SearchView) */}

@@ -94,6 +94,21 @@ const en = {
     loading: 'Loading schedule…',
   },
 
+  /** The order panel, opened by a long press on a timeline (screens/timeline/order). */
+  laneOrder: {
+    /** The Program's lanes are stages. */
+    stageTitle: 'Stage order',
+    /** The Support Program's lanes are categories. */
+    categoryTitle: 'Category order',
+    /** The order holds on every festival day. */
+    everyDay: 'Every day',
+    close: 'Close',
+    /** A row's drag handle, spoken. */
+    move: (name: string): string => `Move ${name}`,
+    moveUp: 'Move up',
+    moveDown: 'Move down',
+  },
+
   myPlanScreen: {
     empty: 'Nothing planned for this day',
     emptyConflicts: 'No conflicts on this day',
@@ -307,6 +322,16 @@ const cs: Strings = {
 
   timelineScreen: {
     loading: 'Načítám program…',
+  },
+
+  laneOrder: {
+    stageTitle: 'Pořadí pódií',
+    categoryTitle: 'Pořadí kategorií',
+    everyDay: 'Všechny dny',
+    close: 'Zavřít',
+    move: (name: string): string => `Přesunout ${name}`,
+    moveUp: 'Posunout nahoru',
+    moveDown: 'Posunout dolů',
   },
 
   myPlanScreen: {

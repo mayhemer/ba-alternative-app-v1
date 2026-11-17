@@ -11,8 +11,8 @@
   and `BaseTimelineScreen`, and the `void cacheRevision` trick in `ConflictDetailSheet`.
 
 - Smaller open items: 
-`slugAdapter` is still a mockup; category **reorder** persistence was planned
-and never built (hiding is persisted); `AppContext` has a TODO to roll the default slug forward
+`slugAdapter` is still a mockup; lanes can be reordered (timeline.md *Stage and
+category order*) but not hidden from the UI yet (hiding is persisted); `AppContext` has a TODO to roll the default slug forward
 automatically once an edition is over; `scheduleNext` has no `AppState` handling for
 sleep/resume/kill.
 

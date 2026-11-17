@@ -35,6 +35,7 @@ Separately, `MAX_CONTENT_WIDTH` (700) caps centred content so a desktop window s
   {!isShort && <BottomBar />}     ← in-flow, solid
   <LensPanel />                   ← absolute, inset 0
   <PlanFilterPanel />             ← absolute, inset 0
+  <LaneOrderPanel />              ← absolute, inset 0 (a timeline's stage / category order, timeline.md)
   <SearchView />                  ← absolute, inset 0, over the content and panels (search.md)
 </View>
 ```

@@ -8,18 +8,21 @@ import React, {
 } from 'react';
 import { useSelectedSlug } from '../../store/AppContext';
 import { useFestivalDays } from '../../store/cacheStore';
-import { getSelectedDay, getUiState, setHiddenCategories as persistHiddenCategories } from '../../store/uiStatePersistence';
+import { getSelectedDay, getUiState, setHiddenCategories as persistHiddenCategories, setLaneOrder as persistLaneOrder, type LaneOrders } from '../../store/uiStatePersistence';
+import { LaneOrderPanelProvider } from './order/LaneOrderPanelContext';
 import { getFestivalDayStart } from '../../utils/festivalTime';
 import { currentTimeMs } from '../../utils/clock';
 
 // Provider lives above AppShell so that slot components rendered in TopBar/BottomBar
 // can access the context even though they're outside the navigator tree.
 //
-// Persisted UI state (hidden categories, scroll positions, selected day) is owned
+// Persisted UI state (hidden categories, lane order, scroll positions, selected day) is owned
 // by the uiStatePersistence module, hydrated before this provider mounts (under
 // StartupGate). Scroll positions and the per-screen selected day are read/written
-// directly against that module by the timeline screens; only hiddenCategories
-// needs to live here as React state because hiding a category re-renders the lanes.
+// directly against that module by the timeline screens; only the hidden categories
+// and the lane order live here as React state, because changing them re-renders
+// the lanes. The order panel's open state is a context of its own
+// (order/LaneOrderPanelContext), provided here too.
 //
 // The festival days are derived here from the cache rather than handed in by a
 // screen, and the selected day lives in a small store beside the context instead
@@ -60,6 +63,11 @@ type TimelineFilterContextValue = {
   // Category IDs the user has chosen to hide. Persisted.
   hiddenCategories: Set<string>;
   toggleCategory: (categoryId: string) => void;
+
+  // Each timeline screen's order of lanes, top first (order/laneOrder): screenKey
+  // → categoryIds. Changed in the order panel. Persisted.
+  laneOrders: LaneOrders;
+  setLaneOrder: (screenKey: string, order: string[]) => void;
 
   // Signals a specific screen's TimelineView to scroll to an event: its centre is
   // centred in the view, but the start is kept visible with 15 min of space to its left
@@ -133,6 +141,7 @@ export function TimelineFilterProvider({ children }: { children: React.ReactNode
   const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(
     () => new Set(getUiState('hiddenCategories')),
   );
+  const [laneOrders, setLaneOrders] = useState<LaneOrders>(() => getUiState('laneOrder'));
   const [scrollToTimeSignal, setScrollToTimeSignal] = useState<ScrollToTimeSignal>({ screenKey: '', fromMs: 0, toMs: 0, counter: 0 });
 
   // ── Stable callbacks ───────────────────────────────────────────────────────
@@ -162,6 +171,13 @@ export function TimelineFilterProvider({ children }: { children: React.ReactNode
     });
   }, []);
 
+  // Replaces one screen's order only: the other screen's array stays the same
+  // object, so its day (useTimelineData) is not computed again.
+  const setLaneOrder = useCallback((screenKey: string, order: string[]): void => {
+    setLaneOrders((prev) => ({ ...prev, [screenKey]: order }));
+    persistLaneOrder(screenKey, order);
+  }, []);
+
   const requestScrollToTime = useCallback((screenKey: string, fromMs: number, toMs: number, categoryId?: string, eventId?: string): void => {
     setScrollToTimeSignal((prev) => ({ screenKey, fromMs, toMs, categoryId, eventId, counter: prev.counter + 1 }));
   }, []);
@@ -178,17 +194,21 @@ export function TimelineFilterProvider({ children }: { children: React.ReactNode
       shareOpeningDay,
       hiddenCategories,
       toggleCategory,
+      laneOrders,
+      setLaneOrder,
       scrollToTimeSignal,
       requestScrollToTime,
       requestScrollToNow,
     }),
-    [festivalDays, setSelectedDayStart, shareOpeningDay, hiddenCategories, toggleCategory, scrollToTimeSignal, requestScrollToTime, requestScrollToNow],
+    [festivalDays, setSelectedDayStart, shareOpeningDay, hiddenCategories, toggleCategory, laneOrders, setLaneOrder, scrollToTimeSignal, requestScrollToTime, requestScrollToNow],
   );
 
   return (
     <DayStoreContext.Provider value={dayStore}>
       <TimelineFilterContext.Provider value={value}>
-        {children}
+        <LaneOrderPanelProvider>
+          {children}
+        </LaneOrderPanelProvider>
       </TimelineFilterContext.Provider>
     </DayStoreContext.Provider>
   );

@@ -192,3 +192,23 @@ describe('what each block is given', () => {
     expect(day().lanes[1].sets[1]).toMatchObject({ status: 'none', overlaps: undefined });
   });
 });
+
+describe('the lanes in my order', () => {
+  // Dimension: the screen's saved lane order (screens/timeline/order) — none,
+  // one that reverses the lanes, one that misses a lane the day shows.
+
+  it('follows a saved order, the tops and titles with it', () => {
+    const d = day({ laneOrder: ['9', '1'] });
+    expect(listed(d)).toEqual(['9: maybe none', '1: must dont night']);
+    expect(d.tops).toEqual({ '9': 0, '1': 102 });
+    expect(d.titles.map((t) => [t.key, t.top])).toEqual([['title-9', 0], ['title-1', 102]]);
+  });
+
+  it('puts a lane the saved order misses after the saved ones', () => {
+    expect(listed(day({ laneOrder: ['9', '10', '3'] }))).toEqual(['9: maybe none', '1: must dont night']);
+  });
+
+  it('keeps a hidden lane out whatever its place', () => {
+    expect(listed(day({ laneOrder: ['9', '1'], hiddenCategories: new Set(['9']) }))).toEqual(['1: must dont night']);
+  });
+});

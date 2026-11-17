@@ -11,6 +11,8 @@ import { timelineDayModel, type TimelineDayModel } from './TimelineDay.model';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
 
 type Options = {
+  /** The screen, whose own lane order (order/laneOrder) the lanes follow. */
+  screenKey: string;
   /**
    * The festival day to lay out (its 06:00 start). Passed in rather than read
    * from TimelineFilterContext: the screen derives the day it shows during
@@ -26,14 +28,16 @@ type Options = {
  * The inputs of one timeline day, gathered from the cache and the contexts and
  * handed to its model (TimelineDay.model.ts), which decides everything shown.
  */
-export function useTimelineData({ dayStart, filterArtist, useSubRows = false }: Options): TimelineDayModel {
+export function useTimelineData({ screenKey, dayStart, filterArtist, useSubRows = false }: Options): TimelineDayModel {
   const selectedSlug = useSelectedSlug();
   // Deferred, with the conflicts: a pick from the artist sheet commits its star
   // first, and the blocks and bars follow.
   const interests = useDeferredInterests();
   // The shared conflict calculation, the one the sheets and the drawer count follow.
   const { overlaps: conflictOverlaps } = useConflicts();
-  const { hiddenCategories } = useTimelineFilter();
+  const { hiddenCategories, laneOrders } = useTimelineFilter();
+  // This screen's order only: the other screen's changes leave it the same array.
+  const laneOrder = laneOrders[screenKey];
   const { scope } = useLens();
   const { isShort } = useLayoutMode();
   const { getFriend } = useSocialData();
@@ -61,10 +65,11 @@ export function useTimelineData({ dayStart, filterArtist, useSubRows = false }: 
       interests,
       friendInterests,
       hiddenCategories,
+      laneOrder,
       conflictOverlaps,
       stack: useSubRows,
       overlayTitles: isShort,
     }),
-    [events, artists, categories, dayStart, filterArtist, scope, interests, friendInterests, hiddenCategories, conflictOverlaps, useSubRows, isShort],
+    [events, artists, categories, dayStart, filterArtist, scope, interests, friendInterests, hiddenCategories, laneOrder, conflictOverlaps, useSubRows, isShort],
   );
 }
