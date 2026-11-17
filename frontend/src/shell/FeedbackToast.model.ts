@@ -1,13 +1,15 @@
 import type { FeedbackAnchor } from './ScreenUIContext';
 import { STAR_COLUMN_RESERVE } from '../features/interests/StarButton.model';
-import { MAX_CONTENT_WIDTH, TOPBAR_HEIGHT } from '../styling/tokens';
+import { BOTTOM_OVERLAY_CLEARANCE, MAX_CONTENT_WIDTH, TOPBAR_HEIGHT } from '../styling/tokens';
 
 // ── The feedback toast: where it goes and what it shows ───────────────────────
 //
 // Where: next to what was tapped. After a share action, in the panel's
 // "My schedule" heading; with nothing to sit next to, right under the top bar,
 // clear of the now pill, in a band that stops short of the star column so it
-// never covers a star. (A star press opens the star selector instead:
+// never covers a star; a pinch's toast on My plan at the bottom, just above the
+// bottom bar, centred across the whole column, over the star column too. (A
+// star press opens the star selector instead:
 // features/interests/StarSelector.) What: the message with a spinner, a tick or
 // a warning sign. A tap dismisses it, except while still in progress.
 
@@ -34,9 +36,28 @@ export function toastBand(
   return { left, width, centeredWidth };
 }
 
+/**
+ * The band of a centred toast: the whole content column, TOAST_GUTTER in from
+ * each side, the star column included. `centeredWidth` as in toastBand: with
+ * an inset on one side only, the widest span still centred on the screen.
+ */
+export function centredToastBand(
+  screenWidth: number,
+  insets: { left: number; right: number },
+): { left: number; width: number; centeredWidth: number } {
+  const columnWidth = Math.min(screenWidth, MAX_CONTENT_WIDTH);
+  const columnLeft = (screenWidth - columnWidth) / 2;
+  const left = Math.max(columnLeft, insets.left) + TOAST_GUTTER;
+  const right = Math.min(columnLeft + columnWidth, screenWidth - insets.right) - TOAST_GUTTER;
+  const width = Math.max(0, right - left);
+  const middle = screenWidth / 2;
+  const centeredWidth = Math.max(0, Math.min(2 * Math.min(right - middle, middle - left), width));
+  return { left, width, centeredWidth };
+}
+
 export type ToastLayout = {
   screenWidth: number;
-  insets: { top: number; left: number; right: number };
+  insets: { top: number; bottom: number; left: number; right: number };
   /** False in the short layout, where the top bar is dropped. */
   topBarShown: boolean;
 };
@@ -44,6 +65,8 @@ export type ToastLayout = {
 export type ToastPlacement =
   /** Under the top bar, centred in the band as far as it fits. */
   | { kind: 'top'; left: number; width: number; centeredWidth: number; top: number }
+  /** Above the bottom bar (`bottom` from the screen's bottom edge), centred in the band as far as it fits. */
+  | { kind: 'bottom'; left: number; width: number; centeredWidth: number; bottom: number }
   /** Drawn by the section it belongs to (SectionFeedbackToast), not over the screen. */
   | { kind: 'in-section' };
 
@@ -52,6 +75,11 @@ export function toastPlacement(anchor: FeedbackAnchor | undefined, layout: Toast
     return { kind: 'in-section' };
   }
   const { screenWidth, insets, topBarShown } = layout;
+  if (anchor?.kind === 'bottom') {
+    // The bottom bar, in the flow or floating (short layout), stands inside the
+    // safe area and is at most BOTTOM_OVERLAY_CLEARANCE tall: the toast clears it.
+    return { kind: 'bottom', ...centredToastBand(screenWidth, insets), bottom: insets.bottom + BOTTOM_OVERLAY_CLEARANCE };
+  }
   const belowTopBar = insets.top + (topBarShown ? TOPBAR_HEIGHT : 0);
   // The top inset is 0 in landscape, which would leave the toast flush against
   // the screen edge: keep a floor under it.

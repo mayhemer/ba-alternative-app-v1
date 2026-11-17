@@ -9,9 +9,11 @@ import { useLayoutMode } from '../hooks/useLayoutMode';
 
 // ── The feedback toast ────────────────────────────────────────────────────────
 //
-// Places the toast card (ui/FeedbackToastCard) under the top bar
-// (FeedbackToast.model.ts). A message anchored to a section is drawn by that
-// section instead (SectionFeedbackToast).
+// Places the toast card (ui/FeedbackToastCard) under the top bar, or a pinch's
+// on My plan above the bottom bar (FeedbackToast.model.ts). A message anchored
+// to a section is drawn by that section instead (SectionFeedbackToast). The
+// pinch's spans the star column, so it lets every touch through to what is
+// under it, and is not tapped away.
 
 export function FeedbackToast() {
   const { state, dismissFeedback } = useScreenUI();
@@ -22,35 +24,34 @@ export function FeedbackToast() {
   if (feedback === null) { return null; }
   const placement = toastPlacement(feedback.anchor, { screenWidth, insets, topBarShown: !isShort });
   const model = feedbackToastModel(feedback);
+  const passThrough = feedback.anchor?.kind === 'bottom';
 
-  switch (placement.kind) {
-    case 'in-section':
-      return null;
-
-    case 'top':
-      // The band's row pushes its one child to the right edge. That child is at
-      // least centeredWidth wide and centres the toast in itself, so a toast that
-      // fits sits centred on the screen; a wider one grows the child leftwards and
-      // ends at the band's edge. No measuring, so no extra render.
-      return (
-        <View
-          pointerEvents="box-none"
-          style={{
-            position: 'absolute',
-            top: placement.top,
-            left: placement.left,
-            width: placement.width,
-            flexDirection: 'row',
-            justifyContent: 'flex-end',
-          }}
-        >
-          <View
-            pointerEvents="box-none"
-            style={{ minWidth: placement.centeredWidth, maxWidth: placement.width, alignItems: 'center' }}
-          >
-            <FeedbackToastCard model={model} onDismiss={dismissFeedback} maxWidth={placement.width} />
-          </View>
-        </View>
-      );
+  if (placement.kind === 'in-section') {
+    return null;
   }
+  // The band's row pushes its one child to the right edge. That child is at
+  // least centeredWidth wide and centres the toast in itself, so a toast that
+  // fits sits centred on the screen; a wider one grows the child leftwards and
+  // ends at the band's edge. No measuring, so no extra render.
+  const vertical = placement.kind === 'top' ? { top: placement.top } : { bottom: placement.bottom };
+  return (
+    <View
+      pointerEvents="box-none"
+      style={{
+        position: 'absolute',
+        ...vertical,
+        left: placement.left,
+        width: placement.width,
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+      }}
+    >
+      <View
+        pointerEvents={passThrough ? 'none' : 'box-none'}
+        style={{ minWidth: placement.centeredWidth, maxWidth: placement.width, alignItems: 'center' }}
+      >
+        <FeedbackToastCard model={model} onDismiss={dismissFeedback} maxWidth={placement.width} />
+      </View>
+    </View>
+  );
 }

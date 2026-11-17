@@ -10,7 +10,7 @@ import { PlanProvider, usePlanFilters, usePlanStore } from './PlanContext';
 import { useInterest, useInterestStatus } from '../../features/interests/InterestContext';
 import { createDataCollector, populateCache, setInterest } from '../../cache/cacheService';
 import { setCurrentTimeMs } from '../../utils/clock';
-import { setPlanFilters, setScroll, type PlanLevel } from '../../store/uiStatePersistence';
+import { getScroll, getUiState, setPlanFilters, setScroll, type PlanLevel } from '../../store/uiStatePersistence';
 import { getFestivalDayStart } from '../../utils/festivalTime';
 import { rendersSinceReset, resetRenders } from '../../../tests/setup/countRenders';
 import { useSearch } from '../../features/search/SearchContext';
@@ -19,6 +19,8 @@ import { itPullsOnIos, pullPastTop } from '../../../tests/setup/pullPastTop';
 import { useArtistDetail } from '../../features/artist-detail/ArtistDetailContext';
 import { useOpenStarSelector, useStarSelectorActions } from '../../features/interests/StarSelectorContext';
 import { navigationRef } from '../../navigation/navigationRef';
+import { FeedbackToast } from '../../shell/FeedbackToast';
+import { createGestureController } from 'react-native-gesture-handler/jest-utils';
 import type { DbArtist, DbCategory, DbEvent, DbStage } from '../../types/backend';
 
 // ── My plan reacts to every input ─────────────────────────────────────────────
@@ -657,6 +659,102 @@ describe('the chrome', () => {
     expect(screen.getByTestId('plan-filter-state-must')).toBeTruthy();
   });
 
+  // A pinch on the list steps the filter (ui/usePinchSteps), a step per threshold
+  // passed: in toward Must-see only, out toward All sets, and the toast says which
+  // filter it is on. One update past a threshold is one step. Mounted
+  // with the toast (shell/FeedbackToast), as AppShell draws it. Every case starts
+  // from Must-see only.
+  async function mountWithToast(): Promise<void> {
+    await render(<PerfProviders><><Chrome /><FeedbackToast /></></PerfProviders>);
+  }
+
+  const toast = (): string | null => {
+    const card = screen.queryByTestId('feedback-toast');
+    return card === null ? null : within(card).getAllByText(/./)[0].props.children as string;
+  };
+
+  async function pinchList(scale: number): Promise<void> {
+    const controller = createGestureController<{ scale: number }>('plan-pinch');
+    await act(async () => {
+      controller.begin({ scale: 1 });
+      controller.activate({ scale: 1 });
+      controller.update({ scale });
+      controller.end({ scale });
+    });
+  }
+
+  it('widens the filter one step per pinch out, up to All sets', async () => {
+    await mountWithToast();
+    expect(toast()).toBeNull();
+    await pinchList(1.5);
+    expect(screen.getByTestId('plan-filter-state-maybe')).toBeTruthy();
+    expect(toast()).toBe('Showing all my picks');
+    expect(listTexts()).toContain('Blood Incantation');
+    expect(listTexts()).not.toContain('Ulcerate');
+    await pinchList(1.5);
+    expect(screen.getByTestId('plan-filter-state-all')).toBeTruthy();
+    expect(toast()).toBe('Showing all sets');
+    expect(listTexts()).toContain('Ulcerate');
+    await pinchList(1.5);
+    expect(screen.getByTestId('plan-filter-state-all')).toBeTruthy();
+    expect(toast()).toBe('Showing all sets');
+  });
+
+  it('narrows the filter one step per pinch in, down to Must-see only', async () => {
+    await mountWithToast();
+    await act(async () => { controls.setLevel('all'); });
+    await pinchList(0.6);
+    expect(screen.getByTestId('plan-filter-state-maybe')).toBeTruthy();
+    expect(toast()).toBe('Showing all my picks');
+    expect(listTexts()).not.toContain('Ulcerate');
+    await pinchList(0.6);
+    expect(screen.getByTestId('plan-filter-state-must')).toBeTruthy();
+    expect(toast()).toBe('Showing only what I must see');
+    expect(listTexts()).not.toContain('Blood Incantation');
+    await pinchList(0.6);
+    expect(screen.getByTestId('plan-filter-state-must')).toBeTruthy();
+    expect(toast()).toBe('Showing only what I must see');
+  });
+
+  it('steps on while one pinch goes on, like a zoom, the toast following', async () => {
+    await mountWithToast();
+    await act(async () => { controls.setLevel('all'); });
+    const controller = createGestureController<{ scale: number }>('plan-pinch');
+    await act(async () => {
+      controller.begin({ scale: 1 });
+      controller.activate({ scale: 1 });
+      controller.update({ scale: 0.75 });
+    });
+    expect(screen.getByTestId('plan-filter-state-maybe')).toBeTruthy();
+    expect(toast()).toBe('Showing all my picks');
+    await act(async () => { controller.update({ scale: 0.55 }); });
+    expect(screen.getByTestId('plan-filter-state-must')).toBeTruthy();
+    expect(toast()).toBe('Showing only what I must see');
+    // Turned back out, past 1.25× of 0.55.
+    await act(async () => { controller.update({ scale: 0.7 }); });
+    expect(screen.getByTestId('plan-filter-state-maybe')).toBeTruthy();
+    await act(async () => { controller.end({ scale: 0.7 }); });
+    expect(screen.getByTestId('plan-filter-state-maybe')).toBeTruthy();
+  });
+
+  it('leaves Only conflicts for Must-see only on a pinch out, and keeps it on a pinch in', async () => {
+    await mountWithToast();
+    await act(async () => { controls.setLevel('conflicts'); });
+    await pinchList(0.6);
+    expect(screen.getByTestId('plan-filter-state-conflicts')).toBeTruthy();
+    expect(toast()).toBe('Showing only conflicts');
+    await pinchList(1.5);
+    expect(screen.getByTestId('plan-filter-state-must')).toBeTruthy();
+    expect(toast()).toBe('Showing only what I must see');
+    expect(listTexts()).toContain('Hooded Menace');
+  });
+
+  it('saves a filter picked by a pinch, as one picked in the panel', async () => {
+    await mountWithToast();
+    await pinchList(1.5);
+    expect(getUiState('planFilters')).toEqual({ level: 'maybe' });
+  });
+
   // The same section as the lens panel's (MyScheduleShare, tested there);
   // signed out here, so it asks to sign in.
   it('ends the panel with my schedule, whose Sign in closes the panel', async () => {
@@ -747,6 +845,19 @@ describe('the chrome', () => {
       await mountSettled(true);
       await act(async () => { controls.setLevel('conflicts'); });
       expect(chromeRenders()).toEqual({ [`day-${THU}`]: 1, 'plan-filter-chip': 1, 'level-must': 1, 'level-conflicts': 1 });
+    });
+
+    it('a pinch out renders only the chip, and no day button', async () => {
+      await mountSettled();
+      await pinchList(1.5);
+      expect(chromeRenders()).toEqual({ 'plan-filter-chip': 1 });
+    });
+
+    it('a pinch in at Must-see only, changing nothing, renders none of them', async () => {
+      await mountSettled();
+      await pinchList(0.6);
+      expect(chromeRenders()).toEqual({});
+      expect(rendersSinceReset()).toEqual({});
     });
 
     it('a changed pick with only conflicts shown renders only the day whose stripe went', async () => {
@@ -970,4 +1081,64 @@ describe('with nothing picked for the day', () => {
     expect(listTexts()).toContain('Ulcerate');
     expect(listTexts()).not.toContain('Nothing picked for this day');
   });
+});
+
+// ── A pinch keeps its place ───────────────────────────────────────────────────
+//
+// A pinch that changes the filter starts a new list where the set row under the
+// pinch's centre keeps its centre on screen (planPinchAnchor); if the stricter
+// filter drops that row, the nearest listed sets above and below it are centred
+// there together. The new position is the day's saved one.
+//
+// They leave Thursday's position saved, so they come last, and the case that
+// saves none first.
+//
+// Thursday 19:23 with the Maybes listed (Blood Incantation 15:30–16:15, a
+// one-line Maybe): the start cap at 12 (30), Hooded Menace at 48 (58), the
+// 50 min gap at 112 (45), Blood Incantation at 163 (26), the 2 h 45 gap at 195
+// (103), Gojira at 304 (58), Batushka at 368, the end cap at 432; 492 tall.
+// Without them, as above: Hooded Menace at 48, Gojira at 268; 456 tall.
+
+/** A pinch on the list, centred `focalY` from the screen's top. */
+async function pinchAt(scale: number, focalY: number): Promise<void> {
+  const controller = createGestureController<{ scale: number; focalX: number; focalY: number }>('plan-pinch');
+  await act(async () => {
+    controller.begin({ scale: 1, focalX: 195, focalY });
+    controller.activate({ scale: 1, focalX: 195, focalY });
+    controller.update({ scale, focalX: 195, focalY });
+    controller.end({ scale, focalX: 195, focalY });
+  });
+}
+
+it('moves nothing on a pinch that changes no filter', async () => {
+  await mount();
+  await measureScreen(240);
+  await pinchAt(0.6, 100);
+  expect(listOffset()).toBeUndefined();
+  expect(getScroll('plan', THU)).toBeUndefined();
+});
+
+it('keeps the set under a pinch out where it was on screen', async () => {
+  await mount();
+  await measureScreen(240);
+  // Landed with now a third down, at 188: Gojira (268–326) is 80–138 on screen,
+  // its centre at 109. Under the Maybes it is 304–362: centre 333 − 109.
+  await pinchAt(1.5, 100);
+  expect(listOffset()).toEqual({ x: 0, y: 224 });
+  // Drawn from there down: the gap after Blood Incantation, listed with the Maybes only.
+  expect(listTexts()).toEqual(expect.arrayContaining(['2 h 45', 'Gojira']));
+  expect(getScroll('plan', THU)).toBe(224);
+});
+
+it('centres the sets around a row a pinch in drops, where that row was', async () => {
+  setPlanFilters({ level: 'maybe' });
+  setScroll('plan', THU, 100);
+  await mount();
+  await measureScreen(240);
+  // At 100, Blood Incantation (163–189) is 63–89 on screen, its centre at 76.
+  // Under Must-see only it goes; Hooded Menace (48–106) and Gojira (268–326)
+  // around it span 48–326, centred at 187: 187 − 76.
+  await pinchAt(0.6, 70);
+  expect(listTexts()).not.toContain('Blood Incantation');
+  expect(listOffset()).toEqual({ x: 0, y: 111 });
 });

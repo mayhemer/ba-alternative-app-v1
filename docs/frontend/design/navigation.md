@@ -114,13 +114,20 @@ when the festival edition changes, since ids are scoped to an edition.
     "Link copied", or "Could not copy the link" (`copyLinkFeedback`).
   - **Nothing on screen to sit next to** (an opened share link): right under the top bar, so the now
     pill in it stays visible; at the top of the screen in the short layout, which has no top bar.
+  - **A pinch on My plan** (anchor `bottom`): at the bottom, just above the bottom bar
+    (`BOTTOM_OVERLAY_CLEARANCE` above the safe area's bottom edge, in the flow or floating), centred
+    across the whole content column ([my-plan.md](my-plan.md) › Pinch).
 - **Look**: a dark card lighter than every other surface (`toastSurface`), a light 1 pt border, 18 pt
   corners and a strong drop shadow (`FLOATING_SHADOW`, a `boxShadow`, the same on iOS, Android and
   web). White text, a white spinner, a green tick, a red warning sign.
-- **It never covers a star button.** Under the top bar it stays in a band of the content column
-  that stops `STAR_COLUMN_RESERVE` short of its right edge (`toastBand()`; the reserve is derived
-  from the star sizes and hit slop in StarButton), so it can't land on the first row's star or the
-  artist sheet's. Unit-tested across widths and insets.
+- **It never covers a star button, except a pinch's toast on My plan.** Under the top bar it stays
+  in a band of the content column that stops `STAR_COLUMN_RESERVE` short of its right edge
+  (`toastBand()`; the reserve is derived from the star sizes and hit slop in StarButton), so it
+  can't land on the first row's star or the artist sheet's; the pinch's toast (anchor `bottom`)
+  is centred across the whole column instead, 12 pt in from each side (`centredToastBand()`), and
+  may cover a row's star for its 2.5 s, letting every touch through to it, so a tap on it is the
+  star's and it is not tapped away ([my-plan.md](my-plan.md) › Pinch). Unit-tested across widths and
+  insets.
 
 ## Elements and their sources
 

@@ -155,3 +155,30 @@ it('shows any other message over the screen, not in the section', async () => {
   expect(screen.getAllByTestId('feedback-toast')).toHaveLength(1);
   expect(within(screen.getByTestId('my-schedule-heading')).queryByText('Link copied')).toBeNull();
 });
+
+// A pinch's toast on My plan (anchor `bottom`) spans the star column, so it lets
+// every touch through to what is under it: a star, the list, or a finger of the
+// next pinch. Every other toast is tapped away.
+function passesTouchesThrough(): boolean {
+  let node = screen.getByTestId('feedback-toast').parent;
+  while (node !== null) {
+    if (node.props.pointerEvents === 'none') {
+      return true;
+    }
+    node = node.parent;
+  }
+  return false;
+}
+
+it('lets touches through a bottom toast', async () => {
+  await showWithSection(<Message anchor={{ kind: 'bottom' }} />);
+
+  expect(screen.getByText('Link copied')).toBeTruthy();
+  expect(passesTouchesThrough()).toBe(true);
+});
+
+it('keeps any other toast over the screen tappable', async () => {
+  await showWithSection(<Message />);
+
+  expect(passesTouchesThrough()).toBe(false);
+});

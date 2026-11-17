@@ -14,10 +14,12 @@ export type FeedbackVariant = 'progress' | 'confirmation' | 'warning';
 
 /**
  * What the toast sits next to (FeedbackToast.model › toastPlacement): the
- * section whose action it reports. None: right under the top bar. (A star
- * press opens the star selector instead: features/interests/StarSelector.)
+ * section whose action it reports. None: right under the top bar, clear of the
+ * star column. `bottom`: just above the bottom bar, centred across the whole
+ * content column, over the star column too (a pinch on My plan). (A star press opens
+ * the star selector instead: features/interests/StarSelector.)
  */
-export type FeedbackAnchor = { kind: 'my-schedule' };
+export type FeedbackAnchor = { kind: 'my-schedule' } | { kind: 'bottom' };
 
 export type FeedbackMessage = {
   text: string;

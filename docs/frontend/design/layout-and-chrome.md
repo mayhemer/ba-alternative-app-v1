@@ -140,7 +140,8 @@ index lands on the wrong stop.
   Out of sight, still laid out, while the search or a panel is open (`bottomBarInSight`).
 - **Feedback toast** (`shell/FeedbackToast.model.ts`): where it goes, from the message's anchor
   (`toastPlacement`: in the "My schedule" heading, or under the top bar inside the band clear of the
-  star column, `toastBand`), its message and icon, and whether a tap dismisses it.
+  star column, `toastBand`, except a pinch's toast on My plan, above the bottom bar, centred across
+  the whole column, `centredToastBand`), its message and icon, and whether a tap dismisses it.
 - **Star selector** (`features/interests/StarSelector.model.ts`): the capsule beside the pressed
   star, apart from it, from its measured frame; the states, their size and which is current; the info
   box above or below. See [interest-system.md](interest-system.md#star-selector).

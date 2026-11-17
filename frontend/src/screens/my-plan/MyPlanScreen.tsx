@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, View, type LayoutChangeEvent, type ListRenderItem, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { useTopBar, useBottomBar } from '../../shell/ScreenUIContext';
+import { GestureDetector } from 'react-native-gesture-handler';
+import { useTopBar, useBottomBar, useFeedback } from '../../shell/ScreenUIContext';
 import { useSelectedSlug } from '../../store/AppContext';
 import { useArtistEventMap, useArtists, useCategories, useFestivalDays, useStages } from '../../store/cacheStore';
 import { decodeCategoryColor, categoryBlockColors } from '../../utils/color';
@@ -13,6 +14,10 @@ import { usePlanFilters, usePlanPanel, usePlanShownDay, usePlanStore, usePlanSto
 import { minuteNow, useMinuteNow } from '../../hooks/useMinuteNow';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
 import { usePullPastTop } from '../../ui/PullPreview';
+import { usePinchSteps, type PinchFocal } from '../../ui/usePinchSteps';
+import type { PinchDirection } from '../../ui/PinchStep.model';
+import { pinchedLevel, pinchToast } from './filter/PlanPinch.model';
+import { pinchAnchor, pinchScrollOffset, type PinchAnchor } from './planPinchAnchor';
 import { PlanFilterSkeleton } from './filter/PlanFilterSkeleton';
 import { getScroll, setScroll } from '../../store/uiStatePersistence';
 import { buildPlanDay, itemAtOffset, itemOffsets, itemsToFill, maxScrollOffset, nowScrollOffset, PLAN_LAYOUT, planNowInView, planNowView, setScrollOffset, type PlanItem } from './planUtils';
@@ -64,6 +69,15 @@ import { colors } from '../../styling/tokens';
 // end, and a list started there draws only the cells it thinks are in view.
 // Once now is in view, the pill switches to the timeline instead, so the screen
 // answers where it is scrolled (registerPlanNowProbe).
+//
+// A pinch on the list steps the filter while it goes, like a zoom
+// (filter/PlanPinch.model, ui/usePinchSteps): in toward Must-see only, out
+// toward All sets, with a toast naming the filter now on, centred above the
+// bottom bar, also at an end where nothing changed, so the pinch is seen to count. Each
+// step that changes the filter keeps its place (planPinchAnchor): the set row
+// under the pinch keeps its height on screen, or the sets around it, if the new
+// filter drops it, are centred where it was. The list then starts again there,
+// as a day does at its landing spot, and that position is the day's saved one.
 
 const PLAN_SCREEN_KEY = 'plan';
 
@@ -220,12 +234,22 @@ export function MyPlanScreen() {
   // Before the first measurement there is no screen to aim at, so that list
   // starts from the top and the landing scroll above positions it, as it does on
   // web, which ignores contentOffset.
-  const listDayRef = useRef<number | null>(null);
+  //
+  // A pinch that changes the filter starts a list of its own too (pinchCount in
+  // its key), landing where the pinch keeps its place.
+  const [pinchCount, setPinchCount] = useState(0);
+  const pendingPinchRef = useRef<{ count: number; day: number; anchor: PinchAnchor } | null>(null);
+  const listKey = `${day}:${pinchCount}`;
+  const listKeyRef = useRef<string | null>(null);
   const landingRef = useRef<{ offset: number; index: number; count: number } | null>(null);
-  if (listDayRef.current !== day) {
-    listDayRef.current = day;
+  if (listKeyRef.current !== listKey) {
+    listKeyRef.current = listKey;
     if (viewportHeight > 0) {
-      const offset = landingOffset(items, day, false, viewportHeight, bottomClearance);
+      const pinched = pendingPinchRef.current;
+      const pinchOffset = pinched !== null && pinched.count === pinchCount && pinched.day === day
+        ? pinchScrollOffset(pinched.anchor, items, viewportHeight, bottomClearance)
+        : null;
+      const offset = pinchOffset ?? landingOffset(items, day, false, viewportHeight, bottomClearance);
       landingRef.current = { offset, index: itemAtOffset(items, offset), count: itemsToFill(items, offset, viewportHeight) };
       scrollYRef.current = offset;
     } else {
@@ -254,6 +278,40 @@ export function MyPlanScreen() {
     }
     persistScroll(e);
   }, [persistScroll]);
+
+  // ── Pinch: filter steps while it goes, each keeping its place ───────────────
+  const showFeedback = useFeedback();
+  const handlePinch = useCallback((direction: PinchDirection, focal: PinchFocal): void => {
+    const next = pinchedLevel(level, direction);
+    if (next !== level && viewportHeight > 0) {
+      // The list fills the screen from its top, so the pinch's centre is on the list too.
+      const anchor = pinchAnchor(itemsRef.current, scrollYRef.current, focal.y);
+      if (anchor !== null) {
+        pendingPinchRef.current = { count: pinchCount + 1, day, anchor };
+        setPinchCount(pinchCount + 1);
+      }
+    }
+    setLevel(next);
+    showFeedback(pinchToast(next), 'confirmation', { anchor: { kind: 'bottom' } });
+  }, [level, setLevel, showFeedback, viewportHeight, pinchCount, day]);
+  const pinch = usePinchSteps(handlePinch, 'plan-pinch');
+
+  // The new list's landing, where native placed it already (contentOffset):
+  // scrolled to on web, which ignores that, and saved as the day's position.
+  useEffect(() => {
+    const pinched = pendingPinchRef.current;
+    if (pinched === null || pinched.count !== pinchCount) {
+      return;
+    }
+    pendingPinchRef.current = null;
+    const target = landingRef.current?.offset;
+    if (target === undefined) {
+      return;
+    }
+    scrollYRef.current = target;
+    setScroll(PLAN_SCREEN_KEY, pinched.day, target);
+    listRef.current?.scrollToOffset({ offset: target, animated: false });
+  }, [pinchCount]);
 
   // A pull down past the list's top opens the filter panel, as its chip does.
   const { scrollProps, preview } = usePullPastTop(openPanel, {
@@ -312,24 +370,26 @@ export function MyPlanScreen() {
   }), [items, offsets]);
 
   return (
-    <View testID="plan-screen" style={{ flex: 1, backgroundColor: colors.background }} onLayout={handleLayout}>
-      <FlatList
-        key={day}
-        testID="plan-list"
-        ref={listRef}
-        data={items}
-        contentOffset={landing !== null ? { x: 0, y: landing.offset } : undefined}
-        initialScrollIndex={landing !== null && landing.index > 0 ? landing.index : undefined}
-        initialNumToRender={landing?.count ?? DEFAULT_CELL_BATCH}
-        maxToRenderPerBatch={landing?.count ?? DEFAULT_CELL_BATCH}
-        keyExtractor={keyOf}
-        renderItem={renderItem}
-        getItemLayout={getItemLayout}
-        {...scrollProps}
-        onMomentumScrollEnd={persistScroll}
-        contentContainerStyle={{ paddingTop: PLAN_LAYOUT.paddingTop, paddingBottom: PLAN_LAYOUT.paddingBottom + bottomClearance }}
-      />
-      {preview}
-    </View>
+    <GestureDetector gesture={pinch}>
+      <View testID="plan-screen" style={{ flex: 1, backgroundColor: colors.background }} onLayout={handleLayout}>
+        <FlatList
+          key={listKey}
+          testID="plan-list"
+          ref={listRef}
+          data={items}
+          contentOffset={landing !== null ? { x: 0, y: landing.offset } : undefined}
+          initialScrollIndex={landing !== null && landing.index > 0 ? landing.index : undefined}
+          initialNumToRender={landing?.count ?? DEFAULT_CELL_BATCH}
+          maxToRenderPerBatch={landing?.count ?? DEFAULT_CELL_BATCH}
+          keyExtractor={keyOf}
+          renderItem={renderItem}
+          getItemLayout={getItemLayout}
+          {...scrollProps}
+          onMomentumScrollEnd={persistScroll}
+          contentContainerStyle={{ paddingTop: PLAN_LAYOUT.paddingTop, paddingBottom: PLAN_LAYOUT.paddingBottom + bottomClearance }}
+        />
+        {preview}
+      </View>
+    </GestureDetector>
   );
 }

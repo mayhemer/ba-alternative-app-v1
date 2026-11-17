@@ -138,6 +138,13 @@ const en = {
     maybe: 'All my picks',
     must: 'Only what I must see',
     conflicts: 'Only conflicts',
+    /** The toast after a pinch on the list: the filter now on. */
+    showing: {
+      all: 'Showing all sets',
+      maybe: 'Showing all my picks',
+      must: 'Showing only what I must see',
+      conflicts: 'Showing only conflicts',
+    },
   },
 
   /** The lock-screen now card (iOS Live Activity, Android notification). */
@@ -362,6 +369,12 @@ const cs: Strings = {
     maybe: 'Vše vybrané',
     must: 'Jen co musím vidět',
     conflicts: 'Jen konflikty',
+    showing: {
+      all: 'Zobrazena všechna vystoupení',
+      maybe: 'Zobrazeno vše vybrané',
+      must: 'Zobrazeno jen co musím vidět',
+      conflicts: 'Zobrazeny jen konflikty',
+    },
   },
 
   nowCard: {
