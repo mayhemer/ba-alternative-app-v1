@@ -1,4 +1,4 @@
-import type { DbUserInterest } from '../types/backend';
+import type { DbUserInterest, DbUserNote } from '../types/backend';
 import { API_ORIGIN } from './apiConfig';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -67,5 +67,30 @@ export async function deleteUserInterest(
 ): Promise<void> {
   await authedFetch<void>(`/user/${slug}/schedule/${artistId}`, token, {
     method: 'DELETE',
+  });
+}
+
+// ── My notes ──────────────────────────────────────────────────────────────────
+
+/**
+ * Fetches the authenticated user's notes for a festival edition, cleared ones
+ * (empty text) included.
+ */
+export async function fetchUserNotes(slug: string, token: string): Promise<DbUserNote[]> {
+  return authedFetch<DbUserNote[]>(`/user/${slug}/notes`, token);
+}
+
+/**
+ * Saves one artist's note on the server; an empty text clears it.
+ */
+export async function putUserNote(
+  slug: string,
+  artistId: string,
+  text: string,
+  token: string,
+): Promise<void> {
+  await authedFetch<void>(`/user/${slug}/notes/${artistId}`, token, {
+    method: 'PUT',
+    body: JSON.stringify({ text }),
   });
 }

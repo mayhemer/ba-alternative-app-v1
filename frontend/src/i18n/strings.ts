@@ -156,6 +156,14 @@ const en = {
     bioOffline: 'Biography unavailable offline.',
   },
 
+  // My private note on the artist sheet (features/notes/ArtistNote).
+  artistNote: {
+    add: 'Add a note',
+    editTitle: 'Edit my note',
+    done: 'Done',
+    counter: (length: number, max: number): string => `${length} / ${max}`,
+  },
+
   artistSetRow: {
     overlaps: (count: number): string => `Overlaps with ${count} other event(s)`,
   },
@@ -365,6 +373,13 @@ const cs: Strings = {
 
   artistDetail: {
     bioOffline: 'Bez připojení není životopis k dispozici.',
+  },
+
+  artistNote: {
+    add: 'Přidat poznámku',
+    editTitle: 'Upravit poznámku',
+    done: 'Hotovo',
+    counter: (length, max) => `${length} / ${max}`,
   },
 
   artistSetRow: {

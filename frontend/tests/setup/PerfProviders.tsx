@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ScreenUIProvider } from '../../src/shell/ScreenUIContext';
 import { InterestProvider } from '../../src/features/interests/InterestContext';
+import { NoteProvider } from '../../src/features/notes/NoteContext';
 import { StarSelectorProvider } from '../../src/features/interests/StarSelectorContext';
 import { SocialProvider } from '../../src/features/social/SocialContext';
 import { LensProvider } from '../../src/features/social/LensContext';
@@ -51,7 +52,9 @@ export function FeatureProviders({ children }: { children: React.ReactNode }) {
                       <TimelineFilterProvider>
                         <PlanProvider>
                           <SearchProvider>
-                            {children}
+                            <NoteProvider>
+                              {children}
+                            </NoteProvider>
                           </SearchProvider>
                         </PlanProvider>
                       </TimelineFilterProvider>

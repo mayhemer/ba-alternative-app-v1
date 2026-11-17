@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { hydrateInterests } from '../cache/cacheService';
+import { hydrateNotes } from '../cache/notesCache';
 import { hydrateSocial } from '../cache/socialCache';
 import { migrateLocalStorage } from './storageMigration';
 import { DEFAULT_SCOPE, type LensScope } from '../lib/interestUtils';
@@ -154,7 +155,7 @@ async function hydrateUiState(): Promise<void> {
 
 /**
  * Load all local persisted state (UI-state snapshot, the language chosen in
- * Settings, and the slug's local interests, friends and own share) before the
+ * Settings, and the slug's local interests, notes, friends and own share) before the
  * splash lifts, so the providers can start from it and the app opens in its
  * language. Never rejects — storage errors fall back to defaults so
  * startup is never blocked. Stored data from older builds is migrated first.
@@ -165,6 +166,7 @@ export async function hydrateLocalState(slug: string): Promise<void> {
     hydrateUiState().catch(() => undefined),
     loadLanguageChoice(),
     hydrateInterests(slug).catch(() => undefined),
+    hydrateNotes(slug).catch(() => undefined),
     hydrateSocial(slug).catch(() => undefined),
   ]);
 }

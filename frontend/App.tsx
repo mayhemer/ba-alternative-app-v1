@@ -10,6 +10,7 @@ import { ArtistDetailProvider } from './src/features/artist-detail/ArtistDetailC
 import { ConflictDetailProvider } from './src/features/conflicts/ConflictDetailContext';
 import { ConflictProvider } from './src/features/conflicts/ConflictContext';
 import { InterestProvider } from './src/features/interests/InterestContext';
+import { NoteProvider } from './src/features/notes/NoteContext';
 import { StarSelectorProvider } from './src/features/interests/StarSelectorContext';
 import { SocialProvider } from './src/features/social/SocialContext';
 import { LensProvider } from './src/features/social/LensContext';
@@ -48,7 +49,9 @@ function AppContent() {
                     <TimelineFilterProvider>
                       <PlanProvider>
                         <SearchProvider>
-                          <AppShell />
+                          <NoteProvider>
+                            <AppShell />
+                          </NoteProvider>
                         </SearchProvider>
                       </PlanProvider>
                     </TimelineFilterProvider>

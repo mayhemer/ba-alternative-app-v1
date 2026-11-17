@@ -50,6 +50,8 @@ const colors = {
   infoText:       '#000000',
   infoSuccess:    '#1a7a3a',   // the tick, dark enough for the light box
   infoDanger:     '#c62828',   // "not saved", dark enough for the light box
+  // ── My note (artist sheet) ──────────────────────────────────────────────────
+  note:           '#d2bd96',   // sepia: my note's text, the line under it and the text being typed, apart from the band's bio
   black:          '#000000',
   white:          '#ffffff',
 };

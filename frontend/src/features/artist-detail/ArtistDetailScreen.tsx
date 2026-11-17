@@ -1,5 +1,5 @@
 import { strings } from '../../i18n/strings';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Linking, TouchableOpacity, View } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 import RenderHtml from 'react-native-render-html';
@@ -19,8 +19,15 @@ import { ArtistSetRow } from './ArtistSetRow';
 import { artistSetRowModel, type ArtistSetRowModel } from './ArtistSetRow.model';
 import { artistLinksModel, type StreamingSite } from './ArtistLinks.model';
 import { heroHeight } from './ArtistHero.model';
+import { ArtistNote } from '../notes/ArtistNote';
 
 const STREAMING_ICON_SIZE = 24;
+
+// With no sets listed, the note follows the photo (16 below it) and this brings
+// it to the 30 the sets keep above and below them.
+const NOTE_GAP_WITHOUT_SETS = 14;
+// How far above the note's top the sheet scrolls it when editing starts.
+const NOTE_REVEAL_MARGIN = 16;
 
 const STREAMING_ICONS: Record<StreamingSite, number> = {
   'spotify': require('../../../assets/spotify-icon-72.png'),
@@ -37,6 +44,11 @@ const HTML_TAG_STYLES = {
 
 type Props = { artist: DbArtist };
 
+type BodyProps = Props & {
+  /** Opens the sheet fully and scrolls its body to this offset (my note's). */
+  revealAt?: (y: number) => void;
+};
+
 // ── Header (sticky — rendered outside scroll view) ────────────────────────────
 
 export function ArtistDetailHeader({ artist }: Props) {
@@ -52,7 +64,7 @@ export function ArtistDetailHeader({ artist }: Props) {
 
 // ── Body (scrollable content) ─────────────────────────────────────────────────
 
-export function ArtistDetailBody({ artist }: Props) {
+export function ArtistDetailBody({ artist, revealAt }: BodyProps) {
   const { closeDetail, innerWidth, hPad, width, height, conflicts, openConflict } = useArtistDerived(artist);
   const bio = useArtistBio(artist);
   const jumpToTimeline = useJumpToTimeline();
@@ -107,6 +119,16 @@ export function ArtistDetailBody({ artist }: Props) {
     })),
     [artistEvents, artist, stageById, categoryById, conflicts, hPad],
   );
+
+  // Editing my note: the sheet opens fully and brings the note into view. Not
+  // through expandDetail, whose new state would render the whole sheet.
+  const noteYRef = useRef(0);
+  const handleNoteLayout = useCallback((e: { nativeEvent: { layout: { y: number } } }): void => {
+    noteYRef.current = e.nativeEvent.layout.y;
+  }, []);
+  const handleNoteEditStart = useCallback((): void => {
+    revealAt?.(Math.max(0, noteYRef.current - NOTE_REVEAL_MARGIN));
+  }, [revealAt]);
 
   const bioHtml = bio.state === 'ready' ? bio.content : '';
   const htmlSource = useMemo(() => ({ html: bioHtml }), [bioHtml]);
@@ -197,6 +219,14 @@ export function ArtistDetailBody({ artist }: Props) {
             ))}
           </View>
         }
+
+        {/* ── My note: private, between the band's sets and its bio ── */}
+        <View
+          onLayout={handleNoteLayout}
+          style={{ paddingHorizontal: hPad, marginTop: rows.length === 0 ? NOTE_GAP_WITHOUT_SETS : 0 }}
+        >
+          <ArtistNote key={artist.artistId} artistId={artist.artistId} onEditStart={handleNoteEditStart} />
+        </View>
 
         {/* Three outcomes, deliberately distinct: the bios are still on their
             way, they could not be fetched (offline), or they arrived and this

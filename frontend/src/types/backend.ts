@@ -75,6 +75,16 @@ export interface DbUserInterest {
   updatedAt: number;
 }
 
+// My private note on an artist, per edition. Never shared: it lives in a table
+// of its own, which the share route does not read. An empty text is a cleared
+// note, kept with its date so the clear wins the merge on other devices.
+export interface DbUserNote {
+  userId: string;
+  slugArtistId: string; // composite SK: "{slug}#{artistId}"
+  text: string;         // at most NOTE_MAX_LENGTH characters; '' = cleared
+  updatedAt: number;
+}
+
 export interface DbShareToken {
   token: string;
   userId: string;

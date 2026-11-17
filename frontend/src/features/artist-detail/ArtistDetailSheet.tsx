@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Platform, ScrollView, View } from 'react-native';
+import type { ScrollViewInstance } from 'react-native';
 import BottomSheet, { BottomSheetScrollView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
-import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
+import type { BottomSheetBackdropProps, BottomSheetScrollViewMethods } from '@gorhom/bottom-sheet';
 import { ReduceMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useArtistDetail } from './ArtistDetailContext';
@@ -32,6 +33,16 @@ export function ArtistDetailSheet() {
   const { top } = useSafeAreaInsets();
   const { height } = useLayoutMode();
   const sheetRef = useRef<BottomSheet>(null);
+  // The body's scroll view, one per platform branch, so editing my note can
+  // open the sheet fully and bring the note into view (ArtistDetailBody's
+  // revealAt). The web build has no collapsed stop.
+  const webScrollRef = useRef<ScrollViewInstance>(null);
+  const sheetScrollRef = useRef<BottomSheetScrollViewMethods>(null);
+  const revealBodyAt = useCallback((y: number): void => {
+    sheetRef.current?.snapToIndex(1);
+    webScrollRef.current?.scrollTo({ y, animated: true });
+    sheetScrollRef.current?.scrollTo({ y, animated: true });
+  }, []);
 
   // '40%' of a landscape phone is ~150 px — barely the title row — so the
   // collapsed stop is sized in points, with a floor and a ceiling.
@@ -79,8 +90,8 @@ export function ArtistDetailSheet() {
     return (
       <View style={{ position: 'absolute', inset: 0, backgroundColor: colors.background }}>
         <ArtistDetailHeader artist={detailState.artist} />
-        <ScrollView>
-          <ArtistDetailBody artist={detailState.artist} />
+        <ScrollView ref={webScrollRef}>
+          <ArtistDetailBody artist={detailState.artist} revealAt={revealBodyAt} />
         </ScrollView>
       </View>
     );
@@ -120,9 +131,9 @@ export function ArtistDetailSheet() {
       {detailState.artist !== null && (
         <ArtistDetailHeader artist={detailState.artist} />
       )}
-      <BottomSheetScrollView>
+      <BottomSheetScrollView ref={sheetScrollRef}>
         {detailState.artist !== null && (
-          <ArtistDetailBody artist={detailState.artist} />
+          <ArtistDetailBody artist={detailState.artist} revealAt={revealBodyAt} />
         )}
       </BottomSheetScrollView>
     </BottomSheet>

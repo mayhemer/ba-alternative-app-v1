@@ -1,4 +1,5 @@
 import React from 'react';
+import { StyleSheet } from 'react-native';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { ArtistDetailSheet } from './ArtistDetailSheet';
 import { PerfProviders } from '../../../tests/setup/PerfProviders';
@@ -9,6 +10,7 @@ import { rendersSinceReset, resetRenders } from '../../../tests/setup/countRende
 import type { DbArtist, DbCategory, DbEvent, DbStage } from '../../types/backend';
 import { putArtistBios } from '../../cache/cacheService';
 import { setLanguageChoice } from '../../i18n/language';
+import { getLocalNotes, hydrateNotes, setNote } from '../../cache/notesCache';
 
 // ── The artist sheet reacts to every input ────────────────────────────────────
 //
@@ -100,12 +102,14 @@ function sync(events: DbEvent[]): void {
 }
 
 let openDetail: (artist: DbArtist) => void;
+let closeDetail: () => void;
 let cycle: (artistId: string) => void;
 
 function Controls() {
   const detail = useArtistDetail();
   const { cycleStatus } = useInterestCycle();
   openDetail = (a) => { detail.openDetail(a, 'expanded'); };
+  closeDetail = detail.closeDetail;
   cycle = (artistId) => { cycleStatus(artistId); };
   return null;
 }
@@ -215,5 +219,147 @@ describe('in Czech', () => {
   it('says the clash in Czech', async () => {
     await openSheet({ bastion: 'will_go', rival: 'will_go' });
     expect(screen.getAllByText('Překrývá se s jiným vystoupením').length).toBeGreaterThan(0);
+  });
+});
+
+// ── My note ───────────────────────────────────────────────────────────────────
+//
+// Dimensions: the saved note (none, a text), the band's sets (some, none yet),
+// how editing ends (Done, closing the sheet) and what was typed (text, nothing).
+// Signed out here (the auth mock), so a save stays on the device; the server
+// side is NoteContext.test.tsx.
+
+describe('my note', () => {
+  const LONER = artist('loner', 'LONER');
+
+  beforeEach(async () => {
+    await setNote(SLUG, 'bastion', '');
+    await setNote(SLUG, 'loner', '');
+    await hydrateNotes(SLUG);
+  });
+
+  const typeNote = async (text: string): Promise<void> => {
+    await fireEvent.changeText(screen.getByLabelText('Edit my note'), text);
+  };
+  const done = async (): Promise<void> => { await fireEvent.press(screen.getByText('Done')); };
+  const fontFamilyOf = (text: string): unknown => StyleSheet.flatten(screen.getByText(text).props.style).fontFamily;
+
+  it('offers to add a note when there is none', async () => {
+    await openSheet();
+    expect(screen.getByText('Add a note')).toBeTruthy();
+    expect(screen.queryByText('Edit my note')).toBeNull();
+  });
+
+  it('opens the editor, titled Edit my note, on Add a note', async () => {
+    await openSheet();
+    await fireEvent.press(screen.getByText('Add a note'));
+    expect(screen.getByText('Edit my note')).toBeTruthy();
+    expect(screen.getByText('0 / 1000')).toBeTruthy();
+    expect(screen.queryByText('Add a note')).toBeNull();
+    expect(screen.getByLabelText('Edit my note').props.placeholder).toBeUndefined();
+  });
+
+  it('shows the typed note in italic after Done, and keeps it', async () => {
+    await openSheet();
+    await fireEvent.press(screen.getByText('Add a note'));
+    await typeNote('Front left');
+    expect(screen.getByText('10 / 1000')).toBeTruthy();
+    await done();
+    expect(screen.getByText('Front left')).toBeTruthy();
+    expect(fontFamilyOf('Front left')).toBe('Italic-Default');
+    expect(screen.queryByText('Edit my note')).toBeNull();
+    expect(getLocalNotes(SLUG).bastion.text).toBe('Front left');
+  });
+
+  it('draws the note, its line and the text being typed in sepia', async () => {
+    await setNote(SLUG, 'bastion', 'Front left');
+    await openSheet();
+    const note = StyleSheet.flatten(screen.getByText('Front left').props.style);
+    expect(note.color).toBe('#d2bd96');
+    expect(note.borderBottomColor).toBe('#d2bd96');
+    await fireEvent.press(screen.getByText('Front left'));
+    expect(StyleSheet.flatten(screen.getByLabelText('Edit my note').props.style).color).toBe('#d2bd96');
+  });
+
+  it('shows a saved note without any title above it', async () => {
+    await setNote(SLUG, 'bastion', 'Front left');
+    await openSheet();
+    expect(screen.getByText('Front left')).toBeTruthy();
+    expect(screen.queryByText('Edit my note')).toBeNull();
+    expect(screen.queryByText('Add a note')).toBeNull();
+  });
+
+  it('edits a saved note from its own text', async () => {
+    await setNote(SLUG, 'bastion', 'Front left');
+    await openSheet();
+    await fireEvent.press(screen.getByText('Front left'));
+    expect(screen.getByDisplayValue('Front left')).toBeTruthy();
+    await typeNote('Front right');
+    await done();
+    expect(screen.getByText('Front right')).toBeTruthy();
+  });
+
+  it('offers Add a note again once the note is emptied', async () => {
+    await setNote(SLUG, 'bastion', 'Front left');
+    await openSheet();
+    await fireEvent.press(screen.getByText('Front left'));
+    await typeNote('   ');
+    await done();
+    expect(screen.getByText('Add a note')).toBeTruthy();
+    expect(getLocalNotes(SLUG).bastion.text).toBe('');
+  });
+
+  it('keeps what was typed when the sheet closes while editing', async () => {
+    await openSheet();
+    await fireEvent.press(screen.getByText('Add a note'));
+    await typeNote('Merch: red vinyl');
+    await act(async () => { closeDetail(); });
+    expect(getLocalNotes(SLUG).bastion.text).toBe('Merch: red vinyl');
+  });
+
+  it('keeps a draft on the device while typing, before Done', async () => {
+    await openSheet();
+    await fireEvent.press(screen.getByText('Add a note'));
+    await typeNote('Merch');
+    await act(async () => { await new Promise((r) => { setTimeout(r, 600); }); });
+    expect(getLocalNotes(SLUG).bastion.text).toBe('Merch');
+  });
+
+  it('offers a note for a band with no stage and time yet', async () => {
+    const collector = createDataCollector();
+    collector.setArtists([BASTION, RIVAL, LONER]);
+    collector.setCategories([{ slug: SLUG, categoryId: 'c1', color: 0, localized: [] } as unknown as DbCategory]);
+    collector.setStages([{ slug: SLUG, stageId: 's1', imageUrl: '', thumbUrl: '', localized: [{ language: 'en', name: 'Octagon' }] } as unknown as DbStage]);
+    collector.setEvents(EVENTS);
+    populateCache(SLUG, collector.build(), at('2025-08-06T09:00:00+02:00'));
+    await render(<PerfProviders><><Controls /><ArtistDetailSheet /></></PerfProviders>);
+    await act(async () => { openDetail(LONER); });
+
+    expect(screen.queryByText('Octagon')).toBeNull();
+    await fireEvent.press(screen.getByText('Add a note'));
+    await typeNote('Ask when they play');
+    await done();
+    expect(screen.getByText('Ask when they play')).toBeTruthy();
+  });
+
+  it('shows each artist\'s own note when the sheet moves to another artist', async () => {
+    await setNote(SLUG, 'bastion', 'Front left');
+    await openSheet();
+    await act(async () => { openDetail(RIVAL); });
+    expect(screen.queryByText('Front left')).toBeNull();
+    expect(screen.getByText('Add a note')).toBeTruthy();
+  });
+
+  describe('render counts', () => {
+    it('typing and saving a note renders neither the header nor the body, nor any set row', async () => {
+      await openSheet({ bastion: 'will_go' });
+      resetPartRenders();
+      resetRenders();
+      await fireEvent.press(screen.getByText('Add a note'));
+      await typeNote('Front left');
+      await done();
+      expect(mockPartRenders).toEqual({});
+      expect(rendersSinceReset()).toEqual({});
+    });
   });
 });

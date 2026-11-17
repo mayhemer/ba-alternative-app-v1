@@ -15,6 +15,9 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 export const APP_FONTS = {
   'Regular-Default': require('../../assets/WorkSans-Regular.ttf'),
   'Bold-Default': require('../../assets/WorkSans-Bold.ttf'),
+  // My notes on the artist sheet: a real italic face, so iOS (which does not
+  // slant a custom font) and Android (which would fake it) draw it alike.
+  'Italic-Default': require('../../assets/WorkSans-Italic.ttf'),
   //'Regular-Default': require('../../assets/DarkerGrotesque-Regular.ttf'),
   //'Bold-Default': require('../../assets/DarkerGrotesque-Bold.ttf'),
   ...Ionicons.font,
