@@ -64,6 +64,8 @@ export class Api extends Construct {
       [HttpMethod.GET, '/user/{slug}/schedule'],
       [HttpMethod.PUT, '/user/{slug}/schedule/{artistId}'],
       [HttpMethod.DELETE, '/user/{slug}/schedule/{artistId}'],
+      [HttpMethod.GET, '/user/{slug}/notes'],
+      [HttpMethod.PUT, '/user/{slug}/notes/{artistId}'],
       [HttpMethod.POST, '/{slug}/share'],
       [HttpMethod.DELETE, '/share/{token}'],
     ];

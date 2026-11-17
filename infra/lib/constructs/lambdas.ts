@@ -26,6 +26,7 @@ export class Lambdas extends Construct {
       CATEGORIES_TABLE: tables.categories.tableName,
       EVENTS_TABLE: tables.events.tableName,
       USER_INTERESTS_TABLE: tables.userInterests.tableName,
+      USER_NOTES_TABLE: tables.userNotes.tableName,
       SHARE_TOKENS_TABLE: tables.shareTokens.tableName,
       SYNC_STATE_TABLE: tables.syncState.tableName,
     };
@@ -83,6 +84,7 @@ export class Lambdas extends Construct {
       table.grantReadData(this.apiFn);
     }
     tables.userInterests.grantReadWriteData(this.apiFn);
+    tables.userNotes.grantReadWriteData(this.apiFn);
     tables.shareTokens.grantReadWriteData(this.apiFn);
 
     // IAM: Sync Lambda — read-write public tables + syncState

@@ -11,6 +11,7 @@ export class Tables extends Construct {
   readonly categories: dynamodb.Table;
   readonly events: dynamodb.Table;
   readonly userInterests: dynamodb.Table;
+  readonly userNotes: dynamodb.Table;
   readonly shareTokens: dynamodb.Table;
   readonly syncState: dynamodb.Table;
 
@@ -55,6 +56,15 @@ export class Tables extends Construct {
     // SK is "slug#artistId" so a user's interests span multiple editions in one table
     this.userInterests = new dynamodb.Table(this, 'UserInterests', {
       tableName: 'ba-user-interests',
+      partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'slugArtistId', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: RemovalPolicy.RETAIN,
+    });
+
+    // A user's private notes, keyed like the interests; never read by the share route
+    this.userNotes = new dynamodb.Table(this, 'UserNotes', {
+      tableName: 'ba-user-notes',
       partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
       sortKey: { name: 'slugArtistId', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
