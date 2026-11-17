@@ -15,27 +15,25 @@ const CARD_STYLE = {
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
   minHeight: 48,
-  paddingVertical: 6,
-  paddingHorizontal: 14,
-  backgroundColor: colors.toastSurface,
-  borderWidth: 1,
-  borderColor: colors.toastBorder,
-  borderRadius: 18,
+  paddingVertical: 4.5,
+  paddingHorizontal: 10.5,
+  // Light and square-cornered, dark text on it: apart from the dark screen under it.
+  backgroundColor: colors.infoSurface,
   boxShadow: FLOATING_SHADOW,
 };
 /** In a panel heading: shorter, so it doesn't spill over the rows around it. */
-const COMPACT_CARD_STYLE = { ...CARD_STYLE, minHeight: 36, paddingVertical: 4, paddingHorizontal: 10 };
+const COMPACT_CARD_STYLE = { ...CARD_STYLE, minHeight: 36, paddingVertical: 3, paddingHorizontal: 7.5 };
 
-const MESSAGE_STYLE = { flexShrink: 1, fontSize: 13, fontWeight: '700' as const, color: colors.white, marginHorizontal: 6 };
+const MESSAGE_STYLE = { flexShrink: 1, fontSize: 13, fontWeight: '700' as const, color: colors.infoText, marginHorizontal: 6 };
 
 function renderIcon(icon: FeedbackVariant): React.ReactNode {
   switch (icon) {
     case 'progress':
-      return <ActivityIndicator testID="feedback-progress" size="small" color={colors.white} />;
+      return <ActivityIndicator testID="feedback-progress" size="small" color={colors.infoText} />;
     case 'confirmation':
-      return <Text style={{ color: colors.success, fontSize: 13, fontWeight: '700' }}>✓</Text>;
+      return <Text style={{ color: colors.infoSuccess, fontSize: 13, fontWeight: '700' }}>✓</Text>;
     case 'warning':
-      return <Text style={{ color: colors.danger, fontSize: 13, fontWeight: '700' }}>⚠</Text>;
+      return <Text style={{ color: colors.infoDanger, fontSize: 13, fontWeight: '700' }}>⚠</Text>;
   }
 }
 

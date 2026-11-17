@@ -122,9 +122,9 @@ when the festival edition changes, since ids are scoped to an edition.
   - **A pinch on My plan** (anchor `bottom`): at the bottom, just above the bottom bar
     (`BOTTOM_OVERLAY_CLEARANCE` above the safe area's bottom edge, in the flow or floating), centred
     across the whole content column ([my-plan.md](my-plan.md) › Pinch).
-- **Look**: a dark card lighter than every other surface (`toastSurface`), a light 1 pt border, 18 pt
-  corners and a strong drop shadow (`FLOATING_SHADOW`, a `boxShadow`, the same on iOS, Android and
-  web). White text, a white spinner, a green tick, a red warning sign.
+- **Look**: an off-white card (`infoSurface`) with square corners, no border, and a strong drop
+  shadow (`FLOATING_SHADOW`, a `boxShadow`, the same on iOS, Android and web). Black text and
+  spinner (`infoText`), a dark green tick (`infoSuccess`), a dark red warning sign (`infoDanger`).
 - **It never covers a star button, except a pinch's toast on My plan.** Under the top bar it stays
   in a band of the content column that stops `STAR_COLUMN_RESERVE` short of its right edge
   (`toastBand()`; the reserve is derived from the star sizes and hit slop in StarButton), so it
