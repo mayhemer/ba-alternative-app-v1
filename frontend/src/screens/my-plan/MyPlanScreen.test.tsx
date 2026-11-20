@@ -723,17 +723,17 @@ describe('the chrome', () => {
     await act(async () => {
       controller.begin({ scale: 1 });
       controller.activate({ scale: 1 });
-      controller.update({ scale: 0.75 });
+      controller.update({ scale: 0.65 });
     });
     expect(screen.getByTestId('plan-filter-state-maybe')).toBeTruthy();
     expect(toast()).toBe('Showing all my picks');
-    await act(async () => { controller.update({ scale: 0.55 }); });
+    await act(async () => { controller.update({ scale: 0.44 }); });
     expect(screen.getByTestId('plan-filter-state-must')).toBeTruthy();
     expect(toast()).toBe('Showing only what I must see');
-    // Turned back out, past 1.25× of 0.55.
-    await act(async () => { controller.update({ scale: 0.7 }); });
+    // Turned back out, past 1.41× of 0.44 (0.620).
+    await act(async () => { controller.update({ scale: 0.65 }); });
     expect(screen.getByTestId('plan-filter-state-maybe')).toBeTruthy();
-    await act(async () => { controller.end({ scale: 0.7 }); });
+    await act(async () => { controller.end({ scale: 0.65 }); });
     expect(screen.getByTestId('plan-filter-state-maybe')).toBeTruthy();
   });
 
