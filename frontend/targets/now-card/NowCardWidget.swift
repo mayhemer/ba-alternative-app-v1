@@ -23,7 +23,7 @@ import WidgetKit
 
 private enum Palette {
   // styling/tokens.js
-  static let background = Color(hex: 0x0A0A0A)
+  static let surfaceRaised = Color(hex: 0x1A1A1A)
   static let text = Color.white
   static let textSecondary = Color(hex: 0xDDDDDD)
   static let textMuted = Color(hex: 0xBBBBBB)
@@ -85,7 +85,7 @@ struct NowCardLiveActivity: Widget {
         .padding(.horizontal, Size.padding)
         .padding(.top, Size.paddingTop)
         .padding(.bottom, Size.paddingBottom)
-        .activityBackgroundTint(Palette.background.opacity(0.95))
+        .activityBackgroundTint(Palette.surfaceRaised.opacity(0.75))
         .activitySystemActionForegroundColor(Palette.text)
         .widgetURL(cardURL)
     } dynamicIsland: { context in
