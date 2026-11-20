@@ -4,7 +4,7 @@ import type { SharedValue } from 'react-native-reanimated';
 import type { DbArtist, DbEvent } from '../../types/backend';
 import { CANVAS_WIDTH, LANE_BORDER_WIDTH } from './timelineLayout';
 import { ArtistBlock } from './ArtistBlock';
-import { artistBlockModel, blockSpan } from './ArtistBlock.model';
+import { blockSpan, cachedArtistBlockModel } from './ArtistBlock.model';
 import type { CategoryLaneModel } from './CategoryLane.model';
 import { spanInMountWindow } from './mountWindow';
 import { NowLine } from './NowLine';
@@ -64,7 +64,7 @@ function CategoryLaneBase({ item, dayStart, nowX, onBlockPress, labelRepeat, mou
         {blocks.map((set) => (
           <ArtistBlock
             key={set.event.eventId}
-            item={artistBlockModel({
+            item={cachedArtistBlockModel({
               event: set.event,
               artist: set.artist,
               dayStart,

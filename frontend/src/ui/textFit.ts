@@ -21,30 +21,7 @@ export type TextFit = {
   lines: number;
 };
 
-/**
- * Whether `words`, wrapped at their boundaries, are estimated to fill no more
- * than `maxLines` lines of `availableWidth` at `fontSize`, no word wider than
- * a line. Lines are filled greedily, as the text engine fills them; a space
- * counts as a character.
- */
-function wrapsWithin(words: string[], availableWidth: number, maxLines: number, fontSize: number): boolean {
-  const charWidth = fontSize * CHAR_WIDTH_RATIO;
-  let lines = 1;
-  let lineChars = 0;
-  for (const word of words) {
-    if (word.length * charWidth > availableWidth) {
-      return false;
-    }
-    const joined = lineChars === 0 ? word.length : lineChars + 1 + word.length;
-    if (joined * charWidth <= availableWidth) {
-      lineChars = joined;
-    } else {
-      lines += 1;
-      lineChars = word.length;
-    }
-  }
-  return lines <= maxLines;
-}
+const SPACE = 0x20;
 
 /**
  * `baseFontSize` on up to `maxLines` lines when `text` is estimated to fit
@@ -53,14 +30,49 @@ function wrapsWithin(words: string[], availableWidth: number, maxLines: number, 
  * label ellipsizes rather than becoming unreadable. When a word does not fit
  * a line even shrunk, the text engine would break it mid-word, so the label
  * keeps to one line and ellipsizes there instead.
+ *
+ * The words are wrapped greedily, as the text engine fills lines, a space
+ * counting as a character, and no word may be wider than a line. One pass over
+ * the characters, without splitting the text: a timeline's blocks fit their
+ * labels by the hundred.
  */
 export function fitText(text: string, availableWidth: number, maxLines: number, baseFontSize: number): TextFit {
-  const words = text.split(' ').filter((word) => word !== '');
-  if (wrapsWithin(words, availableWidth, maxLines, baseFontSize)) {
+  const charWidth = baseFontSize * CHAR_WIDTH_RATIO;
+  // The wrap at the base size, while every word so far fits a line.
+  let wraps = true;
+  let lines = 1;
+  let lineChars = 0;
+  let longest = 0;
+  let word = 0;
+  for (let i = 0; i <= text.length; i++) {
+    if (i < text.length && text.charCodeAt(i) !== SPACE) {
+      word += 1;
+      continue;
+    }
+    // A word ends here; repeated spaces end none.
+    if (word === 0) {
+      continue;
+    }
+    longest = Math.max(longest, word);
+    if (wraps) {
+      if (word * charWidth > availableWidth) {
+        wraps = false;
+      } else {
+        const joined = lineChars === 0 ? word : lineChars + 1 + word;
+        if (joined * charWidth <= availableWidth) {
+          lineChars = joined;
+        } else {
+          lines += 1;
+          lineChars = word;
+        }
+      }
+    }
+    word = 0;
+  }
+  if (wraps && lines <= maxLines) {
     return { fontSize: baseFontSize, lines: maxLines };
   }
   const shrunk = baseFontSize * TEXT_SHRINK_SCALE;
-  const longest = Math.max(0, ...words.map((word) => word.length));
   const wordFits = longest * shrunk * CHAR_WIDTH_RATIO <= availableWidth;
   return { fontSize: shrunk, lines: wordFits ? maxLines : 1 };
 }

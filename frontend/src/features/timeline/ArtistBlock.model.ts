@@ -3,6 +3,7 @@ import type { InterestStatus } from '../../cache/cacheService';
 import type { ConflictOverlap } from '../../lib/conflictUtils';
 import { isInterested } from '../../lib/interestUtils';
 import { fitText } from '../../ui/textFit';
+import { equalValues } from '../../ui/sameProps';
 import { categoryBlockColors } from '../../utils/color';
 import { BLOCK_FONT_SIZE, LANE_BORDER_WIDTH, LANE_HEIGHT, MIN_BLOCK_WIDTH, PIXELS_PER_MS, timeToX } from './timelineLayout';
 import { formatTime } from '../../utils/festivalTime';
@@ -142,7 +143,12 @@ function labelOf(artist: DbArtist, event: DbEvent, width: number, status: Intere
   };
 }
 
-export function artistBlockModel({ event, artist, dayStart, status, categoryColor, labelRepeat, subRow, overlaps, abutsNext }: ArtistBlockInputs): ArtistBlockModel {
+export function artistBlockModel(inputs: ArtistBlockInputs): ArtistBlockModel {
+  return blockModel(inputs, undefined);
+}
+
+function blockModel(inputs: ArtistBlockInputs, previous: AskedBefore | undefined): ArtistBlockModel {
+  const { event, artist, dayStart, status, categoryColor, subRow, overlaps, abutsNext } = inputs;
   const span = blockSpan(event, dayStart);
   const left = span.left;
   // Back to back with the next set, a 1 px separator is cut from its end.
@@ -169,8 +175,62 @@ export function artistBlockModel({ event, artist, dayStart, status, categoryColo
     border,
     frame: muted ? BLOCK_LAYOUT.mutedEdge : null,
     textOpacity: muted ? BLOCK_LAYOUT.mutedTextOpacity : 1,
-    label: labelOf(artist, event, width, status, labelRepeat),
+    label: labelFor(inputs, width, previous),
     status,
     bars,
   };
+}
+
+// ── The same set's model, asked again ─────────────────────────────────────────
+//
+// A lane asks for its blocks' models on every render: each step of a day's
+// progressive mount, a pick, a sync. Most of its sets are unchanged, so the
+// model each one got last time is handed back, the same object, and its block's
+// memo skips it at the first comparison. A set whose inputs did change gets a
+// new model, keeping its label (the font fit, the time) unless the label's own
+// inputs changed: only the star coming or going changes it with a pick.
+//
+// Keyed by the set's record: the cache store hands out the same record until a
+// sync replaces it, and a replaced one's entry goes with it.
+
+type AskedBefore = { inputs: ArtistBlockInputs; model: ArtistBlockModel };
+
+/**
+ * The label the set showed last time, while its name, its width, the star
+ * (whether it takes room) and the repeat gap are the same; else laid out anew.
+ */
+function labelFor({ event, artist, status, labelRepeat }: ArtistBlockInputs, width: number, previous: AskedBefore | undefined): BlockLabelModel | null {
+  if (previous !== undefined
+    && previous.inputs.artist.name === artist.name
+    && previous.model.width === width
+    && isInterested(previous.inputs.status) === isInterested(status)
+    && previous.inputs.labelRepeat === labelRepeat) {
+    return previous.model.label;
+  }
+  return labelOf(artist, event, width, status, labelRepeat);
+}
+
+const askedBefore = new WeakMap<DbEvent, AskedBefore>();
+
+function sameInputs(a: ArtistBlockInputs, b: ArtistBlockInputs): boolean {
+  return a.artist === b.artist
+    && a.dayStart === b.dayStart
+    && a.status === b.status
+    && a.categoryColor === b.categoryColor
+    && a.labelRepeat === b.labelRepeat
+    && a.subRow === b.subRow
+    && a.abutsNext === b.abutsNext
+    // Rebuilt with the conflicts on every pick: compared by value.
+    && equalValues(a.overlaps, b.overlaps);
+}
+
+/** artistBlockModel, the same object again while the set's inputs are the same. */
+export function cachedArtistBlockModel(inputs: ArtistBlockInputs): ArtistBlockModel {
+  const previous = askedBefore.get(inputs.event);
+  if (previous !== undefined && sameInputs(previous.inputs, inputs)) {
+    return previous.model;
+  }
+  const model = blockModel(inputs, previous);
+  askedBefore.set(inputs.event, { inputs, model });
+  return model;
 }

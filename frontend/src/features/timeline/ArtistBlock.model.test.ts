@@ -1,4 +1,4 @@
-import { artistBlockModel, blockSpan, type ArtistBlockInputs } from './ArtistBlock.model';
+import { artistBlockModel, blockSpan, cachedArtistBlockModel, type ArtistBlockInputs } from './ArtistBlock.model';
 import type { DbArtist, DbEvent } from '../../types/backend';
 
 // ── A set's block, as a model ─────────────────────────────────────────────────
@@ -213,5 +213,99 @@ describe('its look, by my pick', () => {
 
   it('draws a "don\'t go" with no fill and no stage colour: a dotted grey 1 pt frame all round, and its text at 30 %', () => {
     expect(model({ status: 'dont_go' })).toMatchObject({ bg: 'transparent', leftEdge: null, frame: '#4d4d4d', textOpacity: 0.3 });
+  });
+});
+
+describe('its model asked again, as a lane does on each render', () => {
+  // A lane asks for its blocks' models on every render (a mount step, a pick).
+  // The same set's model comes back as the same object while its inputs are the
+  // same; the label, and so its font fit, is worked out again only when what it
+  // depends on changes: the star coming or going (it takes 11 px), the block's
+  // width, the repeat gap, the name. Every case takes its own event record, as
+  // a set's record is the key.
+  function inputsFor(overrides: Partial<ArtistBlockInputs> = {}): ArtistBlockInputs {
+    return {
+      event: event('14:30', '15:05'),
+      artist: artist(NAMES.fitsOnlyWithoutStar),
+      dayStart: WED,
+      status: 'none',
+      categoryColor: 'rgb(255, 0, 0)',
+      labelRepeat: 400,
+      subRow: 0,
+      overlaps: undefined,
+      abutsNext: false,
+      ...overrides,
+    };
+  }
+
+  it('is the same model for the same inputs, a new but equal overlaps list included', () => {
+    const inputs = inputsFor({ overlaps: [{ from: at('14:30'), to: at('14:40') }] });
+    const first = cachedArtistBlockModel(inputs);
+    expect(cachedArtistBlockModel({ ...inputs })).toBe(first);
+    expect(cachedArtistBlockModel({ ...inputs, overlaps: [{ from: at('14:30'), to: at('14:40') }] })).toBe(first);
+  });
+
+  it('is what the model function gives', () => {
+    const inputs = inputsFor({ status: 'maybe' });
+    expect(cachedArtistBlockModel(inputs)).toEqual(artistBlockModel(inputs));
+  });
+
+  it('keeps the label from Maybe to Must-see, the star drawn on both, and changes only the edge', () => {
+    const inputs = inputsFor({ status: 'maybe' });
+    const maybe = cachedArtistBlockModel(inputs);
+    const mustSee = cachedArtistBlockModel({ ...inputs, status: 'will_go' });
+    expect(maybe.leftEdge).toBe('dotted');
+    expect(mustSee.leftEdge).toBe('solid');
+    expect(mustSee.label).toBe(maybe.label);
+  });
+
+  it('keeps the label from no pick to "don\'t go", neither drawing the star', () => {
+    const inputs = inputsFor();
+    const none = cachedArtistBlockModel(inputs);
+    const dontGo = cachedArtistBlockModel({ ...inputs, status: 'dont_go' });
+    expect(dontGo.frame).toBe('#4d4d4d');
+    expect(dontGo.label).toBe(none.label);
+  });
+
+  it('keeps the label when only the overlaps change, the bars following them', () => {
+    const inputs = inputsFor();
+    const before = cachedArtistBlockModel(inputs);
+    const after = cachedArtistBlockModel({ ...inputs, overlaps: [{ from: at('14:30'), to: at('14:40') }] });
+    expect(before.bars).toEqual([]);
+    expect(after.bars).toHaveLength(1);
+    expect(after.label).toBe(before.label);
+  });
+
+  it('fits the label again when the star comes: MASTODON 12 without it, shrunk to 9.6 with it, and back', () => {
+    // 80.17 px without the star, 69.17 with it; see NAMES.
+    const inputs = inputsFor();
+    expect(cachedArtistBlockModel(inputs).label?.fontSize).toBe(12);
+    expect(cachedArtistBlockModel({ ...inputs, status: 'will_go' }).label?.fontSize).toBeCloseTo(9.6);
+    expect(cachedArtistBlockModel({ ...inputs, status: 'none' }).label?.fontSize).toBe(12);
+  });
+
+  it('lays the label out again when the repeat gap changes: copies every 300 px instead of 400', () => {
+    // 13:00–23:59, label width 1848.2: copies at 400, 800, 1200, 1600; at a
+    // 300 px gap, 300 … 1500 (1800 + 90 > 1848.2).
+    const inputs = inputsFor({ event: event('13:00', '23:59'), artist: artist('KUNDY CREW') });
+    expect(cachedArtistBlockModel(inputs).label?.repeats.map((r) => r.left)).toEqual([400, 800, 1200, 1600]);
+    expect(cachedArtistBlockModel({ ...inputs, labelRepeat: 300 }).label?.repeats.map((r) => r.left)).toEqual([300, 600, 900, 1200, 1500]);
+  });
+
+  it('works the label out again for the block 1 px shorter once the next set abuts it', () => {
+    // 35 minutes: 99.17 px whole, 98.17 cut; the label is fitted to the width
+    // the block is drawn at.
+    const inputs = inputsFor();
+    const whole = cachedArtistBlockModel(inputs);
+    const cut = cachedArtistBlockModel({ ...inputs, abutsNext: true });
+    expect(whole.width).toBeCloseTo(99.17, 2);
+    expect(cut.width).toBeCloseTo(98.17, 2);
+    expect(cut.label).not.toBe(whole.label);
+  });
+
+  it('names the set anew when the artist is renamed', () => {
+    const inputs = inputsFor();
+    expect(cachedArtistBlockModel(inputs).label?.name).toBe('MASTODON');
+    expect(cachedArtistBlockModel({ ...inputs, artist: artist('MASTODON II') }).label?.name).toBe('MASTODON II');
   });
 });

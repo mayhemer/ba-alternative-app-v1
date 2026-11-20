@@ -150,8 +150,9 @@ function ArtistBlockBase({ item, onPress }: Props) {
 }
 
 /**
- * Renders again only when what it shows changes (sameProps). The lane rebuilds
- * its blocks' models on every render — a mount step, a pick — so each block
- * skips exactly the renders that would repaint the same thing.
+ * Renders again only when what it shows changes (sameProps). The lane asks for
+ * its blocks' models on every render — a mount step, a pick — and gets an
+ * unchanged set's model back as the same object (cachedArtistBlockModel), so
+ * each block skips exactly the renders that would repaint the same thing.
  */
 export const ArtistBlock = React.memo(ArtistBlockBase, sameProps);
