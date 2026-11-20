@@ -15,24 +15,52 @@ import { CHAR_WIDTH_RATIO } from './charWidthRatio';
 
 // The estimate's glyph width per platform: ui/charWidthRatio.
 
+export type TextFit = {
+  fontSize: number;
+  /** For `numberOfLines`: the lines allowed, or 1 where a word would otherwise be broken. */
+  lines: number;
+};
+
 /**
- * `baseFontSize`, or `TEXT_SHRINK_SCALE` of it when the label is estimated not
- * to fit `availableWidth` across `lines` lines. There is no third step: below
- * the shrunk size the label ellipsizes rather than becoming unreadable.
- *
- * The estimate spreads the label evenly over the available lines, so it is
- * optimistic for multi-line labels, which wrap at word boundaries. Erring that
- * way degrades to "truncated but readable" rather than "fits but illegible".
+ * Whether `words`, wrapped at their boundaries, are estimated to fill no more
+ * than `maxLines` lines of `availableWidth` at `fontSize`, no word wider than
+ * a line. Lines are filled greedily, as the text engine fills them; a space
+ * counts as a character.
  */
-export function fitFontSize(
-  charCount: number,
-  availableWidth: number,
-  lines: number,
-  baseFontSize: number,
-): number {
-  const estimatedWidth = charCount * baseFontSize * CHAR_WIDTH_RATIO;
-  if (estimatedWidth / lines > availableWidth) {
-    return baseFontSize * TEXT_SHRINK_SCALE;
+function wrapsWithin(words: string[], availableWidth: number, maxLines: number, fontSize: number): boolean {
+  const charWidth = fontSize * CHAR_WIDTH_RATIO;
+  let lines = 1;
+  let lineChars = 0;
+  for (const word of words) {
+    if (word.length * charWidth > availableWidth) {
+      return false;
+    }
+    const joined = lineChars === 0 ? word.length : lineChars + 1 + word.length;
+    if (joined * charWidth <= availableWidth) {
+      lineChars = joined;
+    } else {
+      lines += 1;
+      lineChars = word.length;
+    }
   }
-  return baseFontSize;
+  return lines <= maxLines;
+}
+
+/**
+ * `baseFontSize` on up to `maxLines` lines when `text` is estimated to fit
+ * `availableWidth` there, wrapped at word boundaries; otherwise
+ * `TEXT_SHRINK_SCALE` of it. There is no third step: below the shrunk size the
+ * label ellipsizes rather than becoming unreadable. When a word does not fit
+ * a line even shrunk, the text engine would break it mid-word, so the label
+ * keeps to one line and ellipsizes there instead.
+ */
+export function fitText(text: string, availableWidth: number, maxLines: number, baseFontSize: number): TextFit {
+  const words = text.split(' ').filter((word) => word !== '');
+  if (wrapsWithin(words, availableWidth, maxLines, baseFontSize)) {
+    return { fontSize: baseFontSize, lines: maxLines };
+  }
+  const shrunk = baseFontSize * TEXT_SHRINK_SCALE;
+  const longest = Math.max(0, ...words.map((word) => word.length));
+  const wordFits = longest * shrunk * CHAR_WIDTH_RATIO <= availableWidth;
+  return { fontSize: shrunk, lines: wordFits ? maxLines : 1 };
 }

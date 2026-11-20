@@ -32,7 +32,7 @@ function ArtistDetailTitleBase({ item, onStar, onExpand, onClose }: Props) {
     }}>
       <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
         <Text
-          numberOfLines={TITLE_LAYOUT.lines}
+          numberOfLines={item.lines}
           style={{
             color: colors.textPrimary,
             flex: 1,

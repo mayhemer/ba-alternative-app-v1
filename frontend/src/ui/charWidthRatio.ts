@@ -8,7 +8,7 @@ import { Platform } from 'react-native';
 // Empirical, so no test checks these values: the tests of ui/textFit and of the
 // labels it sizes replace this module with a fixed ratio.
 export const CHAR_WIDTH_RATIO = Platform.select({
-  ios: 1.0,
+  ios: 0.90,
   android: 0.75,
   default: 0.75,
 });

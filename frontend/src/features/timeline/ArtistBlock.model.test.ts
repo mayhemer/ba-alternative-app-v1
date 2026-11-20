@@ -24,7 +24,11 @@ import type { DbArtist, DbEvent } from '../../types/backend';
 // the 35-minute block's label: 99.17 − 3 − 16 = 80.17 px, 69.17 with the star.
 //   MASTODON     8 × 9 = 72 — fits 80.17, not 69.17 (96 without the ratio)
 //   CRYSTALLAKE 11 × 9 = 99 — does not fit 80.17
-jest.mock('../../ui/charWidthRatio', () => ({ CHAR_WIDTH_RATIO: 0.75 }));
+// One case below takes iOS's ratio instead (see its describe).
+let mockCharWidthRatio = 0.75;
+jest.mock('../../ui/charWidthRatio', () => ({
+  get CHAR_WIDTH_RATIO() { return mockCharWidthRatio; },
+}));
 
 const NAMES = { fitsOnlyWithoutStar: 'MASTODON', tooLong: 'CRYSTALLAKE' };
 
@@ -140,6 +144,30 @@ describe('its label', () => {
     });
     expect(blockOf(510).label?.repeats.map((r) => [r.left, Math.round(r.width)])).toEqual([[400, 91]]);
     expect(blockOf(508).label?.repeats).toEqual([]);
+  });
+});
+
+describe('its label at iOS\'s glyph width: words are never broken', () => {
+  // At iOS's ratio, 0.90 when written, a character is 10.8 px at 12 and 8.64 px
+  // shrunk. NOVEMBERS DOOM, Must-see (the star drawn):
+  //   15:45–16:25, 40 min: 113.33 − 3 − 16 − 11 = 83.33 px for the label.
+  //     NOVEMBERS 9 × 10.8 = 97.2 does not fit at 12 (the name spread over two
+  //     lines would: 14 × 10.8 / 2 = 75.6); shrunk 9 × 8.64 = 77.76 fits.
+  //   15:45–16:20, 35 min: 99.17 − 30 = 69.17 px; NOVEMBERS 77.76 does not fit
+  //     even shrunk.
+  beforeEach(() => { mockCharWidthRatio = 0.9; });
+  afterEach(() => { mockCharWidthRatio = 0.75; });
+
+  it('shrinks NOVEMBERS DOOM at 15:45–16:25 so NOVEMBERS fits a line, the name over two', () => {
+    const label = model({ name: 'NOVEMBERS DOOM', from: '15:45', to: '16:25', status: 'will_go' }).label!;
+    expect(label.fontSize).toBeCloseTo(9.6);
+    expect(label.lines).toBe(2);
+  });
+
+  it('keeps NOVEMBERS DOOM at 15:45–16:20 to one ellipsized line, NOVEMBERS not fitting even shrunk', () => {
+    const label = model({ name: 'NOVEMBERS DOOM', from: '15:45', to: '16:20', status: 'will_go' }).label!;
+    expect(label.fontSize).toBeCloseTo(9.6);
+    expect(label.lines).toBe(1);
   });
 });
 

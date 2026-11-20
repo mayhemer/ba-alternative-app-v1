@@ -1,7 +1,7 @@
 import type { DbArtist } from '../../types/backend';
 import type { InterestStatus } from '../interests/InterestContext';
 import { getArtistLocalized } from '../../utils/localization';
-import { fitFontSize } from '../../ui/textFit';
+import { fitText } from '../../ui/textFit';
 
 // ── The artist sheet's title row: what it shows ───────────────────────────────
 //
@@ -35,6 +35,8 @@ export type ArtistDetailTitleModel = {
   key: string;
   name: string;
   fontSize: number;
+  /** Up to TITLE_LAYOUT.lines, wrapped at word boundaries; 1 when a word would not fit a line (ui/textFit). */
+  lines: number;
   /** "THRASH METAL  ·  Czech Republic"; empty when neither is known. */
   meta: string;
   /** One of the artist's sets clashes: the ⚠ that expands the sheet. */
@@ -62,10 +64,12 @@ export function artistDetailTitleModel({ artist, status, hasConflict, innerWidth
     + (hasConflict ? TITLE_LAYOUT.conflictWidth + TITLE_LAYOUT.gap : 0)
     + (isWeb ? TITLE_LAYOUT.closeWidth : 0);
   const titleWidth = innerWidth - padding * 2 - TITLE_LAYOUT.marginRight - controls;
+  const { fontSize, lines } = fitText(artist.name, titleWidth, TITLE_LAYOUT.lines, TITLE_LAYOUT.fontSize);
   return {
     key: artist.artistId,
     name: artist.name,
-    fontSize: fitFontSize(artist.name.length, titleWidth, TITLE_LAYOUT.lines, TITLE_LAYOUT.fontSize),
+    fontSize,
+    lines,
     meta: artistGenreCountry(artist).join(GENRE_COUNTRY_SEPARATOR),
     showConflict: hasConflict,
     showClose: isWeb,

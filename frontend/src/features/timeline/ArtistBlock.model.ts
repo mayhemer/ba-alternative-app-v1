@@ -2,7 +2,7 @@ import type { DbArtist, DbEvent } from '../../types/backend';
 import type { InterestStatus } from '../../cache/cacheService';
 import type { ConflictOverlap } from '../../lib/conflictUtils';
 import { isInterested } from '../../lib/interestUtils';
-import { fitFontSize } from '../../ui/textFit';
+import { fitText } from '../../ui/textFit';
 import { categoryBlockColors } from '../../utils/color';
 import { BLOCK_FONT_SIZE, LANE_BORDER_WIDTH, LANE_HEIGHT, MIN_BLOCK_WIDTH, PIXELS_PER_MS, timeToX } from './timelineLayout';
 import { formatTime } from '../../utils/festivalTime';
@@ -54,7 +54,7 @@ export type BlockLabelModel = {
   /** "HH:MM–HH:MM". */
   time: string;
   fontSize: number;
-  /** A one-word name keeps to one line; others may wrap to two. */
+  /** A one-word name keeps to one line; others may wrap to two, at word boundaries, or keep to one when a word would not fit a line (ui/textFit). */
   lines: number;
   /** While the label repeats, the width every copy is held to; null otherwise. */
   segmentWidth: number | null;
@@ -117,7 +117,7 @@ function labelOf(artist: DbArtist, event: DbEvent, width: number, status: Intere
   if (width < BLOCK_LAYOUT.labelMinBlockWidth) {
     return null;
   }
-  const lines = artist.name.indexOf(' ') === -1 ? 1 : 2;
+  const maxLines = artist.name.indexOf(' ') === -1 ? 1 : 2;
   // The star takes width only when it is drawn.
   const labelWidth = width - BLOCK_LAYOUT.borderLeft - BLOCK_LAYOUT.padding * 2 - (isInterested(status) ? BLOCK_LAYOUT.starSize : 0);
 
@@ -131,10 +131,11 @@ function labelOf(artist: DbArtist, event: DbEvent, width: number, status: Intere
   const repeating = repeats.length > 0;
 
   // Every copy is sized alike, so a repeating block fits its font to one segment.
+  const { fontSize, lines } = fitText(artist.name, repeating ? Math.min(labelWidth, segment) : labelWidth, maxLines, BLOCK_FONT_SIZE);
   return {
     name: artist.name,
     time: `${formatTime(event.dateFrom)}–${formatTime(event.dateTo)}`,
-    fontSize: fitFontSize(artist.name.length, repeating ? Math.min(labelWidth, segment) : labelWidth, lines, BLOCK_FONT_SIZE),
+    fontSize,
     lines,
     segmentWidth: repeating ? segment : null,
     repeats,
