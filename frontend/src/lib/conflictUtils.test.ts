@@ -53,7 +53,7 @@ describe('eventsOverlap', () => {
 //
 // The one rule deciding which sets the conflict calculation considers — and,
 // through the same predicate, which sets My plan lists: a band's set of any
-// length, a support-programme set up to two hours.
+// length, a support-programme set up to three hours.
 
 describe('isPlanEligible', () => {
   const band = { artistId: 'band', name: 'band', isPlayable: true } as DbArtist;
@@ -61,17 +61,18 @@ describe('isPlanEligible', () => {
 
   it('takes a band\'s set of any length', () => {
     expect(isPlanEligible(event('1', 0, 1), band)).toBe(true);
-    expect(isPlanEligible(event('1', 0, 2.5), band)).toBe(true);
+    expect(isPlanEligible(event('1', 0, 3.5), band)).toBe(true);
     expect(isPlanEligible(event('1', 0, 8), band)).toBe(true);
   });
 
-  it('takes a support-programme set up to two hours long, the boundary included', () => {
+  it('takes a support-programme set up to three hours long, the boundary included', () => {
     expect(isPlanEligible(event('1', 0, 1), support)).toBe(true);
-    expect(isPlanEligible(event('1', 0, 2), support)).toBe(true);
+    expect(isPlanEligible(event('1', 0, 2.5), support)).toBe(true);
+    expect(isPlanEligible(event('1', 0, 3), support)).toBe(true);
   });
 
   it('leaves out a longer support-programme set', () => {
-    expect(isPlanEligible(event('1', 0, 2.5), support)).toBe(false);
+    expect(isPlanEligible(event('1', 0, 3.5), support)).toBe(false);
   });
 });
 
@@ -188,19 +189,19 @@ describe('conflictGroupOf', () => {
   });
 });
 
-// ── Sets over two hours in the full calculation ──────────────────────────────
+// ── Sets over three hours in the full calculation ────────────────────────────
 //
 // The eligibility rule applied by the pairing itself: a support-programme set
-// over two hours the user starred clashes with nothing, and the sets it covers
-// clash only with each other; a band's set over two hours clashes as any other.
+// over three hours the user starred clashes with nothing, and the sets it covers
+// clash only with each other; a band's set over three hours clashes as any other.
 
-describe('support-programme sets over two hours', () => {
+describe('support-programme sets over three hours', () => {
   // 1: all-day exhibition (8 h) over everything. 2 and 3 clash with each other.
   // 4 sits under the exhibition alone. Artist 5 has a long set and a short one
   // that clashes with 3.
   const specs: [string, string, number, number][] = [
     ['1', 'a1', 0, 8], ['2', 'a2', 1, 2], ['3', 'a3', 1.5, 2.5], ['4', 'a4', 5, 6],
-    ['5', 'a5', 0, 3], ['6', 'a5', 2.25, 3],
+    ['5', 'a5', 0, 4], ['6', 'a5', 2.25, 3],
   ];
   const artists = ['a1', 'a2', 'a3', 'a4', 'a5'].map((artistId) => ({ artistId, name: artistId, isPlayable: false } as DbArtist));
   const artistEvents: Record<string, DbEvent[]> = {};
@@ -235,9 +236,9 @@ describe('support-programme sets over two hours', () => {
   });
 });
 
-describe("a band's set over two hours", () => {
-  // 1: a band's 3 h set. 2 starts under it, 3 after it ends.
-  const specs: [string, number, number][] = [['1', 0, 3], ['2', 1, 2], ['3', 3, 4]];
+describe("a band's set over three hours", () => {
+  // 1: a band's 3.5 h set. 2 starts under it, 3 after it ends.
+  const specs: [string, number, number][] = [['1', 0, 3.5], ['2', 1, 2], ['3', 3.5, 4.5]];
   const artists = specs.map(([id]) => ({ artistId: `a${id}`, name: `A${id}`, isPlayable: true } as DbArtist));
   const artistEvents = Object.fromEntries(specs.map(([id, from, to]) => [`a${id}`, [event(id, from, to)]]));
   const inputs: ConflictInputs = { artists, stages: [], artistEvents };

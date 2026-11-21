@@ -8,7 +8,7 @@ import type { DbArtist, DbEvent } from '../types/backend';
 // leaves out, the others do the same.
 
 const HOUR_MS = 60 * 60 * 1000;
-const SUPPORT_SET_DURATION_MAX_FOR_PLAN_MS = 2 * HOUR_MS;
+const SUPPORT_SET_DURATION_MAX_FOR_PLAN_MS = 3 * HOUR_MS;
 
 /**
  * A day's break window opens two hours after the 06:00 day boundary: 08:00. My
@@ -18,7 +18,7 @@ export const BREAK_WINDOW_OFFSET_MS = 2 * HOUR_MS;
 
 /**
  * Whether a set is on the plan at all: a band's set of any length, a support-
- * programme set up to two hours. Longer support sets are things like all-day
+ * programme set up to three hours. Longer support sets are things like all-day
  * exhibitions, which would clash with everything.
  *
  * The one eligibility rule shared by the conflict calculation, My plan's list,

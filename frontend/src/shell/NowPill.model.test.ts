@@ -10,8 +10,8 @@ import type { DbArtist, DbEvent, DbStage } from '../types/backend';
 //   data     — today's Must-sees only; a Maybe live or ending between them
 //              (ignored); a Maybe before the first Must-see (the pill still
 //              counts to the Must-see, unlike the list); two Must-sees clashing,
-//              starting apart or together; support sets over 2 h (never
-//              counted); a band's set over 2 h (counted as any other); no
+//              starting apart or together; support sets over 3 h (never
+//              counted); a band's set over 3 h (counted as any other); no
 //              Must-see at all
 //   time     — before 08:00; in the day-start break; exactly at a set's start
 //              and end; mid-set; in a break between sets; after the last set
@@ -65,19 +65,19 @@ const EARLY: Spec[] = [
   ['2', 'First must', at(7, '14:00'), at(7, '14:40'), 'will_go'],
 ];
 
-/** The day with support sets over two hours that would come first, were they counted. */
+/** The day with support sets over three hours that would come first, were they counted. */
 const LONG: Spec[] = [
   ...DAY,
   // Would start after Gojira, and so be the one shown, were it counted.
-  ['20', 'Evening exhibition', at(7, '19:10'), at(7, '21:30'), 'will_go', 'support'],
+  ['20', 'Evening exhibition', at(7, '19:10'), at(7, '22:30'), 'will_go', 'support'],
   // Would start before Emperor, and so be next, were it counted.
   ['21', 'Night installation', at(7, '21:00'), at(8, '03:00'), 'will_go', 'support'],
 ];
 
-/** The day with a band's 3 h set in the break before Emperor. */
+/** The day with a band's 3.5 h set in the break before Emperor. */
 const LONG_BAND: Spec[] = [
   ...DAY,
-  ['22', 'Night-long band', at(7, '21:00'), at(8, '00:00'), 'will_go'],
+  ['22', 'Night-long band', at(7, '21:00'), at(8, '00:30'), 'will_go'],
 ];
 
 /** Two Must-sees starting together; Mayhem ends first. */
@@ -122,10 +122,10 @@ const CASES: [name: string, data: Spec[], now: number, expected: NowPillModel][]
   ['a Maybe live in a break is ignored', DAY, at(7, '20:40'), countdown('Emperor', '−1 h 50')],
   ['a Maybe before the first Must-see: still counts to the Must-see (the list counts to the Maybe when shown)', EARLY, at(7, '11:00'), countdown('First must', '−3 h')],
   ['a Maybe live before the first Must-see is ignored', EARLY, at(7, '12:20'), countdown('First must', '−1 h 40')],
-  ['support sets over 2 h never count, live', LONG, at(7, '19:23'), live('Gojira', '−37 min', 23 / 60)],
-  ['support sets over 2 h never count, next', LONG, at(7, '20:40'), countdown('Emperor', '−1 h 50')],
-  ["a band's set over 2 h counts, next", LONG_BAND, at(7, '20:40'), countdown('Night-long band', '−20 min')],
-  ["a band's set over 2 h counts, live", LONG_BAND, at(7, '21:10'), live('Night-long band', '−2 h 50', 10 / 180)],
+  ['support sets over 3 h never count, live', LONG, at(7, '19:23'), live('Gojira', '−37 min', 23 / 60)],
+  ['support sets over 3 h never count, next', LONG, at(7, '20:40'), countdown('Emperor', '−1 h 50')],
+  ["a band's set over 3 h counts, next", LONG_BAND, at(7, '20:40'), countdown('Night-long band', '−20 min')],
+  ["a band's set over 3 h counts, live", LONG_BAND, at(7, '21:10'), live('Night-long band', '−3 h 20', 10 / 210)],
   ['no Must-see picked: the logo', MAYBES_ONLY, at(7, '19:23'), LOGO],
 
   // The festival

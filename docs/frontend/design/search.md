@@ -85,7 +85,7 @@ Each result is placed by the screen it was opened on (`features/search/searchSco
     Maybe → All sets, to the first that lists the set.
 - **The other sections** are named by where the set is, never by what is missing. On My plan,
   where All sets lists my "don't go" bands too, "In the Support Program" holds support sets I
-  haven't picked or marked "don't go", and those over 2 h. A band's set over 2 h is on My plan as
+  haven't picked or marked "don't go", and those over 3 h. A band's set over 3 h is on My plan as
   any other.
 - **An artist with no set** goes to the section where the artist belongs, and a tap opens only the
   artist sheet: there is nothing to land on.

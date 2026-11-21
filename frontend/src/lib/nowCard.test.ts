@@ -10,8 +10,8 @@ import type { DbArtist, DbEvent, DbStage } from '../types/backend';
 //              (Gojira × Batushka × Mgła); a two-band clash (Meshuggah × Cult of
 //              Luna) whose sets are later both live; a set after midnight that
 //              belongs to the day before; a Maybe (never on the card); a
-//              support Must-see over 2 h (never on the card); a band's Must-see
-//              over 2 h (on it as any other); a second festival day
+//              support Must-see over 3 h (never on the card); a band's Must-see
+//              over 3 h (on it as any other); a second festival day
 //   time     — before 08:00 and at 08:00; exactly at a set's start and end;
 //              in a break; while one, two or three clashing sets are live;
 //              after the day's last set
@@ -58,7 +58,7 @@ const FESTIVAL: Spec[] = [
   ['2', 'Napalm Death', 'mg', at(7, '14:00'), at(7, '14:50'), 'will_go'],
   // A Maybe in the afternoon break: the card counts down past it, to Gojira.
   ['20', 'Maybe band', 'oct', at(7, '16:00'), at(7, '16:40'), 'maybe'],
-  // A support item over two hours: never a Must-see on the card, though it would be live 12:10–14:00.
+  // A support item over three hours: never a Must-see on the card, though it would be live 12:10–14:00.
   ['21', 'Exhibition', 'oct', at(7, '12:00'), at(7, '18:00'), 'will_go', 'support'],
   ['3', 'Gojira', 'oct', at(7, '19:00'), at(7, '20:00'), 'will_go'],
   ['4', 'Batushka', 'mg', at(7, '19:40'), at(7, '20:30'), 'will_go'],
@@ -162,9 +162,9 @@ describe('nowCardState', () => {
     expect(stateAt(10, '12:00')).toBeNull();
   });
 
-  it("is live through a band's Must-see over 2 h, as any other", () => {
-    const long = setup([['30', 'Night-long band', 'mg', at(7, '21:00'), at(8, '00:00'), 'will_go']]);
-    const set: NowCardSet = { eventId: 'e30', name: 'Night-long band', stage: 'Metal Gate', timeText: '21:00–00:00', start: at(7, '21:00'), end: at(8, '00:00') };
+  it("is live through a band's Must-see over 3 h, as any other", () => {
+    const long = setup([['30', 'Night-long band', 'mg', at(7, '21:00'), at(8, '00:30'), 'will_go']]);
+    const set: NowCardSet = { eventId: 'e30', name: 'Night-long band', stage: 'Metal Gate', timeText: '21:00–00:30', start: at(7, '21:00'), end: at(8, '00:30') };
     expect(nowCardState(long.interests, long.inputs, DAYS, at(7, '23:30'))).toEqual(live(set, null));
   });
 });

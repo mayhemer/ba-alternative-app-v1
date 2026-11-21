@@ -13,8 +13,8 @@ import type { DbArtist, DbEvent, DbStage } from '../../types/backend';
 // Dimensions, and the corner cases tested for each:
 //   filters  — Show only conflicts off / on (Show Maybe never changes the buttons)
 //   data     — a Must-see clash; a Maybe over a Must-see; a "don't go" over a
-//              Must-see; a support set over 2 h over a Must-see; a band's set
-//              over 2 h over a Must-see; sets back to back; a
+//              Must-see; a support set over 3 h over a Must-see; a band's set
+//              over 3 h over a Must-see; sets back to back; a
 //              clash across 06:00, whose sets start on two festival days
 //   time     — now on a festival day; the 05:59 before the next day
 //   festival — a festival day; before the festival; after it
@@ -83,16 +83,16 @@ describe('the clash stripes', () => {
     ])))).toEqual([]);
   });
 
-  it('skip a support Must-see over 2 h, which clashes with nothing', () => {
+  it('skip a support Must-see over 3 h, which clashes with nothing', () => {
     expect(striped(planDaySwitcherModel(inputs([
-      { id: 'exhibition', from: '2025-08-09T12:00:00+02:00', to: '2025-08-09T14:01:00+02:00', pick: 'will_go', support: true },
+      { id: 'exhibition', from: '2025-08-09T12:00:00+02:00', to: '2025-08-09T15:01:00+02:00', pick: 'will_go', support: true },
       { id: 'a', from: '2025-08-09T13:00:00+02:00', to: '2025-08-09T13:45:00+02:00', pick: 'will_go' },
     ])))).toEqual([]);
   });
 
-  it("mark a band's Must-see over 2 h over a Must-see: it clashes as any other", () => {
+  it("mark a band's Must-see over 3 h over a Must-see: it clashes as any other", () => {
     expect(striped(planDaySwitcherModel(inputs([
-      { id: 'long', from: '2025-08-09T12:00:00+02:00', to: '2025-08-09T14:01:00+02:00', pick: 'will_go' },
+      { id: 'long', from: '2025-08-09T12:00:00+02:00', to: '2025-08-09T15:01:00+02:00', pick: 'will_go' },
       { id: 'a', from: '2025-08-09T13:00:00+02:00', to: '2025-08-09T13:45:00+02:00', pick: 'will_go' },
     ])))).toEqual(['Sat']);
   });
