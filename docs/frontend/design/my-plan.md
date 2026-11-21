@@ -73,7 +73,7 @@ On every screen that has a top bar. On festival days it replaces the logo while 
 - **Source:** today's Must-sees only. The pill ignores the plan's filter. With Maybes or all sets shown, the list's break or gap can count down to a Maybe or an unpicked set while the pill counts down to the next Must-see. That's intended: the list draws such a countdown in a box (see [Gaps](#gaps)), so the two read apart.
 - **No words:** the dot, the colours and the arrow carry the state, so nothing needs translating. The accessibility label still says it: `GOJIRA LIVE −37 min`, `NAPALM DEATH START −1 h 30`.
 - **Text:** 12.6 pt bold (10 % under the plan rows' 14 pt), to fit more of the band name, which the festival feed sends in capitals. Times join their numbers and units with narrow no-break spaces (U+202F): about half a space each, without running `37min` together.
-- **Size:** the whole centre between the side slots (56 pt each; the lens and filter chips are 38 pt, right-aligned), 8 pt in from each, so 26 pt clear of the right chip. 36 pt tall (tap area extended to 44 pt with `hitSlop`), radius 18, 1 px `borderMid` border, `surfaceRaised` background, 12 pt padding, 7 pt gaps.
+- **Size:** the whole centre between the side slots (56 pt each; the lens and filter chips are 38 pt, right-aligned), 6 pt in from each, so 24 pt clear of the right chip. 38 pt tall (tap area extended to 46 pt with `hitSlop`), radius 19, 3 px `borderMid` border, `surfaceRaised` background, 12 pt padding, 7 pt gaps.
 - **Pressed:** while a finger is down, the background steps up from `surfaceRaised` to `surfacePressed` (`#262626`), as a button's does.
 - **Conflicts:** the pill never cycles or animates. Motion at the top of every screen is distracting, a mid-glance switch is unreadable, and it ignores the reduce-motion setting.
 - **Tap:** first closes everything open in the overlay hub (`utils/overlayHub` `closeAll`: the search, a panel, the drawer, the artist or conflict sheet, the star selector), then switches between My plan and the timeline (`nowPillTap`). Back returns to the previous screen through the existing back history.
@@ -325,7 +325,7 @@ My plan's strings live with the rest of the app's in `src/i18n/strings.ts` (see 
 
 ## Colours
 
-App tokens: `background #0a0a0a`, `surface #141414`, `surfaceRaised #1a1a1a`, `border #2a2a2a`, `borderMid #333`, `accent #e8c84a`, `danger #ff4444`, `dangerMuted #111111`, `textSecondary #ddd`, `textMuted #bbb`, `muted #7f7f7f`.
+App tokens: `background #0a0a0a`, `surface #141414`, `surfaceRaised #202020`, `border #2a2a2a`, `borderMid #333`, `accent #e8c84a`, `danger #ff4444`, `dangerMuted #111111`, `textSecondary #ddd`, `textMuted #bbb`, `muted #7f7f7f`.
 
 New values this screen introduces, to add as tokens:
 

@@ -34,11 +34,11 @@ const LOGO_HEIGHT = 34;
 const LOGO_WIDTH = Math.round(LOGO_HEIGHT * (601 / 231));
 const LOGO_STYLE = { width: LOGO_WIDTH, height: LOGO_HEIGHT };
 
-const PILL_HEIGHT = 36;
-// The pill is drawn 36 pt tall; the tap area grows to 44 pt.
+const PILL_HEIGHT = 38;
+// The pill is drawn 38 pt tall; the tap area grows to 46 pt.
 const PILL_HIT_SLOP = { top: 4, bottom: 4, left: 0, right: 0 };
-/** In from each side slot: 26 pt clear of the 38 pt chips (TopBarChip) in the 56 pt right slot. */
-const PILL_INSET = 8;
+/** In from each side slot: 24 pt clear of the 38 pt chips (TopBarChip) in the 56 pt right slot. */
+const PILL_INSET = 6;
 /** 10 % under the plan rows' 14 pt, to fit more of the (all-caps) band name. */
 const PILL_FONT_SIZE = 12.6;
 const PROGRESS_HEIGHT = 3;
@@ -48,7 +48,7 @@ const PILL_STYLE = {
   marginHorizontal: PILL_INSET,
   height: PILL_HEIGHT,
   borderRadius: PILL_HEIGHT / 2,
-  borderWidth: 1,
+  borderWidth: 3,
   borderColor: colors.borderMid,
   backgroundColor: colors.surfaceRaised,
   paddingHorizontal: 12,

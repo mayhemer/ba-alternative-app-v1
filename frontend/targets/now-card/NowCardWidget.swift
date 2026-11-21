@@ -23,7 +23,7 @@ import WidgetKit
 
 private enum Palette {
   // styling/tokens.js
-  static let surfaceRaised = Color(hex: 0x1A1A1A)
+  static let surfaceRaised = Color(hex: 0x202020)
   static let text = Color.white
   static let textSecondary = Color(hex: 0xDDDDDD)
   static let textMuted = Color(hex: 0xBBBBBB)
