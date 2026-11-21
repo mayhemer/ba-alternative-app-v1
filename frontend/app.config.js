@@ -13,5 +13,10 @@ module.exports = ({ config }) => {
     plugins.push('./plugins/withCleartextTraffic');
   }
 
+  // Every iOS build skips the dSYM except store builds. See the plugin.
+  if (process.env.BA_KEEP_DSYM !== '1') {
+    plugins.push('./plugins/withoutDsym');
+  }
+
   return { ...config, plugins };
 };

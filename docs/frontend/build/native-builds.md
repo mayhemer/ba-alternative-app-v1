@@ -9,6 +9,15 @@ Native code of our own lives outside them and is linked in by prebuild:
 - `targets/now-card/` — the iOS widget extension that draws the Live Activity, added by
   `@bacons/apple-targets` as the Xcode target `NowCard` (bundle `cz.janbambas.ba.nowcard`);
 - `plugins/withNowCard.js` — its Info.plist keys.
+
+`plugins/withoutDsym.js` sets `DEBUG_INFORMATION_FORMAT = dwarf` on every configuration of every
+iOS target, so **no build produces a dSYM except `production`**. That saves ~5 s on each Release
+build, and those builds have no use for a dSYM because the app has no crash reporter.
+`app.config.js` adds the plugin unless the profile sets `BA_KEEP_DSYM=1`, which only
+`production` does: its archive keeps the dSYM, so App Store Connect can symbolicate crash
+reports. Local builds (`test:e2e:ios`, `install:preview:ios`) never set the flag. Pods are static
+libraries and never had a dSYM.
+
 See [lock-screen.md](../design/lock-screen.md). The extension target needs `ios.appleTeamId` in
 `app.json` for signed builds, and its own App ID and profile ([credentials.md](credentials.md)).
 
