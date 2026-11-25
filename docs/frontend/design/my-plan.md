@@ -26,7 +26,7 @@ Related: [overview.md](../../general/design/overview.md) (app-wide design), [lay
 │ ○                                        │  start cap: ring, then 20 min of bare rail
 │ ┊                                        │
 │ ┌──────────────────────────────────────┐ │
-│ │ 14:00–14:40  Hooded Menace           │ │  past → dimmed, "done"; a pick has no star
+│ │ 14:00–14:40  Hooded Menace          ★│ │  past → dimmed, "done"
 │ │ done                          Octagon│ │
 │ └──────────────────────────────────────┘ │
 │ ┊             2 h 25                     │  gap: height ∝ duration, label
@@ -102,7 +102,7 @@ On every screen that has a top bar. On festival days it replaces the logo while 
   - **Below the rows, the lens panel's "My schedule" section**, the same element (`features/social/MyScheduleShare`): signed out, *Sign in* (to Settings, closing the panel); signed in, *Share my schedule* (*Share again* once shared) with *Copy link* and *Revoke* while a share exists.
 - **Pinch:** a pinch on the list steps the filter **while it goes, like a zoom with stops** (`filter/PlanPinch.model.ts`, through `ui/usePinchSteps`): a **pinch in** (fingers together) narrows toward **Must-see only**, a **pinch out** widens toward **All sets**, along All sets ↔ Must-see and Maybe ↔ Must-see only. Each end holds. **Only conflicts** is off that scale, narrower than Must-see only: a pinch out leaves it for **Must-see only**, a pinch in keeps it.
   - A step is taken **at once, with the fingers down**, each time the scale passes **0.71×** (in) or **1.41×** (out) of where the last step was taken, the pinch's start for the first (`ui/PinchStep.model.ts`). So a pinch going on steps on (All sets to Must-see only in one gesture), and one turning back steps back. One update is one step, however far it jumps; updates come every frame. Past an end it steps nothing more, but the toast still shows.
-  - Every step shows the **feedback toast** (✓, 2.5 s) naming the filter now on (`planFilter.showing.*`), also at an end where nothing changed, so the pinch is seen to count. It sits **at the bottom, just above the day switcher** (`BOTTOM_OVERLAY_CLEARANCE` above the safe area's bottom edge), **centred across the whole content column** (12 pt in from each side, anchor `bottom`, `centredToastBand`), over the star column too: unlike every other toast it may cover a row's star under All sets, for its 2.5 s. It **lets every touch through** to what is under it (the star, the list, a finger of the next pinch), so it is not tapped away; a finger landing on a tappable toast was the toast's, and a pinch started there did nothing (seen in the browser).
+  - Every step shows the **feedback toast** (✓, 2.5 s) naming the filter now on (`planFilter.showing.*`), also at an end where nothing changed, so the pinch is seen to count. It sits **at the bottom, just above the day switcher** (`BOTTOM_OVERLAY_CLEARANCE` above the safe area's bottom edge), **centred across the whole content column** (12 pt in from each side, anchor `bottom`, `centredToastBand`), over the star column too: unlike every other toast it may cover a row's star, for its 2.5 s. It **lets every touch through** to what is under it (the star, the list, a finger of the next pinch), so it is not tapped away; a finger landing on a tappable toast was the toast's, and a pinch started there did nothing (seen in the browser).
   - **Each step keeps its place** (`planPinchAnchor.ts`): the set row under the pinch's centre at that step (on a gap or cap, the nearest set row) keeps its centre at the same height on screen. If the new filter drops that row, the nearest listed set above it and the nearest below (by the order before the step) are centred together where it was; with sets on one side only, that nearest one alone; with none left, the day's usual landing. Held within what the list can scroll, so a row near the top or the end can move. Two neighbours far apart (a long gap between them) can end up partly off screen.
   - The list then starts again at that offset, at every step that changes the filter (a list of its own, as a day at its landing spot), and that offset is saved as the day's position. A filter picked in the panel moves nothing, as before.
   - A filter picked by a pinch is saved like one picked in the panel.
@@ -120,7 +120,7 @@ What each element shows comes from its own model (see Principles), built from th
 
 | Element | Built from | Shows |
 |---|---|---|
-| Set row | the set, its artist and stage, its pick level (Must-see, Maybe, none, don't go), whether the list shows All sets, now, its overlaps with other Must-sees, the Must-sees live now, whether it heads a clash group | its look (tall or compact, fill, left edge, dimmed text), time range, stage, status (`LIVE −x`, `START −x`, `done`), its pick's star under All sets, progress, now arrow, clash bars |
+| Set row | the set, its artist and stage, its pick level (Must-see, Maybe, none, don't go), whether the list shows All sets, now, its overlaps with other Must-sees, the Must-sees live now, whether it heads a clash group | its look (tall or compact, fill, left edge, dimmed text), time range, stage, status (`LIVE −x`, `START −x`, `done`), its pick's star (none on a compact Maybe), progress, now arrow and its colour, clash bars |
 | Gap | where it starts (the end of everything listed above) and the set listed right under it with its pick level, now | length or countdown (boxed when it counts to a set that isn't a Must-see), height, fill, now arrow, the conflict title of the group under it |
 | Day-start break | a gap from 08:00 to the first **listed** set | as a gap, with the start ring |
 | Cap / spacer | its edge, or the clash group under it; the end cap also the end of everything listed, the shown day, now | the rail end, the conflict title of the group under it; the end cap the now arrow once the day's listed sets are over |
@@ -135,14 +135,15 @@ What each element shows comes from its own model (see Principles), built from th
 The rows look different under **All sets** and under the other filters (Must-see and Maybe, Must-see only, Only conflicts).
 
 - **Every filter:** every row has **4 pt rounded corners** (`ROW_RADIUS`) and **no border of its own**. A Must-see and a Maybe have a **3 pt left edge** (`LEFT_EDGE_WIDTH`), drawn by its own element (`ui/LeftEdge`, shared with the timeline's blocks) over the row's background: **solid** in the category's brighter colour (`categoryBlockColors().border`, the timeline block's edge) on a Must-see; **dotted** in a single grey (`maybeBorder`), whatever its category, on a Maybe. The dots are 3 pt squares 3 pt apart, as many as fit with 2 pt clear at each end, centred on whole points (`leftEdgeDots`): 4 on the compact row, 9 on the tall one, both ends whole dots clear of the rounded corners. (A native dotted border was tried: on iOS it is one dotted stroke around the whole rounded box, so the dots on the left side were cut at the corners and fell by the row's width, which showed on the compact row.) An unpicked or "don't go" row has no edge, its own background showing there (the raised surface, or the list). Every live set's progress bar starts 3 pt in, past the edge. A **live Must-see or Maybe** is outlined in a **1 pt border in its category's brighter colour** (`categoryBlockColors().border`, the Must-see's edge colour), laid over the row so nothing in it moves; it runs over the left edge. No other row gets a border, live or not. (A 1 pt accent outline on a live Must-see was tried and dropped.)
-- **All sets:** every row is the tall two-line row (58 pt) and shows its pick's star at the right end of line 1, the same place whatever the name's length; a name too long for the line cuts off before it. The star is the star button's glyph at 15 pt (`StarGlyph`): ★ Must-see, ½ Maybe, ☆ unpicked, struck red ☆ "don't go".
-- **Every other filter:** no row has a star, and a Maybe is the compact one-line row (26 pt).
+- **Stars, under every filter:** every tall two-line row (58 pt) shows its pick's star at the right end of line 1, the same place whatever the name's length; a name too long for the line cuts off before it. The star is the star button's glyph at 15 pt (`StarGlyph`): ★ Must-see, ½ Maybe, ☆ unpicked, struck red ☆ "don't go". The compact Maybe row has none.
+- **All sets:** every row is the tall two-line row, a Maybe too.
+- **Every other filter:** a Maybe is the compact one-line row (26 pt), without a star.
 
 ### Must-see row
 
 - **Box:** 58 pt tall, filled with its **category's colour, as on the timeline** (`categoryBlockColors().bg`, the block's background), with the solid left edge in the category's brighter colour. A live Must-see is outlined in 1 pt of the same brighter colour, besides its accent progress bar and the now arrow.
 - **Fixed inset for every row type and state:** content starts 18 pt from the row's left side and ends 23 pt from its right. The time, name and stage columns always line up, clear of the left progress bar and the right clash bar.
-- **Line 1:** `HH:MM–HH:MM` (13, `textMuted`, tabular figures), then the band name (15 bold, ellipsis). Under All sets, the accent ★ at the right end; under the other filters no star.
+- **Line 1:** `HH:MM–HH:MM` (13, `textMuted`, tabular figures), then the band name (15 bold, ellipsis), and the accent ★ at the right end, under every filter.
 - **Line 2:** the status on the left, the stage right-aligned (13, `textSecondary`, ellipsis). Statuses:
   - *live*: `● LIVE` (red dot, 11 bold caps), then `−37 min` (14 bold accent).
   - *upcoming, clashing with a Must-see that is live now*: `START` (11 bold caps), then `−17 min` (14 bold **red**). It tells you how long you can stay at the live band.
@@ -157,20 +158,20 @@ The rows look different under **All sets** and under the other filters (Must-see
 - **Look:** the same 58 pt, two lines, insets and texts as a Must-see row, filled with the raised surface (`surfaceRaised`), with no left edge and no category colour. Only Must-see rows are filled with their category's colour, so they stand out among the rest; a Maybe shares the unpicked row's fill and is told apart by its dotted grey edge and its ½ star.
 - **Star:** the grey ☆ ("Not marked").
 - **Status line:** `● LIVE −37 min` while it plays and `done` once it's over (dimmed and striped as any past row), as a Must-see's. Never `START`, and never clash bars or a `⚠ Conflict` title: clashes are Must-see × Must-see only.
-- **Live:** a grey 6.5 pt left bar (`#8a8a8a` for what remains, `#333` filling it for the elapsed fraction), 3 pt in as on a picked row, and the now arrow; no border.
+- **Live:** a grey 6.5 pt left bar (`#8a8a8a` for what remains, `#333` filling it for the elapsed fraction), 3 pt in as on a picked row, and the now arrow in the raised surface's grey, not red; no border.
 
 ### "Don't go" row
 
 - Only under **All sets**: a band you marked "don't go". It stays listed so that a pick changed by mistake is easy to find and undo. A "don't go" support-programme set is not listed, as an unpicked one isn't.
 - **Look:** the same 58 pt, two lines and insets, with **no background** (the list shows through) and no left edge; the time, name and stage in the muted grey (`muted`).
 - **Star:** the struck red ☆.
-- **Status line and live:** as an unpicked row's. Never a clash.
+- **Status line and live:** as an unpicked row's, the grey now arrow included. Never a clash.
 
 ### Maybe row
 
 - Shown under **Must-see and Maybe** and **All sets**.
 - **Box:** filled with the raised surface (`surfaceRaised`), as an unpicked row, with the same fixed insets as Must-see rows. Under every filter, the **3 pt dotted** left edge in one grey for every category (`maybeBorder` `#595959`: the luminance of the Octagon stage's border colour, `rgb(95, 89, 72)`). A Maybe row shows no category colour, except its 1 pt live outline.
-- **Under Must-see and Maybe:** the compact row, 26 pt tall, one line: `time · name · stage` (13, `textMuted`), no star and no status; a long name cuts off. Muted, but bright enough to read in sunlight.
+- **Under Must-see and Maybe:** the compact row, 26 pt tall, one line: `time · name · stage` (13, `textMuted`), no star and no status: the only row without a star; a long name cuts off. Muted, but bright enough to read in sunlight.
 - **Under All sets:** the tall two-line row, with the accent ½ star, and the status line of an unpicked row (`● LIVE −37 min`, `done`).
 - Never marked as a clash, and never part of conflict logic.
 - **Live:** the dotted edge stays, under a 1 pt outline in the category's brighter colour, a grey 6.5 pt left bar (`#8a8a8a` for what remains, `#333` filling it for the elapsed fraction) and the now arrow. The compact row also gets a red dot (7 pt) right before the name; it moves only that row's name, by its width and gap. The tall row shows `● LIVE` on its status line instead.
@@ -209,7 +210,8 @@ The rows look different under **All sets** and under the other filters (Must-see
 
 ### Now arrow
 
-- A red (`danger`) triangle, 16 × 24 pt, with a 1 pt white outline. Its tip reaches halfway across the 6.5 pt progress bar (about 6 pt into the row, past the 3 pt left edge), and it is drawn over the row. Red is the now colour across the app (the timeline's now line, the live dot).
+- A red (`danger`) triangle, 16 × 24 pt, with no outline. Its tip reaches halfway across the 6.5 pt progress bar (about 6 pt into the row, past the 3 pt left edge), and it is drawn over the row. Red is the now colour across the app (the timeline's now line, the live dot).
+- On a live **unpicked** or **"don't go"** row it is the raised surface's grey (`surfaceRaised`) instead, with a 1 pt white outline to keep it distinct over the bar: those sets aren't part of your plan, so they don't take the red. On a Must-see or Maybe row, in a gap, the day-start break or on the end cap it stays red.
 - Its centre sits at the **tip of the progress fill**: on a live row (Must-see or Maybe), in the current gap, or in the day-start break. Once the last listed set has ended it sits on the end cap's square instead, as there is no fill left.
 - With two live sets there are two arrows. Rows aren't on a shared time scale, so each arrow means "this far into this set".
 - No arrow before the festival.

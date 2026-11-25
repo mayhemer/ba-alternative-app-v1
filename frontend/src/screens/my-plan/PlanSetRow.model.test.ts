@@ -219,9 +219,23 @@ describe('the star at the end of the name line', () => {
     expect(model({ level: 'dont_go', allSets: true }).star).toBe('dont_go');
   });
 
-  it('is on no row under any other filter', () => {
-    expect(model().star).toBeNull();
+  it('stays on a Must-see under another filter, and is on no compact Maybe', () => {
+    expect(model().star).toBe('will_go');
     expect(model({ level: 'maybe' }).star).toBeNull();
+  });
+});
+
+describe('the now arrow\'s colour', () => {
+  it('is red on a Must-see and a Maybe, under every filter', () => {
+    expect(model({ now: at('19:23') }).nowArrow).toBe('danger');
+    expect(model({ now: at('19:23'), allSets: true }).nowArrow).toBe('danger');
+    expect(model({ level: 'maybe', now: at('19:23') }).nowArrow).toBe('danger');
+    expect(model({ level: 'maybe', allSets: true, now: at('19:23') }).nowArrow).toBe('danger');
+  });
+
+  it('is the raised surface on an unpicked or "don\'t go" set', () => {
+    expect(model({ level: 'none', allSets: true, now: at('19:23') }).nowArrow).toBe('raised');
+    expect(model({ level: 'dont_go', allSets: true, now: at('19:23') }).nowArrow).toBe('raised');
   });
 });
 

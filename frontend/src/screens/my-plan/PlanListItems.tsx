@@ -34,11 +34,11 @@ export const PROGRESS_BAR_X = LIST_GUTTER + LEFT_EDGE_WIDTH;
 const ARROW_LEFT = PROGRESS_BAR_X + PROGRESS_BAR_WIDTH / 2 - ARROW_TIP_X;
 
 /**
- * The red "you are here" triangle, its centre at `y` within the item. Drawn
- * from the gutter, its tip reaching halfway across the progress bar; a 1 pt
- * white outline keeps it distinct over the bar.
+ * The "you are here" triangle (red unless `color` says otherwise), its centre at `y` within the item. Drawn
+ * from the gutter, its tip reaching halfway across the progress bar. The red
+ * one has no outline; any other has a 1 pt white one to keep it distinct over the bar.
  */
-export function NowArrow({ y }: { y: number }) {
+export function NowArrow({ y, color = colors.danger }: { y: number; color?: string }) {
   return (
     <Svg
       testID="plan-now-arrow"
@@ -47,7 +47,9 @@ export function NowArrow({ y }: { y: number }) {
       height={ARROW_HEIGHT}
       style={{ position: 'absolute', left: ARROW_LEFT, top: y - ARROW_HEIGHT / 2, zIndex: 2 }}
     >
-      <Path d={ARROW_PATH} fill={colors.danger} stroke={colors.white} strokeWidth={1} strokeLinejoin="round" />
+      {color === colors.danger
+        ? <Path testID="plan-now-arrow-shape" d={ARROW_PATH} fill={color} />
+        : <Path testID="plan-now-arrow-shape" d={ARROW_PATH} fill={color} stroke={colors.white} strokeWidth={1} strokeLinejoin="round" />}
     </Svg>
   );
 }

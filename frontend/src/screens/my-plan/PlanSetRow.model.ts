@@ -23,7 +23,8 @@ import type { LeftEdgeKind } from '../../ui/LeftEdge.model';
 //     brighter colour and a Maybe a dotted grey one; the other rows have none;
 //   - a Must-see and a Maybe have a 1 pt border in the category's brighter
 //     colour while they play, under every filter; no other row has a border;
-//   - under All sets every row shows its pick's star, under the others none.
+//   - every two-line row shows its pick's star; a compact Maybe has none;
+//   - the now arrow is red on a Must-see or Maybe, the raised surface on the others.
 
 /** How the set is picked: Must-see, Maybe, not at all or "don't go" (the last two listed only under All sets). */
 export type PlanSetLevel = PickLevel;
@@ -62,7 +63,7 @@ export type PlanSetModel = {
   edge: LeftEdgeKind;
   /** Its texts in the muted grey: a "don't go". */
   dimmed: boolean;
-  /** The pick's star at the right end of the name's line, under All sets only; else null. */
+  /** The pick's star at the right end of the name's line on every two-line row; null on a compact Maybe. */
   star: InterestStatus | null;
   /** A 1 pt border in the category's brighter colour round the row: a Must-see or a Maybe while it plays, under every filter. */
   liveBorder: boolean;
@@ -73,6 +74,8 @@ export type PlanSetModel = {
   progress: number;
   /** The now arrow's centre from the row's top while live, else null. */
   nowY: number | null;
+  /** The now arrow's fill: red on a Must-see or Maybe, the raised surface on an unpicked set or a "don't go". */
+  nowArrow: 'danger' | 'raised';
   /** Where this Must-see overlaps other Must-sees; [] for a Maybe or no clash. */
   clashBars: ClashBar[];
   /** First set of a clash group: the "Conflict" title is drawn above it. */
@@ -93,7 +96,7 @@ export type PlanSetInput = {
   liveMusts: DbEvent[];
   /** It starts a clash group (computeConflictEntries' leader). */
   conflictHead: boolean;
-  /** The list shows All sets: every row two lines tall, with its star. */
+  /** The list shows All sets: every row two lines tall, a Maybe included. */
   allSets: boolean;
 };
 
@@ -166,12 +169,13 @@ export function planSetModel(input: PlanSetInput): PlanSetModel {
     edge: edgeOf(level),
     dimmed: level === 'dont_go',
     // The levels are the interest statuses the stars show.
-    star: allSets ? level : null,
+    star: compact ? null : level,
     liveBorder: state === 'live' && (must || level === 'maybe'),
     progressColors: must ? 'live' : 'maybeLive',
     accessibilityLabel: `${artist.name}, ${timeText}, ${stageName}`,
     progress,
     nowY: state === 'live' ? progress * height : null,
+    nowArrow: must || level === 'maybe' ? 'danger' : 'raised',
     // A Maybe never clashes: conflicts are between Must-sees only.
     clashBars: must
       ? input.overlaps.map((iv) => ({ from: (iv.from - event.dateFrom) / duration, to: (iv.to - event.dateFrom) / duration }))

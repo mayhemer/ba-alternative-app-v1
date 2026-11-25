@@ -102,12 +102,34 @@ it('draws the now arrow on a live set only, at the tip of its progress', async (
   expect(screen.queryByTestId('plan-now-arrow')).toBeNull();
 });
 
-it('draws the now arrow red, outlined in white', () => {
-  const arrow = NowArrow({ y: 20 }) as React.ReactElement<{ children: React.ReactElement<{ fill?: string; stroke?: string; strokeWidth?: number }> }>;
-  const shape = arrow.props.children;
+type ArrowShape = React.ReactElement<{ fill?: string; stroke?: string; strokeWidth?: number }>;
+
+function arrowShape(color?: string): ArrowShape {
+  const arrow = NowArrow({ y: 20, color }) as React.ReactElement<{ children: ArrowShape }>;
+  return arrow.props.children;
+}
+
+it('draws the now arrow red by default, with no outline', () => {
+  const shape = arrowShape();
   expect(shape.props.fill).toBe(colors.danger);
+  expect(shape.props.stroke).toBeUndefined();
+});
+
+it('draws a now arrow of another colour outlined in white', () => {
+  const shape = arrowShape(colors.surfaceRaised);
+  expect(shape.props.fill).toBe(colors.surfaceRaised);
   expect(shape.props.stroke).toBe(colors.white);
   expect(shape.props.strokeWidth).toBe(1);
+});
+
+it.each([
+  ['a Must-see', 'Gojira', '19:23', colors.danger],
+  ['a Maybe', 'Paysage', '20:20', colors.danger],
+  ['an unpicked set', 'Ulcerate', '21:20', colors.surfaceRaised],
+  ['a "don\'t go" set', 'Spectral', '22:00', colors.surfaceRaised],
+] as const)('draws the now arrow of live %s in %s', async (_kind, name, now, fill) => {
+  await renderRow(item(name, now));
+  expect(screen.getByTestId('plan-now-arrow-shape').props.fill).toEqual({ type: 0, payload: processColor(fill) });
 });
 
 it('marks a past set as done', async () => {
@@ -330,12 +352,14 @@ it.each([
   expect(StyleSheet.flatten(text.props.style).flexGrow).toBe(1);
 });
 
-it.each([
-  ['a Must-see', 'Gojira'],
-  ['a Maybe', 'Paysage'],
-])('puts no star on %s under another filter', async (_kind, name) => {
-  await renderRow(item(name, '19:23', 'maybe'));
-  expect(screen.getByText(name)).toBeTruthy();
+it.each(['maybe', 'must'] as const)('keeps the star on a Must-see under the %s filter', async (level) => {
+  await renderRow(item('Gojira', '19:23', level));
+  expect(within(screen.getByText('Gojira').parent!).getByTestId('plan-star-will_go')).toBeTruthy();
+});
+
+it('puts no star on the compact Maybe under Must-see and Maybe', async () => {
+  await renderRow(item('Paysage', '19:23', 'maybe'));
+  expect(screen.getByText('Paysage')).toBeTruthy();
   expect(screen.queryByTestId(/^plan-star/)).toBeNull();
 });
 

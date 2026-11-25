@@ -28,8 +28,8 @@ import { colors, MAX_CONTENT_WIDTH } from '../../styling/tokens';
 // outlined in a 1 pt border in its category's brighter colour, laid over the
 // row so nothing in it moves. Outside All sets a Maybe is
 // one compact line, its text muted but bright enough for sunlight, with a red
-// dot before the name while live. Under All sets every row has its pick's star
-// at the right end of the name's line, before which a long name cuts off. A
+// dot before the name while live. Every two-line row has its pick's star at
+// the right end of the name's line, before which a long name cuts off. A
 // past row is only slightly dimmed, with faint grey stripes behind its text.
 // Both share one fixed inset, so the time, name and stage columns line up in
 // every state, clear of the progress bar on the left edge and the clash bar on
@@ -257,7 +257,7 @@ function SetCard({ item, onPressArtist, category = NO_CATEGORY }: Props) {
 
 /** The card inside the list's side gutters, the now arrow in the left one while live, and the ring of a landing on it. */
 function PlanSetRowBase(props: Props) {
-  const { nowY } = props.item;
+  const { nowY, nowArrow } = props.item;
   // Only this row's own answer: a landing renders the row it lands on alone.
   const landing = useLandingHighlight(props.item.key);
   return (
@@ -266,7 +266,7 @@ function PlanSetRowBase(props: Props) {
         <SetCard {...props} />
         {landing !== null && <LandingRing key={landing} token={landing} onEnd={endLandingHighlight} horizontalInset={LIST_GUTTER} />}
       </View>
-      {nowY !== null && <NowArrow y={nowY} />}
+      {nowY !== null && <NowArrow y={nowY} color={nowArrow === 'raised' ? colors.surfaceRaised : colors.danger} />}
     </View>
   );
 }
