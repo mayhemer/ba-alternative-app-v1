@@ -23,6 +23,8 @@ flows:
 # b9 (a pull past the top opens a panel) is out while the pull is switched off
 # (ui/PullPreview.model › PULL_PAST_TOP_ENABLED); back in by dropping this and
 # restoring it to the order below, after b8-support-lens.
+# b10 (turning the phone on My plan) needs a freshly booted simulator, which
+# scripts/test/e2e-ios.ts gives every run.
 excludeTags:
   - pull-switched-off
 executionOrder:
@@ -44,5 +46,6 @@ executionOrder:
     - b6-plan-search-jump
     - b7-add-friend
     - b8-support-lens
+    - b10-plan-turn
     - c1-language
     - c2-edition-switch

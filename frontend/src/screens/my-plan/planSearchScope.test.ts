@@ -1,6 +1,7 @@
 import { planSearchScope, type PlanSearchInputs } from './planSearchScope';
 import { placeResult } from '../../features/search/searchScope';
 import type { DbArtist, DbEvent } from '../../types/backend';
+import type { PlanFilterLevel } from '../../lib/plan';
 
 // ── What My plan tells search ─────────────────────────────────────────────────
 //
@@ -81,5 +82,49 @@ describe('planSearchScope', () => {
     planSearchScope(run).reveal(ref('must'), 0);
     expect(run.setLevel).not.toHaveBeenCalled();
     expect(run.land).toHaveBeenCalledTimes(1);
+  });
+});
+
+// Turned to landscape, My plan shows the timeline (PlanTimeline.model): a set
+// only where you picked something that day in its category on its stage, your
+// picks over 3 h too, and under All sets every set there, support items not
+// picked included. Search places a set by what the timeline shows, as it does
+// by the list.
+describe('in landscape', () => {
+  // The timeline's rule, by set: the filters each one shows under.
+  const SHOWN: Record<string, PlanFilterLevel[]> = {
+    must: ['must', 'maybe', 'all'],
+    long: ['must', 'maybe', 'all'],
+    band: ['all'],
+    support: ['all'],
+  };
+  const timeline = { shows: (level: PlanFilterLevel, event: DbEvent): boolean => (SHOWN[event.eventId] ?? []).includes(level) };
+  const landscape = (over: Partial<PlanSearchInputs> = {}) => planSearchScope(inputs({
+    listable: new Map([['must', 'will_go'], ['band', 'none'], ['quiet', 'none']]),
+    timeline,
+    ...over,
+  }));
+
+  it('widens to All sets for a band not picked in a picked category on a picked stage', () => {
+    expect(placeResult(landscape(), ref('band'))).toEqual({ section: 'here', view: 2 });
+  });
+
+  it('widens to All sets for a support item not picked there, which the list never shows', () => {
+    expect(placeResult(landscape(), ref('support', false))).toEqual({ section: 'here', view: 2 });
+    expect(placeResult(planSearchScope(inputs()), ref('support', false))).toEqual({ section: 'support' });
+  });
+
+  it('lands on a Must-see over 3 h as it is, which the list never shows', () => {
+    expect(placeResult(landscape(), ref('long', false))).toEqual({ section: 'here', view: 0 });
+    expect(placeResult(planSearchScope(inputs()), ref('long', false))).toEqual({ section: 'support' });
+  });
+
+  it('places a set the timeline shows under no filter by where it is', () => {
+    expect(placeResult(landscape(), ref('quiet'))).toEqual({ section: 'program' });
+    expect(placeResult(landscape({ level: 'all' }), ref('quiet'))).toEqual({ section: 'program' });
+  });
+
+  it('lists a Must-see as the list does', () => {
+    expect(placeResult(landscape(), ref('must'))).toEqual({ section: 'here', view: 0 });
   });
 });

@@ -5,6 +5,10 @@ iPhone 17 Pro), installs the build, serves the fixtures on `:4010` and runs ever
 `tests/e2e/ios/` with Maestro (`--flow tests/e2e/ios/<file>.yaml` runs one, while writing it). The simulator shares the Mac's network, so the build's
 `http://localhost:4010` reaches the server with no further setup.
 
+The simulator is always booted afresh, shut down first if it is up. One up for a while stops turning:
+Maestro's `setOrientation` reports success and nothing rotates (seen on iOS 26.5), and `b10` turns
+the phone.
+
 The build is a Release simulator build made with `xcodebuild` from the prebuilt `ios/` folder, into
 `~/Library/Developer/Xcode/DerivedData/BrutalAssaultalt-e2e` (outside `ios/`, so a prebuild keeps it),
 for the Mac's own architecture only, with the `e2e-ios-sim` profile's env from `eas.json`
@@ -35,7 +39,7 @@ The suite runs as three launches, in the order `tests/e2e/ios/config.yaml` lists
 | Launch | Install | Scenarios |
 |---|---|---|
 | A | fresh, the real clock, no picks | `a1`–`a8`: startup, drawer sections, search, jump to a set, the star selector, two quick star presses, picks after a restart, an offline cold start |
-| B | seeded as a returning user (`e2eSeed: returning-user`), Wednesday 14:10 (`e2eNow`) | `b1`–`b9`: My plan's clashes, the now pill's switch between My plan and the timeline, the now card's link, the conflict sheet, a day's restored end, a search landing then a jump, a share link, the Support Program's lens; `b9` (a pull past the top opening a panel) is out of the run while the pull is switched off |
+| B | seeded as a returning user (`e2eSeed: returning-user`), Wednesday 14:10 (`e2eNow`) | `b1`–`b10`: My plan's clashes, the now pill's switch between My plan and the timeline, the now card's link, the conflict sheet, a day's restored end, a search landing then a jump, a share link, the Support Program's lens, My plan turned between the list and the timeline without scrolling, landing in the same place every time; `b9` (a pull past the top opening a panel) is out of the run while the pull is switched off |
 | C | fresh, the system in Czech | `c1`, `c2`: the language, the edition switch |
 
 The first scenario of a launch clears the app (`common/launch-fresh.yaml`,

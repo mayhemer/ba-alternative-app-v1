@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FlatList, View, type LayoutChangeEvent, type ListRenderItem, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
+import { FlatList, Platform, View, type LayoutChangeEvent, type ListRenderItem, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { GestureDetector } from 'react-native-gesture-handler';
 import { useTopBar, useBottomBar, useFeedback } from '../../shell/ScreenUIContext';
@@ -36,6 +36,10 @@ import { PlanGap } from './PlanGap';
 import { PlanSpacer } from './PlanSpacer';
 import { PlanFilterChip } from './filter/PlanFilterChip';
 import { PlanDaySwitcher } from './PlanDaySwitcher';
+import { PLAN_TIMELINE_SCREEN_KEY, PlanTimeline } from './landscape/PlanTimeline';
+import { planTimelineRule } from './landscape/PlanTimeline.model';
+import { planListOffsetAt, planListTime } from './planTimeCurve';
+import { useTimelineFilter } from '../timeline/TimelineFilterContext';
 import { strings } from '../../i18n/strings';
 import type { DbArtist, DbEvent } from '../../types/backend';
 import { colors } from '../../styling/tokens';
@@ -78,6 +82,16 @@ import { colors } from '../../styling/tokens';
 // under the pinch keeps its height on screen, or the sets around it, if the new
 // filter drops it, are centred where it was. The list then starts again there,
 // as a day does at its landing spot, and that position is the day's saved one.
+//
+// A phone turned to landscape shows the day as a timeline instead
+// (landscape/PlanTimeline), with only the lanes holding a set the list shows
+// under the current filter. The list is unmounted meanwhile. A roomy screen
+// (isWide: a tablet, a desktop window) keeps the list in either orientation.
+// Turning keeps the screen's time (see "The screen's time" below): one time
+// per day, the time curve at the list's middle line (planTimeCurve) and the
+// time at the timeline's centre line; both land on it, and only a landing on a
+// new day, a request, a pinch or the user's own scroll changes it. In landscape, now and set requests (today's day button
+// tapped again, search) scroll the timeline, as on the Program.
 
 const PLAN_SCREEN_KEY = 'plan';
 
@@ -131,7 +145,9 @@ export function MyPlanScreen() {
   const day = usePlanShownDay(festivalDays, now);
   const { openDetail } = useArtistDetail();
   const { openConflict } = useConflictDetail();
-  const { bottomClearance } = useLayoutMode();
+  const { bottomClearance, isWide, width, height } = useLayoutMode();
+  const landscape = !isWide && width > height;
+  const { requestScrollToNow, requestScrollToTime } = useTimelineFilter();
 
   const duringFestival = festivalToday(festivalDays, now) !== null;
   const items = useMemo<PlanItem[]>(
@@ -149,9 +165,14 @@ export function MyPlanScreen() {
   const landOnSet = useCallback((event: DbEvent): void => {
     store.requestSet(getFestivalDayStart(event.dateFrom), event.eventId, minuteNow());
   }, [store]);
+  // In landscape, by what the timeline shows (PlanTimeline.model).
+  const timelineRule = useMemo(
+    () => (landscape ? planTimelineRule(interests, Object.values(artistEvents).flat(), artists) : undefined),
+    [landscape, interests, artistEvents, artists],
+  );
   const searchScope = useMemo(
-    () => planSearchScope({ level, listable, clashing: conflicts.overlaps, setLevel, land: landOnSet }),
-    [level, listable, conflicts.overlaps, setLevel, landOnSet],
+    () => planSearchScope({ level, listable, clashing: conflicts.overlaps, timeline: timelineRule, setLevel, land: landOnSet }),
+    [level, listable, conflicts.overlaps, timelineRule, setLevel, landOnSet],
   );
   useSearchScope(searchScope);
 
@@ -200,20 +221,93 @@ export function MyPlanScreen() {
   // landing offsets, which native may apply without one.
   const scrollYRef = useRef(0);
 
+  // ── The screen's time: what the list and the landscape timeline show ──────
+  //
+  // One time per shown day, kept here: on the list it is the time curve at the
+  // middle line (planTimeCurve), on the landscape timeline the time at its
+  // centre line. Both land on it. It is taken anew only from:
+  //   - a landing of the screen's own on a day it keeps no time for (where the
+  //     day opens: its saved position, now, or the top);
+  //   - a request (now, a set) or a pinch's landing, at their target;
+  //   - the end of the user's own scroll (web: any scroll not the list's own).
+  // A landing on the kept time never reads it back, so turning without
+  // scrolling shows the same time every time, even where a view is held at its
+  // top or end. The list lands on it again each time its height changes: while
+  // the phone turns, the screen is laid out at passing sizes before its own.
+  // Its height is measured again when it comes back (cleared on the turn), so
+  // it mounts from the top and is scrolled to the time, never placed at a mount
+  // offset worked out from a stale height; the scroll also tells the list which
+  // rows to draw there.
+  const planTimeRef = useRef<{ day: number; timeMs: number } | null>(null);
+  const keptTime = (forDay: number): number | null => (planTimeRef.current?.day === forDay ? planTimeRef.current.timeMs : null);
+  const keepTime = useCallback((forDay: number, timeMs: number | null): void => {
+    if (timeMs !== null) {
+      planTimeRef.current = { day: forDay, timeMs };
+    }
+  }, []);
+  const viewportHeightRef = useRef(viewportHeight);
+  viewportHeightRef.current = viewportHeight;
+  /** The list's time scrolled to `scrollY`, on the shown day, at its measured height. */
+  const listTimeAt = useCallback((scrollY: number): number | null => planListTime(itemsRef.current, dayRef.current, {
+    scrollY,
+    viewportHeight: viewportHeightRef.current,
+    bottomInset: bottomClearanceRef.current,
+  }), []);
+
+  const shownLandscapeRef = useRef(landscape);
+  if (shownLandscapeRef.current !== landscape) {
+    shownLandscapeRef.current = landscape;
+    if (landscape) {
+      setViewportHeight(0);
+    }
+  }
+  // The landscape timeline's own landings, requests and the user's scrolls there.
+  const handleTimelineTime = useCallback((timeMs: number, dayStart: number): void => {
+    keepTime(dayStart, timeMs);
+  }, [keepTime]);
+
+  const artistEventsRef = useRef(artistEvents);
+  artistEventsRef.current = artistEvents;
+
   useEffect(() => {
-    if (viewportHeight === 0 || day === 0) {
+    if (day === 0) {
+      return;
+    }
+    if (landscape) {
+      // The timeline takes the requests: now scrolls it to now, a set to its block.
+      const request = store.takeLanding();
+      if (request?.kind === 'now') {
+        requestScrollToNow(PLAN_TIMELINE_SCREEN_KEY);
+      } else if (request?.kind === 'set') {
+        const event = Object.values(artistEventsRef.current).flat().find((e) => e.eventId === request.eventId);
+        if (event !== undefined) {
+          requestScrollToTime(PLAN_TIMELINE_SCREEN_KEY, event.dateFrom, event.dateTo, event.categoryId, event.eventId);
+        }
+      }
+      return;
+    }
+    if (viewportHeight === 0) {
       return;
     }
     const request = store.takeLanding();
-    if (request === null && landedDayRef.current === day) {
+    const kept = keptTime(day);
+    // Landed already, nothing asked, no time to keep: the list stays.
+    if (request === null && kept === null && landedDayRef.current === day) {
       return;
     }
+    const items = itemsRef.current;
+    const clearance = bottomClearanceRef.current;
     // A set (search) lands a third down, as now does, held within the list; a
     // set the day does not list falls back to the day's own landing.
-    const setOffset = request?.kind === 'set' ? setScrollOffset(itemsRef.current, request.eventId, viewportHeight) : null;
-    const target = setOffset !== null
-      ? Math.min(setOffset, maxScrollOffset(itemsRef.current, viewportHeight, bottomClearanceRef.current))
-      : landingOffset(itemsRef.current, day, request?.kind === 'now', viewportHeight, bottomClearanceRef.current);
+    const setOffset = request?.kind === 'set' ? setScrollOffset(items, request.eventId, viewportHeight) : null;
+    let target: number;
+    if (setOffset !== null) {
+      target = Math.min(setOffset, maxScrollOffset(items, viewportHeight, clearance));
+    } else if (request === null && kept !== null) {
+      target = planListOffsetAt(items, day, kept, { viewportHeight, bottomInset: clearance }) ?? landingOffset(items, day, false, viewportHeight, clearance);
+    } else {
+      target = landingOffset(items, day, request?.kind === 'now', viewportHeight, clearance);
+    }
     const animated = request !== null && landedDayRef.current === day;
     landedDayRef.current = day;
     // An animated scroll to now or to a set is the user's own request; that position may be kept.
@@ -221,11 +315,20 @@ export function MyPlanScreen() {
     if (!animated) {
       scrollYRef.current = target;
     }
+    if (request !== null || kept === null) {
+      // Where the day opens, or a request's target: the time now.
+      keepTime(day, planListTime(items, day, { scrollY: target, viewportHeight, bottomInset: clearance }));
+    } else {
+      // On the kept time: the day's position from now on, the time not read back.
+      setScroll(PLAN_SCREEN_KEY, day, target);
+    }
     listRef.current?.scrollToOffset({ offset: target, animated });
     if (setOffset !== null && request?.kind === 'set') {
       showLandingHighlight(request.eventId);
     }
-  }, [day, viewportHeight, storeVersion, store]);
+    // keptTime reads a ref.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [day, viewportHeight, storeVersion, store, landscape, requestScrollToNow, requestScrollToTime, keepTime]);
 
   // ── Landing: where a day's list starts, fixed for the life of that list ─────
   //
@@ -239,17 +342,22 @@ export function MyPlanScreen() {
   // its key), landing where the pinch keeps its place.
   const [pinchCount, setPinchCount] = useState(0);
   const pendingPinchRef = useRef<{ count: number; day: number; anchor: PinchAnchor } | null>(null);
-  const listKey = `${day}:${pinchCount}`;
+  // Turned back from landscape, the list mounts again, at the kept time.
+  const listKey = `${day}:${pinchCount}:${landscape ? 'timeline' : 'list'}`;
   const listKeyRef = useRef<string | null>(null);
   const landingRef = useRef<{ offset: number; index: number; count: number } | null>(null);
   if (listKeyRef.current !== listKey) {
     listKeyRef.current = listKey;
-    if (viewportHeight > 0) {
+    if (viewportHeight > 0 && !landscape) {
       const pinched = pendingPinchRef.current;
       const pinchOffset = pinched !== null && pinched.count === pinchCount && pinched.day === day
         ? pinchScrollOffset(pinched.anchor, items, viewportHeight, bottomClearance)
         : null;
-      const offset = pinchOffset ?? landingOffset(items, day, false, viewportHeight, bottomClearance);
+      const kept = keptTime(day);
+      const keptOffset = kept === null ? null : planListOffsetAt(items, day, kept, { viewportHeight, bottomInset: bottomClearance });
+      const offset = pinchOffset
+        ?? keptOffset
+        ?? landingOffset(items, day, false, viewportHeight, bottomClearance);
       landingRef.current = { offset, index: itemAtOffset(items, offset), count: itemsToFill(items, offset, viewportHeight) };
       scrollYRef.current = offset;
     } else {
@@ -258,8 +366,16 @@ export function MyPlanScreen() {
   }
   const landing = landingRef.current;
 
+  // A phone's list is taller than wide: a wider frame is one passing by while
+  // the phone turns, not the list's own size.
+  const isWideRef = useRef(isWide);
+  isWideRef.current = isWide;
   const handleLayout = useCallback((e: LayoutChangeEvent): void => {
-    setViewportHeight(e.nativeEvent.layout.height);
+    const { width: layoutWidth, height: layoutHeight } = e.nativeEvent.layout;
+    if (!isWideRef.current && layoutWidth > layoutHeight) {
+      return;
+    }
+    setViewportHeight(layoutHeight);
   }, []);
 
   const persistScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>): void => {
@@ -269,15 +385,28 @@ export function MyPlanScreen() {
     setScroll(PLAN_SCREEN_KEY, dayRef.current, e.nativeEvent.contentOffset.y);
   }, []);
 
-  // Saved while scrolling too: web wheel scrolling fires no drag/momentum events.
+  // The end of the user's own scroll: its position saved, and the time there kept.
+  const handleScrollEnd = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>): void => {
+    persistScroll(e);
+    if (landedDayRef.current === dayRef.current) {
+      keepTime(dayRef.current, listTimeAt(e.nativeEvent.contentOffset.y));
+    }
+  }, [persistScroll, keepTime, listTimeAt]);
+
+  // Saved while scrolling too: web wheel scrolling fires no drag/momentum
+  // events, so there a scroll not the list's own also sets the time.
   const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>): void => {
     scrollYRef.current = e.nativeEvent.contentOffset.y;
     if (skipNextScrollRef.current) {
       skipNextScrollRef.current = false;
       return;
     }
-    persistScroll(e);
-  }, [persistScroll]);
+    if (Platform.OS === 'web') {
+      handleScrollEnd(e);
+    } else {
+      persistScroll(e);
+    }
+  }, [persistScroll, handleScrollEnd]);
 
   // ── Pinch: filter steps while it goes, each keeping its place ───────────────
   const showFeedback = useFeedback();
@@ -310,14 +439,16 @@ export function MyPlanScreen() {
     }
     scrollYRef.current = target;
     setScroll(PLAN_SCREEN_KEY, pinched.day, target);
+    // The pinch's landing is the time now.
+    keepTime(pinched.day, listTimeAt(target));
     listRef.current?.scrollToOffset({ offset: target, animated: false });
-  }, [pinchCount]);
+  }, [pinchCount, keepTime, listTimeAt]);
 
   // A pull down past the list's top opens the filter panel, as its chip does
   // (switched off for now: ui/PullPreview.model › PULL_PAST_TOP_ENABLED).
   const { scrollProps, preview } = usePullPastTop(openPanel, {
     onScroll: handleScroll,
-    onScrollEndDrag: persistScroll,
+    onScrollEndDrag: handleScrollEnd,
     scrollEventThrottle: 100,
   }, PlanFilterSkeleton);
 
@@ -370,6 +501,20 @@ export function MyPlanScreen() {
     index,
   }), [items, offsets]);
 
+  if (landscape) {
+    return (
+      <View testID="plan-screen" style={{ flex: 1, backgroundColor: colors.background }}>
+        <PlanTimeline
+          day={day}
+          level={level}
+          onPullPastTop={openPanel}
+          landingCentreMs={keptTime(day) ?? undefined}
+          onCentreTime={handleTimelineTime}
+        />
+      </View>
+    );
+  }
+
   return (
     <GestureDetector gesture={pinch}>
       <View testID="plan-screen" style={{ flex: 1, backgroundColor: colors.background }} onLayout={handleLayout}>
@@ -386,7 +531,7 @@ export function MyPlanScreen() {
           renderItem={renderItem}
           getItemLayout={getItemLayout}
           {...scrollProps}
-          onMomentumScrollEnd={persistScroll}
+          onMomentumScrollEnd={handleScrollEnd}
           contentContainerStyle={{ paddingTop: PLAN_LAYOUT.paddingTop, paddingBottom: PLAN_LAYOUT.paddingBottom + bottomClearance }}
         />
         {preview}

@@ -82,7 +82,12 @@ Each result is placed by the screen it was opened on (`features/search/searchSco
     leaves out (under My picks or a friend's lens, every set but its picks) turns the lens to
     Everything.
   - My plan: the filter steps out from where it is: Only conflicts → Must-see only → Must-see and
-    Maybe → All sets, to the first that lists the set.
+    Maybe → All sets, to the first that lists the set. Turned to landscape, My plan's section and
+    its steps follow what the timeline shows instead (`planTimelineRule`, see
+    [my-plan.md](my-plan.md), *Landscape*):
+    - **Gained:** support items not picked and picks over 3 h, in a category picked on that stage
+      that day.
+    - **Lost:** none: under All sets the timeline shows every band's set, as the list.
 - **The other sections** are named by where the set is, never by what is missing. On My plan,
   where All sets lists my "don't go" bands too, "In the Support Program" holds support sets I
   haven't picked or marked "don't go", and those over 3 h. A band's set over 3 h is on My plan as
@@ -99,7 +104,9 @@ Each screen's section uses the same rule the screen draws with, never a search-o
 - what the lens removes from a timeline: `isRemovedByLens` in `lib/interestUtils.ts`, also used by
   `TimelineDay.model`;
 - which sets My plan can list, and under which filter: `planPicks` and `planLevelLists` in
-  `lib/plan.ts`, also used by `buildPlanDay`.
+  `lib/plan.ts`, also used by `buildPlanDay`;
+- which sets My plan's landscape timeline shows, and under which filter: `planTimelineRule` in
+  `screens/my-plan/landscape/PlanTimeline.model.ts`, also used by its day model.
 
 ## A result row
 
@@ -128,7 +135,9 @@ Search lands through the scroll-to the app already has; it adds no path of its o
   set's `eventId`. The artist sheet's jump uses the same, so it gets the highlight too. A "now"
   scroll (day button, now pill) carries no set and never highlights.
 - **My plan:** the plan store's request to land, which used to mean only "now", can name a set; the
-  screen scrolls that row a third down the list, held within what the list can scroll.
+  screen scrolls that row a third down the list, held within what the list can scroll. In
+  landscape the timeline takes the request (`requestScrollToTime`, under its own screen key) and
+  scrolls to the set's block, its category's lane brought into view.
 - **Artists:** every result opens the artist sheet.
 - **Highlight:** the landed set's block or row gets a plain accent frame: no tint, no animation
   while it shows. It shows for 3 s counted from when the frame is put on screen, then it is gone,

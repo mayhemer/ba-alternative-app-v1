@@ -310,10 +310,47 @@ My plan's strings live with the rest of the app's in `src/i18n/strings.ts` (see 
 
 ## Layout modes
 
-- **Landscape (short layout):** no dedicated design.
+- **Landscape (short layout):** a phone turned sideways shows the day as a timeline; see *Landscape: the day as a timeline* below.
   - **No now pill in landscape, on any screen**, because the top bar is hidden there, as today.
   - The existing floating bottom bar carries ☰, the day switcher and the screen's right-hand chip, as on the timeline. On My plan that's the filter chip; on other screens the lens chip is unchanged.
-- **Wide (tablet, web):** same layout, with the content width capped at `MAX_CONTENT_WIDTH`.
+- **Wide (tablet, web):** same layout, with the content width capped at `MAX_CONTENT_WIDTH`. A tablet or a wide window never turns into the timeline.
+
+## Landscape: the day as a timeline
+
+A phone held sideways (`!isWide && width > height`) shows My plan's day as a timeline (`landscape/PlanTimeline.tsx`), and turned back it shows the list again. It is not a screen of its own: nothing navigates to it, and the day, the filter, the filter panel and the bottom bar stay My plan's.
+
+**Which sets** (`planTimelineRule` in `landscape/PlanTimeline.model.ts`). A set shows where you picked something on that day **in its category on its stage**: its pair; under All sets, every band's set shows too, as on the list. A pick is a Must-see or a Maybe, of any length; "don't go" is no pick. A busy category, or a stage that hosts several, shows only what is next to what you are going to anyway.
+
+| Filter | The timeline shows |
+|---|---|
+| Only conflicts | the clashing Must-sees, as the list |
+| Must-see only | every Must-see, those over 3 h too |
+| Must-see and Maybe | every Must-see and Maybe, those over 3 h too |
+| All sets | every band's set, as the list, and every set of a picked pair: support items too, picked or not, "don't go" and those over 3 h too |
+
+- The list leaves out support sets over 3 h (all-day exhibitions): a row early in the day, forgotten by the afternoon. On the timeline a long block shows all day, so there they show.
+- The conflict calculation never includes them, so Only conflicts shows exactly the list's sets.
+- Example, Wednesday, with Crystal Lake (Sea Shepherd) and Frayle (Octagon) Must-see and Gene Hoglan's drum clinic (Clinic, on KAL stage) Maybe. Under All sets: every band of the day, and both clinics on KAL stage. Not Octagon's exhibitions or KAL stage's lectures (their categories have no pick on those stages).
+
+**Lanes.** Categories, as on the timelines: the Program's (a category holding a band's set) first in the Program's lane order, then the Support Program's in the Support Program's order (`planLaneOrder`). A category holding both is the Program's. Every lens and the timelines' hidden lanes are left out: the plan's filter alone decides. Overlapping sets stack in rows, as on the Support Program, since bands and support items can share a lane. Blocks look as on the timelines: their category's colour, my star, the conflict bars.
+
+**The time kept across a turn.** My plan keeps one time per day, and both views land on it, so turning back and forth without scrolling shows the same moment every time.
+
+- The timeline's time is the one at its centre line, read from its scroll linearly.
+- The list's time is the time at its middle line, on a curve through its elements (`planTimeCurve.ts`):
+  - **Points:** each element with a time gives a point at its centre. A set row gives its start; rows starting together count as one element. A break gives the time it starts. The end cap gives the end of everything listed.
+  - **No points:** the start cap, spacers and spacing give none.
+  - **Between points:** straight lines join neighbouring points, and the curve is held flat beyond the first and last.
+  - **Reading it:** height and time both rise strictly from point to point, so the curve reads either way, at any height. The middle line is the middle of what is visible above the floating bottom bar, or half the list's height when the list is shorter than the screen.
+- **What changes the kept time:** only a day's own landing, a request (now, a set), a pinch, or the end of the user's own scroll. A scroll the view makes itself, or a relayout moving it, never does.
+- **When a view lands:** after it is laid out, and again on every layout change. A turn lays a view out at passing sizes and safe-area insets before its own, and a landing aimed at one of those drifted.
+
+**Taps and requests in landscape.**
+
+- Tapping today's day button scrolls the timeline to now, as on the timeline.
+- A search landing scrolls to the set's block, its lane brought into view, and lights it.
+- A block opens the artist sheet.
+- A pull down past the lanes' top opens the filter panel, as the list's pull does.
 
 ## Navigation
 

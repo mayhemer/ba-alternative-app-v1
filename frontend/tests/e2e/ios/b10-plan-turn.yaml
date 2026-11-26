@@ -1,0 +1,87 @@
+# B10 · Turning the phone back and forth on My plan, without scrolling, lands
+# each view in the same place every time.
+#
+# My plan keeps one time per day: the list shows it at its middle line (its
+# time curve), the landscape timeline at its centre line, and both land on it
+# whenever they appear or are laid out again (MyPlanScreen › The screen's time,
+# planTimeCurve). A bug seen on an iPhone: with no scrolling at all, the
+# timeline came back a set's middle on one turn and its start on the next, and
+# the list drifted further with every turn. The mapping and the landing rules
+# are Jest's (planTimeCurve.test.ts, MyPlanScreen.turn.test.tsx); native only:
+# a real turn lays both views out at passing sizes and safe-area insets before
+# their own, which is where the landings went astray.
+#
+# Each view is photographed (cropped to its scroller, so the status bar's clock
+# is out of it) after the first turn, and every later turn must match it. The
+# clock stands at Wednesday 14:10 (common/relaunch-returning-user.yaml), so
+# nothing else on the views moves.
+#
+# Searching KERRY KING (23:30–00:30, Sea Shepherd) in landscape centres the
+# timeline on its middle, 00:00; on the list 00:00 lies halfway between KERRY
+# KING's start (its row's centre) and THRASH COBRA's 00:30.
+#
+# Needs a freshly booted simulator: one up for a while does not turn
+# (scripts/test/e2e-ios.ts reboots it).
+appId: cz.janbambas.ba
+---
+- runFlow: common/relaunch-returning-user.yaml
+- runFlow:
+    file: common/open-section.yaml
+    env: { SECTION: "My plan.*" }
+- tapOn: "Filters"
+- tapOn: "Only what I must see"
+- setOrientation: LANDSCAPE_LEFT
+- extendedWaitUntil:
+    visible: { id: "timeline-scroll-x" }
+    timeout: 10000
+# A set found from landscape: the timeline centres it.
+- tapOn: "Filters"
+- tapOn: { id: "search-entry" }
+- tapOn: { id: "search-input" }
+- inputText: "kerry king"
+- pressKey: Enter
+- tapOn: "KERRY KING, Wed.*"
+- extendedWaitUntil:
+    visible: "KERRY KING.*23:30.*"
+    timeout: 10000
+# The landing frame shows for 3 s (ui/LandingRing); the photographs are taken
+# after it. Maestro has no plain wait: this waits for something never shown.
+- extendedWaitUntil:
+    visible: "never shown, a 4 s wait"
+    timeout: 4000
+    optional: true
+- takeScreenshot:
+    path: b10-landscape
+    cropOn: { id: "timeline-scroll-y" }
+- setOrientation: PORTRAIT
+- extendedWaitUntil:
+    visible: { id: "plan-list" }
+    timeout: 10000
+- waitForAnimationToEnd
+- takeScreenshot:
+    path: b10-portrait
+    cropOn: { id: "plan-list" }
+# On the list: KERRY KING's row and THRASH COBRA's, the middle line between them.
+- assertVisible: "KERRY KING, 23:30–00:30, Sea Shepherd"
+- assertVisible: "THRASH COBRA, 00:30–01:15, KAL stage"
+- repeat:
+    times: 3
+    commands:
+      - setOrientation: LANDSCAPE_LEFT
+      - extendedWaitUntil:
+          visible: { id: "timeline-scroll-x" }
+          timeout: 10000
+      - waitForAnimationToEnd
+      - assertScreenshot:
+          path: b10-landscape.png
+          cropOn: { id: "timeline-scroll-y" }
+          thresholdPercentage: 99
+      - setOrientation: PORTRAIT
+      - extendedWaitUntil:
+          visible: { id: "plan-list" }
+          timeout: 10000
+      - waitForAnimationToEnd
+      - assertScreenshot:
+          path: b10-portrait.png
+          cropOn: { id: "plan-list" }
+          thresholdPercentage: 99

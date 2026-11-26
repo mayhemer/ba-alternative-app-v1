@@ -27,6 +27,8 @@ export type TimelineDayInputs = {
   dayStart: number;
   /** The screen's own filter: bands on the Program, the rest on the Support Program. */
   filterArtist?: (artist: DbArtist) => boolean;
+  /** A filter of single sets (My plan in landscape: by its filter and the set's stage). */
+  filterSet?: (event: DbEvent) => boolean;
   scope: LensScope;
   interests: Record<string, string>;
   /** The focused friend's picks, for a friend's lens. */
@@ -60,7 +62,7 @@ export type TimelineDayModel = {
 const NO_ORDER: readonly string[] = [];
 
 export function timelineDayModel(inputs: TimelineDayInputs): TimelineDayModel {
-  const { events, artists, categories, dayStart, filterArtist, scope, interests, friendInterests, hiddenCategories, laneOrder = NO_ORDER, conflictOverlaps, stack, overlayTitles } = inputs;
+  const { events, artists, categories, dayStart, filterArtist, filterSet, scope, interests, friendInterests, hiddenCategories, laneOrder = NO_ORDER, conflictOverlaps, stack, overlayTitles } = inputs;
   const artistById = new Map(artists.map((a) => [a.artistId, a]));
   const byCategory = new Map<string, LaneSetInput[]>();
   let firstEventMs: number | undefined;
@@ -68,7 +70,7 @@ export function timelineDayModel(inputs: TimelineDayInputs): TimelineDayModel {
   if (dayStart !== 0) {
     const dayEnd = dayStart + DAY_DURATION_MS;
     for (const event of events) {
-      if (event.dateFrom < dayStart || event.dateFrom >= dayEnd) {
+      if (event.dateFrom < dayStart || event.dateFrom >= dayEnd || (filterSet !== undefined && !filterSet(event))) {
         continue;
       }
       const artist = artistById.get(event.artistId);

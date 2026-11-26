@@ -1,4 +1,4 @@
-import { assignSubRows, conflictWindow, defaultScrollX, eventScrollTarget, labelRepeatPx, PIXELS_PER_HOUR, RULER_HEIGHT, timeToX, VIEW_OFFSET_X } from './timelineLayout';
+import { assignSubRows, centreTimeAt, conflictWindow, defaultScrollX, eventScrollTarget, labelRepeatPx, PIXELS_PER_HOUR, RULER_HEIGHT, scrollXCentredOn, timeToX, VIEW_OFFSET_X } from './timelineLayout';
 import type { DbEvent } from '../../types/backend';
 
 // ── Timeline geometry ─────────────────────────────────────────────────────────
@@ -165,3 +165,50 @@ describe('eventScrollTarget', () => {
   });
 });
 
+// The time at the timeline's centre, and the scroll that centres a time: what
+// My plan keeps while the phone turns. The view window runs 08:30 to 04:00
+// (19.5 h, 3315 px at 170 px an hour); a 340 px view shows two hours.
+describe('centreTimeAt', () => {
+  it('reads the window\'s start plus half the view at scroll 0', () => {
+    // 08:30 + 1 h.
+    expect(centreTimeAt(0, 340, WED)).toBe(at('2025-08-06T09:30:00+02:00'));
+  });
+
+  it('moves an hour per 170 px scrolled', () => {
+    // 850 px is 5 h: 09:30 + 5 h.
+    expect(centreTimeAt(850, 340, WED)).toBe(at('2025-08-06T14:30:00+02:00'));
+  });
+
+  it('reads further right on a wider view scrolled the same', () => {
+    // 1020 px wide: 08:30 + 5 h + 3 h. The width the centre is read with is
+    // what tells a turned phone's insets apart.
+    expect(centreTimeAt(850, 1020, WED)).toBe(at('2025-08-06T16:30:00+02:00'));
+  });
+});
+
+describe('scrollXCentredOn', () => {
+  it('centres a time in the view', () => {
+    // 14:30 is 6 h into the window (1020 px), less half the view (170).
+    expect(scrollXCentredOn(at('2025-08-06T14:30:00+02:00'), WED, 340)).toBe(850);
+  });
+
+  it('centres the same time further left on a wider view', () => {
+    // 1020 − 510.
+    expect(scrollXCentredOn(at('2025-08-06T14:30:00+02:00'), WED, 1020)).toBe(510);
+  });
+
+  it('holds a time near the window\'s start at its left edge', () => {
+    // 09:00: 85 px into the window, less 170.
+    expect(scrollXCentredOn(at('2025-08-06T09:00:00+02:00'), WED, 340)).toBe(0);
+  });
+
+  it('holds a time near the window\'s end at its right edge', () => {
+    // 04:00 next morning: 3315 px into the window, less 170; held at 3315 − 340.
+    expect(scrollXCentredOn(at('2025-08-07T04:00:00+02:00'), WED, 340)).toBe(2975);
+  });
+
+  it('reads back the time it centred', () => {
+    const time = at('2025-08-06T20:07:30+02:00');
+    expect(centreTimeAt(scrollXCentredOn(time, WED, 734), 734, WED)).toBe(time);
+  });
+});

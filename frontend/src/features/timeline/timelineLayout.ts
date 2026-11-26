@@ -181,6 +181,19 @@ export function defaultScrollX(firstEventMs: number | undefined, dayStartMs: num
   return Math.max(0, timeToX(firstEventMs - TIMELINE_PRE_ROLL_MS, dayStartMs) - VIEW_OFFSET_X);
 }
 
+// ── The time at the centre ────────────────────────────────────────────────────
+
+/** The time at the centre of a timeline `viewportWidth` wide, scrolled to `scrollX`. */
+export function centreTimeAt(scrollX: number, viewportWidth: number, dayStartMs: number): number {
+  return dayStartMs + (scrollX + VIEW_OFFSET_X + viewportWidth / 2) / PIXELS_PER_MS;
+}
+
+/** The scroll offset that puts `timeMs` at the centre of the timeline, held within the view window. */
+export function scrollXCentredOn(timeMs: number, dayStartMs: number, viewportWidth: number): number {
+  const x = timeToX(timeMs, dayStartMs) - VIEW_OFFSET_X - viewportWidth / 2;
+  return Math.max(0, Math.min(x, VIEW_WIDTH - viewportWidth));
+}
+
 // ── Scroll to an event ────────────────────────────────────────────────────────
 
 // Horizontal space kept to the left of an event's start when scrolling to it.

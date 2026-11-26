@@ -212,3 +212,15 @@ describe('the lanes in my order', () => {
     expect(listed(day({ laneOrder: ['9', '1'], hiddenCategories: new Set(['9']) }))).toEqual(['1: must dont night']);
   });
 });
+
+// My plan in landscape keeps single sets, not whole artists: by its filter and
+// the stage each set plays on (my-plan/landscape/PlanTimeline.model).
+describe("a filter of single sets", () => {
+  it('lists only the sets it keeps, the artist filter still applied', () => {
+    expect(listed(day({ filterSet: (e) => e.eventId !== 'e-none' }))).toEqual(['1: must dont night', '9: maybe']);
+  });
+
+  it('lands at the earliest set it keeps', () => {
+    expect(day({ filterSet: (e) => e.eventId !== 'e-maybe' }).firstEventMs).toBe(at('2025-08-06T14:00:00+02:00'));
+  });
+});

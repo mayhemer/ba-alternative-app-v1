@@ -63,10 +63,16 @@ if (!has('maestro')) {
 
 const sim = findSimulator(simName);
 console.log(`simulator: ${sim.name} (${sim.udid})`);
-if (sim.state !== 'Booted') {
-  console.log('booting…');
-  run('xcrun', ['simctl', 'boot', sim.udid]);
+// Every run starts from a fresh boot. A simulator that has been up a while
+// stops turning: Maestro's setOrientation (XCUIDevice) reports success and
+// nothing rotates (seen on iOS 26.5, as Appium users report on 26.1), which
+// b10-plan-turn needs; after a reboot it turns.
+if (sim.state === 'Booted') {
+  console.log('rebooting (the simulator turns only after a fresh boot)…');
+  run('xcrun', ['simctl', 'shutdown', sim.udid]);
 }
+console.log('booting…');
+run('xcrun', ['simctl', 'boot', sim.udid]);
 // Blocks until the simulator has finished booting, not merely started.
 must('xcrun', ['simctl', 'bootstatus', sim.udid, '-b']);
 

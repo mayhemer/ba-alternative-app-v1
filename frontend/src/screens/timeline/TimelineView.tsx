@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Platform, Pressable, ScrollView, View } from 'react-native';
 import type { NativeScrollEvent, NativeSyntheticEvent, ScrollViewInstance } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -25,6 +25,8 @@ import {
   labelRepeatPx,
   defaultScrollX,
   eventScrollTarget,
+  centreTimeAt,
+  scrollXCentredOn,
 } from '../../features/timeline/timelineLayout';
 import { showLandingHighlight } from '../../features/timeline/landingHighlight';
 import { colors } from '../../styling/tokens';
@@ -58,6 +60,16 @@ const MOUNT_MIN_STEP = 200;
 /** The lanes' area under the ruler: the vertical scroller and the pull preview over its top. */
 const PULL_AREA = { flex: 1 };
 
+/** Web's wheel scrolling sends no drag events: a scroll there counts as the user's once it has rested this long. */
+const IS_WEB = Platform.OS === 'web';
+const WEB_SCROLL_REST_MS = 150;
+
+// Scroll requests already carried out. The signal stays in the context after it
+// is handled, so a view mounted again (My plan's landscape timeline, each time
+// the phone turns) would otherwise repeat the last one. A request made before
+// the view's first mount (a jump from another screen) is still carried out.
+const handledSignals = new WeakSet<object>();
+
 type Props = {
   screenKey: string;
   /** The shown day's lanes, titles and geometry (TimelineDay.model.ts). */
@@ -70,9 +82,17 @@ type Props = {
   onPullPastTop: () => void;
   /** What that pull shows coming down: the panel it opens. */
   pullPreview: PullPreview;
+  /**
+   * Where the first day shown lands: centred on this time instead of its saved
+   * position (My plan turned to landscape keeps the list's time). A later day
+   * lands as usual.
+   */
+  landingCentreMs?: number;
+  /** Told the time at the centre whenever the view lands or is scrolled (My plan, to keep it when turned back). */
+  onCentreTime?: (timeMs: number, dayStart: number) => void;
 };
 
-export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress, onLongPress, onPullPastTop, pullPreview }: Props) {
+export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress, onLongPress, onPullPastTop, pullPreview, landingCentreMs, onCentreTime }: Props) {
   const { lanes, titles, tops, canvasHeight, firstEventMs } = day;
   const [areaHeight, setAreaHeight] = useState(0);
   // The same measurement in two forms: a ref for the scroll-to-event centring,
@@ -81,7 +101,41 @@ export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress, o
   const scrollViewWidthRef = useRef(0);
   const [viewportWidth, setViewportWidth] = useState(0);
   const { scrollToTimeSignal } = useTimelineFilter();
-  const { bottomClearance } = useLayoutMode();
+  const { bottomClearance, width: windowWidth } = useLayoutMode();
+  // The scroller's width before it is measured: the window's, which it fills
+  // unless the drawer is pinned beside it.
+  const windowWidthRef = useRef(windowWidth);
+  windowWidthRef.current = windowWidth;
+  const viewWidth = useCallback((): number => scrollViewWidthRef.current > 0 ? scrollViewWidthRef.current : windowWidthRef.current, []);
+
+  // ── The time at the centre (a view told about it: My plan's, in landscape) ──
+  //
+  // Such a view keeps a time at its centre: the one it is given, and lands on
+  // it again whenever its width changes (measured at last, or laid out at a
+  // turn's passing sizes). It takes a new one, and tells it, only from:
+  //   - a landing of its own on a day it keeps no time for (where the day opens);
+  //   - a request (now, a set), at the request's target;
+  //   - the end of the user's drag or its momentum (web: a scroll at rest that
+  //     is not the view's own).
+  // A scroll event alone never changes it (a relayout moves the scroller too),
+  // nor does a landing the window holds at its edge: the kept time is never read
+  // back from a landing, so turning without scrolling shows the same time. The
+  // centre is only ever read at the scroller's measured width: the window's is
+  // wider where the safe area insets the scroller, and a time read or aimed at
+  // with it sits half the insets off.
+  const onCentreTimeRef = useRef(onCentreTime);
+  onCentreTimeRef.current = onCentreTime;
+  const centreRef = useRef(onCentreTime === undefined || landingCentreMs === undefined ? null : { day: selectedDayStart, timeMs: landingCentreMs });
+  /** Takes `x` as where the view now is: its centre time kept and told. Not before the scroller is measured. */
+  const noteCentre = useCallback((x: number, dayStart: number): void => {
+    const width = scrollViewWidthRef.current;
+    if (onCentreTimeRef.current === undefined || width <= 0) {
+      return;
+    }
+    const timeMs = centreTimeAt(x, width, dayStart);
+    centreRef.current = { day: dayStart, timeMs };
+    onCentreTimeRef.current(timeMs, dayStart);
+  }, []);
 
   // ── Default landing position ────────────────────────────────────────────────
 
@@ -95,11 +149,16 @@ export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress, o
   const firstEventMsRef = useRef(firstEventMs);
   firstEventMsRef.current = firstEventMs;
 
-  // Where a day opens: the persisted offset if the user ever scrolled it, else
-  // derived from that day's first event.
+  // Where a day opens: centred on the time kept for it (above), else the
+  // persisted offset if the user ever scrolled it, else derived from that day's
+  // first event.
   const landingX = useCallback((day: number): number => {
+    const centre = centreRef.current;
+    if (centre !== null && centre.day === day) {
+      return scrollXCentredOn(centre.timeMs, day, viewWidth());
+    }
     return getScroll(screenKey, day) ?? defaultScrollX(firstEventMsRef.current, day);
-  }, [screenKey]);
+  }, [screenKey, viewWidth]);
 
   // ── Horizontal scroll tracking ──────────────────────────────────────────────
 
@@ -142,6 +201,33 @@ export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress, o
     setScroll(screenKey, selectedDayStartRef.current, x);
   }, [screenKey]);
 
+  // Where the view last sent the scroller itself: a scroll ending there is the
+  // view's own, not the user's.
+  const commandedXRef = useRef<number | null>(null);
+  /** The user's own scroll came to rest at `x`: the time there is the one kept. */
+  const userScrolled = useCallback((x: number): void => {
+    if (selectedDayStartRef.current !== 0) {
+      noteCentre(x, selectedDayStartRef.current);
+    }
+  }, [noteCentre]);
+  const webRestTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const webScrolled = useCallback((x: number): void => {
+    if (webRestTimerRef.current !== null) {
+      clearTimeout(webRestTimerRef.current);
+    }
+    webRestTimerRef.current = setTimeout(() => {
+      webRestTimerRef.current = null;
+      if (commandedXRef.current === null || Math.abs(x - commandedXRef.current) > 1) {
+        userScrolled(x);
+      }
+    }, WEB_SCROLL_REST_MS);
+  }, [userScrolled]);
+  useEffect(() => () => {
+    if (webRestTimerRef.current !== null) {
+      clearTimeout(webRestTimerRef.current);
+    }
+  }, []);
+
   const onScroll = useAnimatedScrollHandler({
     onScroll: (event) => {
       scrollX.value = event.contentOffset.x;
@@ -153,13 +239,18 @@ export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress, o
         lastPersist.value = now;
         scheduleOnRN(persistCurrentScroll, event.contentOffset.x);
       }
+      if (IS_WEB) {
+        scheduleOnRN(webScrolled, event.contentOffset.x);
+      }
     },
     // Native: capture the exact final offset when the gesture settles.
     onEndDrag: (event) => {
       scheduleOnRN(persistCurrentScroll, event.contentOffset.x);
+      scheduleOnRN(userScrolled, event.contentOffset.x);
     },
     onMomentumEnd: (event) => {
       scheduleOnRN(persistCurrentScroll, event.contentOffset.x);
+      scheduleOnRN(userScrolled, event.contentOffset.x);
     },
   });
 
@@ -201,18 +292,27 @@ export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress, o
     prevDayRef.current = selectedDayStart;
 
     const savedX = landingX(selectedDayStart);
+    // A day it keeps no time for: where it opens is the time now.
+    if (centreRef.current?.day !== selectedDayStart) {
+      noteCentre(savedX, selectedDayStart);
+    }
 
     if (prevDay === 0) {
       // The first day is already mounted at this offset via `contentOffset`, which
       // both native platforms honour. This is the web fallback (react-native-web
       // ignores the prop), and on native a no-op — or a correction, should iOS have
       // clamped the mount offset against a content size it did not have yet.
+      // Worked out when it runs, not before: the scroller may have been measured
+      // since, and a time kept at the centre is aimed at with its real width.
       const timer = setTimeout(() => {
-        horizontalScrollRef.current?.scrollTo({ x: savedX, animated: false });
+        const x = landingX(selectedDayStart);
+        commandedXRef.current = x;
+        horizontalScrollRef.current?.scrollTo({ x, animated: false });
       }, 50);
       return () => clearTimeout(timer);
     }
 
+    commandedXRef.current = savedX;
     horizontalScrollRef.current?.scrollTo({ x: savedX, animated: false });
     // Only re-run when the day changes; the saved offset is read imperatively.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -289,8 +389,12 @@ export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress, o
   useEffect(() => {
     if (scrollToTimeSignal.counter === 0) { return; }
     if (scrollToTimeSignal.screenKey !== screenKey) { return; }
-    const { fromMs, toMs, categoryId, eventId } = scrollToTimeSignal;
+    if (handledSignals.has(scrollToTimeSignal)) { return; }
+    const signal = scrollToTimeSignal;
+    const { fromMs, toMs, categoryId, eventId } = signal;
     const timer = setTimeout(() => {
+      // Marked when carried out, not when scheduled: a cancelled timer leaves it to do.
+      handledSignals.add(signal);
       // The lane is unknown for a "now" jump, or when the category is hidden by
       // the filter; the vertical offset then stands.
       const geometry = laneGeometryRef.current;
@@ -320,7 +424,10 @@ export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress, o
         if (fromX === w.fromX && toX === w.toX && fromY === w.fromY && toY === w.toY) { return w; }
         return { ...w, fromX, toX, fromY, toY };
       });
+      commandedXRef.current = targetX;
       horizontalScrollRef.current?.scrollTo({ x: targetX, animated: true });
+      // The request's target is the time now.
+      noteCentre(targetX, selectedDayStartRef.current);
       if (targetY !== undefined) {
         verticalScrollRef.current?.scrollTo({ y: targetY, animated: true });
       }
@@ -399,6 +506,19 @@ export function TimelineView({ screenKey, day, selectedDayStart, onBlockPress, o
                 const measured = e.nativeEvent.layout.width;
                 scrollViewWidthRef.current = measured;
                 setViewportWidth(measured);
+                // A view keeping a time lands on it again at the new width,
+                // never reading it back; measured for the first time with none
+                // kept yet, it takes the time where the day opened.
+                const day = selectedDayStartRef.current;
+                const centre = centreRef.current;
+                if (onCentreTimeRef.current !== undefined && centre !== null && centre.day === day) {
+                  const x = scrollXCentredOn(centre.timeMs, day, measured);
+                  scrollX.value = x;
+                  commandedXRef.current = x;
+                  horizontalScrollRef.current?.scrollTo({ x, animated: false });
+                } else if (day !== 0) {
+                  noteCentre(scrollX.value, day);
+                }
               }}
             >
               {/* Clipping wrapper sized to the visible window only */}
