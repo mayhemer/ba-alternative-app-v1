@@ -220,66 +220,6 @@ export function maxScrollOffset(items: PlanItem[], viewportHeight: number, botto
   return Math.max(0, contentEnd + PLAN_LAYOUT.paddingBottom + bottomInset - viewportHeight);
 }
 
-/**
- * How central the now arrow must be for the now pill on My plan to go to the
- * timeline rather than scroll to now: the middle 80 % of the list above the
- * floating bottom bar (planNowInView).
- */
-export const PLAN_NOW_BAND = 0.8;
-
-/** Where now is on the scrolled list, in content y. */
-export type PlanNowView = {
-  /** Where the first now arrow is drawn; null when none is. */
-  now: number | null;
-  /** The scroll offset. */
-  scroll: number;
-  /** How much of the list is visible above the floating bottom bar. */
-  size: number;
-  /** Where a scroll to now goes, as far as the list can scroll. */
-  nowScroll: number;
-};
-
-/**
- * Whether now is in My plan's view: the arrow is drawn inside the central
- * PLAN_NOW_BAND of the visible list, or a scroll to now would not move the list
- * (it cannot get any closer: an arrow near the top or the end, or none).
- */
-export function planNowInView({ now, scroll, size, nowScroll }: PlanNowView): boolean {
-  const margin = (size * (1 - PLAN_NOW_BAND)) / 2;
-  if (now !== null && now >= scroll + margin && now <= scroll + size - margin) {
-    return true;
-  }
-  return Math.abs(nowScroll - scroll) < 1;
-}
-
-/**
- * Now on a day's list scrolled to `scrollY`, in content y: where the first now
- * arrow is (null when none is drawn), how much is visible above the floating
- * bottom bar (`bottomInset`, its clearance, also added below the content), and
- * where a scroll to now goes (nowScrollOffset, the top when there is no arrow),
- * held within what the list can scroll. The now pill reads it (planNowInView).
- */
-export function planNowView(
-  items: PlanItem[],
-  { scrollY, viewportHeight, bottomInset }: { scrollY: number; viewportHeight: number; bottomInset: number },
-): PlanNowView {
-  const offsets = itemOffsets(items);
-  const index = items.findIndex(hostsNow);
-  let now: number | null = null;
-  if (index !== -1) {
-    const host = items[index];
-    if (host.kind === 'set' || host.kind === 'gap' || host.kind === 'cap') {
-      now = offsets[index] + (host.nowY ?? 0);
-    }
-  }
-  return {
-    now,
-    scroll: scrollY,
-    size: viewportHeight - bottomInset,
-    nowScroll: Math.min(nowScrollOffset(items, viewportHeight) ?? 0, maxScrollOffset(items, viewportHeight, bottomInset)),
-  };
-}
-
 /** The festival days (06:00 starts) with at least one Must-see clash. */
 export function daysWithClash(entries: ConflictEntry[]): Set<number> {
   const days = new Set<number>();

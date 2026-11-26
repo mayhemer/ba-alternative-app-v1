@@ -29,9 +29,8 @@ export type PillSet =
   | null;
 
 /**
- * The one selection the pill makes: what it shows (nowPillModel), where a tap
- * goes (nowPillTarget) and the now card's top row all take its result, so they
- * never name two sets.
+ * The one selection the pill makes: what it shows (nowPillModel) and the now
+ * card's top row both take its result, so they never name two sets.
  */
 export function nowPillSet(
   interests: Record<string, string>,

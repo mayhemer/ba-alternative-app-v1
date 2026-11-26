@@ -1,8 +1,6 @@
 import type { PillSet } from '../lib/nowPillSet';
 import { formatRemaining, NARROW_SPACE } from '../screens/my-plan/planDurations';
 import { strings } from '../i18n/strings';
-import { timelineJump, type TimelineJump } from '../lib/timelineJump';
-import type { DbEvent } from '../types/backend';
 
 // ── What the now pill in the top bar says ─────────────────────────────────────
 //
@@ -16,16 +14,13 @@ import type { DbEvent } from '../types/backend';
 //   logo  — nothing to say: outside the festival, before 08:00, after the day's
 //           last Must-see, or no Must-see today at all.
 // One selection (nowPillSet, in lib/ because the lock-screen now card follows it
-// too) picks the set the pill names; nowPillTarget hands the same set to a tap on
-// My plan, which opens its timeline at now (see nowPillTap).
+// too) picks the set the pill names. A tap always opens My plan on today,
+// scrolled to now (shell/openPlanAtNow); the logo is not a button.
 
 export type NowPillModel =
   | { kind: 'logo' }
   | { kind: 'live'; artistName: string; time: string; progress: number; more: number; accessibilityLabel: string }
   | { kind: 'break'; artistName: string; time: string; accessibilityLabel: string };
-
-/** The set the pill names, and where it is on the timelines. */
-export type NowPillTarget = { event: DbEvent; jump: TimelineJump };
 
 const LOGO: NowPillModel = { kind: 'logo' };
 
@@ -52,40 +47,4 @@ export function nowPillModel(set: PillSet, now: number): NowPillModel {
     time,
     accessibilityLabel: `${artist.name} ${strings().setStatus.start} ${time}`,
   };
-}
-
-/** The set the pill names and where it is drawn; null while the pill shows the logo. */
-export function nowPillTarget(set: PillSet): NowPillTarget | null {
-  if (set === null) {
-    return null;
-  }
-  return { event: set.must.event, jump: timelineJump(set.must.artist, set.must.event) };
-}
-
-// ── What a tap does ───────────────────────────────────────────────────────────
-//
-// The pill toggles between My plan and the timeline: on My plan showing today
-// with now in view (planNowInView) a tap shows the pill's set's timeline at now;
-// anywhere else, My plan scrolled away from now or showing another day
-// included, it opens My plan on today at now. So on My plan a first tap brings
-// now into view and the next one switches. The logo has no set and is not a
-// button.
-
-export type NowPillTap =
-  | { kind: 'none' }
-  | { kind: 'plan' }
-  | { kind: 'timeline'; target: NowPillTarget };
-
-/** Where My plan is: whether it shows today, and whether now is in its view (planNowInView). */
-export type PlanAtTap = { showsToday: boolean; nowInView: boolean };
-
-/** `activeRoute` is the drawer screen shown, undefined before navigation is ready. */
-export function nowPillTap(activeRoute: string | undefined, target: NowPillTarget | null, plan: PlanAtTap): NowPillTap {
-  if (target === null) {
-    return { kind: 'none' };
-  }
-  if (activeRoute === 'MyPlan' && plan.showsToday && plan.nowInView) {
-    return { kind: 'timeline', target };
-  }
-  return { kind: 'plan' };
 }

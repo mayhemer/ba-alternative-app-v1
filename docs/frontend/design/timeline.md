@@ -16,7 +16,7 @@
 
 ## Landing on a set
 
-A jump to a set (the artist sheet's "jump to timeline", search, the now pill's switch) selects its
+A jump to a set (the artist sheet's "jump to timeline", search) selects its
 day and centres its time and lane (`requestScrollToTime`). A jump that names a set (`eventId`)
 lights its block: a plain accent frame for 3 s from when it is on screen, then gone, without a fade
 (`features/timeline/landingHighlight`, `ui/LandingRing`); only that block renders again. A scroll to now names no set and lights nothing.

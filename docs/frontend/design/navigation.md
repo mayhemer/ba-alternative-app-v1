@@ -79,8 +79,7 @@ selected festival day, the lens scope, and which sheet is open (artist / conflic
 
 - **What is a position**: switching section from the drawer nav, jumping to an event
   from the artist detail view, switching the day on a timeline, opening the artist or
-  conflict sheet, changing the lens filter. The now pill's switch from My plan to a timeline at
-  now is one position.
+  conflict sheet, changing the lens filter.
 - **What is not**: opening the drawer, the lens panel or the search, hidden categories, the
   typed query, and expanding the artist sheet from collapsed. A search's landing
   is a position (its screen, day and lens), so one back press returns from it. The drawer is

@@ -76,12 +76,7 @@ On every screen that has a top bar. On festival days it replaces the logo while 
 - **Size:** the whole centre between the side slots (56 pt each; the lens and filter chips are 38 pt, right-aligned), 6 pt in from each, so 24 pt clear of the right chip. 38 pt tall (tap area extended to 46 pt with `hitSlop`), radius 19, 3 px `borderMid` border, `surfaceRaised` background, 12 pt padding, 7 pt gaps.
 - **Pressed:** while a finger is down, the background steps up from `surfaceRaised` to `surfacePressed` (`#262626`), as a button's does.
 - **Conflicts:** the pill never cycles or animates. Motion at the top of every screen is distracting, a mid-glance switch is unreadable, and it ignores the reduce-motion setting.
-- **Tap:** first closes everything open in the overlay hub (`utils/overlayHub` `closeAll`: the search, a panel, the drawer, the artist or conflict sheet, the star selector), then switches between My plan and the timeline (`nowPillTap`). Back returns to the previous screen through the existing back history.
-  - On any other screen: opens My plan on **today, scrolled to now**.
-  - On My plan showing another day, or showing today with now out of view: the same, My plan on **today, scrolled to now**.
-  - On My plan showing today with **now in view**: shows **the pill's set's timeline at now** (`useJumpToTimelineNow`): the Program or the Support Program, whichever the set the pill names is on, scrolled to now in time only, as today's day button does; the lane stays where it was. So on My plan a first tap brings now into view and the next one switches.
-  - **Now is in view** (`planNowInView`) when the first now arrow is drawn inside the **central 80 %** (`PLAN_NOW_BAND`, 10 % in from each edge) of the list above the floating bottom bar (`planNowView`), or when a scroll to now would not move the list (it cannot get closer: the arrow near the top or the end of the day, or no arrow). Asked only at the tap: My plan registers a probe (`planNowProbe`), so scrolling re-renders nothing.
-  - The set comes from the same selection as the pill's text (`nowPillTarget` and `nowPillModel` both take the one `nowPillSet`), so the tap always goes to the set the pill names.
+- **Tap:** first closes everything open in the overlay hub (`utils/overlayHub` `closeAll`: the search, a panel, the drawer, the artist or conflict sheet, the star selector), then always opens My plan on **today, scrolled to now** (`openPlanAtNow`, the same step as a tap on the lock-screen now card). That holds on every screen, My plan included, whatever day it shows and wherever it is scrolled: the pill never switches to a timeline. Back returns to the previous screen through the existing back history.
   - The logo is not a button.
 
 ### Filter chip (right, My plan only)
@@ -271,7 +266,7 @@ The rows look different under **All sets** and under the other filters (Must-see
   - A landing never goes past the end of the day's list (`maxScrollOffset`): a position saved under a longer filter, or now on the end cap after the last set, lands at the end. Started past its end, a list would draw only the rows it thinks are in view and leave the screen blank until touched.
   - Tapping today's button while today is shown scrolls to now (`requestScrollToNow`).
   - A search landing on a set shows its day, scrolls its row about ⅓ from the top (`setScrollOffset`, held within `maxScrollOffset`) and lights it (`requestSet`, the plan store's landing request, which otherwise means now). The filter widens first if it does not list the set ([search.md](search.md)).
-  - Tapping the now pill goes to today at now, except on My plan showing today with now in view, where it goes to the pill's set's timeline at now (see Top bar).
+  - Tapping the now pill goes to today at now, from any screen, My plan included (see Top bar).
 - **Switching days** mounts the new day the way the timeline does: once the screen's height is known, each day gets a list of its own that starts at its landing spot (saved position, else now, else the top) and draws about one screen of rows from there, the rest following one screenful per batch. Mounting the whole day at once, or its top first and then scrolling, made the switch visibly slow on phones. The very first list, before the screen is measured, starts from the top and is scrolled into place.
 
 ---
@@ -393,7 +388,7 @@ New values this screen introduces, to add as tokens:
 | Clash bar (right edge) | Nothing separate: it's too thin, so a tap there counts as a row tap. |
 | Gap | Nothing. |
 | Long-press on a row | Nothing. Changing a pick inline would make the row vanish under your finger. |
-| Now pill | On My plan showing today with now in view: the pill's set's timeline at now. Elsewhere, My plan scrolled away from now or on another day included: My plan, today, scrolled to now (see Top bar). |
+| Now pill | My plan, today, scrolled to now, always (see Top bar). |
 
 ---
 

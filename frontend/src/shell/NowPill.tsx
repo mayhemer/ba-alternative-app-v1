@@ -7,13 +7,10 @@ import { Text } from '../ui/Text';
 import { useSelectedSlug } from '../store/AppContext';
 import { useArtistEventMap, useArtists, useFestivalDays, useStages } from '../store/cacheStore';
 import { useDeferredInterests } from '../features/interests/InterestContext';
-import { shownPlanDay, usePlanStore } from '../screens/my-plan/PlanContext';
-import { minuteNow, useMinuteNow } from '../hooks/useMinuteNow';
-import { festivalToday } from '../utils/festivalTime';
+import { usePlanStore } from '../screens/my-plan/PlanContext';
+import { useMinuteNow } from '../hooks/useMinuteNow';
 import { navigationRef } from '../navigation/navigationRef';
-import { useJumpToTimelineNow } from '../navigation/useJumpToTimeline';
-import { isPlanNowInView } from '../screens/my-plan/planNowProbe';
-import { nowPillModel, nowPillTap, nowPillTarget, type NowPillModel, type NowPillTarget } from './NowPill.model';
+import { nowPillModel, type NowPillModel } from './NowPill.model';
 import { nowPillSet } from '../lib/nowPillSet';
 import { openPlanAtNow } from './openPlanAtNow';
 import { closeAll } from '../utils/overlayHub';
@@ -143,15 +140,11 @@ function NowPillViewBase({ state, onPress }: ViewProps) {
 export const NowPillView = memo(NowPillViewBase);
 
 /**
- * What a tap does (nowPillTap): on My plan showing today with now in view,
- * shows the pill's set's timeline at now; elsewhere, My plan scrolled away from
- * now or on another day included, opens My plan on today, scrolled to now. The
- * screen, My plan's day and its scroll are read at tap time, so changing any of
- * them does not re-render the pill.
+ * What a tap does: opens My plan on today, scrolled to now, from any screen, My
+ * plan itself included. The logo is not a button.
  */
-function useNowPillPress(target: NowPillTarget | null, festivalDays: number[]): () => void {
+function useNowPillPress(): () => void {
   const store = usePlanStore();
-  const jumpToTimelineNow = useJumpToTimelineNow();
   return useCallback((): void => {
     // Clears the screen first — the search, a panel, the drawer, a sheet, the
     // star selector (utils/overlayHub) — then does what it always does.
@@ -159,20 +152,8 @@ function useNowPillPress(target: NowPillTarget | null, festivalDays: number[]): 
     if (!navigationRef.isReady()) {
       return;
     }
-    const now = minuteNow();
-    const showsToday = shownPlanDay(store.getSelection(), festivalDays, now) === festivalToday(festivalDays, now);
-    const tap = nowPillTap(navigationRef.getCurrentRoute()?.name, target, { showsToday, nowInView: isPlanNowInView() });
-    switch (tap.kind) {
-      case 'timeline':
-        jumpToTimelineNow(tap.target.jump);
-        break;
-      case 'plan':
-        openPlanAtNow(store);
-        break;
-      case 'none':
-        break;
-    }
-  }, [target, festivalDays, store, jumpToTimelineNow]);
+    openPlanAtNow(store);
+  }, [store]);
 }
 
 export function NowPill() {
@@ -187,14 +168,12 @@ export function NowPill() {
   const festivalDays = useFestivalDays(slug);
   const now = useMinuteNow();
 
-  // One selection for what the pill shows and where a tap goes.
   const set = useMemo(
     () => nowPillSet(interests, { artists, stages, artistEvents }, festivalDays, now),
     [interests, artists, stages, artistEvents, festivalDays, now],
   );
   const state = useMemo(() => nowPillModel(set, now), [set, now]);
-  const target = useMemo(() => nowPillTarget(set), [set]);
-  const onPress = useNowPillPress(target, festivalDays);
+  const onPress = useNowPillPress();
 
   return <NowPillView state={state} onPress={onPress} />;
 }

@@ -20,8 +20,7 @@ import { pinchedLevel, pinchToast } from './filter/PlanPinch.model';
 import { pinchAnchor, pinchScrollOffset, type PinchAnchor } from './planPinchAnchor';
 import { PlanFilterSkeleton } from './filter/PlanFilterSkeleton';
 import { getScroll, setScroll } from '../../store/uiStatePersistence';
-import { buildPlanDay, itemAtOffset, itemOffsets, itemsToFill, maxScrollOffset, nowScrollOffset, PLAN_LAYOUT, planNowInView, planNowView, setScrollOffset, type PlanItem } from './planUtils';
-import { registerPlanNowProbe } from './planNowProbe';
+import { buildPlanDay, itemAtOffset, itemOffsets, itemsToFill, maxScrollOffset, nowScrollOffset, PLAN_LAYOUT, setScrollOffset, type PlanItem } from './planUtils';
 import { festivalToday, getFestivalDayStart } from '../../utils/festivalTime';
 import { planPicks } from '../../lib/plan';
 import { useSearchScope } from '../../features/search/SearchContext';
@@ -71,8 +70,6 @@ import { colors } from '../../styling/tokens';
 // Every landing is held within what the list can scroll (landingOffset): a
 // position saved under a longer filter, or now on the end cap, can be past the
 // end, and a list started there draws only the cells it thinks are in view.
-// Once now is in view, the pill switches to the timeline instead, so the screen
-// answers where it is scrolled (registerPlanNowProbe).
 //
 // A pinch on the list steps the filter while it goes, like a zoom
 // (filter/PlanPinch.model, ui/usePinchSteps): in toward Must-see only, out
@@ -451,19 +448,6 @@ export function MyPlanScreen() {
     onScrollEndDrag: handleScrollEnd,
     scrollEventThrottle: 100,
   }, PlanFilterSkeleton);
-
-  // ── Is now in view here? ───────────────────────────────────────────────────
-  // Asked by the now pill at the tap: it switches to the timeline when the now
-  // arrow is in the central 80 % of the list above the floating bottom bar, or
-  // when a scroll to now would not move the list. Read from refs at that
-  // moment, so scrolling re-renders nothing.
-  const probeInputsRef = useRef({ viewportHeight, bottomClearance });
-  probeInputsRef.current = { viewportHeight, bottomClearance };
-  useEffect(() => registerPlanNowProbe(() => planNowInView(planNowView(itemsRef.current, {
-    scrollY: scrollYRef.current,
-    viewportHeight: probeInputsRef.current.viewportHeight,
-    bottomInset: probeInputsRef.current.bottomClearance,
-  }))), []);
 
   // ── Rows ────────────────────────────────────────────────────────────────────
 
