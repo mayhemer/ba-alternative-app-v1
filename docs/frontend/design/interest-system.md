@@ -30,6 +30,8 @@ with no conversion layer:
   from the friends cache.
 - The struck star is an Ionicons outline with a drawn bar (`StarGlyph`), not a second icon font —
   that would have to be preloaded behind the splash (styling/fonts).
+  `StarMark` draws the same star, not pressable, for rows that show one each (My plan): the
+  glyph in a plain Text, wrapped in a View only when struck.
 - Visual state change is immediate. A star tap also opens the star selector beside the star (below).
 - Visual distinction must be strong — color weight, not fill level alone. Color progression: neutral → amber/dim → bright accent.
 - Half-star must render crisply at small sizes.

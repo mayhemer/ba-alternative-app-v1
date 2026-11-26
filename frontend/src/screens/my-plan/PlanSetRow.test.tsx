@@ -363,6 +363,33 @@ it('puts no star on the compact Maybe under Must-see and Maybe', async () => {
   expect(screen.queryByTestId(/^plan-star/)).toBeNull();
 });
 
+// The star as the icon font draws it: Ionicons' glyph at 15 pt in the status's colour.
+it.each([
+  ['a Must-see', 'Gojira', 'will_go', '\u{f595}', colors.accent],
+  ['a Maybe', 'Paysage', 'maybe', '\u{f596}', colors.accent],
+  ['an unpicked set', 'Ulcerate', 'none', '\u{f599}', colors.notInterested],
+  ['a "don\'t go" set', 'Spectral', 'dont_go', '\u{f599}', colors.dontGo],
+] as const)('draws the star of %s as the icon font\'s glyph in its colour', async (_kind, name, status, glyph, color) => {
+  await renderRow(item(name, '19:23'));
+  // The glyph is the star itself, or inside it for the struck one.
+  const star = screen.getByTestId(`plan-star-${status}`);
+  const text = screen.getByText(glyph);
+  expect(text === star || within(star).queryByText(glyph) === text).toBe(true);
+  const style = StyleSheet.flatten(text.props.style);
+  expect(style.fontFamily).toBe('ionicons');
+  expect(style.fontSize).toBe(15);
+  expect(style.color).toBe(color);
+});
+
+it('strikes out the "don\'t go" star and no other', async () => {
+  await renderRow(item('Spectral', '19:23'));
+  expect(within(screen.getByTestId('plan-star-dont_go')).getByTestId('star-strike')).toBeTruthy();
+  for (const name of ['Gojira', 'Paysage', 'Ulcerate']) {
+    await renderRow(item(name, '19:23'));
+    expect(screen.queryByTestId('star-strike')).toBeNull();
+  }
+});
+
 it('cuts a long name off before the star, which never shrinks', async () => {
   await renderRow(item('Ulcerate', '19:23'));
   const name = screen.getByText('Ulcerate');

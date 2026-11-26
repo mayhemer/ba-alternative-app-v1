@@ -1,10 +1,10 @@
 import React, { useCallback, useRef } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, Text, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import type { MeasurableStar } from './StarSelectorContext';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { InterestStatus } from './InterestContext';
 import { isInterested } from '../../lib/interestUtils';
-import { STAR_CONFIG, STAR_HIT_SLOP, STAR_ICON_SIZE, starGlyphModel } from './StarButton.model';
+import { STAR_CONFIG, STAR_HIT_SLOP, STAR_ICON_SIZE, starGlyphModel, type StarGlyphModel } from './StarButton.model';
 
 export { getFeedbackLabel, STAR_COLUMN_RESERVE } from './StarButton.model';
 export type { StarIconName } from './StarButton.model';
@@ -34,27 +34,90 @@ type GlyphProps = {
 
 export function StarGlyph({ status, size, color }: GlyphProps) {
   const model = starGlyphModel(status, size, color);
-  const { strike } = model;
   return (
     <>
       <Ionicons name={model.icon} size={model.size} color={model.color} />
-      {strike !== null && (
-        <View
-          testID="star-strike"
-          pointerEvents="none"
-          style={{
-            position: 'absolute',
-            left: strike.left,
-            top: strike.top,
-            width: strike.length,
-            height: strike.thickness,
-            borderRadius: strike.thickness / 2,
-            backgroundColor: model.color,
-            transform: [{ rotate: '45deg' }],
-          }}
-        />
-      )}
+      {strikeBar(model)}
     </>
+  );
+}
+
+/** The bar over a struck star, positioned in the glyph's parent; nothing for an unstruck one. A plain function, not a component: no element of its own in every star. */
+function strikeBar(model: StarGlyphModel): React.ReactElement | null {
+  const { strike } = model;
+  if (strike === null) {
+    return null;
+  }
+  return (
+    <View
+      testID="star-strike"
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        left: strike.left,
+        top: strike.top,
+        width: strike.length,
+        height: strike.thickness,
+        borderRadius: strike.thickness / 2,
+        backgroundColor: model.color,
+        transform: [{ rotate: '45deg' }],
+      }}
+    />
+  );
+}
+
+// ── StarMark ──────────────────────────────────────────────────────────────────
+// The same star, not pressable, for lists that draw one on many rows at once
+// (My plan). It is the icon font's glyph in React Native's own Text, with nothing
+// round it: `<Ionicons>` adds two class components and the glyph's parent a View,
+// and on mount those cost about as much again as the star itself (the perf gate's
+// My plan scenarios, 2026-11-26). The font is loaded behind the splash (fonts.ts),
+// so the glyph never waits for it as `<Ionicons>` would.
+//
+// A struck star still needs the parent its bar is laid out in, so 'dont_go' keeps
+// a wrapper, which takes `testID` and `style`. That changes the view when the
+// status crosses 'dont_go'; a mark takes no touch, so nothing is lost by it.
+
+/** Ionicons' font, as `<Ionicons>` sets it on its Text; read on first use, not at import. */
+let glyphFont: TextStyle | null = null;
+function glyphFontStyle(): TextStyle {
+  glyphFont ??= { fontFamily: Ionicons.getFontFamily(), fontWeight: 'normal', fontStyle: 'normal' };
+  return glyphFont;
+}
+
+/** An icon's character, as `<Ionicons>` resolves it: the map holds code points, or the character itself. */
+function glyphOf(icon: StarGlyphModel['icon']): string {
+  const glyph = Ionicons.glyphMap[icon];
+  return typeof glyph === 'number' ? String.fromCodePoint(glyph) : glyph;
+}
+
+type MarkProps = {
+  status: InterestStatus;
+  size: number;
+  testID?: string;
+  style?: StyleProp<ViewStyle & TextStyle>;
+};
+
+export function StarMark({ status, size, testID, style }: MarkProps) {
+  const model = starGlyphModel(status, size);
+  const glyph = (
+    <Text
+      testID={model.strike === null ? testID : undefined}
+      selectable={false}
+      allowFontScaling={false}
+      style={[model.strike === null ? style : null, { fontSize: model.size, color: model.color }, glyphFontStyle()]}
+    >
+      {glyphOf(model.icon)}
+    </Text>
+  );
+  if (model.strike === null) {
+    return glyph;
+  }
+  return (
+    <View testID={testID} style={style}>
+      {glyph}
+      {strikeBar(model)}
+    </View>
   );
 }
 

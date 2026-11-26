@@ -5,7 +5,7 @@ import { Text } from '../../ui/Text';
 import { stripePath, CONFLICT_STRIPE } from '../../ui/stripes';
 import { BOLD, CLASH_BAR_WIDTH, LIST_GUTTER, PAST_ROW, PROGRESS_BAR_WIDTH, PROGRESS_COLORS, ROW_RADIUS, STATUS_LABEL, TABULAR, type ProgressColors } from './planStyles';
 import { NowArrow } from './PlanListItems';
-import { StarGlyph } from '../../features/interests/StarButton';
+import { StarMark } from '../../features/interests/StarButton';
 import { LeftEdge } from '../../ui/LeftEdge';
 import { LEFT_EDGE_WIDTH } from '../../ui/LeftEdge.model';
 import { sameProps } from '../../ui/sameProps';
@@ -63,14 +63,12 @@ function PastStripes({ height }: { height: number }) {
   );
 }
 
-/** The pick's star, at the line's right end; it never shrinks, the name does. */
+/** The pick's star, at the line's right end; it never shrinks, the name does. One Text per row (StarMark): it is drawn on every two-line row. */
 function PickStar({ status }: { status: InterestStatus }) {
-  return (
-    <View testID={`plan-star-${status}`} style={{ flexShrink: 0 }}>
-      <StarGlyph status={status} size={STAR_SIZE} />
-    </View>
-  );
+  return <StarMark testID={`plan-star-${status}`} status={status} size={STAR_SIZE} style={STAR_STYLE} />;
 }
+
+const STAR_STYLE = { flexShrink: 0 } as const;
 
 /** The red dot that marks a live set, in a Must-see's status and before a live Maybe's name. */
 const LIVE_DOT = { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.danger };
