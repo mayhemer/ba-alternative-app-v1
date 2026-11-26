@@ -211,7 +211,7 @@ The rows look different under **All sets** and under the other filters (Must-see
 ### Now arrow
 
 - A red (`danger`) triangle, 16 × 24 pt, with no outline. Its tip reaches halfway across the 6.5 pt progress bar (about 6 pt into the row, past the 3 pt left edge), and it is drawn over the row. Red is the now colour across the app (the timeline's now line, the live dot).
-- On a live **unpicked** or **"don't go"** row it is the raised surface's grey (`surfaceRaised`) instead, with a 1 pt white outline to keep it distinct over the bar: those sets aren't part of your plan, so they don't take the red. On a Must-see or Maybe row, in a gap, the day-start break or on the end cap it stays red.
+- On a live **unpicked** or **"don't go"** row it is the raised surface's grey (`surfaceRaised`) instead, with a 1 pt grey outline (`muted`) to keep it distinct over the bar: those sets aren't part of your plan, so they don't take the red. On a Must-see or Maybe row, in a gap, the day-start break or on the end cap it stays red.
 - Its centre sits at the **tip of the progress fill**: on a live row (Must-see or Maybe), in the current gap, or in the day-start break. Once the last listed set has ended it sits on the end cap's square instead, as there is no fill left.
 - With two live sets there are two arrows. Rows aren't on a shared time scale, so each arrow means "this far into this set".
 - No arrow before the festival.

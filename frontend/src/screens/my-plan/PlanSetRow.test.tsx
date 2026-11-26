@@ -115,10 +115,10 @@ it('draws the now arrow red by default, with no outline', () => {
   expect(shape.props.stroke).toBeUndefined();
 });
 
-it('draws a now arrow of another colour outlined in white', () => {
+it('draws a now arrow of another colour outlined in grey', () => {
   const shape = arrowShape(colors.surfaceRaised);
   expect(shape.props.fill).toBe(colors.surfaceRaised);
-  expect(shape.props.stroke).toBe(colors.white);
+  expect(shape.props.stroke).toBe(colors.muted);
   expect(shape.props.strokeWidth).toBe(1);
 });
 

@@ -36,7 +36,7 @@ const ARROW_LEFT = PROGRESS_BAR_X + PROGRESS_BAR_WIDTH / 2 - ARROW_TIP_X;
 /**
  * The "you are here" triangle (red unless `color` says otherwise), its centre at `y` within the item. Drawn
  * from the gutter, its tip reaching halfway across the progress bar. The red
- * one has no outline; any other has a 1 pt white one to keep it distinct over the bar.
+ * one has no outline; any other has a 1 pt grey one to keep it distinct over the bar.
  */
 export function NowArrow({ y, color = colors.danger }: { y: number; color?: string }) {
   return (
@@ -49,7 +49,7 @@ export function NowArrow({ y, color = colors.danger }: { y: number; color?: stri
     >
       {color === colors.danger
         ? <Path testID="plan-now-arrow-shape" d={ARROW_PATH} fill={color} />
-        : <Path testID="plan-now-arrow-shape" d={ARROW_PATH} fill={color} stroke={colors.white} strokeWidth={1} strokeLinejoin="round" />}
+        : <Path testID="plan-now-arrow-shape" d={ARROW_PATH} fill={color} stroke={colors.muted} strokeWidth={1} strokeLinejoin="round" />}
     </Svg>
   );
 }
