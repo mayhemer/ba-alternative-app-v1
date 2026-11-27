@@ -1,4 +1,5 @@
 import { OVERLAY_PANEL_MARGIN, OVERLAY_PANEL_MAX_WIDTH } from '../../styling/tokens';
+import { overlayPanelColumn, type OverlayPanelColumn } from '../../ui/overlayPanelColumn';
 
 // ── The search field at the bottom edge ───────────────────────────────────────
 //
@@ -28,8 +29,8 @@ export const SEARCH_ENTRY_DOCK_HEIGHT = ENTRY_BOTTOM + SEARCH_ENTRY.height + OVE
 const RESULTS_END_GAP = 16;
 
 export type SearchDockFrame = {
-  left?: number;
-  right: number;
+  left?: OverlayPanelColumn['left'];
+  right: OverlayPanelColumn['right'];
   width?: number;
   bottom: number;
   height: number;
@@ -48,9 +49,13 @@ export function searchDockFrame({ isWide }: { isWide: boolean }): SearchDockFram
   };
 }
 
-/** The panels' entry's frame: the open field's, higher (above). */
-export function searchEntryFrame({ isWide }: { isWide: boolean }): SearchDockFrame {
-  return { ...searchDockFrame({ isWide }), bottom: ENTRY_BOTTOM };
+/**
+ * The panels' entry's frame: the open field's pill, higher (above), in the
+ * panels' column (ui/overlayPanelColumn), so it lines up with the card above
+ * it: on a turned phone the middle 70%, which the open field does not narrow to.
+ */
+export function searchEntryFrame(screen: { isWide: boolean; width: number; height: number }): SearchDockFrame {
+  return { ...searchDockFrame({ isWide: screen.isWide }), ...overlayPanelColumn(screen), bottom: ENTRY_BOTTOM };
 }
 
 /**

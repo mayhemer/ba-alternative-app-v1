@@ -12,13 +12,13 @@ import { SEARCH_ENTRY_DOCK_HEIGHT } from '../search/SearchDock.model';
 import { useInterestCycle } from '../interests/InterestContext';
 import { type LensScope } from '../../lib/interestUtils';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
+import { overlayPanelColumn } from '../../ui/overlayPanelColumn';
 import { PanelFadeIn } from '../../ui/PanelFadeIn';
 import {
   colors,
   OVERLAY_BACKDROP,
   OVERLAY_PANEL_MARGIN,
   OVERLAY_PANEL_RADIUS,
-  OVERLAY_PANEL_MAX_WIDTH,
 } from '../../styling/tokens';
 
 /** The card's padding, which its pull preview (LensPanelSkeleton) lays out in too. */
@@ -29,7 +29,8 @@ export const LENS_PANEL_CARD_PADDING = { paddingHorizontal: 12, paddingTop: 10, 
 export function LensPanel() {
   const { isOpen, close } = useLensPanel();
   const { scope, setScope } = useLens();
-  const { isWide } = useLayoutMode();
+  const { isWide, width, height } = useLayoutMode();
+  const column = useMemo(() => overlayPanelColumn({ isWide, width, height }), [isWide, width, height]);
   const { friends } = useSocialData();
   const { removeFriend, refreshFriend } = useSocialActions();
   const { refreshFromServer } = useInterestCycle();
@@ -106,22 +107,26 @@ export function LensPanel() {
 
       {/* Floating card — inset from the screen edges and the TopBar above it, and
           held above the search field at the bottom edge: the frame around it
-          ends there and the card shrinks to fit, scrolling its content. Past
-          the wide-screen breakpoint it stops growing and stays pinned to the
-          right, under the LensChip that opens it and clear of the permanent
-          drawer, rather than stretching a dropdown across a desktop window.
+          ends there and the card shrinks to fit, scrolling its content.
+          Across the screen it stands in the panels' column with the search
+          field (ui/overlayPanelColumn.ts): on a turned phone the middle 70%,
+          centred; past the wide-screen breakpoint it stops growing and stays
+          pinned to the right, under the LensChip that opens it and clear of
+          the permanent drawer, rather than stretching a dropdown across a
+          desktop window.
           No `overflow: hidden` is needed to keep content off the rounded corners:
           the ScrollView already clips to its own frame, which the padding insets
           past the corner radius — and it would clip the shadow away on iOS. */}
       <View
+        testID="lens-panel-frame"
         pointerEvents="box-none"
         style={{
           position: 'absolute',
           top: OVERLAY_PANEL_MARGIN,
           bottom: SEARCH_ENTRY_DOCK_HEIGHT,
-          left: isWide ? undefined : OVERLAY_PANEL_MARGIN,
-          right: OVERLAY_PANEL_MARGIN,
-          width: isWide ? OVERLAY_PANEL_MAX_WIDTH : undefined,
+          left: column.left,
+          right: column.right,
+          width: column.width,
         }}
       >
         <View
@@ -139,7 +144,7 @@ export function LensPanel() {
             elevation: 12,
           }}
         >
-          <ScrollView keyboardShouldPersistTaps="handled" style={{ flexGrow: 0 }}>
+          <ScrollView testID="lens-panel-scroll" keyboardShouldPersistTaps="handled" style={{ flexGrow: 0 }}>
             {/* ── SHOW ─────────────────────────────────────────────── */}
             <PanelSectionLabel>{strings().lensPanel.show}</PanelSectionLabel>
 

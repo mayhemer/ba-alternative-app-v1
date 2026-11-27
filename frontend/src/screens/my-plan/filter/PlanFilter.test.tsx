@@ -1,10 +1,12 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { Text } from 'react-native';
+import { fireEvent, render, screen, within } from '@testing-library/react-native';
 import { PlanFilterChipView } from './PlanFilterChipView';
 import { PlanFilterPanelView } from './PlanFilterPanel';
 import { planFilterChipModel } from './PlanFilterChip.model';
 import { planFilterLevelModels } from './PlanFilterLevel.model';
 import type { PlanLevel } from '../../../store/uiStatePersistence';
+import type { LayoutMode } from '../../../hooks/useLayoutMode';
 import { setLanguageChoice } from '../../../i18n/language';
 
 // ── The plan's filter chip and panel ──────────────────────────────────────────
@@ -15,6 +17,15 @@ import { setLanguageChoice } from '../../../i18n/language';
 // row raised and ticked. Both draw their models (PlanFilterChip.model.ts,
 // PlanFilterLevel.model.ts, tested there). That a tap also closes the panel is
 // the connected panel's job, tested with the screen (MyPlanScreen.test.tsx).
+//
+// The panel's dimensions: the filter (each of the four); the screen, upright
+// or turned, which places its card (ui/overlayPanelColumn.ts, tested there):
+// an upright phone unless a test turns it.
+
+const UPRIGHT: LayoutMode = { isWide: false, isShort: false, contentPadding: 16, bottomClearance: 0, width: 402, height: 874 };
+const mockLayout: { current: LayoutMode } = { current: UPRIGHT };
+jest.mock('../../../hooks/useLayoutMode', () => ({ useLayoutMode: () => mockLayout.current }));
+beforeEach(() => { mockLayout.current = UPRIGHT; });
 
 describe('PlanFilterChipView', () => {
   it.each([
@@ -95,5 +106,28 @@ describe('PlanFilterPanelView', () => {
     const { onClose } = await renderPanel();
     await fireEvent.press(screen.getByLabelText('Close'));
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('scrolls its content, the heading, the rows and the section below them', async () => {
+    await render(
+      <PlanFilterPanelView levels={planFilterLevelModels('must')} onPick={jest.fn()} onClose={jest.fn()}>
+        <Text>Below the rows</Text>
+      </PlanFilterPanelView>,
+    );
+    const scroller = screen.getByTestId('plan-filter-panel-scroll');
+    expect(within(scroller).getByText('Filter')).toBeTruthy();
+    expect(within(scroller).getByRole('button', { name: 'Only conflicts' })).toBeTruthy();
+    expect(within(scroller).getByText('Below the rows')).toBeTruthy();
+  });
+
+  it('takes the middle 70% of a turned phone, centred', async () => {
+    mockLayout.current = { ...mockLayout.current, width: 874, height: 402, isShort: true };
+    await renderPanel();
+    expect(screen.getByTestId('plan-filter-panel-frame')).toHaveStyle({ left: '15%', right: '15%', width: undefined });
+  });
+
+  it('spans an upright phone', async () => {
+    await renderPanel();
+    expect(screen.getByTestId('plan-filter-panel-frame')).toHaveStyle({ left: 10, right: 10, width: undefined });
   });
 });

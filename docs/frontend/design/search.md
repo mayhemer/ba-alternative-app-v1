@@ -16,7 +16,10 @@ document wins over the mock wherever they differ.
 - **Both fields** are the same pill (`SEARCH_ENTRY`: 53 tall, its ends half that round); the open
   one has the accent frame and a ✕.
 - **The field's place** (`features/search/SearchDock.model.ts`): the bottom of the content area,
-  where the bottom bar was; the panels' column (inset on a phone, pinned right on a wide screen).
+  where the bottom bar was; the panels' column (`ui/overlayPanelColumn`: inset on an upright
+  phone, the middle 70% on a turned phone, pinned right on a wide screen), so the entry lines up
+  with the card above it. The open field does not narrow on a turned phone: it spans the content
+  area there, as on an upright phone.
   The bottom bar is out of sight meanwhile (layout-and-chrome.md). The panel's card ends above the
   entry (`searchEntryFrame`); the open field sits lower, at the bottom edge (`searchDockFrame`).
 - **The search view** (`features/search/SearchView`) covers the content area and the bottom bar,

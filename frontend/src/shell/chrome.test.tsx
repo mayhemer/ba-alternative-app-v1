@@ -13,6 +13,7 @@ import { setLensScope } from '../store/uiStatePersistence';
 import { DEFAULT_SCOPE, type LensScope } from '../lib/interestUtils';
 import { rendersSinceReset, resetRenders } from '../../tests/setup/countRenders';
 import type { DbArtist, DbCategory, DbEvent, DbStage } from '../types/backend';
+import type { LayoutMode } from '../hooks/useLayoutMode';
 
 // ── The chrome reacts to every input ──────────────────────────────────────────
 //
@@ -40,6 +41,18 @@ jest.mock('../auth/AuthContext', () => {
     signOut: async () => undefined,
   };
   return { useAuth: () => auth };
+});
+
+// The screen: the test environment's own unless a test turns the phone.
+const mockLayout: { current: LayoutMode | null } = { current: null };
+jest.mock('../hooks/useLayoutMode', () => {
+  const actual = jest.requireActual('../hooks/useLayoutMode');
+  return {
+    useLayoutMode: (): LayoutMode => {
+      const own = actual.useLayoutMode();
+      return mockLayout.current ?? own;
+    },
+  };
 });
 
 jest.mock('../features/social/LensChipView', () => {
@@ -124,6 +137,25 @@ describe('the chrome reacts', () => {
   it('fades the panel in (ui/PanelFadeIn)', async () => {
     await mountChrome();
     expect(within(screen.getByTestId('panel-fade-in')).getByText('Everything')).toBeTruthy();
+  });
+
+  it('lays the panel and its search field in one column, the middle 70% of a turned phone', async () => {
+    mockLayout.current = { isWide: false, isShort: true, contentPadding: 16, bottomClearance: 0, width: 874, height: 402 };
+    try {
+      await mountChrome();
+      expect(screen.getByTestId('lens-panel-frame')).toHaveStyle({ left: '15%', right: '15%', width: undefined });
+      expect(screen.getByTestId('search-entry')).toHaveStyle({ left: '15%', right: '15%', width: undefined });
+    } finally {
+      mockLayout.current = null;
+    }
+  });
+
+  it('scrolls the panel\'s content, the sources and My schedule', async () => {
+    await mountChrome();
+    const scroller = screen.getByTestId('lens-panel-scroll');
+    expect(within(scroller).getByText('Everything')).toBeTruthy();
+    expect(within(scroller).getByText('Anna')).toBeTruthy();
+    expect(within(scroller).getByText('My schedule')).toBeTruthy();
   });
 
   it('closes the panel once a source is chosen', async () => {

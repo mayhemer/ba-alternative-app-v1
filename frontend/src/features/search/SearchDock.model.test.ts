@@ -11,7 +11,8 @@ import {
 //
 // Dimensions: the platform (iOS reports the keyboard from the screen's bottom
 // edge, Android above the navigation bar); the keyboard up, down, or shorter
-// than the safe area (a hardware keyboard's bar); a phone or a wide screen;
+// than the safe area (a hardware keyboard's bar); a phone (the panels' entry:
+// upright or turned) or a wide screen;
 // where a scroll of the results started and where it came to rest.
 
 describe('keyboardLift', () => {
@@ -42,11 +43,15 @@ describe('searchDockFrame', () => {
 
 describe('searchEntryFrame', () => {
   it('is the open field\'s pill, higher by half its height, so it is not missed', () => {
-    expect(searchEntryFrame({ isWide: false })).toEqual({ left: 10, right: 10, width: undefined, bottom: 37, height: 53, borderRadius: 26.5 });
+    expect(searchEntryFrame({ isWide: false, width: 402, height: 874 })).toEqual({ left: 10, right: 10, width: undefined, bottom: 37, height: 53, borderRadius: 26.5 });
   });
 
   it('on a wide screen keeps the panels\' column', () => {
-    expect(searchEntryFrame({ isWide: true })).toEqual({ left: undefined, right: 10, width: 780, bottom: 37, height: 53, borderRadius: 26.5 });
+    expect(searchEntryFrame({ isWide: true, width: 1194, height: 834 })).toEqual({ left: undefined, right: 10, width: 780, bottom: 37, height: 53, borderRadius: 26.5 });
+  });
+
+  it('on a turned phone keeps the panels\' column, the middle 70%', () => {
+    expect(searchEntryFrame({ isWide: false, width: 874, height: 402 })).toEqual({ left: '15%', right: '15%', width: undefined, bottom: 37, height: 53, borderRadius: 26.5 });
   });
 
   it('leaves the panel card the area down to a margin above it', () => {

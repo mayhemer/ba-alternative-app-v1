@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { usePlanFilters, usePlanPanel } from '../PlanContext';
 import { useLayoutMode } from '../../../hooks/useLayoutMode';
 import { PanelFadeIn } from '../../../ui/PanelFadeIn';
@@ -10,12 +10,12 @@ import { SearchEntry } from '../../../features/search/SearchEntry';
 import { SEARCH_ENTRY_DOCK_HEIGHT } from '../../../features/search/SearchDock.model';
 import { FILTER_PANEL_PADDING, planFilterLevelModels, type PlanFilterLevelModel } from './PlanFilterLevel.model';
 import { PanelSectionLabel } from '../../../ui/PanelSectionLabel';
+import { overlayPanelColumn } from '../../../ui/overlayPanelColumn';
 import type { PlanLevel } from '../../../store/uiStatePersistence';
 import {
   colors,
   OVERLAY_BACKDROP,
   OVERLAY_PANEL_MARGIN,
-  OVERLAY_PANEL_MAX_WIDTH,
   OVERLAY_PANEL_RADIUS,
 } from '../../../styling/tokens';
 
@@ -28,6 +28,10 @@ import {
 // model (PlanFilterLevel.model.ts). A tap applies that filter and closes the
 // panel, back to the list. Below them, the lens
 // panel's "My schedule" section (MyScheduleShare), passed in as children.
+// The content scrolls, as the lens panel's, when the card is shorter than it
+// (a turned phone). Across the screen the card and the search field stand in
+// the panels' column (ui/overlayPanelColumn.ts): on a turned phone the middle
+// 70%, centred.
 
 
 type ViewProps = {
@@ -41,7 +45,8 @@ type ViewProps = {
 };
 
 export function PlanFilterPanelView({ levels, onPick, onClose, dock, children }: ViewProps) {
-  const { isWide } = useLayoutMode();
+  const { isWide, width, height } = useLayoutMode();
+  const column = useMemo(() => overlayPanelColumn({ isWide, width, height }), [isWide, width, height]);
   return (
     <PanelFadeIn>
       {/* Backdrop — taps outside the card dismiss the panel */}
@@ -53,14 +58,15 @@ export function PlanFilterPanelView({ levels, onPick, onClose, dock, children }:
       />
       {/* The frame ends above the search field; the card shrinks to fit it. */}
       <View
+        testID="plan-filter-panel-frame"
         pointerEvents="box-none"
         style={{
           position: 'absolute',
           top: OVERLAY_PANEL_MARGIN,
           bottom: SEARCH_ENTRY_DOCK_HEIGHT,
-          left: isWide ? undefined : OVERLAY_PANEL_MARGIN,
-          right: OVERLAY_PANEL_MARGIN,
-          width: isWide ? OVERLAY_PANEL_MAX_WIDTH : undefined,
+          left: column.left,
+          right: column.right,
+          width: column.width,
         }}
       >
         <View
@@ -78,9 +84,14 @@ export function PlanFilterPanelView({ levels, onPick, onClose, dock, children }:
             elevation: 12,
           }}
         >
-          <PanelSectionLabel>{strings().planFilter.heading}</PanelSectionLabel>
-          {levels.map((item) => <PlanFilterLevel key={item.key} item={item} onPick={onPick} />)}
-          {children}
+          {/* No `overflow: hidden` on the card: the ScrollView clips to its
+              own frame, inset past the corner radius by the padding, and it
+              would clip the shadow away on iOS (as in the lens panel). */}
+          <ScrollView testID="plan-filter-panel-scroll" keyboardShouldPersistTaps="handled" style={{ flexGrow: 0 }}>
+            <PanelSectionLabel>{strings().planFilter.heading}</PanelSectionLabel>
+            {levels.map((item) => <PlanFilterLevel key={item.key} item={item} onPick={onPick} />)}
+            {children}
+          </ScrollView>
         </View>
       </View>
       {dock}

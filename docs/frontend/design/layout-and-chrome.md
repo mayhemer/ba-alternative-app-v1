@@ -44,6 +44,12 @@ The lens and filter panels fade in over 125 ms (`ui/PanelFadeIn`, `OVERLAY_PANEL
 backdrop, card and search field together, taking touches while fading; they close at once. The fade
 plays with the system's reduce-motion setting on too (`ReduceMotion.Never`): it moves nothing.
 
+The card and the search field under it stand in one column (`ui/overlayPanelColumn.ts`): across an
+upright phone, inset 10 pt from both edges; on a turned phone (`!isWide && width > height`) the
+middle 70% (15% in from either side of the overlays' area, so centred between the safe-area insets);
+on a wide screen at most `OVERLAY_PANEL_MAX_WIDTH`, pinned right. The card's content scrolls when the
+card, which ends above the search field, is shorter than it.
+
 The panels and the search cover the bottom bar's area too: while one of them is open the search
 field sits at the bottom edge, where the bar was (`features/search/SearchDock.model.ts`), and the
 bar is out of sight (`bottomBarInSight`). It stays laid out, invisible and untouchable, so the screen
