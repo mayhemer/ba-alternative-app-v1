@@ -1,12 +1,13 @@
 # Brutal Assault — alternative app
 
 An unofficial, BA-specific companion app for the Brutal Assault festival: lineup, schedule,
-personal picks, schedule conflicts and sharing with friends. One codebase for iOS, Android and
-web.
+personal picks, a festival-time plan, schedule conflicts, a lock-screen "now" card and sharing with
+friends. One codebase for iOS, Android and web.
 
-**Status: alpha.** It runs, it is used on real devices, and it is not finished. It is a personal
-project, hosted on a private AWS account and domain, not affiliated with or endorsed by the
-festival.
+**Status: beta.** Nearly every planned feature is finished and in use on real devices. One gap
+remains: on iOS the lock-screen card needs server push to stay reliably up to date (see *Current
+state* below). It is a personal project, hosted on a private AWS account and domain, not
+affiliated with or endorsed by the festival.
 
 - Web build: <https://ba.janbambas.cz>
 - API: <https://api.ba.janbambas.cz>
@@ -49,20 +50,25 @@ maps, news, shuttle buses, merch, cashless).
 
 | Area | Feature |
 |---|---|
-| Lineup | Alphabetical artist list with section separators, name search, photo/genre/country, star control |
-| Timeline | 2D scroll canvas, category lanes, proportional blocks, NOW line, day switcher, day boundary at 06:00 so after-midnight sets stay on "their" day |
+| Lineup | Alphabetical artist list with section separators, photo/genre/country, star control |
+| Timeline | 2D scroll canvas, category lanes (reorderable), proportional blocks, NOW line, day switcher, day boundary at 06:00 so after-midnight sets stay on "their" day |
 | Support stages | A second timeline for non-playable/supporting entries, with sub-rows for stage-level overlaps |
+| My plan | The festival-time view of your own picks: what is on now, what is next and how long until it starts, the gaps between sets, conflicts inline; a pinch steps between all sets, all picks and must-sees only; a turned phone shows the plan as a lane timeline |
+| Search | One search on every event screen (list, timelines, My plan); results jump to the hit and highlight it |
 | Artist detail | Bottom-sheet (collapsed) or full-screen (expanded); bio, genre, country, set time and stage; jump to that slot on the timeline; search links to Spotify, TIDAL, Metal Archives, setlist.fm |
-| Personal picks | Three states — none / maybe / must see. Local-first; works fully signed out |
+| Personal picks | Four states: not marked / maybe / must see / don't go (checked and skipped, so a band is never re-checked by mistake); a star tap shows a selector with all states. Local-first; works fully signed out |
+| Notes | A private note per artist on the detail sheet; synced when signed in, never shared |
 | Conflicts | Automatic overlap detection over "must see" picks, a red bar on the affected block, My plan's conflict titles and filter, and a detail sheet showing the whole clash group on the timeline's lanes |
+| Lock-screen card | The band playing now, the next must-see with a countdown, and clashes: an iOS Live Activity (with Dynamic Island) and an Android ongoing notification |
 | Lens | One global scope — *everything* / *my picks* / *a friend's picks* — applied to both the list and the timelines |
 | Sharing | Mint a read-only share link for the current edition; friends are added by opening the link (universal/app link → deep link into the app); revocable |
-| Account | Sign in with Google or Apple via Cognito; picks then sync across devices |
+| Account | Sign in with Google or Apple via Cognito; picks and notes then sync across devices |
+| Languages | English and Czech, following the system language or chosen in Settings; the festival data follows the same language |
 | Editions | Data is partitioned per festival edition (`ba2019`, `ba2022` … `ba2027` — no 2020/2021, both cancelled); switchable in Settings |
 | Platforms | iOS, Android and web from one codebase; free rotation, phone/tablet/desktop layouts; UI state (last screen, per-day scroll position) restored across restarts |
 
-Not there yet: localization (the UI is English-only, although the data carries EN/CS), push
-notifications/reminders, and offline-first write queuing.
+Not there yet: server push for the iOS lock-screen card, reminders before a set starts, and
+offline-first write queuing.
 
 ---
 
@@ -79,8 +85,9 @@ app/
 
 [`docs/README.md`](docs/README.md) indexes every document.
 
-Roughly 8k lines of TypeScript/TSX in the frontend, ~1.5k in the Lambdas, plus the CDK stack;
-~200 commits since late March 2026.
+Roughly 22k lines of TypeScript/TSX in the frontend (tests not counted) plus ~1.8k of native
+Swift/Kotlin for the lock-screen card, ~1.2k in the Lambdas, plus the CDK stack; ~500 commits
+since late March 2026.
 
 ---
 
@@ -90,7 +97,7 @@ Roughly 8k lines of TypeScript/TSX in the frontend, ~1.5k in the Lambdas, plus t
    official                    this project (AWS, eu-central-1)                  clients
  ┌────────────────┐        ┌───────────────────────────────────────┐       ┌──────────────┐
  │ admin.         │  poll  │  sync Lambda ──▶ DynamoDB ◀── api     │       │  iOS app     │
- │ best4fest.app  │ ◀──────│  (EventBridge,   7 tables      Lambda │◀──────│  Android app │
+ │ best4fest.app  │ ◀──────│  (EventBridge,   8 tables      Lambda │◀──────│  Android app │
  │  /changes  v2  │  read  │   hourly)                        ▲    │  HTTPS│  web (SPA)   │
  │  /artists  v3  │  only  │                                  │    │       └──────────────┘
  │  /schedule v3  │        │  CloudFront ─────────────────────┘    │              ▲
@@ -136,7 +143,7 @@ This is the part most worth reviewing, so it is spelled out:
 If any of this is unwelcome — polling cadence, image hotlinking, anything else — it is a
 configuration change on our side, not a redesign.
 
-### Data model (DynamoDB, 7 tables)
+### Data model (DynamoDB, 8 tables)
 
 | Table | Key | Notes |
 |---|---|---|
@@ -145,6 +152,7 @@ configuration change on our side, not a redesign.
 | `ba-categories` | `slug` + `categoryId` | The timeline's vertical axis |
 | `ba-events` | `slug` + `eventId` | Fully normalized: `dateFrom/dateTo` + artist/stage/category IDs |
 | `ba-user-interests` | `userId` + `slug#artistId` | Per-edition picks, `updatedAt` drives merge resolution |
+| `ba-user-notes` | `userId` + `slug#artistId` | Private per-artist notes (max 1000 characters), kept apart from picks so a share never exposes them |
 | `ba-share-tokens` | `token` | Opaque token → `{userId, slug, label, avatarUrl}`, explicitly revocable |
 | `ba-sync-state` | `slug` + `tableName` | Last official timestamp vs. last rebuild, per dataset |
 
@@ -158,6 +166,7 @@ configuration change on our side, not a redesign.
 | GET | `/{slug}/validity` | — | CloudFront, 30 s |
 | GET | `/share/{token}` | — | — |
 | GET/PUT/DELETE | `/user/{slug}/schedule[/{artistId}]` | Cognito JWT | none |
+| GET/PUT | `/user/{slug}/notes[/{artistId}]` | Cognito JWT | none |
 | POST | `/{slug}/share`, DELETE `/share/{token}` | Cognito JWT | none |
 
 The sync Lambda issues a CloudFront invalidation for the affected paths after a rebuild, so a
@@ -187,16 +196,19 @@ are stored locally first and only synced when an account exists.
 
 ## Frontend
 
-Expo SDK 54 / React Native 0.81 (New Architecture enabled), TypeScript, NativeWind (Tailwind) for
-styling, React Navigation (drawer), Reanimated + `@gorhom/bottom-sheet` for the sheets, plain React
-Context + `useReducer` for state — no external state library.
+Expo SDK 58 / React Native 0.88 (New Architecture), React 19, TypeScript, NativeWind (Tailwind) for
+styling, React Navigation (drawer), Reanimated + `@gorhom/bottom-sheet` for the sheets. State is
+React Context plus small stores read through `useSyncExternalStore`, with no external state
+library. Festival logic without React lives in `src/lib/`, and a lint rule keeps imports pointing
+one way (shell → screens → features → lib or ui → utils). The lock-screen card is a local Expo module
+(Swift + Kotlin) that only draws what the TypeScript side computes.
 
 Data flow is deliberately boring:
 
 ```
-adapter (HTTP)  ──▶  cacheService (in-memory, single source for the UI)  ──▶  React contexts  ──▶  screens
+adapter (HTTP)  ──▶  cacheService (in-memory, single source for the UI)  ──useSyncExternalStore──▶  screens
         ▲                                   ▲
-  background sync         AsyncStorage (festival data, picks, friends, UI state)
+  background sync         AsyncStorage (festival data, picks, notes, friends, UI state)
 ```
 
 - `src/adapters/*` are swappable fetchers behind one interface (`validate` / `populate`), so the
@@ -207,8 +219,10 @@ adapter (HTTP)  ──▶  cacheService (in-memory, single source for the UI)  �
 - Startup reads the persisted cache before the network, so a cold start with no connectivity opens
   on the last known schedule rather than an error screen. The freshness watermark is the server's
   own `lastSyncedAt`, stored beside the data it describes.
-- The interest state is local-first with `updatedAt` timestamps; on sign-in, local and cloud sets
-  are merged by latest-write-wins per `slug#artistId`.
+- The interest state and notes are local-first with `updatedAt` timestamps; on sign-in, local and
+  cloud sets are merged by latest-write-wins per `slug#artistId`.
+- The cache is a subscribable store: a component that reads it is subscribed automatically, and
+  each sync run is its own instance, so switching edition mid-load cannot mix up two runs.
 
 Two frontend problems were interesting enough to be written up in `docs/frontend/design/`, in case they are
 useful elsewhere:
@@ -224,9 +238,10 @@ useful elsewhere:
   horizontal scroller entirely, which makes the problem structurally impossible rather than
   merely smoothed.
 
-Builds go through EAS cloud builds. iOS is distributed ad-hoc by UDID (deliberately not TestFlight
-at this size), Android as a plain APK, and the web build is a static export served from
-`ba.janbambas.cz`. Details, including the deep-link `.well-known` files, are in `docs/frontend/build/`.
+Distributed builds go through EAS cloud builds. iOS is distributed ad-hoc by UDID (deliberately
+not TestFlight at this size), Android as a plain APK, and the web build is a static export served
+from `ba.janbambas.cz`. The iOS E2E suite runs on a local Release simulator build instead. Details,
+including the deep-link `.well-known` files, are in `docs/frontend/build/`.
 
 ---
 
@@ -234,15 +249,18 @@ at this size), Android as a plain APK, and the web build is a static export serv
 
 | Layer | Stack |
 |---|---|
-| App | Expo SDK 54, React Native 0.81, React 19, TypeScript, NativeWind/Tailwind, React Navigation, Reanimated 4, `@gorhom/bottom-sheet`, `expo-image`, AsyncStorage, `expo-secure-store` |
+| App | Expo SDK 58, React Native 0.88, React 19, TypeScript, NativeWind/Tailwind, React Navigation, Reanimated 4, `@gorhom/bottom-sheet`, `expo-image`, `expo-localization`, AsyncStorage, `expo-secure-store` |
+| Lock-screen card | Local Expo module: SwiftUI Live Activity (via `@bacons/apple-targets`), Kotlin ongoing notification |
 | API | AWS Lambda (Node 22, ARM64) + API Gateway HTTP API, bundled with esbuild |
-| Data | DynamoDB (on-demand billing, 7 tables) |
+| Data | DynamoDB (on-demand billing, 8 tables) |
 | Edge | CloudFront (per-path cache policies, custom domain, ACM certificate) |
 | Auth | Cognito user pool + identity pool, Google & Apple IdPs, hosted UI, PKCE |
 | Scheduling | EventBridge rule → sync Lambda |
 | Infra | AWS CDK v2 (TypeScript), one stack, least-privilege IAM |
-| Tests | Jest — unit tests over real API fixtures, sync-handler tests with mocked I/O, integration tests against in-memory DynamoDB |
-| Builds | EAS cloud builds (iOS ad-hoc, Android APK, web static export) |
+| Tests, backend | Jest — unit tests over real API fixtures, sync-handler tests with mocked I/O, integration tests against in-memory DynamoDB |
+| Tests, frontend | Jest + React Native Testing Library (unit and screen tests, element budgets), Reassure render-count and timing gate, Playwright web E2E, Maestro E2E on the iOS Simulator (29 flows), a scripted performance run on Android devices |
+| CI | GitHub Actions: types, lint, unit tests, web E2E and an advisory performance job on every frontend push |
+| Builds | EAS cloud builds (iOS ad-hoc, Android APK, web static export); local Release simulator build for iOS E2E |
 
 Everything runs in `eu-central-1` except the CloudFront certificate (`us-east-1`, as required).
 No secrets are committed: keystores, provisioning profiles and `credentials.json` live outside the
@@ -255,8 +273,9 @@ repository.
 ```bash
 # frontend
 cd frontend && npm install
-npm run web            # or: npm start, npm run start:device:ios
-npm test               # types, lint, unit, web E2E (see docs/frontend/instructions/testing.md)
+npm run start:web      # or: npm run start:sim:ios, npm run start:device:ios
+npm test               # types, lint, unit, web E2E, about a minute (see docs/frontend/instructions/testing.md)
+npm run verify         # adds expo-doctor, performance gate and the iOS Simulator E2E
 
 # backend
 cd backend && npm install
@@ -284,15 +303,19 @@ code"; the working method matters, and it is visible in the repository:
   not a historical artifact: architecture decisions, the data model, and the non-obvious layout and
   rendering rules are written down *and updated* whenever the code moves. `CLAUDE.md` holds the
   coding conventions the agent must follow (adapter/data-source separation, mandatory
-  cross-file impact checks after multi-file changes, `useCallback`/`useMemo` discipline inside
-  context providers, bracing and ternary rules). New work starts by reading them.
+  cross-file impact checks after multi-file changes, one source per piece of information on
+  screen, urgent vs deferred updates, the import direction, `useCallback`/`useMemo` discipline
+  inside context providers, bracing and ternary rules). New work starts by reading them.
+- **Tests first for behaviour changes.** A change in behaviour starts with a test that is shown to
+  fail for the expected reason; expected values are written by hand, never computed by the code
+  under test.
 - **Decisions are approved before implementation.** Where a design choice has real consequences,
   it gets discussed and agreed first; the agent is explicitly not allowed to pick an approach on
   its own and present it as done.
-- **Small, single-purpose commits.** ~200 of them, each one thing, with a scope prefix
+- **Small, single-purpose commits.** ~500 of them, each one thing, with a scope prefix
   (`feat(frontend)`, `fix(frontend)`, `opt(frontend)`, `security fix(frontend)`) — which is what
   makes reviewing AI-written changes tractable at all.
-- **Specialised review agents.** Repo-local agents re-check the React code for unnecessary
+- **Specialised review agents.** Project agents re-check the React code for unnecessary
   re-renders and for dead code after commits; the backend is covered by three test layers so the
   sync logic can be changed without guessing.
 - **The hard parts were still reasoned about by hand.** The scroll-jitter analysis, the
@@ -307,25 +330,28 @@ recoverable from the code, and nothing else.
 
 ## Current state and what is next
 
-Alpha. In practical terms:
+Beta. In practical terms:
 
-- The full flow works end-to-end on iOS, Android and web: browse, star, detect conflicts, sign in,
-  share, follow a friend.
-- The startup path now loads from a persisted cache first and only then checks the server, so a cold
-  start works offline and the freshness check actually skips unchanged data (see *Client-side cache
-  and freshness* in `docs/frontend/design/architecture/cache-freshness.md`).
-- What remains in that area is known and written down rather than fixed: the festival cache lives
-  outside React and is bridged to it by a hand-rolled event emitter, so a consumer that forgets to
-  subscribe silently reads stale data; and the sync service is a module singleton, which leaves a
-  narrow race on edition switching. Both are scheduled after the festival, deliberately not before.
-- Localization is not done — English UI over EN/CS data.
-- Android app-link verification needs the release keystore fingerprint published before deep links
-  verify on Android.
-- Expo SDK upgrade and a proper beta round are the next planned steps.
+- The full flow works end-to-end on iOS, Android and web: browse, search, star, plan the day,
+  detect conflicts, take notes, sign in, share, follow a friend, and follow the day from the lock
+  screen.
+- A cold start works offline: the app loads the cache saved on the device first and only then
+  checks the server, and the freshness check skips data that has not changed (see
+  `docs/frontend/design/architecture/cache-freshness.md`).
+- The UI is in English and Czech, over the EN/CS festival data.
+- The app is on Expo SDK 58.
+- **Missing: reliability of the iOS lock-screen card.** The card's content is computed on the device
+  and handed to iOS for the whole day, but iOS does not reliably redraw a Live Activity at the
+  planned switch times while the phone is locked, so the card can go stale until the app is opened.
+  The fix is designed: a server-side replayer that sends ActivityKit pushes at each switch, with no
+  festival logic on the server. Until it ships, the iOS card is not reliable enough to depend on.
+  The Android card schedules its own updates and is not affected.
 
-Ideas beyond that, in decreasing order of confidence: reminders/push before a set starts, richer
-friend groups, and — only if the BA side ever finds it interesting — integration with the modules
-the official app owns, so this stays a complement rather than a fork.
+
+Ideas beyond that, in decreasing order of confidence: reminders before a set starts, native
+Google/Apple sign-in instead of the web flow, syncing shared and accepted links across devices,
+richer friend groups, and — only if the BA side ever finds it interesting — integration with the
+modules the official app owns, so this stays a complement rather than a fork.
 
 ---
 
